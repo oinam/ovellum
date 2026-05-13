@@ -1,0 +1,15 @@
+{
+  "extends": "./tsconfig.base.json",
+  "compilerOptions": {
+    "noEmit": true
+  },
+  "include": [],
+  "references": [
+    { "path": "./packages/core" },
+    { "path": "./packages/parser" },
+    { "path": "./packages/generator" },
+    { "path": "./packages/reader" },
+    { "path": "./packages/merger" },
+    { "path": "./packages/cli" }
+  ]
+}

@@ -1,0 +1,37 @@
+{
+  "name": "ovellum",
+  "version": "0.0.0",
+  "description": "O'Vellum CLI - documentation tool for TypeScript and JavaScript projects.",
+  "license": "MIT",
+  "type": "module",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "bin": {
+    "ovellum": "./dist/index.js"
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    }
+  },
+  "files": ["dist"],
+  "scripts": {
+    "build": "tsup",
+    "test": "vitest run --passWithNoTests",
+    "lint": "eslint src",
+    "typecheck": "tsc --noEmit"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "dependencies": {
+    "@ovellum/core": "workspace:*",
+    "@ovellum/generator": "workspace:*",
+    "@ovellum/merger": "workspace:*",
+    "@ovellum/parser": "workspace:*",
+    "@ovellum/reader": "workspace:*"
+  }
+}

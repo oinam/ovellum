@@ -1,0 +1,29 @@
+{
+  "name": "@ovellum/merger",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Merge engine: combines generated docs with protected zones; handles orphans.",
+  "license": "MIT",
+  "type": "module",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    }
+  },
+  "files": ["dist"],
+  "scripts": {
+    "build": "tsup",
+    "test": "vitest run --passWithNoTests",
+    "lint": "eslint src",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@ovellum/core": "workspace:*",
+    "@ovellum/reader": "workspace:*"
+  }
+}
