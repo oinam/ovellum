@@ -1,7 +1,7 @@
 # TODO
 
 Living checklist. Update in place as work progresses.
-Last updated: 2026-05-13 (Phase 1 done)
+Last updated: 2026-05-13 (Phase 1 done; Phase 2/3/6 partial v0 slice for demo)
 
 Legend: `[ ]` not started · `[~]` in progress · `[x]` done · `[!]` blocked
 
@@ -50,88 +50,99 @@ Legend: `[ ]` not started · `[~]` in progress · `[x]` done · `[!]` blocked
 - [x] Export `OvellumError` base class for typed error handling
 - [x] Write unit tests for config loader (valid config, invalid config, defaults, merge)
 
-> Phase 0 build note (encountered during Phase 1): tsup's `dts: true` rolls up
+> Phase 0 build note (encountered during Phase 1 & 2): tsup's `dts: true` rolls up
 > declarations using its own pipeline and chokes on `composite: true` projects
 > with multi-file imports (TS6307 "not listed within the file list of project").
-> Resolved for `@ovellum/core` by switching its build to `tsup && tsc -b --force`
-> with `emitDeclarationOnly: true` and `tsBuildInfoFile: "./dist/.tsbuildinfo"`.
-> The `--force` flag is required because tsup's `clean: true` wipes the
-> tsbuildinfo mid-build, leaving tsc unable to tell what changed. Other packages
-> still ship the stock `tsup` build and will need the same change when they grow
-> beyond a single source file.
+> Resolved by switching each multi-file package to `tsup && tsc -b --force` with
+> `emitDeclarationOnly: true` and `tsBuildInfoFile: "./dist/.tsbuildinfo"`. The
+> `--force` flag is required because tsup's `clean: true` wipes the tsbuildinfo
+> mid-build, leaving tsc unable to tell what changed. Pattern applied to: core,
+> parser, generator, cli. `reader` and `merger` still ship the original `tsup`
+> with `dts: true` (their stubs are single-file).
 
 ---
 
 ## Phase 2 - Source Parser (`@ovellum/parser`)
 
-- [ ] Install and configure `ts-morph`
-- [ ] Set up project loader (accepts `tsconfig.json` path or inline compiler options)
-- [ ] Implement file discovery (respects `include` / `exclude` globs from config)
-- [ ] Implement symbol extractors:
-  - [ ] `function` declarations (name, params, return type, generics, overloads, JSDoc)
-  - [ ] `class` declarations (name, constructor, methods, properties, extends, implements, JSDoc)
-  - [ ] `interface` declarations (name, members, extends, JSDoc)
-  - [ ] `type` alias declarations (name, definition, JSDoc)
-  - [ ] `enum` declarations (name, members with values, JSDoc)
+- [x] Install and configure `ts-morph`
+- [~] Set up project loader (accepts inline compiler options only; tsconfig.json path passthrough deferred)
+- [x] Implement file discovery (respects `include` / `exclude` globs from config)
+- [~] Implement symbol extractors:
+  - [x] `function` declarations (name, params, return type, generics, JSDoc) — overloads deferred
+  - [x] `class` declarations (methods, properties, extends, implements, JSDoc) — constructor extraction deferred
+  - [x] `interface` declarations (name, properties + methods, extends, JSDoc)
+  - [x] `type` alias declarations (name, definition, JSDoc)
+  - [x] `enum` declarations (name, members with values, JSDoc)
   - [ ] `const` / `let` / `var` (exported only, unless `includeInternal`)
-  - [ ] Module-level JSDoc (`@module` tag)
-- [ ] Implement JSDoc tag parser:
-  - [ ] `@param`, `@returns` / `@return`
-  - [ ] `@throws` / `@exception`
-  - [ ] `@example`
-  - [ ] `@deprecated`
-  - [ ] `@since`, `@see`
-  - [ ] `@remarks`, `@description`
-  - [ ] `@preserve` (flag on DocNode)
-  - [ ] `@internal` (flag on DocNode)
-  - [ ] Unknown tags → `tags` bag
-- [ ] Implement anchor ID generator (`{relativeFilePath}::{symbolPath}`) - must be deterministic
-- [ ] Implement export filter (respect `isExported`, `includeInternal`, `includePrivate` flags)
+  - [~] Module-level JSDoc (`@module` tag) — extracted but only when attached to first statement
+- [~] Implement JSDoc tag parser:
+  - [x] `@param`, `@returns` / `@return`
+  - [x] `@throws` / `@exception`
+  - [x] `@example`
+  - [x] `@deprecated`
+  - [x] `@since`, `@see`
+  - [x] `@remarks`, `@description`
+  - [x] `@preserve` (flag on DocNode)
+  - [x] `@internal` (flag on DocNode)
+  - [x] Unknown tags → `tags` bag
+- [x] Implement anchor ID generator (`{relativeFilePath}::{symbolPath}`)
+- [x] Implement export filter (respect `isExported`, `includeInternal`, `includePrivate` flags)
 - [ ] Handle edge cases:
   - [ ] Re-exports and barrel files (warn on duplicates, deduplicate by anchor ID)
   - [ ] Circular imports (warn and continue; partial IR acceptable)
   - [ ] Overloaded functions (collapse to single DocNode with union signatures)
   - [ ] Namespace exports (warn; skip in v1)
   - [ ] `declare module` augmentations (warn; skip in v1)
-- [ ] Return fully typed `DocProject` IR
-- [ ] Write unit tests:
-  - [ ] Each symbol type with all JSDoc tags
-  - [ ] Exported vs. non-exported filtering
-  - [ ] `@internal` / `@preserve` flags
-  - [ ] Anchor ID stability
+- [x] Return fully typed `DocProject` IR
+- [~] Write unit tests:
+  - [x] Each symbol type — smoke test only, full per-tag coverage TBD
+  - [x] Exported vs. non-exported filtering
+  - [x] `@internal` / `@preserve` flags
+  - [ ] Anchor ID stability (formal test)
   - [ ] Overloads
   - [ ] Edge cases (re-exports, circular, empty file)
+
+> Phase 2 v0 slice (2026-05-13): the parser handles enough of TS to power the
+> `pnpm demo` end-to-end. Deferred: const/let/var extraction, function
+> overloads, re-exports/barrels, circular imports, namespace handling. See
+> `examples/simple-ts/` for what currently parses cleanly.
 
 ---
 
 ## Phase 3 - Markdown Generator (`@ovellum/generator`)
 
-- [ ] Accept `DocProject` IR + config, return `Map<filePath, string>` (output path → Markdown content)
-- [ ] Implement output path mapping (`src/utils/format.ts` → `docs/utils/format.md`)
-- [ ] Implement per-file Markdown builder:
-  - [ ] File-level frontmatter (`title`, `source`, `generated`, `ovellum: true`)
-  - [ ] Module description (from `@module` JSDoc)
-  - [ ] Section per exported symbol
-- [ ] Implement per-symbol Markdown templates:
-  - [ ] `function`: signature code block, description, params table, returns, throws, examples
-  - [ ] `class`: signature, description, constructor, methods table, properties table
-  - [ ] `interface`: signature, description, members table
-  - [ ] `type`: definition code block, description
-  - [ ] `enum`: members table with values
+- [x] Accept `DocProject` IR + config, return `Map<filePath, string>` (output path → Markdown content)
+- [x] Implement output path mapping (`src/utils/format.ts` → `docs/utils/format.md`)
+- [~] Implement per-file Markdown builder:
+  - [x] File-level frontmatter (`title`, `source`, `generated`, `ovellum: true`)
+  - [x] Module description (from `@module` JSDoc) — rendered when present
+  - [x] Section per exported symbol
+- [~] Implement per-symbol Markdown templates:
+  - [x] `function`: signature code block, description, params table, returns, throws, examples
+  - [~] `class`: signature, description, methods + properties tables — constructor section deferred
+  - [x] `interface`: signature, description, members table
+  - [x] `type`: definition code block, description
+  - [x] `enum`: members table with values
   - [ ] `variable`: type + description
 - [ ] Implement `_index.md` / sidebar table of contents generator
-- [ ] MDX output mode: emit `.mdx`, detect JSX in `@example` blocks, warn user
-- [ ] Handle `@deprecated` symbols: add deprecation notice callout
+- [ ] MDX output mode: emit `.mdx`, detect JSX in `@example` blocks, warn user (path mapping done; detection TBD)
+- [~] Handle `@deprecated` symbols: blockquote callout (full styled callout TBD)
 - [ ] Handle `@since`: add "Since: vX.X" note
 - [ ] Handle `@see`: add "See also" section with links
-- [ ] Attach anchor comments to each section for merge engine targeting:
-  - [ ] `<!-- ovellum:anchor id="{anchorId}" generated="{timestamp}" -->`
-- [ ] Write unit tests:
-  - [ ] Each symbol type → expected Markdown string (use snapshot-free explicit comparisons)
-  - [ ] Frontmatter correctness
-  - [ ] MDX mode
-  - [ ] Deprecated symbols
-  - [ ] TOC generation
+- [x] Attach anchor comments to each section for merge engine targeting:
+  - [x] `<!-- ovellum:anchor id="{anchorId}" generated="{timestamp}" -->`
+- [~] Write unit tests:
+  - [x] Function rendering smoke test (frontmatter, signature, params, returns, example)
+  - [x] Output path mapping (md + mdx)
+  - [x] Multi-file emission
+  - [ ] Class, interface, type, enum dedicated tests
+  - [ ] MDX mode tests
+  - [ ] Deprecation callout test
+  - [ ] TOC generation tests
+
+> Phase 3 v0 slice (2026-05-13): output is clean for functions/classes/
+> interfaces/types/enums against `examples/simple-ts/`. Deferred: sidebar
+> generation, MDX JSX detection, variable rendering, dedicated callout styling.
 
 ---
 
@@ -178,9 +189,9 @@ Legend: `[ ]` not started · `[~]` in progress · `[x]` done · `[!]` blocked
 - [ ] Implement `MergeResult`:
   ```typescript
   interface MergeResult {
-    content: string;        // Final merged Markdown
+    content: string; // Final merged Markdown
     orphans: OrphanRecord[]; // Blocks that could not be placed
-    warnings: string[];     // Non-fatal issues
+    warnings: string[]; // Non-fatal issues
   }
   ```
 - [ ] Implement `ovellum orphans` subcommand:
@@ -203,13 +214,13 @@ Legend: `[ ]` not started · `[~]` in progress · `[x]` done · `[!]` blocked
 
 ## Phase 6 - CLI (`ovellum`)
 
-- [ ] Install `citty` for CLI framework
-- [ ] Implement `ovellum build`:
-  - [ ] Load config
-  - [ ] Determine mode
-  - [ ] Run appropriate pipeline (auto / manual / hybrid)
-  - [ ] Print summary: N files written, N orphans quarantined, N warnings
-  - [ ] Exit codes: 0 (success), 1 (error), 2 (strict warnings), 3 (config invalid)
+- [x] Install `citty` for CLI framework
+- [~] Implement `ovellum build`:
+  - [x] Load config
+  - [~] Determine mode — accepts `auto`/`hybrid`; `manual` exits with "not implemented" message
+  - [~] Run appropriate pipeline — auto-mode only (parse → generate → write); hybrid degrades to auto (no merger)
+  - [x] Print summary: N sources, N written, N warnings
+  - [x] Exit codes: 0 (success), 1 (error), 3 (config invalid). `--strict` (code 2) deferred until Phase 5 merger lands.
 - [ ] Implement `ovellum watch`:
   - [ ] Install `chokidar`
   - [ ] Watch source files, docs files, config file
@@ -237,10 +248,14 @@ Legend: `[ ]` not started · `[~]` in progress · `[x]` done · `[!]` blocked
   - [ ] Preserve manual-only files
   - [ ] Dry-run mode by default; `--confirm` to actually delete
 - [ ] Add `--strict` global flag
-- [ ] Add `--config <path>` global flag (custom config path)
+- [~] Add `--config <path>` global flag — supported as `build --config <path>` only
 - [ ] Add `--verbose` global flag (debug output)
 - [ ] Write unit tests for CLI argument parsing and exit codes
-- [ ] Wire `bin.ovellum` in `packages/cli/package.json`
+- [x] Wire `bin.ovellum` in `packages/cli/package.json`
+
+> Phase 6 v0 slice (2026-05-13): only `ovellum build` is wired. Run via
+> `pnpm -w run demo` to exercise it against `examples/simple-ts/`. Deferred:
+> watch / check / orphans / init / clean subcommands and the global flags.
 
 ---
 
