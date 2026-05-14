@@ -34,6 +34,7 @@
     "@ovellum/generator": "workspace:*",
     "@ovellum/merger": "workspace:*",
     "@ovellum/parser": "workspace:*",
-    "@ovellum/reader": "workspace:*"
+    "@ovellum/reader": "workspace:*",
+    "citty": "^0.2.2"
   }
 }

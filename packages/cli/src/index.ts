@@ -1,6 +1,14 @@
-// ovellum (CLI)
-// Implementation arrives in Phase 6.
-//
-// The CLI is the user-facing surface: build, watch, check, orphans, init, clean.
-// See docs/internal/DESIGN.md §13 for the command specification.
-export {};
+import { defineCommand, runMain } from 'citty';
+import { buildCommand } from './commands/build.js';
+
+const main = defineCommand({
+  meta: {
+    name: 'ovellum',
+    description: "O'Vellum - documentation tool for TypeScript and JavaScript projects.",
+  },
+  subCommands: {
+    build: buildCommand,
+  },
+});
+
+void runMain(main);
