@@ -1,7 +1,7 @@
 {
   "name": "simple-ts",
   "version": "0.1.0",
-  "mode": "auto",
+  "mode": "hybrid",
   "input": "./src",
   "output": "./docs",
   "defaultFormat": "md"

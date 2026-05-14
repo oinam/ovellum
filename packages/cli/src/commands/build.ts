@@ -1,9 +1,12 @@
+import { existsSync } from 'node:fs';
 import { mkdir, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { defineCommand } from 'citty';
-import { ConfigError, loadOvellumConfig } from '@ovellum/core';
+import { ConfigError, loadOvellumConfig, type OrphanRecord } from '@ovellum/core';
 import { parseProject } from '@ovellum/parser';
 import { generateDocs } from '@ovellum/generator';
+import { readManualDoc } from '@ovellum/reader';
+import { merge, writeOrphan } from '@ovellum/merger';
 
 export const buildCommand = defineCommand({
   meta: {
@@ -39,8 +42,7 @@ export const buildCommand = defineCommand({
     if (config.mode !== 'auto' && config.mode !== 'hybrid') {
       process.stderr.write(
         `'${config.mode}' mode is not implemented yet in this CLI slice. ` +
-          `Only 'auto' (and 'hybrid' as auto) is supported. ` +
-          `See docs/internal/TODO.md Phase 6.\n`,
+          `Only 'auto' and 'hybrid' are supported. See docs/internal/TODO.md Phase 6.\n`,
       );
       process.exit(1);
     }
@@ -49,24 +51,54 @@ export const buildCommand = defineCommand({
     const project = parseProject({ config, cwd });
     const { files, warnings } = generateDocs(project, config);
 
-    for (const [relOut, body] of files) {
+    const orphanRecords: OrphanRecord[] = [];
+    const mergedFiles: string[] = [];
+
+    for (const [relOut, generatedBody] of files) {
       const abs = path.resolve(cwd, relOut);
+      let finalBody = generatedBody;
+
+      if (config.mode === 'hybrid' && existsSync(abs)) {
+        const manualDoc = await readManualDoc(abs);
+        if (manualDoc.protectedBlocks.length > 0) {
+          const result = merge(generatedBody, manualDoc, { sourceFile: relOut });
+          finalBody = result.content;
+          orphanRecords.push(...result.orphans);
+          warnings.push(...result.warnings);
+          mergedFiles.push(relOut);
+        }
+      }
+
       await mkdir(path.dirname(abs), { recursive: true });
-      await writeFile(abs, body, 'utf8');
+      await writeFile(abs, finalBody, 'utf8');
+    }
+
+    const orphanPaths: string[] = [];
+    if (orphanRecords.length > 0) {
+      const orphanDir = path.resolve(cwd, config.protect.orphanDir);
+      for (const record of orphanRecords) {
+        const archivePath = await writeOrphan(record, orphanDir);
+        orphanPaths.push(path.relative(cwd, archivePath));
+      }
     }
 
     const elapsed = Date.now() - startedAt;
-    process.stdout.write(
-      [
-        `ovellum build complete in ${elapsed}ms`,
-        `  config:    ${configFile ?? '(defaults)'}`,
-        `  mode:      ${config.mode}`,
-        `  sources:   ${project.files.length}`,
-        `  written:   ${files.size} file(s)`,
-        `  warnings:  ${warnings.length}`,
-        ...Array.from(files.keys()).map((f) => `    → ${f}`),
-      ].join('\n') + '\n',
-    );
+    const lines = [
+      `ovellum build complete in ${elapsed}ms`,
+      `  config:    ${configFile ?? '(defaults)'}`,
+      `  mode:      ${config.mode}`,
+      `  sources:   ${project.files.length}`,
+      `  written:   ${files.size} file(s)`,
+      `  merged:    ${mergedFiles.length} file(s)`,
+      `  orphans:   ${orphanRecords.length}`,
+      `  warnings:  ${warnings.length}`,
+      ...Array.from(files.keys()).map((f) => `    → ${f}`),
+    ];
+    if (orphanPaths.length > 0) {
+      lines.push('  quarantined:');
+      lines.push(...orphanPaths.map((p) => `    ↪ ${p}`));
+    }
+    process.stdout.write(lines.join('\n') + '\n');
 
     for (const w of warnings) process.stderr.write(`warning: ${w}\n`);
   },
