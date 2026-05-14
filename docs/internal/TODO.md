@@ -1,7 +1,7 @@
 # TODO
 
 Living checklist. Update in place as work progresses.
-Last updated: 2026-05-13
+Last updated: 2026-05-13 (Phase 1 done)
 
 Legend: `[ ]` not started · `[~]` in progress · `[x]` done · `[!]` blocked
 
@@ -36,19 +36,29 @@ Legend: `[ ]` not started · `[~]` in progress · `[x]` done · `[!]` blocked
 
 ## Phase 1 - Core Types & Config (`@ovellum/core`)
 
-- [ ] Define all IR types (`DocNode`, `DocFile`, `DocProject`, `DocParam`, `DocReturn`) - see DESIGN.md §6
-- [ ] Define `OvellumConfig` type with full schema - see DESIGN.md §7
-- [ ] Define `ProtectedBlock` and `ManualDoc` types for merger
-- [ ] Define `OrphanRecord` type (metadata stored in quarantine files)
-- [ ] Implement `defineConfig()` helper (re-exports user config with type safety)
-- [ ] Implement config loader using `c12`
-  - [ ] Load `ovellum.config.ts` / `.js` / `.json` from project root
-  - [ ] Support per-directory config merging (child wins on conflict)
-  - [ ] Support frontmatter `ovellum:` block as per-file override
-  - [ ] Validate config against schema; throw descriptive errors on invalid input
-  - [ ] Apply defaults for all optional fields
-- [ ] Export `OvellumError` base class for typed error handling
-- [ ] Write unit tests for config loader (valid config, invalid config, defaults, merge)
+- [x] Define all IR types (`DocNode`, `DocFile`, `DocProject`, `DocParam`, `DocReturn`) - see DESIGN.md §6
+- [x] Define `OvellumConfig` type with full schema - see DESIGN.md §7
+- [x] Define `ProtectedBlock` and `ManualDoc` types for merger
+- [x] Define `OrphanRecord` type (metadata stored in quarantine files)
+- [x] Implement `defineConfig()` helper (re-exports user config with type safety)
+- [x] Implement config loader using `c12`
+  - [x] Load `ovellum.config.ts` / `.js` / `.json` from project root
+  - [x] Support per-directory config merging (child wins on conflict)
+  - [x] Support frontmatter `ovellum:` block as per-file override
+  - [x] Validate config against schema; throw descriptive errors on invalid input
+  - [x] Apply defaults for all optional fields
+- [x] Export `OvellumError` base class for typed error handling
+- [x] Write unit tests for config loader (valid config, invalid config, defaults, merge)
+
+> Phase 0 build note (encountered during Phase 1): tsup's `dts: true` rolls up
+> declarations using its own pipeline and chokes on `composite: true` projects
+> with multi-file imports (TS6307 "not listed within the file list of project").
+> Resolved for `@ovellum/core` by switching its build to `tsup && tsc -b --force`
+> with `emitDeclarationOnly: true` and `tsBuildInfoFile: "./dist/.tsbuildinfo"`.
+> The `--force` flag is required because tsup's `clean: true` wipes the
+> tsbuildinfo mid-build, leaving tsc unable to tell what changed. Other packages
+> still ship the stock `tsup` build and will need the same change when they grow
+> beyond a single source file.
 
 ---
 
