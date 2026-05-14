@@ -1,4 +1,5 @@
-// @ovellum/generator
-// Renders O'Vellum intermediate representation into Markdown / MDX.
-// Implementation arrives in Phase 3.
-export {};
+export { generateDocs } from './generate.js';
+export type { GenerateResult } from './generate.js';
+export { outputPathFor } from './path.js';
+export { buildFrontmatter } from './frontmatter.js';
+export { renderNode } from './templates.js';
