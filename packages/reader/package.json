@@ -25,6 +25,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@ovellum/core": "workspace:*"
+    "@ovellum/core": "workspace:*",
+    "gray-matter": "^4.0.3"
   }
 }
