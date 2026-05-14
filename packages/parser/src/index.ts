@@ -1,4 +1,2 @@
-// @ovellum/parser
-// TypeScript/JavaScript AST to O'Vellum intermediate representation.
-// Implementation arrives in Phase 2.
-export {};
+export { parseProject, anchorId, MODULE_SYMBOL } from './parse.js';
+export type { ParseOptions } from './parse.js';
