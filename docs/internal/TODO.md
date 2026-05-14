@@ -1,7 +1,7 @@
 # TODO
 
 Living checklist. Update in place as work progresses.
-Last updated: 2026-05-13 (Phase 1 done; Phase 2/3/6 partial v0 slice for demo)
+Last updated: 2026-05-14 (Phase 4/5 v0 slice landed; hybrid merge + orphan quarantine working end-to-end)
 
 Legend: `[ ]` not started · `[~]` in progress · `[x]` done · `[!]` blocked
 
@@ -148,67 +148,70 @@ Legend: `[ ]` not started · `[~]` in progress · `[x]` done · `[!]` blocked
 
 ## Phase 4 - Manual Doc Reader (`@ovellum/reader`)
 
-- [ ] Install `unified`, `remark`, `remark-parse`, `remark-stringify`, `gray-matter`, `remark-mdx`
-- [ ] Implement file reader: accepts a file path, returns `ManualDoc`
-- [ ] Implement frontmatter extractor (using `gray-matter`)
-- [ ] Implement protected zone extractor:
-  - [ ] Find all `<!-- @manual:start -->` / `<!-- @manual:end -->` pairs
-  - [ ] Extract `id` attribute if present; generate positional fallback if not (warn when fallback used)
-  - [ ] Store: `{ id, content: string, startLine, endLine }`
-  - [ ] Detect and error on unclosed tags
-  - [ ] Detect and error on nested tags
-- [ ] Implement anchor association: map each protected block to the nearest preceding `<!-- ovellum:anchor id="..." -->` comment
+- [~] Install `unified`, `remark`, `remark-parse`, `remark-stringify`, `gray-matter`, `remark-mdx` — only `gray-matter` installed; regex was enough for tag extraction. Pull in the remark stack when validation mode lands.
+- [x] Implement file reader: accepts a file path, returns `ManualDoc`
+- [x] Implement frontmatter extractor (using `gray-matter`)
+- [~] Implement protected zone extractor:
+  - [x] Find all `<!-- @manual:start -->` / `<!-- @manual:end -->` pairs
+  - [x] Extract `id` attribute if present; generate positional fallback if not
+  - [ ] Warn when positional fallback used (silent today)
+  - [x] Store: `{ id, content: string, startLine, endLine, anchorId? }`
+  - [x] Detect and error on unclosed tags
+  - [x] Detect and error on nested tags
+- [x] Implement anchor association: map each protected block to the nearest preceding `<!-- ovellum:anchor id="..." -->` comment
 - [ ] Validate mode: in `manual` mode only, also run:
   - [ ] Internal link checker (relative `[text](./path.md)` links that resolve to nothing)
   - [ ] Missing required frontmatter fields (configurable list)
   - [ ] Malformed protected zone tags
-- [ ] Return `ManualDoc` with full protected zone map
-- [ ] Write unit tests:
-  - [ ] Protected zone extraction (with ID, without ID)
-  - [ ] Unclosed tag error
-  - [ ] Nested tag error
-  - [ ] Frontmatter parsing
-  - [ ] Anchor association
-  - [ ] Link validation (manual mode)
+- [x] Return `ManualDoc` with full protected zone map
+- [~] Write unit tests:
+  - [x] Protected zone extraction (with ID, without ID)
+  - [x] Unclosed tag error
+  - [x] Nested tag error + stray `@manual:end`
+  - [x] Frontmatter parsing
+  - [x] Anchor association (single + multiple)
+  - [ ] Link validation (manual mode) — deferred with validation mode
+
+> Phase 4 v0 slice (2026-05-14): reader handles enough of the spec to feed
+> the merger. Validation mode (link checking, required frontmatter fields)
+> and the warning on positional-fallback IDs are deferred.
 
 ---
 
 ## Phase 5 - Merge Engine (`@ovellum/merger`)
 
-- [ ] Implement `merge(generated: string, manual: ManualDoc): MergeResult`
-- [ ] Parse generated content into sections keyed by anchor ID
-- [ ] For each anchor section:
-  - [ ] Look up anchor ID in `manual.protectedBlocks`
-  - [ ] If found: splice protected block content into generated section at correct position
-  - [ ] Mark block as "placed"
-- [ ] Collect unplaced protected blocks → these are orphans
-- [ ] Implement orphan handler:
-  - [ ] Write `OrphanRecord` to `.ovellum/orphans/{YYYY-MM-DD}_{anchorId}.md`
-  - [ ] Include full metadata header (source file, anchor ID, last seen timestamp, block ID)
-  - [ ] Collect all orphan paths → return in `MergeResult.orphans[]`
-- [ ] Implement `MergeResult`:
-  ```typescript
-  interface MergeResult {
-    content: string; // Final merged Markdown
-    orphans: OrphanRecord[]; // Blocks that could not be placed
-    warnings: string[]; // Non-fatal issues
-  }
-  ```
-- [ ] Implement `ovellum orphans` subcommand:
-  - [ ] List all files in `.ovellum/orphans/` with metadata
-  - [ ] `--stale` flag: filter to orphans older than `orphanRetention` days
-  - [ ] Interactive mode: reattach / delete / skip (use `@inquirer/prompts`)
+- [x] Implement `merge(generated: string, manual: ManualDoc): MergeResult`
+- [x] Parse generated content into sections keyed by anchor ID
+- [x] For each anchor section:
+  - [x] Look up anchor ID in `manual.protectedBlocks`
+  - [x] If found: splice protected block at the end of the anchor's section (right before the next heading)
+  - [x] Mark block as "placed"
+- [x] Collect unplaced protected blocks → these are orphans
+- [x] Implement orphan handler:
+  - [x] Write `OrphanRecord` to `.ovellum/orphans/{YYYY-MM-DD}_{anchorId}.md`
+  - [x] Include full metadata header (source file, anchor ID, manual block ID)
+  - [ ] Anchor last-seen timestamp (deferred — needs a persisted IR history store)
+  - [x] Collect all orphan paths → returned via CLI summary; `MergeResult.orphans[]` carries the records
+- [x] Implement `MergeResult` with `content`, `orphans`, `warnings`
+- [ ] Implement `ovellum orphans` subcommand (Phase 6 still has it open)
 - [ ] Handle `@preserve`-tagged source symbols:
   - [ ] Generator emits protected zone wrappers around `@preserve` content automatically
   - [ ] Merger treats them identically to `<!-- @manual:start -->` blocks
-- [ ] Write unit tests:
-  - [ ] Protected block survives regeneration
-  - [ ] Protected block without ID (positional fallback)
-  - [ ] Orphan is quarantined when anchor disappears
-  - [ ] Orphan file has correct metadata
-  - [ ] Multiple protected blocks per file
-  - [ ] Merge output is valid Markdown
+  - Note: the IR already carries `isPreserved`; just needs generator wiring
+- [~] Write unit tests:
+  - [x] Protected block survives regeneration
+  - [ ] Protected block without ID (positional fallback) — needs dedicated test
+  - [x] Orphan is quarantined when anchor disappears
+  - [x] Orphan file has correct metadata
+  - [x] Multiple protected blocks per file (same anchor)
+  - [ ] Merge output validated as Markdown (dedicated test deferred)
 - [ ] Write integration tests (fixture-based - see Phase 7)
+
+> Phase 5 v0 slice (2026-05-14): the merger handles the canonical case end
+> to end — manual block survives regeneration, orphans are quarantined to
+> `.ovellum/orphans/` with full metadata. Deferred: `ovellum orphans`
+> subcommand, `@preserve`-driven auto-wrapping in the generator, anchor
+> last-seen tracking.
 
 ---
 
@@ -218,9 +221,9 @@ Legend: `[ ]` not started · `[~]` in progress · `[x]` done · `[!]` blocked
 - [~] Implement `ovellum build`:
   - [x] Load config
   - [~] Determine mode — accepts `auto`/`hybrid`; `manual` exits with "not implemented" message
-  - [~] Run appropriate pipeline — auto-mode only (parse → generate → write); hybrid degrades to auto (no merger)
-  - [x] Print summary: N sources, N written, N warnings
-  - [x] Exit codes: 0 (success), 1 (error), 3 (config invalid). `--strict` (code 2) deferred until Phase 5 merger lands.
+  - [x] Run appropriate pipeline — auto: parse → generate → write; hybrid: also reads existing output via @ovellum/reader, runs @ovellum/merger, writes orphans to `.ovellum/orphans/`
+  - [x] Print summary: N sources, N written, N merged, N orphans, N warnings, quarantine paths
+  - [x] Exit codes: 0 (success), 1 (error), 3 (config invalid). `--strict` (code 2) still deferred.
 - [ ] Implement `ovellum watch`:
   - [ ] Install `chokidar`
   - [ ] Watch source files, docs files, config file
