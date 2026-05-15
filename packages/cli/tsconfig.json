@@ -14,6 +14,7 @@
     { "path": "../parser" },
     { "path": "../generator" },
     { "path": "../reader" },
-    { "path": "../merger" }
+    { "path": "../merger" },
+    { "path": "../site" }
   ]
 }
