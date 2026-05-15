@@ -1,7 +1,12 @@
 # TODO
 
-Living checklist. Update in place as work progresses.
-Last updated: 2026-05-14 (Phase 4/5 v0 slice landed; hybrid merge + orphan quarantine working end-to-end)
+Living checklist for code / automation work. Update in place as work progresses.
+Last updated: 2026-05-15 (renamed root package to `ovellum`; brand sweep to `Ovellum`; split human-only items into [`TODO-Human.md`](./TODO-Human.md))
+
+> Manual items — prose, decisions, releases, things only a human can do —
+> live in [`TODO-Human.md`](./TODO-Human.md). When in doubt: if the work
+> needs `git`, `pnpm`, or a code edit, it belongs here; if it needs a brain,
+> an account, or a real-world action, it goes there.
 
 Legend: `[ ]` not started · `[~]` in progress · `[x]` done · `[!]` blocked
 
@@ -284,33 +289,29 @@ Legend: `[ ]` not started · `[~]` in progress · `[x]` done · `[!]` blocked
 
 ## Phase 8 - Documentation & Self-Hosting
 
-- [ ] Write `README.md` (final): overview, install, quickstart, config reference, tagging guide
-- [ ] Write `CONTRIBUTING.md` (final): dev setup, test instructions, PR process, release process
-- [ ] Write `docs/` using O'Vellum itself (hybrid mode, self-documenting)
-  - [ ] `docs/getting-started.md` (manual)
-  - [ ] `docs/config.md` (manual)
-  - [ ] `docs/tagging.md` (manual - the tagging spec)
-  - [ ] `docs/api/` (auto-generated from `packages/*/src/`)
-  - [ ] `docs/orphans.md` (manual - how to handle orphaned sections)
-  - [ ] `docs/contributing.md` (manual)
-- [ ] Verify `ovellum build` on itself produces clean output
-- [ ] Add badge: CI status, npm version, license, coverage
+Code-side scaffolding for self-hosting. The actual prose authorship for
+`README.md`, `CONTRIBUTING.md`, and the `docs/*.md` pages lives in
+[`TODO-Human.md`](./TODO-Human.md).
+
+- [ ] Wire `ovellum build` against the repo itself: root `ovellum.config.ts` pointing at `packages/*/src/`, output to `docs/api/`
+- [ ] Verify `ovellum build` on itself produces clean output (CI step)
+- [ ] Once `docs/api/` generates cleanly, link it from `docs/getting-started.md`
+      (the manual page lands via `TODO-Human.md`)
 
 ---
 
 ## Phase 9 - Pre-release Polish
+
+Automated polish only. Manual smoke-tests, release notes, npm publish, and
+announcements are in [`TODO-Human.md`](./TODO-Human.md).
 
 - [ ] Full lint pass across all packages
 - [ ] Full typecheck with `--strict` across all packages
 - [ ] Coverage report: all packages at 90%+ line coverage
 - [ ] Run `ovellum check --strict` on own docs (exit 0)
 - [ ] Review all `TODO`, `FIXME`, `HACK` comments in source - resolve or track as issues
-- [ ] Run `npm pack` on CLI package - verify contents look correct
-- [ ] Test `npx ovellum init` on a fresh TypeScript project (manual end-to-end)
-- [ ] Test `npx ovellum build` in `auto`, `manual`, and `hybrid` modes on the examples/ projects
-- [ ] Write GitHub release notes for v0.1.0
-- [ ] Publish to npm as `0.1.0` (pre-release tag: `next`)
-- [ ] Announce in relevant communities (note: open source launch strategy TBD)
+- [ ] Run `npm pack` on CLI package locally - verify contents look correct (automated check; the live `npx`-from-tarball smoke test is in TODO-Human)
+- [ ] Add an `examples/` integration job that runs `ovellum build` in `auto` and `hybrid` modes and diffs against expected output
 
 ---
 
@@ -332,8 +333,9 @@ Legend: `[ ]` not started · `[~]` in progress · `[x]` done · `[!]` blocked
 
 ## Open Questions
 
+Code-affecting design questions. Product decisions that block specific
+tickets here (clean behavior, watch reload, `@preserve` semantics,
+output-in-VCS default) live in [`TODO-Human.md`](./TODO-Human.md) under
+"Product decisions". This section will reflect their outcomes once decided.
+
 - [x] Confirm npm package name availability before Phase 0 is done
-- [ ] Decide: should `ovellum clean` touch `.ovellum/orphans/`? (Probably not without explicit flag)
-- [ ] Decide: should watch mode reload config on `ovellum.config.*` change, or require restart? (Lean: restart with message)
-- [ ] Decide: what does `@preserve` on a class do - protect the whole class section, or just the class-level comment? (Lean: just the class-level comment block; individual method sections are independent)
-- [ ] Decide: should generated output files be committed to version control or gitignored? (Lean: committed, so PRs show doc diffs - but make it configurable)
