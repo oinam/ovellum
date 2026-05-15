@@ -2,7 +2,7 @@
   "name": "@ovellum/generator",
   "version": "0.0.0",
   "private": true,
-  "description": "Renders O'Vellum intermediate representation into Markdown / MDX.",
+  "description": "Renders Ovellum intermediate representation into Markdown / MDX.",
   "license": "MIT",
   "type": "module",
   "main": "./dist/index.cjs",

@@ -2,7 +2,7 @@
   "name": "@ovellum/core",
   "version": "0.0.0",
   "private": true,
-  "description": "Shared types, IR definitions, and utilities for O'Vellum.",
+  "description": "Shared types, IR definitions, and utilities for Ovellum.",
   "license": "MIT",
   "type": "module",
   "main": "./dist/index.cjs",

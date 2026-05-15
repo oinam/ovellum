@@ -148,7 +148,7 @@ vite.config.ts.timestamp-*
 # Turborepo
 .turbo/
 
-# O'Vellum runtime: ignore cache, but keep the orphan archive in version control.
+# Ovellum runtime: ignore cache, but keep the orphan archive in version control.
 .ovellum/
 !.ovellum/orphans/
 !.ovellum/orphans/**

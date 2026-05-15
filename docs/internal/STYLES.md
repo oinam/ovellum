@@ -1,6 +1,6 @@
-# O'Vellum - Style System
+# STYLES
 
-Design tokens and rendering conventions for any UI surface O'Vellum produces or ships - the CLI output's color blocks, the eventual self-hosted docs site, and any future renderer. Every value lives in CSS custom properties so themes swap without rebuilds.
+Design tokens and rendering conventions for any UI surface Ovellum produces or ships - the CLI output's color blocks, the eventual self-hosted docs site, and any future renderer. Every value lives in CSS custom properties so themes swap without rebuilds.
 
 This document is the single source of truth for color, type, spacing, and rhythm. If a value isn't here, it shouldn't be in the codebase as a literal.
 
@@ -529,7 +529,7 @@ Define only when a component needs to deviate. Default each to a Tier 2 token:
 
 ```css
 :root {
-  /* O'Vellum-specific */
+  /* Ovellum-specific */
   --ovellum-anchor-bg: var(--color-info-bg);
   --ovellum-anchor-fg: var(--color-info-fg);
   --ovellum-orphan-bg: var(--color-warning-bg);

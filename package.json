@@ -1,8 +1,8 @@
 {
-  "name": "ovellum-monorepo",
+  "name": "ovellum",
   "private": true,
   "version": "0.0.0",
-  "description": "O'Vellum monorepo root - not published.",
+  "description": "Ovellum monorepo root - not published.",
   "type": "module",
   "license": "MIT",
   "packageManager": "pnpm@10.0.0",

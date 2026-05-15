@@ -1,10 +1,10 @@
-# O’Vellum - Design & Architecture
+# DESIGN
 
 ## 1. Vision & Philosophy
 
-O’Vellum is a documentation tool for TypeScript and JavaScript projects that treats documentation as a living, collaborative artifact - not a one-time export or a separate parallel universe.
+Ovellum is a documentation tool for TypeScript and JavaScript projects that treats documentation as a living, collaborative artifact - not a one-time export or a separate parallel universe.
 
-Most documentation tools force a choice: either you auto-generate from code (and lose narrative voice), or you hand-write everything (and it drifts from reality). O’Vellum refuses that tradeoff and lets auto-generated content and manually written content live in the same file, governed by a tagging contract that both the tool and the human author respect.
+Most documentation tools force a choice: either you auto-generate from code (and lose narrative voice), or you hand-write everything (and it drifts from reality). Ovellum refuses that tradeoff and lets auto-generated content and manually written content live in the same file, governed by a tagging contract that both the tool and the human author respect.
 
 **Core principles:**
 
@@ -19,12 +19,15 @@ Most documentation tools force a choice: either you auto-generate from code (and
 ## 2. Modes
 
 ### `hybrid` (default)
+
 Auto-generates documentation from TypeScript/JavaScript source, then merges it with existing Markdown files. Protected zones (tagged by the author) survive regeneration intact. Untagged content in existing docs is treated as previously auto-generated and may be replaced.
 
 ### `manual`
+
 The tool acts as a static documentation site builder only. It reads `.md` and `.mdx` files, validates structure, and renders output. No source parsing occurs. Equivalent to Retype or Docsify in behavior.
 
 ### `auto`
+
 Full auto-generation from source with no manual content layer. Existing docs are fully replaced on each run. No merge engine involved. Equivalent to TypeDoc in behavior.
 
 Mode can be set globally in config or overridden per-directory or per-file via frontmatter.
@@ -87,7 +90,7 @@ ovellum/
 │   ├── integration/        # End-to-end fixture-based tests
 │   └── fixtures/           # Sample TS/JS projects + expected outputs
 │
-├── docs/                   # Self-hosted: O’Vellum documents itself
+├── docs/                   # Self-hosted: Ovellum documents itself
 │   └── internal/           # Planning documents (DESIGN.md, TODO.md)
 ├── examples/               # Example projects (simple-ts, api-server, mixed)
 │
@@ -106,23 +109,24 @@ All packages are internal (`@ovellum/core`, `@ovellum/parser`, etc.) except `ove
 
 ## 5. Tech Stack
 
-| Concern | Choice | Reason |
-|---|---|---|
-| Language | TypeScript 5.x | Throughout; strict mode always on |
-| Monorepo | pnpm workspaces + Turborepo | Fast, cache-aware builds; industry standard |
-| AST Parsing | `ts-morph` | Friendly wrapper over TS compiler API; full type information |
-| Markdown | `unified` + `remark` ecosystem | Best-in-class; composable; powers MDX |
-| MDX | `remark-mdx` | Extends remark; keeps the pipeline unified |
-| Config | `c12` (unjs) | Supports `.ts` config files; env merging; sane defaults |
-| CLI | `citty` (unjs) | Lightweight; TypeScript-native; no magic |
-| Testing | `vitest` | Fast; ESM-native; compatible with the TS stack |
-| Linting | `eslint` + `@typescript-eslint` | Standard; extendable |
-| Formatting | `prettier` | Non-negotiable for open source; format on commit |
-| Build | `tsup` | Zero-config; outputs CJS + ESM |
-| Releases | `changesets` | Changelog generation + versioning for monorepos |
-| CI | GitHub Actions | Standard for open source |
+| Concern     | Choice                          | Reason                                                       |
+| ----------- | ------------------------------- | ------------------------------------------------------------ |
+| Language    | TypeScript 5.x                  | Throughout; strict mode always on                            |
+| Monorepo    | pnpm workspaces + Turborepo     | Fast, cache-aware builds; industry standard                  |
+| AST Parsing | `ts-morph`                      | Friendly wrapper over TS compiler API; full type information |
+| Markdown    | `unified` + `remark` ecosystem  | Best-in-class; composable; powers MDX                        |
+| MDX         | `remark-mdx`                    | Extends remark; keeps the pipeline unified                   |
+| Config      | `c12` (unjs)                    | Supports `.ts` config files; env merging; sane defaults      |
+| CLI         | `citty` (unjs)                  | Lightweight; TypeScript-native; no magic                     |
+| Testing     | `vitest`                        | Fast; ESM-native; compatible with the TS stack               |
+| Linting     | `eslint` + `@typescript-eslint` | Standard; extendable                                         |
+| Formatting  | `prettier`                      | Non-negotiable for open source; format on commit             |
+| Build       | `tsup`                          | Zero-config; outputs CJS + ESM                               |
+| Releases    | `changesets`                    | Changelog generation + versioning for monorepos              |
+| CI          | GitHub Actions                  | Standard for open source                                     |
 
 **Intentionally NOT included in v1:**
+
 - A renderer / static site engine (hosting platform is future scope)
 - Multi-language support (Python, Go, Rust, etc.)
 - GUI / web dashboard
@@ -161,29 +165,29 @@ export interface DocReturn {
 }
 
 export interface DocNode {
-  id: string;              // Stable anchor ID: "src/utils/format.ts::formatDate"
+  id: string; // Stable anchor ID: "src/utils/format.ts::formatDate"
   kind: DocKind;
   name: string;
-  filePath: string;        // Relative to project root
+  filePath: string; // Relative to project root
   line: number;
-  signature: string;       // Full type signature as string
-  description?: string;    // From JSDoc/TSDoc @description or leading comment
+  signature: string; // Full type signature as string
+  description?: string; // From JSDoc/TSDoc @description or leading comment
   params?: DocParam[];
   returns?: DocReturn;
-  throws?: string[];       // From @throws
-  examples?: string[];     // From @example
-  deprecated?: string;     // From @deprecated
-  since?: string;          // From @since
+  throws?: string[]; // From @throws
+  examples?: string[]; // From @example
+  deprecated?: string; // From @deprecated
+  since?: string; // From @since
   tags: Record<string, string>; // Any additional JSDoc tags
   isExported: boolean;
-  isInternal: boolean;     // @internal tag
-  children?: DocNode[];    // For classes: methods + properties
+  isInternal: boolean; // @internal tag
+  children?: DocNode[]; // For classes: methods + properties
 }
 
 export interface DocFile {
   filePath: string;
-  moduleName?: string;     // From @module tag
-  description?: string;    // Module-level comment
+  moduleName?: string; // From @module tag
+  description?: string; // Module-level comment
   nodes: DocNode[];
 }
 
@@ -191,7 +195,7 @@ export interface DocProject {
   name: string;
   version: string;
   files: DocFile[];
-  generatedAt: string;     // ISO timestamp
+  generatedAt: string; // ISO timestamp
 }
 ```
 
@@ -208,38 +212,32 @@ import { defineConfig } from 'ovellum';
 
 export default defineConfig({
   // Project identity
-  name: 'My Project',          // Defaults to package.json name
-  version: 'auto',             // 'auto' reads from package.json
+  name: 'My Project', // Defaults to package.json name
+  version: 'auto', // 'auto' reads from package.json
 
   // Mode
-  mode: 'hybrid',              // 'hybrid' | 'manual' | 'auto'
+  mode: 'hybrid', // 'hybrid' | 'manual' | 'auto'
 
   // Source (used in 'auto' and 'hybrid' modes)
-  input: './src',              // Source directory to parse
+  input: './src', // Source directory to parse
   include: ['**/*.ts', '**/*.tsx', '**/*.js', '**/*.jsx'],
-  exclude: [
-    'node_modules',
-    'dist',
-    '**/*.test.*',
-    '**/*.spec.*',
-    '**/*.d.ts',
-  ],
-  includeInternal: false,      // Whether to document @internal symbols
-  includePrivate: false,       // Whether to document private class members
+  exclude: ['node_modules', 'dist', '**/*.test.*', '**/*.spec.*', '**/*.d.ts'],
+  includeInternal: false, // Whether to document @internal symbols
+  includePrivate: false, // Whether to document private class members
 
   // Output
-  output: './docs',            // Where docs are written
+  output: './docs', // Where docs are written
 
   // Format
-  defaultFormat: 'md',        // 'md' | 'mdx'
+  defaultFormat: 'md', // 'md' | 'mdx'
 
   // Protect (used in 'hybrid' mode)
   protect: {
-    blockTag: '@manual',       // Tag used in Markdown: <!-- @manual:start -->
-    inlineTag: '@preserve',    // Tag used in source JSDoc: @preserve
+    blockTag: '@manual', // Tag used in Markdown: <!-- @manual:start -->
+    inlineTag: '@preserve', // Tag used in source JSDoc: @preserve
     orphanStrategy: 'quarantine', // 'quarantine' | 'warn' (future: 'delete')
     orphanDir: '.ovellum/orphans',
-    orphanRetention: 90,       // Days before archived orphans are flagged for cleanup
+    orphanRetention: 90, // Days before archived orphans are flagged for cleanup
   },
 
   // Hooks (future: plugin system foundation)
@@ -266,17 +264,20 @@ ovellum:
 
 ```markdown
 <!-- @manual:start id="intro-paragraph" -->
+
 This paragraph was written by a human. The auto-documentor
 will not overwrite or remove this content on regeneration.
+
 <!-- @manual:end -->
 ```
 
 Rules:
-- The `id` attribute is optional but strongly recommended. Without it, O’Vellum generates a positional ID that is fragile (e.g., `manual-block-3`).
+
+- The `id` attribute is optional but strongly recommended. Without it, Ovellum generates a positional ID that is fragile (e.g., `manual-block-3`).
 - With an explicit `id`, the block survives file restructuring as long as the anchor symbol still exists.
 - Blocks can appear anywhere in a `.md` or `.mdx` file.
 - Nested blocks are not supported and will produce a warning.
-- Content between tags is treated as opaque - O’Vellum does not parse or validate it.
+- Content between tags is treated as opaque - Ovellum does not parse or validate it.
 
 ### 8.2 In TypeScript/JavaScript Source (Inline Protection)
 
@@ -297,9 +298,10 @@ export function formatDate(date: Date, format: string): string { ... }
 ```
 
 Rules:
+
 - `@preserve` applies to the entire JSDoc block, not just what follows it.
 - When `@preserve` is present, the full JSDoc comment block is treated as manually managed.
-- O’Vellum will still read the comment to build the IR (for type signatures, params, etc.), but will not overwrite the doc comment in the source or in the generated output.
+- Ovellum will still read the comment to build the IR (for type signatures, params, etc.), but will not overwrite the doc comment in the source or in the generated output.
 - The generated Markdown will include a fenced zone wrapping the content from `@preserve` to the end of the JSDoc, protected from future regeneration.
 
 ### 8.3 Anchor IDs and Stability
@@ -311,11 +313,12 @@ Every protected block is associated with an anchor - the documentation symbol it
 ```
 
 Examples:
+
 - `src/utils/format.ts::formatDate`
 - `src/models/User.ts::User.constructor`
-- `src/index.ts::__module__`  (for module-level comments)
+- `src/index.ts::__module__` (for module-level comments)
 
-When an anchor disappears (function deleted, renamed without redirect), O’Vellum quarantines the protected block. See Section 9.
+When an anchor disappears (function deleted, renamed without redirect), Ovellum quarantines the protected block. See Section 9.
 
 ---
 
@@ -358,7 +361,7 @@ manual_block_id: intro-paragraph
 [original protected content here]
 ```
 
-2. O’Vellum prints a warning on stdout:
+2. Ovellum prints a warning on stdout:
 
 ```
 ⚠  3 orphaned manual section(s) detected.
@@ -377,8 +380,9 @@ manual_block_id: intro-paragraph
 
 ### 9.3 Conflict Detection
 
-O’Vellum does not attempt three-way merges. The contract is:
-- Auto-generated content → owned by O’Vellum, replaced freely
+Ovellum does not attempt three-way merges. The contract is:
+
+- Auto-generated content → owned by Ovellum, replaced freely
 - Protected zones → owned by the human, never touched
 
 There is no middle ground that creates merge conflicts. This is a deliberate simplicity decision.
@@ -391,15 +395,15 @@ Built on `ts-morph`, which exposes the full TypeScript compiler API with a frien
 
 ### 10.1 What is extracted
 
-| Symbol | Extracted info |
-|---|---|
-| `function` | Name, params (name, type, optional, default), return type, JSDoc, generics, overloads |
-| `class` | Name, constructor, methods, properties, implements, extends, JSDoc |
-| `interface` | Name, members (properties, methods, index signatures), extends, JSDoc |
-| `type` | Name, definition, JSDoc |
-| `enum` | Name, members (name + value), JSDoc |
-| `const` / `let` / `var` | Name, type, JSDoc (exported only, unless includeInternal) |
-| Module-level | File-level JSDoc comment block (`/** @module ... */`) |
+| Symbol                  | Extracted info                                                                        |
+| ----------------------- | ------------------------------------------------------------------------------------- |
+| `function`              | Name, params (name, type, optional, default), return type, JSDoc, generics, overloads |
+| `class`                 | Name, constructor, methods, properties, implements, extends, JSDoc                    |
+| `interface`             | Name, members (properties, methods, index signatures), extends, JSDoc                 |
+| `type`                  | Name, definition, JSDoc                                                               |
+| `enum`                  | Name, members (name + value), JSDoc                                                   |
+| `const` / `let` / `var` | Name, type, JSDoc (exported only, unless includeInternal)                             |
+| Module-level            | File-level JSDoc comment block (`/** @module ... */`)                                 |
 
 ### 10.2 What is NOT extracted (v1)
 
@@ -448,20 +452,21 @@ A `docs/_sidebar.md` (or `_index.md`) is generated as a table of contents. Struc
 
 ### 11.2 Per-symbol Markdown template
 
-```markdown
+````markdown
 ## `formatDate`
 
 ```typescript
-function formatDate(date: Date, format: string): string
+function formatDate(date: Date, format: string): string;
 ```
+````
 
 Formats a date string into a human-readable format.
 
 **Parameters**
 
-| Name | Type | Description |
-|---|---|---|
-| `date` | `Date` | The date to format |
+| Name     | Type     | Description          |
+| -------- | -------- | -------------------- |
+| `date`   | `Date`   | The date to format   |
 | `format` | `string` | Output format string |
 
 **Returns** `string`
@@ -469,9 +474,10 @@ Formats a date string into a human-readable format.
 **Example**
 
 ```typescript
-formatDate(new Date(), 'YYYY-MM-DD') // '2026-05-12'
+formatDate(new Date(), 'YYYY-MM-DD'); // '2026-05-12'
 ```
-```
+
+````
 
 ### 11.3 MDX output
 
@@ -488,7 +494,7 @@ source: src/utils/format.ts
 generated: 2026-05-12T10:30:00Z
 ovellum: true
 ---
-```
+````
 
 The `ovellum: true` flag allows the reader to identify auto-generated files vs. purely manual ones.
 
@@ -499,6 +505,7 @@ The `ovellum: true` flag allows the reader to identify auto-generated files vs. 
 Reads existing `.md` and `.mdx` files from the output directory. Used by the merge engine in `hybrid` mode, and as the sole input in `manual` mode.
 
 Responsibilities:
+
 - Parse frontmatter (using `gray-matter`)
 - Parse Markdown AST (using `remark`)
 - Locate and extract all `<!-- @manual:start -->` / `<!-- @manual:end -->` blocks
@@ -506,6 +513,7 @@ Responsibilities:
 - Return a `ManualDoc` structure for the merge engine
 
 In `manual` mode, the reader also validates:
+
 - Broken internal links
 - Missing frontmatter fields (configurable)
 - Malformed protected zone tags (unclosed, nested)
@@ -539,12 +547,12 @@ ovellum clean          Remove generated output files (preserves manual files)
 
 ### Exit codes
 
-| Code | Meaning |
-|---|---|
-| `0` | Success |
-| `1` | Build errors (parse failure, write failure) |
-| `2` | Warnings promoted to errors (orphans found, when `--strict`) |
-| `3` | Config invalid |
+| Code | Meaning                                                      |
+| ---- | ------------------------------------------------------------ |
+| `0`  | Success                                                      |
+| `1`  | Build errors (parse failure, write failure)                  |
+| `2`  | Warnings promoted to errors (orphans found, when `--strict`) |
+| `3`  | Config invalid                                               |
 
 ### `--strict` flag
 
@@ -555,6 +563,7 @@ When passed, any warnings (orphaned sections, broken links, missing descriptions
 ## 14. File Watching (`ovellum watch`)
 
 Uses `chokidar` to watch:
+
 - Source files matching `include` patterns (triggers re-parse + re-generate + re-merge)
 - Manual doc files in `output/` (triggers re-merge only, no re-parse)
 - `ovellum.config.*` (triggers full restart)
@@ -569,13 +578,13 @@ Debounce: 300ms. On change, only affected files are rebuilt (incremental). Cache
 
 Every package has its own test suite co-located under `packages/{name}/src/__tests__/`.
 
-| Package | What to test |
-|---|---|
-| `parser` | IR correctness for each symbol type; edge cases (overloads, generics, re-exports, barrel files) |
-| `generator` | Markdown output for each IR node type; frontmatter; MDX flag |
-| `merger` | Protected zone extraction; merge output; orphan detection; ID stability |
-| `reader` | Frontmatter parsing; protected zone detection; broken link detection |
-| `cli` | Argument parsing; exit codes; init flow |
+| Package     | What to test                                                                                    |
+| ----------- | ----------------------------------------------------------------------------------------------- |
+| `parser`    | IR correctness for each symbol type; edge cases (overloads, generics, re-exports, barrel files) |
+| `generator` | Markdown output for each IR node type; frontmatter; MDX flag                                    |
+| `merger`    | Protected zone extraction; merge output; orphan detection; ID stability                         |
+| `reader`    | Frontmatter parsing; protected zone detection; broken link detection                            |
+| `cli`       | Argument parsing; exit codes; init flow                                                         |
 
 ### Integration / fixture tests
 
@@ -593,6 +602,7 @@ tests/fixtures/
 The integration test runner runs `ovellum build` against each fixture and diffs the output against `expected/`. Any diff = test failure.
 
 Fixtures cover:
+
 - Pure auto mode output
 - Pure manual mode pass-through
 - Hybrid: protected zones survive regeneration
@@ -640,6 +650,7 @@ Fixtures cover:
 ### CI pipeline (GitHub Actions)
 
 On every PR:
+
 1. `pnpm install`
 2. `pnpm lint` - ESLint + Prettier check
 3. `pnpm typecheck` - `tsc --noEmit` across all packages
@@ -648,6 +659,7 @@ On every PR:
 6. Coverage report posted as PR comment
 
 On merge to `main`:
+
 1. All of the above
 2. `changesets version` if a changeset is present
 3. `pnpm publish` to npm (after version bump)
@@ -666,7 +678,7 @@ On merge to `main`:
 
 ## 17. Self-Documentation
 
-O’Vellum documents itself. The `docs/` directory in the repo is built using O’Vellum in `hybrid` mode. This serves three purposes:
+Ovellum documents itself. The `docs/` directory in the repo is built using Ovellum in `hybrid` mode. This serves three purposes:
 
 1. Dogfooding - any bugs in the tool surface against the tool's own docs
 2. Demonstration - the repo itself is the best example project
@@ -680,17 +692,17 @@ This means `ovellum.config.ts` at the root points to `packages/` as input and `d
 
 Decisions that were consciously made and should not be revisited without documented reason.
 
-| Decision | Rationale |
-|---|---|
-| No three-way merge | Complexity isn't worth it. The contract (auto-owned vs. human-owned) is simpler and more predictable. |
-| No plugin system in v1 | Design for extensibility; don't build the extension points until there are real use cases. |
-| Orphans committed to version control | Manual writing is valuable. Loss must be visible in PRs, not silently swallowed. |
-| `.md` output, not HTML | The tool is a documentation *generator*, not a renderer. Hosting/rendering is a separate concern. |
-| pnpm over npm/yarn | Strict dependency resolution, good monorepo support, faster. |
-| `ts-morph` over raw TS compiler API | 80% less boilerplate. Full fidelity. Worth the dependency. |
-| `c12` for config | Native `.ts` config support without compilation step. Handles env overrides cleanly. |
-| Single public npm package | Simpler for users. Internal architecture is an implementation detail. |
-| Node 18+ minimum | Fetch API, `--experimental-vm-modules` for vitest, modern ESM. No reason to support older. |
+| Decision                             | Rationale                                                                                             |
+| ------------------------------------ | ----------------------------------------------------------------------------------------------------- |
+| No three-way merge                   | Complexity isn't worth it. The contract (auto-owned vs. human-owned) is simpler and more predictable. |
+| No plugin system in v1               | Design for extensibility; don't build the extension points until there are real use cases.            |
+| Orphans committed to version control | Manual writing is valuable. Loss must be visible in PRs, not silently swallowed.                      |
+| `.md` output, not HTML               | The tool is a documentation _generator_, not a renderer. Hosting/rendering is a separate concern.     |
+| pnpm over npm/yarn                   | Strict dependency resolution, good monorepo support, faster.                                          |
+| `ts-morph` over raw TS compiler API  | 80% less boilerplate. Full fidelity. Worth the dependency.                                            |
+| `c12` for config                     | Native `.ts` config support without compilation step. Handles env overrides cleanly.                  |
+| Single public npm package            | Simpler for users. Internal architecture is an implementation detail.                                 |
+| Node 18+ minimum                     | Fetch API, `--experimental-vm-modules` for vitest, modern ESM. No reason to support older.            |
 
 ---
 

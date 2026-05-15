@@ -1,6 +1,6 @@
-# Contributing to O'Vellum
+# CONTRIBUTING
 
-Thanks for your interest in O'Vellum. This document explains how to set up a development environment, how to propose changes, and how releases work.
+Thanks for your interest in Ovellum. This document explains how to set up a development environment, how to propose changes, and how releases work.
 
 ## Prerequisites
 
@@ -52,7 +52,7 @@ Turborepo caches task outputs, so subsequent runs are fast. Use `pnpm <task> --f
 - TypeScript with `strict: true` everywhere; no `any` unless justified in a comment.
 - ESLint and Prettier are enforced in CI. Run `pnpm format` locally before pushing.
 - Tests live alongside source in `src/__tests__/` for unit tests; integration fixtures live under `tests/fixtures/`.
-- Default to writing no comments. Add one only when the *why* is non-obvious.
+- Default to writing no comments. Add one only when the _why_ is non-obvious.
 
 ## Changesets
 

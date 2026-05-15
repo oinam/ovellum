@@ -1,6 +1,6 @@
 ---
 name: Bug report
-about: Report a bug in O'Vellum
+about: Report a bug in Ovellum
 title: '[bug] '
 labels: bug
 ---
@@ -27,7 +27,7 @@ What actually happened. Include stack traces, CLI output, and screenshots when r
 
 ## Environment
 
-- O'Vellum version:
+- Ovellum version:
 - Node version:
 - Package manager and version:
 - Operating system:

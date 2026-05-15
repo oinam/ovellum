@@ -4,7 +4,7 @@ import { buildCommand } from './commands/build.js';
 const main = defineCommand({
   meta: {
     name: 'ovellum',
-    description: "O'Vellum - documentation tool for TypeScript and JavaScript projects.",
+    description: "Ovellum - documentation tool for TypeScript and JavaScript projects.",
   },
   subCommands: {
     build: buildCommand,

@@ -16,7 +16,7 @@ export interface ParseOptions {
 }
 
 /**
- * Parse a TypeScript/JavaScript project into the O'Vellum IR.
+ * Parse a TypeScript/JavaScript project into the Ovellum IR.
  *
  * Implemented as of Phase 2 (slice): functions, classes (methods+props), interfaces, type
  * aliases, enums. Overloads, namespaces, re-exports, and `declare module` are not yet
