@@ -1,0 +1,481 @@
+/*
+ * Ovellum default site theme — Tier 1 + Tier 2 token snapshot from
+ * docs/internal/STYLES.md. Hand-ported; resync if the source moves.
+ */
+
+:root {
+  /* Tier 1 — neutrals (zinc) */
+  --color-zinc-50: oklch(98.5% 0.001 286.38);
+  --color-zinc-100: oklch(96.7% 0.001 286.38);
+  --color-zinc-200: oklch(92% 0.004 286.32);
+  --color-zinc-300: oklch(87.1% 0.006 286.29);
+  --color-zinc-500: oklch(55.2% 0.016 285.94);
+  --color-zinc-700: oklch(37% 0.013 285.81);
+  --color-zinc-800: oklch(27.4% 0.006 286.03);
+  --color-zinc-900: oklch(21% 0.006 285.89);
+  --color-zinc-950: oklch(14.1% 0.005 285.82);
+
+  /* Tier 1 — accents */
+  --color-blue-50: oklch(97% 0.014 254.6);
+  --color-blue-200: oklch(88.2% 0.059 254.16);
+  --color-blue-300: oklch(80.9% 0.105 251.81);
+  --color-blue-400: oklch(70.7% 0.165 254.62);
+  --color-blue-500: oklch(62.3% 0.214 259.81);
+  --color-blue-600: oklch(54.6% 0.245 262.88);
+  --color-blue-700: oklch(48.8% 0.243 264.38);
+  --color-blue-900: oklch(37.9% 0.146 265.52);
+
+  /* Tier 2 — semantic (default light) */
+  --color-bg: var(--color-zinc-50);
+  --color-bg-subtle: var(--color-zinc-100);
+  --color-bg-muted: var(--color-zinc-200);
+  --color-fg: var(--color-zinc-900);
+  --color-fg-muted: var(--color-zinc-700);
+  --color-fg-subtle: var(--color-zinc-500);
+  --color-border: var(--color-zinc-200);
+  --color-border-strong: var(--color-zinc-300);
+  --color-border-focus: var(--color-blue-500);
+  --color-accent: var(--color-blue-600);
+  --color-accent-hover: var(--color-blue-700);
+  --color-link: var(--color-blue-600);
+  --color-link-hover: var(--color-blue-700);
+  --color-code-bg: var(--color-zinc-100);
+
+  /* Fonts */
+  --font-sans:
+    ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
+    'Helvetica Neue', Arial, 'Noto Sans', sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji';
+  --font-mono:
+    ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New',
+    monospace;
+
+  /* Type scale (Major Third → Perfect Fourth) */
+  --font-size-0: clamp(1rem, 0.9348rem + 0.3261vw, 1.1875rem);
+  --font-size-1: clamp(1.25rem, 1.1341rem + 0.5793vw, 1.5831rem);
+  --font-size-2: clamp(1.5625rem, 1.3721rem + 0.9522vw, 2.11rem);
+  --font-size-3: clamp(1.9531rem, 1.6542rem + 1.4946vw, 2.8125rem);
+  --font-size-4: clamp(2.4413rem, 1.9861rem + 2.276vw, 3.75rem);
+
+  /* Space scale */
+  --space-3xs: clamp(0.25rem, 0.2337rem + 0.0815vw, 0.2969rem);
+  --space-2xs: clamp(0.5rem, 0.4674rem + 0.1631vw, 0.5938rem);
+  --space-xs: clamp(0.75rem, 0.7011rem + 0.2445vw, 0.8906rem);
+  --space-s: clamp(1rem, 0.9348rem + 0.3261vw, 1.1875rem);
+  --space-m: clamp(1.5rem, 1.4022rem + 0.4892vw, 1.7813rem);
+  --space-l: clamp(2rem, 1.8696rem + 0.6522vw, 2.375rem);
+  --space-xl: clamp(3rem, 2.8043rem + 0.9783vw, 3.5625rem);
+
+  /* Misc */
+  --radius-md: 0.375rem;
+  --radius-lg: 0.5rem;
+  --shadow-sm: 0 1px 2px oklch(0% 0 0 / 0.08);
+  --shadow-md: 0 4px 6px oklch(0% 0 0 / 0.08), 0 2px 4px oklch(0% 0 0 / 0.08);
+
+  --leading-normal: 1.55;
+  --leading-tight: 1.2;
+  --leading-mono: 1.55;
+
+  /* Layout widths */
+  --sidebar-w: 240px;
+  --toc-w: 200px;
+  --content-max: 70ch;
+}
+
+/* Dark theme — auto + explicit */
+@media (prefers-color-scheme: dark) {
+  :root[data-theme='auto'] {
+    --color-bg: var(--color-zinc-950);
+    --color-bg-subtle: var(--color-zinc-900);
+    --color-bg-muted: var(--color-zinc-800);
+    --color-fg: var(--color-zinc-100);
+    --color-fg-muted: var(--color-zinc-300);
+    --color-fg-subtle: var(--color-zinc-500);
+    --color-border: var(--color-zinc-800);
+    --color-border-strong: var(--color-zinc-700);
+    --color-border-focus: var(--color-blue-400);
+    --color-accent: var(--color-blue-400);
+    --color-accent-hover: var(--color-blue-300);
+    --color-link: var(--color-blue-400);
+    --color-link-hover: var(--color-blue-300);
+    --color-code-bg: var(--color-zinc-900);
+  }
+}
+
+:root[data-theme='dark'] {
+  --color-bg: var(--color-zinc-950);
+  --color-bg-subtle: var(--color-zinc-900);
+  --color-bg-muted: var(--color-zinc-800);
+  --color-fg: var(--color-zinc-100);
+  --color-fg-muted: var(--color-zinc-300);
+  --color-fg-subtle: var(--color-zinc-500);
+  --color-border: var(--color-zinc-800);
+  --color-border-strong: var(--color-zinc-700);
+  --color-border-focus: var(--color-blue-400);
+  --color-accent: var(--color-blue-400);
+  --color-accent-hover: var(--color-blue-300);
+  --color-link: var(--color-blue-400);
+  --color-link-hover: var(--color-blue-300);
+  --color-code-bg: var(--color-zinc-900);
+}
+
+/* Reset + base */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: var(--font-sans);
+  font-size: var(--font-size-0);
+  line-height: var(--leading-normal);
+  color: var(--color-fg);
+  background: var(--color-bg);
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+}
+
+a {
+  color: var(--color-link);
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.2em;
+}
+a:hover {
+  color: var(--color-link-hover);
+}
+
+:where(:focus-visible) {
+  outline: 2px solid var(--color-border-focus);
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+
+/* Top bar */
+.ov-topbar {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-s);
+  padding: var(--space-xs) var(--space-m);
+  border-block-end: 1px solid var(--color-border);
+  background: color-mix(in oklch, var(--color-bg) 88%, transparent);
+  backdrop-filter: saturate(180%) blur(8px);
+}
+.ov-brand {
+  font-weight: 600;
+  text-decoration: none;
+  color: var(--color-fg);
+  font-size: var(--font-size-1);
+}
+.ov-theme-toggle {
+  inline-size: 2rem;
+  block-size: 2rem;
+  border: 1px solid var(--color-border-strong);
+  background: var(--color-bg-subtle);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  font-size: 1rem;
+}
+.ov-theme-toggle::before {
+  content: '◐';
+  color: var(--color-fg-muted);
+}
+:root[data-theme='light'] .ov-theme-toggle::before {
+  content: '☀';
+}
+:root[data-theme='dark'] .ov-theme-toggle::before {
+  content: '☾';
+}
+
+/* Layout */
+.ov-layout {
+  display: grid;
+  grid-template-columns: var(--sidebar-w) minmax(0, 1fr) var(--toc-w);
+  gap: var(--space-l);
+  max-inline-size: 1320px;
+  margin-inline: auto;
+  padding: var(--space-m);
+}
+
+/* Sidebar */
+.ov-sidebar {
+  position: sticky;
+  top: calc(2rem + var(--space-s) * 2);
+  align-self: start;
+  block-size: calc(100vh - 4rem);
+  overflow-y: auto;
+  padding-inline-end: var(--space-s);
+  border-inline-end: 1px solid var(--color-border);
+}
+.ov-sidebar-nav ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.ov-sidebar-nav > ul > li {
+  margin-block-end: var(--space-2xs);
+}
+.ov-nav-link {
+  display: block;
+  padding: var(--space-3xs) var(--space-2xs);
+  border-radius: var(--radius-md);
+  text-decoration: none;
+  color: var(--color-fg-muted);
+  font-size: 0.95em;
+}
+.ov-nav-link:hover {
+  background: var(--color-bg-subtle);
+  color: var(--color-fg);
+}
+.ov-nav-link.is-active {
+  background: var(--color-accent);
+  color: var(--color-bg);
+}
+.ov-nav-group {
+  display: block;
+  padding: var(--space-2xs) var(--space-2xs);
+  color: var(--color-fg-subtle);
+  text-transform: uppercase;
+  letter-spacing: 0.025em;
+  font-size: 0.78em;
+  font-weight: 600;
+}
+.ov-nav-children {
+  margin-inline-start: var(--space-s);
+  border-inline-start: 1px solid var(--color-border);
+  padding-inline-start: var(--space-2xs);
+}
+
+/* Content */
+.ov-content {
+  min-inline-size: 0;
+}
+.ov-prose {
+  max-inline-size: var(--content-max);
+}
+.ov-prose h1 {
+  font-size: var(--font-size-4);
+  line-height: var(--leading-tight);
+  letter-spacing: -0.025em;
+  margin-block: 0 var(--space-m);
+}
+.ov-prose h2 {
+  font-size: var(--font-size-3);
+  line-height: var(--leading-tight);
+  letter-spacing: -0.025em;
+  margin-block: var(--space-l) var(--space-s);
+  padding-block-start: var(--space-s);
+  border-block-start: 1px solid var(--color-border);
+}
+.ov-prose h3 {
+  font-size: var(--font-size-2);
+  line-height: 1.25;
+  margin-block: var(--space-m) var(--space-s);
+}
+.ov-prose h4 {
+  font-size: var(--font-size-1);
+  margin-block: var(--space-m) var(--space-s);
+}
+.ov-prose p,
+.ov-prose ul,
+.ov-prose ol,
+.ov-prose pre,
+.ov-prose blockquote {
+  margin-block: 0 var(--space-s);
+}
+.ov-prose blockquote {
+  margin-inline: 0;
+  padding-inline-start: var(--space-s);
+  border-inline-start: 3px solid var(--color-border-strong);
+  color: var(--color-fg-muted);
+}
+.ov-prose ul,
+.ov-prose ol {
+  padding-inline-start: var(--space-m);
+}
+.ov-prose code:not(pre code) {
+  font-family: var(--font-mono);
+  background: var(--color-code-bg);
+  padding: 0.1em 0.4em;
+  border-radius: 4px;
+  font-size: 0.92em;
+}
+.ov-prose img {
+  max-inline-size: 100%;
+  height: auto;
+  border-radius: var(--radius-md);
+}
+.ov-prose table {
+  border-collapse: collapse;
+  inline-size: 100%;
+  margin-block: 0 var(--space-s);
+  font-size: 0.95em;
+}
+.ov-prose th,
+.ov-prose td {
+  padding: var(--space-2xs) var(--space-s);
+  border: 1px solid var(--color-border);
+  text-align: start;
+}
+.ov-prose th {
+  background: var(--color-bg-subtle);
+  font-weight: 600;
+}
+
+/* Heading anchors */
+.heading-anchor {
+  margin-inline-end: 0.4em;
+  color: var(--color-fg-subtle);
+  text-decoration: none;
+  opacity: 0;
+  transition: opacity 120ms ease;
+}
+.ov-prose :is(h1, h2, h3, h4):hover .heading-anchor,
+.heading-anchor:focus-visible {
+  opacity: 1;
+}
+
+/* Code blocks (shiki dual-theme) */
+.ov-prose pre {
+  position: relative;
+  padding: var(--space-s);
+  border-radius: var(--radius-md);
+  overflow-x: auto;
+  font-family: var(--font-mono);
+  font-size: 0.92em;
+  line-height: var(--leading-mono);
+}
+.ov-prose pre.shiki {
+  background: var(--shiki-light-bg);
+  color: var(--shiki-light);
+}
+.ov-prose pre.shiki span {
+  color: var(--shiki-light);
+}
+@media (prefers-color-scheme: dark) {
+  :root[data-theme='auto'] .ov-prose pre.shiki {
+    background: var(--shiki-dark-bg);
+    color: var(--shiki-dark);
+  }
+  :root[data-theme='auto'] .ov-prose pre.shiki span {
+    color: var(--shiki-dark);
+  }
+}
+:root[data-theme='dark'] .ov-prose pre.shiki {
+  background: var(--shiki-dark-bg);
+  color: var(--shiki-dark);
+}
+:root[data-theme='dark'] .ov-prose pre.shiki span {
+  color: var(--shiki-dark);
+}
+
+/* Copy button (injected by script.js) */
+.ov-copy-btn {
+  position: absolute;
+  top: var(--space-2xs);
+  right: var(--space-2xs);
+  padding: var(--space-3xs) var(--space-2xs);
+  font-size: 0.78em;
+  font-family: var(--font-sans);
+  background: var(--color-bg-subtle);
+  color: var(--color-fg-muted);
+  border: 1px solid var(--color-border-strong);
+  border-radius: 4px;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 120ms ease;
+}
+.ov-prose pre:hover .ov-copy-btn,
+.ov-copy-btn:focus-visible {
+  opacity: 1;
+}
+.ov-copy-btn.is-copied {
+  color: var(--color-accent);
+}
+
+/* Right ToC */
+.ov-toc {
+  position: sticky;
+  top: calc(2rem + var(--space-s) * 2);
+  align-self: start;
+  block-size: calc(100vh - 4rem);
+  overflow-y: auto;
+  font-size: 0.9em;
+}
+.ov-toc-title {
+  font-size: 0.78em;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--color-fg-subtle);
+  margin-block: 0 var(--space-2xs);
+  font-weight: 600;
+}
+.ov-toc ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.ov-toc li {
+  margin-block-end: var(--space-3xs);
+}
+.ov-toc li a {
+  color: var(--color-fg-muted);
+  text-decoration: none;
+}
+.ov-toc li a:hover {
+  color: var(--color-fg);
+}
+.ov-toc-h3 {
+  padding-inline-start: var(--space-s);
+}
+
+/* Footer */
+.ov-footer {
+  max-inline-size: 1320px;
+  margin: var(--space-l) auto 0;
+  padding: var(--space-s) var(--space-m);
+  border-block-start: 1px solid var(--color-border);
+  color: var(--color-fg-subtle);
+  font-size: 0.9em;
+  text-align: center;
+}
+.ov-footer-sep {
+  margin-inline: var(--space-2xs);
+}
+
+/* Narrow viewports: drop the right ToC, then collapse the sidebar */
+@media (max-width: 1100px) {
+  .ov-layout {
+    grid-template-columns: var(--sidebar-w) minmax(0, 1fr);
+  }
+  .ov-toc {
+    display: none;
+  }
+}
+@media (max-width: 720px) {
+  .ov-layout {
+    grid-template-columns: minmax(0, 1fr);
+    padding-inline: var(--space-s);
+  }
+  .ov-sidebar {
+    position: static;
+    block-size: auto;
+    border-inline-end: 0;
+    border-block-end: 1px solid var(--color-border);
+    padding: 0 0 var(--space-s);
+  }
+}
+
+::selection {
+  background: var(--color-blue-200);
+  color: var(--color-blue-900);
+}

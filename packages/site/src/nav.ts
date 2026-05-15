@@ -1,0 +1,162 @@
+import { readdir, readFile, stat } from 'node:fs/promises';
+import path from 'node:path';
+import matter from 'gray-matter';
+
+export interface NavNode {
+  /** Display title. */
+  title: string;
+  /** Site-relative URL with trailing slash (`/foo/`, `/foo/bar/`, or `/` for root). */
+  url: string;
+  /** Source file relative to project root, or undefined for directory-only nodes. */
+  sourcePath?: string;
+  /** Child nodes (sub-pages and sub-directories). */
+  children: NavNode[];
+}
+
+interface MetaJson {
+  title?: string;
+  order?: string[];
+}
+
+interface FsItem {
+  name: string;
+  abs: string;
+  isDir: boolean;
+}
+
+/**
+ * Walk a content directory and build a `NavNode` tree:
+ *
+ *  - `.md` files become page nodes; `index.md` represents its containing
+ *    directory (its title and url collapse onto the parent node).
+ *  - Subdirectories become group nodes; each is recursively built.
+ *  - Per-directory `_meta.json` may set `title` and an explicit `order` of
+ *    child slugs.
+ *  - Without explicit order, items sort alphabetically by slug, but any
+ *    directory's `index` always leads.
+ */
+export async function buildNav(rootDir: string, cwd: string): Promise<NavNode> {
+  const absRoot = path.resolve(cwd, rootDir);
+  const rel = (abs: string) => '/' + path.posix.relative(absRoot, abs).replace(/\\/g, '/');
+  return walk(absRoot, '/', cwd, rel);
+}
+
+async function walk(
+  dirAbs: string,
+  urlPrefix: string,
+  cwd: string,
+  rel: (abs: string) => string,
+): Promise<NavNode> {
+  const items = await listDir(dirAbs);
+  const meta = await readMeta(dirAbs);
+
+  const indexItem = items.find((i) => !i.isDir && stem(i.name) === 'index' && isMarkdown(i.name));
+  const indexNode = indexItem ? await pageNode(indexItem.abs, urlPrefix, cwd) : undefined;
+
+  const children: NavNode[] = [];
+  for (const item of items) {
+    if (item.name.startsWith('_')) continue;
+    if (item === indexItem) continue;
+    if (item.isDir) {
+      const childUrl = ensureTrailingSlash(urlPrefix + item.name + '/');
+      children.push(await walk(item.abs, childUrl, cwd, rel));
+    } else if (isMarkdown(item.name)) {
+      const childUrl = ensureTrailingSlash(urlPrefix + stem(item.name) + '/');
+      children.push(await pageNode(item.abs, childUrl, cwd));
+    }
+  }
+
+  applyOrdering(children, meta);
+
+  const title =
+    meta?.title ?? indexNode?.title ?? titleFromSegment(path.basename(dirAbs)) ?? 'Untitled';
+  const url = ensureTrailingSlash(urlPrefix);
+
+  return {
+    title,
+    url,
+    sourcePath: indexNode?.sourcePath,
+    children,
+  };
+}
+
+async function pageNode(abs: string, url: string, cwd: string): Promise<NavNode> {
+  const raw = await readFile(abs, 'utf8');
+  const { data, content } = matter(raw);
+  const fmTitle = typeof data.title === 'string' ? data.title : undefined;
+  const h1 = firstH1(content);
+  const title = fmTitle ?? h1 ?? titleFromSegment(stem(path.basename(abs))) ?? 'Untitled';
+  return {
+    title,
+    url: ensureTrailingSlash(url),
+    sourcePath: path.relative(cwd, abs).replace(/\\/g, '/'),
+    children: [],
+  };
+}
+
+async function listDir(dirAbs: string): Promise<FsItem[]> {
+  const names = await readdir(dirAbs);
+  const out: FsItem[] = [];
+  for (const name of names) {
+    const abs = path.join(dirAbs, name);
+    const st = await stat(abs);
+    out.push({ name, abs, isDir: st.isDirectory() });
+  }
+  return out;
+}
+
+async function readMeta(dirAbs: string): Promise<MetaJson | undefined> {
+  const metaPath = path.join(dirAbs, '_meta.json');
+  try {
+    const raw = await readFile(metaPath, 'utf8');
+    const parsed = JSON.parse(raw) as MetaJson;
+    return parsed;
+  } catch {
+    return undefined;
+  }
+}
+
+function applyOrdering(children: NavNode[], meta: MetaJson | undefined): void {
+  if (meta?.order && meta.order.length > 0) {
+    const rank = new Map(meta.order.map((slug, i) => [slug, i]));
+    children.sort((a, b) => {
+      const ra = rank.get(slugOf(a)) ?? Number.MAX_SAFE_INTEGER;
+      const rb = rank.get(slugOf(b)) ?? Number.MAX_SAFE_INTEGER;
+      if (ra !== rb) return ra - rb;
+      return a.title.localeCompare(b.title);
+    });
+    return;
+  }
+  children.sort((a, b) => a.title.localeCompare(b.title));
+}
+
+function slugOf(node: NavNode): string {
+  const trimmed = node.url.replace(/\/+$/, '');
+  return trimmed.slice(trimmed.lastIndexOf('/') + 1);
+}
+
+function isMarkdown(name: string): boolean {
+  return /\.(md|markdown)$/i.test(name);
+}
+
+function stem(name: string): string {
+  return name.replace(/\.(md|markdown)$/i, '');
+}
+
+function ensureTrailingSlash(p: string): string {
+  return p.endsWith('/') ? p : p + '/';
+}
+
+function titleFromSegment(seg: string): string | undefined {
+  if (!seg) return undefined;
+  return seg
+    .split(/[-_]/)
+    .filter(Boolean)
+    .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+    .join(' ');
+}
+
+function firstH1(content: string): string | undefined {
+  const m = content.match(/^\s*#\s+(.+)$/m);
+  return m ? m[1]!.trim() : undefined;
+}
