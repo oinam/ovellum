@@ -1,0 +1,14 @@
+{
+  "name": "Ovellum demo site",
+  "version": "0.1.0",
+  "mode": "manual",
+  "input": "./content",
+  "output": "./dist",
+  "defaultFormat": "md",
+  "site": {
+    "title": "Ovellum demo",
+    "description": "A small static site built with `ovellum build` in manual mode.",
+    "defaultTheme": "auto",
+    "footer": "Built with Ovellum · demo site"
+  }
+}
