@@ -4,6 +4,7 @@ import type { OvellumUserConfig } from '../types/config.js';
 const MODES = ['hybrid', 'manual', 'auto'] as const;
 const FORMATS = ['md', 'mdx'] as const;
 const ORPHAN_STRATEGIES = ['quarantine', 'warn'] as const;
+const THEMES = ['auto', 'light', 'dark'] as const;
 
 function isPlainObject(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
@@ -89,6 +90,31 @@ export function validateUserConfig(input: unknown): OvellumUserConfig {
       if (p.orphanRetention < 0) {
         throw new ConfigError('`protect.orphanRetention` must be >= 0.');
       }
+    }
+  }
+
+  if (c.site !== undefined) {
+    if (!isPlainObject(c.site)) {
+      throw new ConfigError('`site` must be an object.');
+    }
+    const s = c.site;
+    if (s.title !== undefined && typeof s.title !== 'string') {
+      throw new ConfigError('`site.title` must be a string.');
+    }
+    if (s.description !== undefined && typeof s.description !== 'string') {
+      throw new ConfigError('`site.description` must be a string.');
+    }
+    if (s.baseUrl !== undefined && typeof s.baseUrl !== 'string') {
+      throw new ConfigError('`site.baseUrl` must be a string URL.');
+    }
+    if (s.footer !== undefined && typeof s.footer !== 'string') {
+      throw new ConfigError('`site.footer` must be a string.');
+    }
+    if (
+      s.defaultTheme !== undefined &&
+      !THEMES.includes(s.defaultTheme as (typeof THEMES)[number])
+    ) {
+      throw new ConfigError(`\`site.defaultTheme\` must be one of: ${THEMES.join(', ')}.`);
     }
   }
 
