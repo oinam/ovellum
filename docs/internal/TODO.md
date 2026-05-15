@@ -1,7 +1,7 @@
 # TODO
 
 Living checklist for code / automation work. Update in place as work progresses.
-Last updated: 2026-05-15 (renamed root package to `ovellum`; brand sweep to `Ovellum`; split human-only items into [`TODO-Human.md`](./TODO-Human.md))
+Last updated: 2026-05-15 (manual-mode static site builder v0 landed — @ovellum/site + CLI wiring + examples/manual-site demo)
 
 > Manual items — prose, decisions, releases, things only a human can do —
 > live in [`TODO-Human.md`](./TODO-Human.md). When in doubt: if the work
@@ -180,6 +180,43 @@ Legend: `[ ]` not started · `[~]` in progress · `[x]` done · `[!]` blocked
 > Phase 4 v0 slice (2026-05-14): reader handles enough of the spec to feed
 > the merger. Validation mode (link checking, required frontmatter fields)
 > and the warning on positional-fallback IDs are deferred.
+
+---
+
+## Phase 4.5 - Manual-Mode Static Site Builder (`@ovellum/site`)
+
+New phase introduced 2026-05-15. Design lives in [`SITE.md`](./SITE.md).
+
+- [x] Scaffold `@ovellum/site` (tsup + tsc -b --force pattern; ESM-only due to `import.meta.url`)
+- [x] Add `site` sub-config to `OvellumConfig` (title, description, baseUrl, defaultTheme, footer) + merge / validate / defaults
+- [x] Markdown → HTML pipeline (unified + remark-parse + remark-rehype + rehype-slug + rehype-autolink-headings + rehype-stringify)
+- [x] Shiki dual-theme code-block highlighting (github-light + github-dark via CSS variables)
+- [x] Heading collection for the right-side "On this page" ToC (h2/h3)
+- [x] Auto-generated sidebar from the file tree (with optional `_meta.json` per directory for title + order)
+- [x] Default template (HTML shell, sidebar, content, right ToC, footer, top bar with theme toggle)
+- [x] Stylesheet hand-ported from `STYLES.md` Tier 1 + Tier 2 default-light / default-dark
+- [x] Client JS: theme toggle (auto → light → dark) + copy buttons on code blocks
+- [x] buildSite() orchestrator: discovers `.md`, renders, writes pretty URLs (`name/index.html`), copies static assets, writes `assets/ovellum.{css,js}`
+- [x] CLI manual-mode wiring: `ovellum build` routes to `buildSite()` when `config.mode === 'manual'`
+- [x] `examples/manual-site` fixture (5 pages, nested guides/, `_meta.json` ordering)
+- [x] `pnpm -w run demo:site` end-to-end
+- [x] Smoke tests: 11 tests across markdown.ts, nav.ts, template.ts
+- [ ] Token-extraction script: pull current `STYLES.md` values into `style.css` automatically (avoid manual resync)
+- [ ] Nord + Solarized themes wired into the theme switcher (palettes already in STYLES.md)
+- [ ] `_meta.json` title fallback for directories without their own `index.md`
+- [ ] Search (Pagefind integration as a separate package or `--search` flag)
+- [ ] Sitemap.xml + RSS
+- [ ] MDX rendering via `remark-mdx`
+- [ ] Plugin API for custom templates
+- [ ] Multi-version / multi-language docs
+- [ ] Live reload (pairs with the `ovellum watch` ticket in Phase 6)
+
+> Phase 4.5 v0 slice (2026-05-15): a Jekyll-style static site can be built
+> from a folder of Markdown files with `ovellum build` (mode: manual). Demo
+> at `examples/manual-site/` produces 5 pretty-URL pages with sidebar,
+> right-side ToC, syntax-highlighted code, and an auto/light/dark theme
+> toggle. All deferred items above are nice-to-haves; the core path is
+> shippable.
 
 ---
 
