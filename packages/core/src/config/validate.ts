@@ -111,6 +111,9 @@ export function validateUserConfig(input: unknown): OvellumUserConfig {
     if (s.footer !== undefined && typeof s.footer !== 'string') {
       throw new ConfigError('`site.footer` must be a string.');
     }
+    if (s.editUrlPattern !== undefined && typeof s.editUrlPattern !== 'string') {
+      throw new ConfigError('`site.editUrlPattern` must be a string URL template.');
+    }
     if (
       s.defaultTheme !== undefined &&
       !THEMES.includes(s.defaultTheme as (typeof THEMES)[number])

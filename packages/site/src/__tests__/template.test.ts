@@ -74,6 +74,52 @@ describe('renderPage', () => {
     expect(html).not.toContain('rel="canonical"');
   });
 
+  it('renders an "Edit this page" link when editUrl is set, omits otherwise', () => {
+    const withLink = renderPage({
+      site: { title: 'X', defaultTheme: 'auto', footer: '' },
+      nav: NAV,
+      url: '/',
+      title: 'X',
+      bodyHtml: '',
+      headings: [],
+      generatedAt: '2026-05-16T00:00:00.000Z',
+      editUrl: 'https://example.com/edit/main/content/index.md',
+    });
+    expect(withLink).toContain('class="ov-edit-link"');
+    expect(withLink).toContain('href="https://example.com/edit/main/content/index.md"');
+    expect(withLink).toContain('Edit this page');
+
+    const withoutLink = renderPage({
+      site: { title: 'X', defaultTheme: 'auto', footer: '' },
+      nav: NAV,
+      url: '/',
+      title: 'X',
+      bodyHtml: '',
+      headings: [],
+      generatedAt: '2026-05-16T00:00:00.000Z',
+    });
+    expect(withoutLink).not.toContain('ov-edit-link');
+  });
+
+  it('renders prev/next nav when adjacent pages are passed', () => {
+    const html = renderPage({
+      site: { title: 'X', defaultTheme: 'auto', footer: '' },
+      nav: NAV,
+      url: '/getting-started/',
+      title: 'Getting started',
+      bodyHtml: '',
+      headings: [],
+      generatedAt: '2026-05-16T00:00:00.000Z',
+      prev: { title: 'Home', url: '/' },
+      next: { title: 'Deploy', url: '/guides/deploy/' },
+    });
+    expect(html).toContain('class="ov-prevnext"');
+    expect(html).toContain('href="/"');
+    expect(html).toContain('href="/guides/deploy/"');
+    expect(html).toContain('Previous');
+    expect(html).toContain('Next');
+  });
+
   it('renders the ToC when headings are present, and omits it when empty', () => {
     const withToc = renderPage({
       site: { title: 'X', defaultTheme: 'auto', footer: '' },

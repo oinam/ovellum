@@ -113,6 +113,7 @@ export async function buildSite(options: BuildSiteOptions): Promise<BuildSiteRes
       }
       const outputPath = path.join(outputAbs, urlToOutputPath(url));
       const { prev, next } = findAdjacent(nav, url);
+      const sourceRelFromCwd = path.relative(cwd, file).replace(/\\/g, '/');
       const result = await renderOne({
         absInput: file,
         url,
@@ -122,6 +123,7 @@ export async function buildSite(options: BuildSiteOptions): Promise<BuildSiteRes
         docsHref,
         prev: prev ? { title: prev.title, url: prev.url } : undefined,
         next: next ? { title: next.title, url: next.url } : undefined,
+        sourceRelFromCwd,
       });
       await mkdir(path.dirname(outputPath), { recursive: true });
       await writeFile(outputPath, result.html, 'utf8');
@@ -175,6 +177,8 @@ interface RenderOneInput {
   docsHref?: string;
   prev?: { title: string; url: string };
   next?: { title: string; url: string };
+  /** Page's source path relative to the project root; substituted into the edit URL. */
+  sourceRelFromCwd: string;
 }
 
 interface RenderOneResult {
@@ -190,6 +194,10 @@ async function renderOne(input: RenderOneInput): Promise<RenderOneResult> {
   const { html: bodyHtml, headings } = await renderMarkdown(parsed.content);
   const title = frontmatter.title ?? firstHeading(headings) ?? input.site.title;
 
+  const editUrl = input.site.editUrlPattern
+    ? input.site.editUrlPattern.replace('{path}', input.sourceRelFromCwd)
+    : undefined;
+
   const html = renderPage({
     site: input.site,
     nav: input.nav,
@@ -202,6 +210,7 @@ async function renderOne(input: RenderOneInput): Promise<RenderOneResult> {
     docsHref: input.docsHref,
     prev: input.prev,
     next: input.next,
+    editUrl,
   });
   return { html, title, warnings: [] };
 }

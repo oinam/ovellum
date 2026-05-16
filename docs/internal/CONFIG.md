@@ -104,6 +104,7 @@ interface OvellumSiteConfig {
 | `baseUrl`      | `string?`                     | `undefined`               | template (`<link rel="canonical">`, OG cards) | E.g. `'https://docs.example.com'`. Omit for relative-link output. |
 | `defaultTheme` | `'auto' \| 'light' \| 'dark'` | `'auto'`                  | template (initial `data-theme`)               | Overridden once the user toggles and we read `localStorage`.      |
 | `footer`       | `string`                      | `'Built with Ovellum'`    | template (footer)                             | Empty string disables the footer entirely.                        |
+| `editUrlPattern` | `string?`                   | `undefined`               | template (per-page edit link)                 | URL pattern with `{path}` placeholder. `{path}` is the page's source path relative to the **build cwd** (`--cwd`). Include any repo prefix yourself, e.g. `'https://github.com/owner/repo/edit/main/website/{path}'`. When unset the link is not rendered. |
 | `landing`      | `OvellumLandingConfig`        | `{ enabled: false, … }`   | landing renderer                              | See §4.                                                           |
 
 ---

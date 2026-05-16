@@ -11,6 +11,7 @@
     "baseUrl": "https://ovellum.oss.oinam.com",
     "defaultTheme": "auto",
     "footer": "Ovellum is MIT-licensed. Built with itself.",
+    "editUrlPattern": "https://github.com/oinam/ovellum/edit/main/website/{path}",
     "landing": {
       "enabled": true,
       "docsHref": "/getting-started/",

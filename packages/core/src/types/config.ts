@@ -82,6 +82,19 @@ export interface OvellumSiteConfig {
   defaultTheme: OvellumDefaultTheme;
   /** Footer text. Empty string disables the footer entirely. */
   footer: string;
+  /**
+   * Pattern for the "Edit this page" link in the page footer. The literal
+   * `{path}` is replaced with each page's source path **relative to the
+   * build cwd** (`--cwd <dir>`, defaults to `process.cwd()`). When unset
+   * the link is not rendered.
+   *
+   * If you run `ovellum build --cwd website` from a repo root, `{path}`
+   * will look like `content/getting-started.md`. Include any prefix you
+   * need in the pattern itself:
+   *
+   *   `'https://github.com/owner/repo/edit/main/website/{path}'`.
+   */
+  editUrlPattern?: string;
   /** Landing-page settings. Disabled by default. */
   landing: OvellumLandingConfig;
 }

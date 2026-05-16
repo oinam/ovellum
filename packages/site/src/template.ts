@@ -106,6 +106,8 @@ export interface RenderPageInput {
   prev?: PrevNextPage;
   /** Next page in the sidebar's reading order, if any. */
   next?: PrevNextPage;
+  /** Resolved "Edit this page" URL (already had `{path}` substituted), if set. */
+  editUrl?: string;
 }
 
 /**
@@ -120,11 +122,15 @@ export function renderPage(input: RenderPageInput): string {
   const sidebar = renderSidebar(input.nav, input.url);
   const toc = renderToc(input.headings);
   const prevNext = renderPrevNext(input.prev, input.next);
+  const editLink = input.editUrl
+    ? `<p class="ov-edit-page"><a class="ov-edit-link" href="${escapeAttr(input.editUrl)}" rel="noopener" target="_blank">Edit this page</a></p>`
+    : '';
 
   const body = `<div class="ov-layout">
     <aside class="ov-sidebar" aria-label="Site navigation">${sidebar}</aside>
     <main class="ov-content">
       <article class="ov-prose">${input.bodyHtml}</article>
+      ${editLink}
       ${prevNext}
     </main>
     <aside class="ov-toc" aria-label="On this page">${toc}</aside>
