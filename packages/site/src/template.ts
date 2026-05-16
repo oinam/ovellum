@@ -1,6 +1,7 @@
 import type { OvellumLandingConfig, OvellumSiteConfig } from '@ovellum/core';
 import type { Heading } from './markdown.js';
 import type { NavNode } from './nav.js';
+import { assetsPrefix as assetsPrefixFor, normaliseBasePath, siteUrl } from './url.js';
 
 export interface ShellOptions {
   site: OvellumSiteConfig & { title: string };
@@ -23,7 +24,8 @@ export interface ShellOptions {
 }
 
 function renderShell(opts: ShellOptions): string {
-  const assets = opts.assetsPrefix ?? '/';
+  const basePath = normaliseBasePath(opts.site.basePath);
+  const assets = opts.assetsPrefix ?? assetsPrefixFor(basePath);
   const desc = opts.description ?? opts.site.description ?? '';
   // Optional-chain because `site.search` may be undefined when callers pass a
   // partial site object (template/landing tests cast partial fixtures to the
@@ -48,7 +50,7 @@ function renderShell(opts: ShellOptions): string {
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>${escapeHtml(opts.fullTitle)}</title>
   ${desc ? `<meta name="description" content="${escapeAttr(desc)}">` : ''}
-  ${opts.site.baseUrl ? `<link rel="canonical" href="${escapeAttr(join(opts.site.baseUrl, opts.url))}">` : ''}
+  ${opts.site.baseUrl ? `<link rel="canonical" href="${escapeAttr(join(opts.site.baseUrl, basePath + opts.url))}">` : ''}
   <link rel="stylesheet" href="${escapeAttr(assets)}assets/ovellum.css">
   ${searchHead}
   <script>
@@ -63,7 +65,7 @@ function renderShell(opts: ShellOptions): string {
   </script>
 </head>
 <body${opts.bodyClass ? ` class="${escapeAttr(opts.bodyClass)}"` : ''}>
-  ${renderTopbar(opts.site, assets, opts.docsHref, searchEnabled)}
+  ${renderTopbar(opts.site, assets, opts.docsHref ? siteUrl(opts.docsHref, basePath) : undefined, searchEnabled)}
   ${opts.body}
   ${renderFooter(opts.site, opts.generatedAt)}
   ${searchScripts}
@@ -140,9 +142,10 @@ export function renderPage(input: RenderPageInput): string {
       ? `${input.title} · ${input.site.title}`
       : input.site.title;
 
-  const sidebar = renderSidebar(input.nav, input.url);
+  const basePath = normaliseBasePath(input.site.basePath);
+  const sidebar = renderSidebar(input.nav, input.url, basePath);
   const toc = renderToc(input.headings);
-  const prevNext = renderPrevNext(input.prev, input.next);
+  const prevNext = renderPrevNext(input.prev, input.next, basePath);
   const editLink = input.editUrl
     ? `<p class="ov-edit-page"><a class="ov-edit-link" href="${escapeAttr(input.editUrl)}" rel="noopener" target="_blank">Edit this page</a></p>`
     : '';
@@ -190,8 +193,14 @@ export interface RenderLandingInput {
 export function renderLanding(input: RenderLandingInput): string {
   const heroTitle = input.landing.hero.title ?? input.site.title;
   const fullTitle = input.site.title;
+  const basePath = normaliseBasePath(input.site.basePath);
 
-  const hero = renderHero(heroTitle, input.landing.hero.subtitle, input.landing.hero.ctas);
+  const hero = renderHero(
+    heroTitle,
+    input.landing.hero.subtitle,
+    input.landing.hero.ctas,
+    basePath,
+  );
   const features = renderFeatures(input.landing.features);
   const pitch = input.pitchHtml
     ? `<section class="ov-pitch"><div class="ov-pitch-inner">${input.pitchHtml}</div></section>`
@@ -211,7 +220,7 @@ export function renderLanding(input: RenderLandingInput): string {
     description: input.site.description,
     url: '/',
     assetsPrefix: input.assetsPrefix,
-    docsHref: input.docsHref,
+    docsHref: input.docsHref ? siteUrl(input.docsHref, basePath) : undefined,
     generatedAt: input.generatedAt,
     body,
     bodyClass: 'ov-body-landing',
@@ -222,11 +231,12 @@ function renderHero(
   title: string,
   subtitle: string | undefined,
   ctas: OvellumLandingConfig['hero']['ctas'],
+  basePath: string,
 ): string {
   const ctaButtons = ctas
     .map((cta, i) => {
       const style = cta.style ?? (i === 0 ? 'primary' : 'secondary');
-      return `<a class="ov-cta ov-cta--${escapeAttr(style)}" href="${escapeAttr(cta.href)}">${escapeHtml(cta.label)}</a>`;
+      return `<a class="ov-cta ov-cta--${escapeAttr(style)}" href="${escapeAttr(siteUrl(cta.href, basePath))}">${escapeHtml(cta.label)}</a>`;
     })
     .join('\n      ');
   const ctaRow = ctas.length > 0 ? `<div class="ov-cta-row">\n      ${ctaButtons}\n    </div>` : '';
@@ -278,21 +288,21 @@ function renderTrustStrip(trust: OvellumLandingConfig['trustStrip']): string {
 
 // -- shared helpers ------------------------------------------------------
 
-function renderSidebar(nav: NavNode, activeUrl: string): string {
-  return `<nav class="ov-sidebar-nav"><ul>${navList(nav.children, activeUrl)}</ul></nav>`;
+function renderSidebar(nav: NavNode, activeUrl: string, basePath: string): string {
+  return `<nav class="ov-sidebar-nav"><ul>${navList(nav.children, activeUrl, basePath)}</ul></nav>`;
 }
 
-function navList(nodes: NavNode[], activeUrl: string): string {
+function navList(nodes: NavNode[], activeUrl: string, basePath: string): string {
   if (nodes.length === 0) return '';
   return nodes
     .map((node) => {
       const isActive = node.url === activeUrl;
       const hasChildren = node.children.length > 0;
       const link = node.sourcePath
-        ? `<a class="ov-nav-link${isActive ? ' is-active' : ''}" href="${escapeAttr(node.url)}">${escapeHtml(node.title)}</a>`
+        ? `<a class="ov-nav-link${isActive ? ' is-active' : ''}" href="${escapeAttr(siteUrl(node.url, basePath))}">${escapeHtml(node.title)}</a>`
         : `<span class="ov-nav-group">${escapeHtml(node.title)}</span>`;
       const children = hasChildren
-        ? `<ul class="ov-nav-children">${navList(node.children, activeUrl)}</ul>`
+        ? `<ul class="ov-nav-children">${navList(node.children, activeUrl, basePath)}</ul>`
         : '';
       return `<li>${link}${children}</li>`;
     })
@@ -302,16 +312,17 @@ function navList(nodes: NavNode[], activeUrl: string): string {
 function renderPrevNext(
   prev: PrevNextPage | undefined,
   next: PrevNextPage | undefined,
+  basePath: string,
 ): string {
   if (!prev && !next) return '';
   const prevHtml = prev
-    ? `<a class="ov-prevnext-link ov-prevnext-prev" href="${escapeAttr(prev.url)}">
+    ? `<a class="ov-prevnext-link ov-prevnext-prev" href="${escapeAttr(siteUrl(prev.url, basePath))}">
          <span class="ov-prevnext-label">Previous</span>
          <span class="ov-prevnext-title">${escapeHtml(prev.title)}</span>
        </a>`
     : '<span class="ov-prevnext-spacer" aria-hidden="true"></span>';
   const nextHtml = next
-    ? `<a class="ov-prevnext-link ov-prevnext-next" href="${escapeAttr(next.url)}">
+    ? `<a class="ov-prevnext-link ov-prevnext-next" href="${escapeAttr(siteUrl(next.url, basePath))}">
          <span class="ov-prevnext-label">Next</span>
          <span class="ov-prevnext-title">${escapeHtml(next.title)}</span>
        </a>`

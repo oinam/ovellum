@@ -3,6 +3,8 @@ import type { PageOutput } from './build.js';
 export interface GenerateSitemapInput {
   pages: PageOutput[];
   baseUrl: string;
+  /** Site-prefix path (e.g. `/ovellum`). Prepended to each page URL. */
+  basePath?: string;
   /** URLs to exclude from the sitemap (e.g. `/404/`). */
   exclude?: string[];
 }
@@ -20,11 +22,12 @@ export interface GenerateSitemapInput {
 export function generateSitemap(input: GenerateSitemapInput): string | undefined {
   if (!input.baseUrl) return undefined;
   const base = stripTrailingSlash(input.baseUrl);
+  const prefix = input.basePath ? stripTrailingSlash(input.basePath) : '';
   const exclude = new Set(input.exclude ?? ['/404/']);
 
   const entries = input.pages
     .filter((p) => !exclude.has(p.url))
-    .map((p) => `  <url>\n    <loc>${escapeXml(base + p.url)}</loc>\n  </url>`)
+    .map((p) => `  <url>\n    <loc>${escapeXml(base + prefix + p.url)}</loc>\n  </url>`)
     .join('\n');
 
   return `<?xml version="1.0" encoding="UTF-8"?>

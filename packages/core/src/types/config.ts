@@ -83,6 +83,17 @@ export interface OvellumSiteConfig {
   description?: string;
   /** Base URL for absolute links / OG cards, e.g. `https://docs.example.com`. */
   baseUrl?: string;
+  /**
+   * Subpath the site is served from, Jekyll-style. Leading slash, no
+   * trailing slash. Example: `"/ovellum"` makes the site available at
+   * `https://<user>.github.io/ovellum/` — every internal link, asset URL,
+   * canonical, and sitemap entry is prefixed with this value. Authors
+   * keep writing root-relative links (`/getting-started/`) and the build
+   * applies the prefix at render time.
+   *
+   * Defaults to `""` (no prefix; site is served from the root).
+   */
+  basePath?: string;
   /** Initial theme before user preference loads. */
   defaultTheme: OvellumDefaultTheme;
   /** Footer text. Empty string disables the footer entirely. */

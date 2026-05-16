@@ -108,6 +108,17 @@ export function validateUserConfig(input: unknown): OvellumUserConfig {
     if (s.baseUrl !== undefined && typeof s.baseUrl !== 'string') {
       throw new ConfigError('`site.baseUrl` must be a string URL.');
     }
+    if (s.basePath !== undefined) {
+      if (typeof s.basePath !== 'string') {
+        throw new ConfigError('`site.basePath` must be a string path.');
+      }
+      if (s.basePath !== '' && !s.basePath.startsWith('/')) {
+        throw new ConfigError(
+          '`site.basePath` must start with `/` (e.g. `/ovellum`) or be the empty string.',
+          { hint: 'Strip the protocol+host; that belongs in `site.baseUrl`.' },
+        );
+      }
+    }
     if (s.footer !== undefined && typeof s.footer !== 'string') {
       throw new ConfigError('`site.footer` must be a string.');
     }

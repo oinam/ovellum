@@ -152,7 +152,7 @@ export async function buildSite(options: BuildSiteOptions): Promise<BuildSiteRes
 
   // Emit sitemap.xml when site.baseUrl is configured.
   if (site.baseUrl) {
-    const xml = generateSitemap({ pages, baseUrl: site.baseUrl });
+    const xml = generateSitemap({ pages, baseUrl: site.baseUrl, basePath: site.basePath });
     if (xml) await writeFile(path.join(outputAbs, 'sitemap.xml'), xml, 'utf8');
   } else {
     warnings.push(
