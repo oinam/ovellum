@@ -9,6 +9,53 @@
     "title": "Ovellum demo",
     "description": "A small static site built with `ovellum build` in manual mode.",
     "defaultTheme": "auto",
-    "footer": "Built with Ovellum · demo site"
+    "footer": "Built with Ovellum · demo site",
+    "landing": {
+      "enabled": true,
+      "docsHref": "/getting-started/",
+      "hero": {
+        "title": "Markdown docs that don't drift",
+        "subtitle": "Ovellum builds a deployable static site from a folder of Markdown files. Pretty URLs, themes, syntax-highlighted code, no proprietary formats.",
+        "ctas": [
+          { "label": "Get started", "href": "/getting-started/", "style": "primary" },
+          {
+            "label": "View on GitHub",
+            "href": "https://github.com/oinam/ovellum",
+            "style": "secondary"
+          }
+        ]
+      },
+      "features": [
+        {
+          "icon": "⚡",
+          "title": "Fast by default",
+          "description": "Sub-second builds for small sites. Shiki highlights at build time, so the browser ships zero runtime JS for code blocks."
+        },
+        {
+          "icon": "🪶",
+          "title": "Markdown-first",
+          "description": "Write in plain `.md`. No proprietary format, no MDX required, no lock-in. Add static assets next to your content and they pass through verbatim."
+        },
+        {
+          "icon": "🎨",
+          "title": "Light + dark, no flash",
+          "description": "Themes ship in OKLCH. Auto follows the OS; users can override per session and the preference is applied before first paint."
+        },
+        {
+          "icon": "🧭",
+          "title": "Sidebar + ToC included",
+          "description": "Auto-generated nav from your file tree (with optional `_meta.json` ordering) plus a right-side outline of every page's h2/h3 headings."
+        }
+      ],
+      "trustStrip": {
+        "label": "Powered by",
+        "items": [
+          { "name": "TypeScript", "href": "https://www.typescriptlang.org/" },
+          { "name": "unified", "href": "https://unifiedjs.com/" },
+          { "name": "shiki", "href": "https://shiki.style/" },
+          { "name": "pnpm", "href": "https://pnpm.io/" }
+        ]
+      }
+    }
   }
 }
