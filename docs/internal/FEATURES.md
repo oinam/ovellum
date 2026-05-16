@@ -8,7 +8,7 @@ deferred items see [`TODO.md`](./TODO.md). For human-only tasks (writing prose,
 product decisions, release) see [`TODO-Human.md`](./TODO-Human.md). For
 terminology see [`GLOSSARY.md`](./GLOSSARY.md).
 
-Last updated: 2026-05-16 (configurable landing page added)
+Last updated: 2026-05-16 (official website + GitHub Pages deployment)
 
 Status legend:
 
@@ -24,9 +24,9 @@ Ovellum runs in one of three modes, set via `mode:` in `ovellum.config.{json,ts,
 
 | Mode     | Status | What it does                                                                                                                                         |
 | -------- | ------ | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `hybrid` | done     | Default. Auto-generates Markdown from TS/JS source, then merges existing `<!-- @manual:start -->` blocks back in. Orphans go to `.ovellum/orphans/`. |
-| `manual` | done     | Pure static-site builder from `.md` files → HTML. No source parsing. See §4 ([`@ovellum/site`](#4-site-builder---ovellumsite)).                      |
-| `auto`   | done     | Auto-generate Markdown only. Existing output is overwritten. No merge step.                                                                          |
+| `hybrid` | done   | Default. Auto-generates Markdown from TS/JS source, then merges existing `<!-- @manual:start -->` blocks back in. Orphans go to `.ovellum/orphans/`. |
+| `manual` | done   | Pure static-site builder from `.md` files → HTML. No source parsing. See §4 ([`@ovellum/site`](#4-site-builder---ovellumsite)).                      |
+| `auto`   | done   | Auto-generate Markdown only. Existing output is overwritten. No merge step.                                                                          |
 
 ---
 
@@ -36,15 +36,15 @@ Shared types, config schema, error class. Consumed by every other package.
 
 | Feature                                                                | Status | Notes                                                                                          |
 | ---------------------------------------------------------------------- | ------ | ---------------------------------------------------------------------------------------------- |
-| IR types (`DocNode`, `DocFile`, `DocProject`, `DocParam`, `DocReturn`) | done     | Per [`DESIGN.md` §6](./DESIGN.md#6-intermediate-representation-ir)                             |
-| `OvellumConfig` schema                                                 | done     | Full reference in [`CONFIG.md`](./CONFIG.md). Includes `site`, `protect`, format, mode, paths. |
-| `defineConfig()` helper                                                | done     | Identity function for type-safe `ovellum.config.ts`.                                           |
-| `loadOvellumConfig({ cwd, configFile })`                               | done     | Loads via `c12`; applies defaults; validates. Returns `{ config, configFile, cwd }`.           |
-| `loadDirectoryOverride(rootCwd, targetDir, root)`                      | done     | Walks from root → target, merges every nested `ovellum.config.*` (deepest wins).               |
-| `parseFrontmatterOverride(frontmatter)`                                | done     | Extracts `ovellum:` block from `.md` frontmatter for per-file mode overrides.                  |
-| `mergeConfig(base, override)`                                          | done     | Shallow merge; arrays replaced wholesale; `protect` and `site` merged field-by-field.          |
-| `validateUserConfig(input)`                                            | done     | Hand-rolled validator; throws `ConfigError` with `code` + `hint`.                              |
-| `OvellumError` / `ConfigError`                                         | done     | Typed error base + config-specific subclass.                                                   |
+| IR types (`DocNode`, `DocFile`, `DocProject`, `DocParam`, `DocReturn`) | done   | Per [`DESIGN.md` §6](./DESIGN.md#6-intermediate-representation-ir)                             |
+| `OvellumConfig` schema                                                 | done   | Full reference in [`CONFIG.md`](./CONFIG.md). Includes `site`, `protect`, format, mode, paths. |
+| `defineConfig()` helper                                                | done   | Identity function for type-safe `ovellum.config.ts`.                                           |
+| `loadOvellumConfig({ cwd, configFile })`                               | done   | Loads via `c12`; applies defaults; validates. Returns `{ config, configFile, cwd }`.           |
+| `loadDirectoryOverride(rootCwd, targetDir, root)`                      | done   | Walks from root → target, merges every nested `ovellum.config.*` (deepest wins).               |
+| `parseFrontmatterOverride(frontmatter)`                                | done   | Extracts `ovellum:` block from `.md` frontmatter for per-file mode overrides.                  |
+| `mergeConfig(base, override)`                                          | done   | Shallow merge; arrays replaced wholesale; `protect` and `site` merged field-by-field.          |
+| `validateUserConfig(input)`                                            | done   | Hand-rolled validator; throws `ConfigError` with `code` + `hint`.                              |
+| `OvellumError` / `ConfigError`                                         | done   | Typed error base + config-specific subclass.                                                   |
 
 **Tests:** 29 vitest cases — defaults, full config, every validation error, merge rules, frontmatter overrides, per-directory loading.
 
@@ -54,35 +54,35 @@ Shared types, config schema, error class. Consumed by every other package.
 
 ### 3.1 Parser (`@ovellum/parser`)
 
-| Symbol kind             | Status | Notes                                                                |
-| ----------------------- | ------ | -------------------------------------------------------------------- |
+| Symbol kind             | Status   | Notes                                                                      |
+| ----------------------- | -------- | -------------------------------------------------------------------------- |
 | `function`              | done     | Generics + JSDoc + params + return type. Overloads deferred.               |
-| `class`                 | partial     | Methods + properties + extends + implements. Constructor section deferred. |
-| `interface`             | done     | Properties + methods + extends.                                      |
-| `type` alias            | done     | Name + RHS + generics.                                               |
-| `enum`                  | done     | Members with optional initializer values.                            |
-| `const` / `let` / `var` | deferred     | Deferred.                                                            |
-| Module-level `@module`  | partial     | Only when attached to the first statement of the file.               |
+| `class`                 | partial  | Methods + properties + extends + implements. Constructor section deferred. |
+| `interface`             | done     | Properties + methods + extends.                                            |
+| `type` alias            | done     | Name + RHS + generics.                                                     |
+| `enum`                  | done     | Members with optional initializer values.                                  |
+| `const` / `let` / `var` | deferred | Deferred.                                                                  |
+| Module-level `@module`  | partial  | Only when attached to the first statement of the file.                     |
 
-| JSDoc tag                        | Status                                                   |
-| -------------------------------- | -------------------------------------------------------- |
-| `@param`, `@returns` / `@return` | done                                                       |
-| `@throws` / `@exception`         | done                                                       |
-| `@example`                       | done                                                       |
-| `@deprecated`                    | done                                                       |
-| `@since`, `@see`                 | partial (extracted; rendering in generator deferred)     |
-| `@remarks`, `@description`       | done                                                     |
-| `@preserve` flag                 | partial (flag on `DocNode`; auto-wrapping deferred)      |
-| `@internal` flag                 | done                                                     |
-| Unknown tags                     | done (collected into the `tags` bag)                     |
+| JSDoc tag                        | Status                                               |
+| -------------------------------- | ---------------------------------------------------- |
+| `@param`, `@returns` / `@return` | done                                                 |
+| `@throws` / `@exception`         | done                                                 |
+| `@example`                       | done                                                 |
+| `@deprecated`                    | done                                                 |
+| `@since`, `@see`                 | partial (extracted; rendering in generator deferred) |
+| `@remarks`, `@description`       | done                                                 |
+| `@preserve` flag                 | partial (flag on `DocNode`; auto-wrapping deferred)  |
+| `@internal` flag                 | done                                                 |
+| Unknown tags                     | done (collected into the `tags` bag)                 |
 
-| Edge case                      | Status |
-| ------------------------------ | ------ |
-| Re-exports / barrel files      | deferred     |
-| Circular imports               | deferred     |
-| Overloaded functions           | deferred     |
-| Namespace exports              | deferred     |
-| `declare module` augmentations | deferred     |
+| Edge case                      | Status   |
+| ------------------------------ | -------- |
+| Re-exports / barrel files      | deferred |
+| Circular imports               | deferred |
+| Overloaded functions           | deferred |
+| Namespace exports              | deferred |
+| `declare module` augmentations | deferred |
 
 Anchor IDs: done `{relativeFilePath}::{symbolPath}` per [`DESIGN.md` §8.3](./DESIGN.md#83-anchor-ids-and-stability).
 
@@ -90,49 +90,49 @@ Anchor IDs: done `{relativeFilePath}::{symbolPath}` per [`DESIGN.md` §8.3](./DE
 
 ### 3.2 Generator (`@ovellum/generator`)
 
-| Feature                                                                    | Status | Notes                                        |
-| -------------------------------------------------------------------------- | ------ | -------------------------------------------- |
-| `generateDocs(project, config)` → `Map<outputPath, markdown>`              | done     |                                              |
+| Feature                                                                    | Status   | Notes                                              |
+| -------------------------------------------------------------------------- | -------- | -------------------------------------------------- |
+| `generateDocs(project, config)` → `Map<outputPath, markdown>`              | done     |                                                    |
 | Output path mapping `src/foo.ts` → `docs/foo.md`                           | done     | `.mdx` extension wired but JSX detection deferred. |
-| Frontmatter (`title`, `source`, `generated`, `ovellum: true`)              | done     |                                              |
-| Function template (signature + params table + returns + throws + examples) | done     |                                              |
-| Class template (heritage + methods table + properties table)               | partial     | Constructor section deferred.                      |
-| Interface template (members table)                                         | done     |                                              |
-| Type alias template                                                        | done     |                                              |
-| Enum template (members with values)                                        | done     |                                              |
-| Variable / const template                                                  | deferred     |                                              |
-| Anchor comments `<!-- ovellum:anchor id="…" generated="…" -->`             | done     | On every top-level + child node.             |
-| `@deprecated` callout                                                      | partial     | Plain blockquote. Styled callout deferred.         |
-| `@since` / `@see` rendering                                                | deferred     |                                              |
-| Sidebar / `_index.md` generator                                            | deferred     |                                              |
-| MDX mode (JSX-in-`@example` detection)                                     | deferred     |                                              |
+| Frontmatter (`title`, `source`, `generated`, `ovellum: true`)              | done     |                                                    |
+| Function template (signature + params table + returns + throws + examples) | done     |                                                    |
+| Class template (heritage + methods table + properties table)               | partial  | Constructor section deferred.                      |
+| Interface template (members table)                                         | done     |                                                    |
+| Type alias template                                                        | done     |                                                    |
+| Enum template (members with values)                                        | done     |                                                    |
+| Variable / const template                                                  | deferred |                                                    |
+| Anchor comments `<!-- ovellum:anchor id="…" generated="…" -->`             | done     | On every top-level + child node.                   |
+| `@deprecated` callout                                                      | partial  | Plain blockquote. Styled callout deferred.         |
+| `@since` / `@see` rendering                                                | deferred |                                                    |
+| Sidebar / `_index.md` generator                                            | deferred |                                                    |
+| MDX mode (JSX-in-`@example` detection)                                     | deferred |                                                    |
 
 **Tests:** 4 vitest cases (function rendering, mdx path mapping, multi-file).
 
 ### 3.3 Reader (`@ovellum/reader`)
 
-| Feature                                                              | Status | Notes                                                                                     |
-| -------------------------------------------------------------------- | ------ | ----------------------------------------------------------------------------------------- |
+| Feature                                                              | Status   | Notes                                                                                     |
+| -------------------------------------------------------------------- | -------- | ----------------------------------------------------------------------------------------- |
 | `readManualDoc(path)` / `parseManualDoc(raw, path)`                  | done     |                                                                                           |
 | Frontmatter via `gray-matter`                                        | done     |                                                                                           |
 | Protected zone extraction (`<!-- @manual:start id="…" -->` / `:end`) | done     | Regex-based; positional fallback IDs when `id` omitted.                                   |
 | Anchor association (block → nearest preceding `ovellum:anchor`)      | done     |                                                                                           |
 | Error: unclosed / nested / stray `@manual:end`                       | done     | `OvellumError` with codes `UNCLOSED_MANUAL_TAG`, `NESTED_MANUAL_TAG`, `STRAY_MANUAL_END`. |
-| Positional-fallback warning                                          | deferred     | Silent today.                                                                             |
-| Validation mode (link checker, required frontmatter)                 | deferred     | Needs `remark` stack.                                                                     |
+| Positional-fallback warning                                          | deferred | Silent today.                                                                             |
+| Validation mode (link checker, required frontmatter)                 | deferred | Needs `remark` stack.                                                                     |
 
 **Tests:** 9 vitest cases.
 
 ### 3.4 Merger (`@ovellum/merger`)
 
-| Feature                                                                     | Status | Notes                                               |
-| --------------------------------------------------------------------------- | ------ | --------------------------------------------------- |
+| Feature                                                                     | Status   | Notes                                               |
+| --------------------------------------------------------------------------- | -------- | --------------------------------------------------- |
 | `merge(generated, manual, opts?)` → `{ content, orphans, warnings }`        | done     |                                                     |
 | Section detection (anchor → next heading boundary)                          | done     | Splices manual blocks at section end.               |
 | Orphan quarantine                                                           | done     | Writes `.ovellum/orphans/{YYYY-MM-DD}_{slug}.md`.   |
 | `OrphanRecord` metadata (orphaned, source_file, anchor_id, manual_block_id) | done     |                                                     |
-| Anchor last-seen timestamp on orphans                                       | deferred     | Needs persisted IR history.                         |
-| `@preserve` auto-wrapping in generator                                      | deferred     | IR carries `isPreserved`; generator wiring pending. |
+| Anchor last-seen timestamp on orphans                                       | deferred | Needs persisted IR history.                         |
+| `@preserve` auto-wrapping in generator                                      | deferred | IR carries `isPreserved`; generator wiring pending. |
 
 **Tests:** 8 vitest cases.
 
@@ -140,21 +140,21 @@ Anchor IDs: done `{relativeFilePath}::{symbolPath}` per [`DESIGN.md` §8.3](./DE
 
 See [`CLI.md`](./CLI.md) for full reference.
 
-| Subcommand        | Status |
-| ----------------- | ------ |
+| Subcommand        | Status   |
+| ----------------- | -------- |
 | `ovellum build`   | done     |
-| `ovellum watch`   | deferred     |
-| `ovellum check`   | deferred     |
-| `ovellum orphans` | deferred     |
-| `ovellum init`    | deferred     |
-| `ovellum clean`   | deferred     |
+| `ovellum watch`   | deferred |
+| `ovellum check`   | deferred |
+| `ovellum orphans` | deferred |
+| `ovellum init`    | deferred |
+| `ovellum clean`   | deferred |
 
-| Flag               | Status          |
-| ------------------ | --------------- |
+| Flag               | Status            |
+| ------------------ | ----------------- |
 | `--cwd <dir>`      | done (on `build`) |
 | `--config <path>`  | done (on `build`) |
-| `--strict` global  | deferred              |
-| `--verbose` global | deferred              |
+| `--strict` global  | deferred          |
+| `--verbose` global | deferred          |
 
 Exit codes: `0` success · `1` build error · `3` config invalid · `2` (strict) deferred.
 
@@ -164,8 +164,8 @@ Exit codes: `0` success · `1` build error · `3` config invalid · `2` (strict)
 
 Powers `mode: 'manual'`. Design lives in [`SITE.md`](./SITE.md).
 
-| Feature                                                                            | Status | Notes                                                                                                                                                                                          |
-| ---------------------------------------------------------------------------------- | ------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Feature                                                                            | Status   | Notes                                                                                                                                                                                          |
+| ---------------------------------------------------------------------------------- | -------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `buildSite({ config, cwd })`                                                       | done     | Returns `{ pages, warnings, outputDir, assetsDir }`.                                                                                                                                           |
 | Markdown → HTML via unified + remark + rehype                                      | done     |                                                                                                                                                                                                |
 | Heading slugs (`rehype-slug`) + clickable `#` anchors (`rehype-autolink-headings`) | done     |                                                                                                                                                                                                |
@@ -179,15 +179,15 @@ Powers `mode: 'manual'`. Design lives in [`SITE.md`](./SITE.md).
 | Top bar with theme toggle                                                          | done     | Auto → light → dark cycle; localStorage-backed; applied pre-paint.                                                                                                                             |
 | Copy buttons on code blocks                                                        | done     | Injected client-side; ~50 lines of vanilla JS.                                                                                                                                                 |
 | Default light + dark themes                                                        | done     | From `STYLES.md` Tier 2 tokens (hand-ported into `style.css`).                                                                                                                                 |
-| Nord / Solarized themes in switcher                                                | deferred     | Tokens already in `STYLES.md`.                                                                                                                                                                 |
+| Nord / Solarized themes in switcher                                                | deferred | Tokens already in `STYLES.md`.                                                                                                                                                                 |
 | Footer with build timestamp                                                        | done     | Configurable; empty string disables.                                                                                                                                                           |
 | Canonical `<link>` + OG meta                                                       | done     | When `site.baseUrl` is set.                                                                                                                                                                    |
-| Search                                                                             | deferred     | Pagefind candidate.                                                                                                                                                                            |
-| Sitemap.xml / RSS                                                                  | deferred     |                                                                                                                                                                                                |
-| MDX rendering                                                                      | deferred     | `.md` only in v1.                                                                                                                                                                              |
-| Multiple bundled templates                                                         | deferred     | One default for now.                                                                                                                                                                           |
-| Live reload                                                                        | deferred     | Pairs with `ovellum watch`.                                                                                                                                                                    |
-| Plugin API for custom templates                                                    | deferred     |                                                                                                                                                                                                |
+| Search                                                                             | deferred | Pagefind candidate.                                                                                                                                                                            |
+| Sitemap.xml / RSS                                                                  | deferred |                                                                                                                                                                                                |
+| MDX rendering                                                                      | deferred | `.md` only in v1.                                                                                                                                                                              |
+| Multiple bundled templates                                                         | deferred | One default for now.                                                                                                                                                                           |
+| Live reload                                                                        | deferred | Pairs with `ovellum watch`.                                                                                                                                                                    |
+| Plugin API for custom templates                                                    | deferred |                                                                                                                                                                                                |
 
 **Tests:** 11 vitest cases across markdown, nav, template.
 
@@ -198,15 +198,15 @@ Powers `mode: 'manual'`. Design lives in [`SITE.md`](./SITE.md).
 Authoritative reference for color, type, space, rhythm. Site-builder
 stylesheet **hand-ports** from this.
 
-| Token group                                                | Status                            |
-| ---------------------------------------------------------- | --------------------------------- |
-| OKLCH palette: 4 neutrals + 8 accents, 50–950              | done                                |
-| Type scale (Major Third → Perfect Fourth, fluid)           | done                                |
-| Space scale (Utopia static + fluid pairs)                  | done                                |
-| Themes: default light + dark                               | done                                |
+| Token group                                                | Status                                    |
+| ---------------------------------------------------------- | ----------------------------------------- |
+| OKLCH palette: 4 neutrals + 8 accents, 50–950              | done                                      |
+| Type scale (Major Third → Perfect Fourth, fluid)           | done                                      |
+| Space scale (Utopia static + fluid pairs)                  | done                                      |
+| Themes: default light + dark                               | done                                      |
 | Themes: Nord (light + dark)                                | partial (in STYLES.md; not in stylesheet) |
 | Themes: Solarized (light + dark)                           | partial (in STYLES.md; not in stylesheet) |
-| Token-extraction script (auto-sync stylesheet ← STYLES.md) | deferred                                |
+| Token-extraction script (auto-sync stylesheet ← STYLES.md) | deferred                                  |
 
 ---
 
@@ -221,20 +221,42 @@ Generated outputs are gitignored per-example.
 
 ---
 
+## 6.5 Official website (`website/`)
+
+Ovellum's own site, built with Ovellum in manual mode and deployed to
+GitHub Pages on every push to `main`. Lives in
+[`website/`](../../website/). Design lives in [`DEPLOY.md`](./DEPLOY.md).
+
+| Feature                                     | Status   | Notes                                                                                                              |
+| ------------------------------------------- | -------- | ------------------------------------------------------------------------------------------------------------------ |
+| Landing + 15 doc pages built from Markdown  | done     | `pnpm -w run build:website` → `website/dist/`.                                                                     |
+| Custom domain via `CNAME`                   | done     | `website/content/CNAME` passes through to `dist/CNAME`. Target: `ovellum.oss.oinam.com` (DNS pending; TODO-Human). |
+| `404.html` for missing paths                | done     | `content/404.md` builds to `dist/404/index.html`; the post-build script also copies it to `dist/404.html`.         |
+| Deploy workflow (`deploy-website.yml`)      | done     | Push to `main` → build → `actions/deploy-pages@v4`. Concurrency-cancellation enabled.                              |
+| PR preview workflow (`website-preview.yml`) | done     | Pull-request builds upload `website-dist` as an artifact; no deploy.                                               |
+| pnpm + Node cache in CI                     | done     | `actions/setup-node@v4` with `cache: pnpm`.                                                                        |
+| `site.basePath` for subpath hosting         | deferred | Needed only if hosting from `<user>.github.io/<repo>/` instead of a custom domain.                                 |
+| Pagefind search integration                 | deferred | Post-build indexer + ~50 KB client. Separate slice.                                                                |
+| Sitemap.xml / RSS                           | deferred |                                                                                                                    |
+| Lighthouse CI                               | deferred |                                                                                                                    |
+
+---
+
 ## 7. Project plumbing
 
 | Feature                                          | Status | Notes                                                                                                                                                                      |
 | ------------------------------------------------ | ------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| pnpm workspaces + Turborepo                      | done     | Topological build / test / lint / typecheck.                                                                                                                               |
-| TypeScript project references                    | done     | Every package `composite: true` with `tsBuildInfoFile` inside `dist/`.                                                                                                     |
-| Build pattern `tsup && tsc -b --force`           | done     | Required for multi-file packages with composite refs. Documented in [`TODO.md` Phase 1 build note](./TODO.md#phase-1---core-types--config-ovellumcore) and project memory. |
-| ESM-only for `@ovellum/site`                     | done     | Uses `import.meta.url` to resolve bundled template dir.                                                                                                                    |
-| Post-build asset copy (site templates → `dist/`) | done     | `node -e "require('fs').cpSync(...)"` step.                                                                                                                                |
-| Prettier                                         | done     | `pnpm format` / `format:check`.                                                                                                                                            |
-| ESLint flat config + typescript-eslint           | done     | `src/templates/**` excluded for browser-globals.                                                                                                                           |
-| changesets                                       | done     | Configured; no releases yet.                                                                                                                                               |
-| GitHub Actions CI                                | done     | `ci.yml` (lint + typecheck + test + build) and `release.yml` (changesets publish).                                                                                         |
-| Demo scripts                                     | done     | `demo`, `demo:clean`, `demo:site`, `demo:site:clean`.                                                                                                                      |
+| pnpm workspaces + Turborepo                      | done   | Topological build / test / lint / typecheck.                                                                                                                               |
+| TypeScript project references                    | done   | Every package `composite: true` with `tsBuildInfoFile` inside `dist/`.                                                                                                     |
+| Build pattern `tsup && tsc -b --force`           | done   | Required for multi-file packages with composite refs. Documented in [`TODO.md` Phase 1 build note](./TODO.md#phase-1---core-types--config-ovellumcore) and project memory. |
+| ESM-only for `@ovellum/site`                     | done   | Uses `import.meta.url` to resolve bundled template dir.                                                                                                                    |
+| Post-build asset copy (site templates → `dist/`) | done   | `node -e "require('fs').cpSync(...)"` step.                                                                                                                                |
+| Prettier                                         | done   | `pnpm format` / `format:check`.                                                                                                                                            |
+| ESLint flat config + typescript-eslint           | done   | `src/templates/**` excluded for browser-globals.                                                                                                                           |
+| changesets                                       | done   | Configured; no releases yet.                                                                                                                                               |
+| GitHub Actions CI                                | done   | `ci.yml` (lint + typecheck + test + build) and `release.yml` (changesets publish).                                                                                         |
+| Demo scripts                                     | done   | `demo`, `demo:clean`, `demo:site`, `demo:site:clean`, `build:website`, `build:website:clean`.                                                                              |
+| Website deploy + PR preview workflows            | done   | `.github/workflows/{deploy-website,website-preview}.yml` + `scripts/website-postbuild.mjs`. See [`DEPLOY.md`](./DEPLOY.md).                                                |
 
 ---
 

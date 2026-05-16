@@ -1,7 +1,7 @@
 # TODO
 
 Living checklist for code / automation work. Update in place as work progresses.
-Last updated: 2026-05-16 (configurable landing page added to manual mode — hero + features + optional `_landing.md` pitch + trust strip)
+Last updated: 2026-05-16 (official `website/` + GitHub Pages deploy workflow; design in `DEPLOY.md`)
 
 > Manual items — prose, decisions, releases, things only a human can do —
 > live in [`TODO-Human.md`](./TODO-Human.md). When in doubt: if the work
@@ -245,6 +245,32 @@ Material for MkDocs. Disabled by default.
 - [ ] Multiple bundled landing templates / hero variants
 - [ ] Live GitHub stars / sponsor APIs in trust strip
 - [ ] Image / video hero variants
+
+### Phase 4.6 - Official website + GitHub Pages deploy (2026-05-16)
+
+Ovellum dogfooded against itself. Lives in [`website/`](../../website/);
+deploy design in [`DEPLOY.md`](./DEPLOY.md).
+
+- [x] `website/ovellum.config.json` with landing config (hero + 6 features + trust strip)
+- [x] `website/content/_landing.md` (Why-Ovellum pitch)
+- [x] 14 doc pages: getting-started, install, concepts/{modes, anchors-and-zones, orphans}, guides/{manual-mode, hybrid-mode, themes, deploy}, reference/{config, cli, glossary}, contributing
+- [x] `website/content/404.md` → `dist/404/index.html`; post-build script copies to `dist/404.html` for GH Pages
+- [x] `website/content/CNAME` (custom-domain marker) — passes through to `dist/CNAME`
+- [x] `pnpm -w run build:website` + `build:website:clean`
+- [x] `.github/workflows/deploy-website.yml` (push to `main` → build → upload artifact → deploy-pages)
+- [x] `.github/workflows/website-preview.yml` (PR build → artifact upload; no deploy)
+- [x] Concurrency cancellation (`group: pages, cancel-in-progress: true`)
+- [x] pnpm + Node 20 caching
+- [x] `docs/internal/DEPLOY.md` internal-design doc + user-facing `website/content/guides/deploy.md`
+- [ ] `site.basePath` config for project-page subpath hosting
+- [ ] Pagefind search wired into both workflows
+- [ ] Sitemap.xml + RSS auto-emit
+- [ ] Lighthouse CI workflow
+
+> Phase 4.6 v0 (2026-05-16): the site builds locally (`pnpm -w run build:website`)
+> with 15 pages and zero warnings. Deploy workflow is committed but not yet
+> verified end-to-end against live GitHub Pages — that happens on the next
+> push to `main`. DNS for `ovellum.oss.oinam.com` is a TODO-Human item.
 
 ---
 

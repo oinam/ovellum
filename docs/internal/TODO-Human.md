@@ -1,10 +1,8 @@
 # TODO (Human)
 
 > Yes, TODO items for humans.
->
-> Items that need a person — writing prose, making product decisions, running
-> things on real accounts, talking to other humans. Tracked here so they don't
-> clutter the code-side checklist in [`TODO.md`](./TODO.md).
+
+Items that need a person — writing prose, making product decisions, running things on real accounts, talking to other humans. Tracked here so they don't clutter the code-side checklist in [`TODO.md`](./TODO.md).
 
 Legend: `[ ]` not started · `[~]` in progress · `[x]` done · `[!]` blocked
 
@@ -14,17 +12,6 @@ Legend: `[ ]` not started · `[~]` in progress · `[x]` done · `[!]` blocked
 
 Public-facing writing. Voice matters; better drafted by a person and refined
 rather than generated.
-
-### `README.md` (final)
-
-- [ ] Replace the current scaffolded README with a launch-ready version covering:
-  - Overview / pitch
-  - Install (`npm i -D ovellum` / `npx ovellum init`)
-  - Quickstart (3-step path from `init` to a built `docs/`)
-  - Mode comparison (hybrid / manual / auto) with when to use each
-  - Config reference (link to `docs/config.md` once written)
-  - Tagging guide (link to `docs/tagging.md` once written)
-  - Badges: CI status, npm version, license, coverage
 
 ### `CONTRIBUTING.md` (final)
 
@@ -114,3 +101,21 @@ event with a clear "done" state.
       and that DNS / hosting is reserved.
 - [ ] Confirm GitHub org/owner (`oinam` per README) and that the repo URL is
       stable before publicizing.
+
+## Website / deploy go-live
+
+The website code, content, and workflows are wired up (see Phase 4.6 in
+`TODO.md`). These one-time tasks need a human with repo + DNS access:
+
+- [ ] In GitHub repo Settings → Pages, set "Build and deployment" source
+      to **GitHub Actions** (the modern flow; the workflow expects this).
+- [ ] Push to `main` (or trigger the `Deploy website` workflow via
+      `workflow_dispatch`) to verify the first deploy end-to-end.
+- [ ] Set up DNS for `ovellum.oss.oinam.com`: - Add a `CNAME` record at `ovellum.oss.oinam.com`
+      pointing to `oinam.github.io`. - Wait for propagation (usually ≤ 1 hour). - In Pages settings, the custom domain should auto-verify from the
+      committed `website/CNAME`. Enable **Enforce HTTPS** once the
+      certificate is provisioned.
+- [ ] Smoke-test the live URL: landing renders, CTAs link, theme toggle
+      works, `/wat/` returns the 404 page.
+- [ ] Open a PR (any small change to `website/`) to confirm the
+      `Website preview` workflow uploads its `website-dist` artifact.
