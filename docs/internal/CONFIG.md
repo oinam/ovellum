@@ -8,7 +8,7 @@ For the original design intent see [`DESIGN.md` §7](./DESIGN.md#7-config-schema
 For terms ("anchor", "protected zone", "orphan") see [`GLOSSARY.md`](./GLOSSARY.md).
 For what each field actually enables see [`FEATURES.md`](./FEATURES.md).
 
-Last updated: 2026-05-16
+Last updated: 2026-05-16 (added `site.landing`)
 
 ---
 
@@ -104,10 +104,96 @@ interface OvellumSiteConfig {
 | `baseUrl`      | `string?`                     | `undefined`               | template (`<link rel="canonical">`, OG cards) | E.g. `'https://docs.example.com'`. Omit for relative-link output. |
 | `defaultTheme` | `'auto' \| 'light' \| 'dark'` | `'auto'`                  | template (initial `data-theme`)               | Overridden once the user toggles and we read `localStorage`.      |
 | `footer`       | `string`                      | `'Built with Ovellum'`    | template (footer)                             | Empty string disables the footer entirely.                        |
+| `landing`      | `OvellumLandingConfig`        | `{ enabled: false, … }`   | landing renderer                              | See §4.                                                           |
 
 ---
 
-## 4. Per-file overrides
+## 4. `site.landing` block (homepage / landing page)
+
+Opt-in landing page rendered at `/` instead of the regular doc index.
+Disabled by default; existing manual-mode sites are unchanged. When
+enabled, `content/index.md` is skipped with a warning (the landing
+replaces it).
+
+```typescript
+interface OvellumLandingConfig {
+  enabled: boolean;
+  docsHref?: string;
+  hero: {
+    title?: string;
+    subtitle?: string;
+    ctas: Array<{ label: string; href: string; style?: 'primary' | 'secondary' }>;
+  };
+  features: Array<{ icon?: string; title: string; description: string }>;
+  trustStrip?: {
+    label?: string;
+    items: Array<{ name: string; href?: string; image?: string }>;
+  };
+}
+```
+
+| Field        | Type                        | Default            | Notes                                                                                                         |
+| ------------ | --------------------------- | ------------------ | ------------------------------------------------------------------------------------------------------------- |
+| `enabled`    | `boolean`                   | `false`            | When `false`, `/` behaves as before (the regular doc index).                                                  |
+| `docsHref`   | `string?`                   | first sidebar page | Where the top-bar **Docs** link points and where the primary CTA defaults if it isn't given an explicit href. |
+| `hero`       | `OvellumLandingHero`        | empty              | See below.                                                                                                    |
+| `features`   | `OvellumLandingFeature[]`   | `[]`               | Feature cards in document order; replaced wholesale on merge.                                                 |
+| `trustStrip` | `OvellumLandingTrustStrip?` | omitted            | Rendered last when present and `items` is non-empty.                                                          |
+
+### `hero`
+
+| Field      | Type                  | Notes                                                                                      |
+| ---------- | --------------------- | ------------------------------------------------------------------------------------------ |
+| `title`    | `string?`             | Falls back to `site.title`.                                                                |
+| `subtitle` | `string?`             | Short tagline rendered under the title.                                                    |
+| `ctas`     | `OvellumLandingCta[]` | First CTA defaults to `primary` style, the rest to `secondary` unless `style` is explicit. |
+
+### `OvellumLandingCta`
+
+| Field   | Type                        | Notes                                                |
+| ------- | --------------------------- | ---------------------------------------------------- |
+| `label` | `string`                    | Button text.                                         |
+| `href`  | `string`                    | Internal path (`/getting-started/`) or absolute URL. |
+| `style` | `'primary' \| 'secondary'?` | Visual treatment.                                    |
+
+### `OvellumLandingFeature`
+
+| Field         | Type      | Notes                                                                                 |
+| ------------- | --------- | ------------------------------------------------------------------------------------- |
+| `icon`        | `string?` | Emoji, short text, or raw HTML / SVG. Rendered as-is. Omit to render without an icon. |
+| `title`       | `string`  | Card title.                                                                           |
+| `description` | `string`  | Card body. One short sentence works best.                                             |
+
+### `OvellumLandingTrustStrip`
+
+| Field   | Type                        | Notes                                                        |
+| ------- | --------------------------- | ------------------------------------------------------------ |
+| `label` | `string?`                   | Optional section label, e.g. `"Trusted by"`, `"Powered by"`. |
+| `items` | `OvellumLandingTrustItem[]` | Rendered in order; replaced wholesale on merge.              |
+
+### `OvellumLandingTrustItem`
+
+| Field   | Type      | Notes                                                                                                        |
+| ------- | --------- | ------------------------------------------------------------------------------------------------------------ |
+| `name`  | `string`  | Display name (used as both visible text and the `alt` if `image` is set).                                    |
+| `href`  | `string?` | If set, the item becomes a link.                                                                             |
+| `image` | `string?` | Path relative to `input/`. The file should be a static asset (`.svg`, `.png`) that the build passes through. |
+
+### Optional `content/_landing.md`
+
+When the landing is enabled, the build looks for `content/_landing.md`
+(file name configurable in a future release). If present, its body is
+rendered between the feature grid and the trust strip as the
+"Why / pitch" section.
+
+The underscore prefix keeps it out of the regular page walk, so it
+doesn't appear in the sidebar or as a standalone URL. Frontmatter is
+respected but currently only `title` is read (used for the section
+heading if you want one inline in the body).
+
+---
+
+## 5. Per-file overrides
 
 Front-matter inside any `.md` / `.mdx` file may override the mode for that
 file:
@@ -132,7 +218,7 @@ auto-generated file is **not** a mode override. The parser distinguishes
 
 ---
 
-## 5. Frontmatter on `.md` content pages (manual mode)
+## 6. Frontmatter on `.md` content pages (manual mode)
 
 Recognised inside the frontmatter of any page (orthogonal to the `ovellum:`
 override above):
@@ -147,7 +233,7 @@ Per-directory ordering uses `_meta.json` instead — see §6.
 
 ---
 
-## 6. `_meta.json` (per-directory, manual mode)
+## 7. `_meta.json` (per-directory, manual mode)
 
 Place inside any subdirectory of `input/` to control sidebar grouping:
 
@@ -165,7 +251,7 @@ Place inside any subdirectory of `input/` to control sidebar grouping:
 
 ---
 
-## 7. Subdirectory config overrides
+## 8. Subdirectory config overrides
 
 `ovellum.config.*` may appear in any subdirectory. `loadDirectoryOverride()`
 walks from the project root down to a target directory and merges every config
@@ -177,7 +263,7 @@ and `site` are merged field-by-field.
 
 ---
 
-## 8. Validation
+## 9. Validation
 
 Every load passes through `validateUserConfig()` and throws a `ConfigError`
 on the first invalid field. CLI exit code on failure: **3**.

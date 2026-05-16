@@ -5,7 +5,7 @@ and CLI output. Linked from `DESIGN.md`, `SITE.md`, `FEATURES.md`, `CLI.md`,
 `CONFIG.md`. Update in the same commit as any change that introduces a new
 term.
 
-Last updated: 2026-05-16
+Last updated: 2026-05-16 (added Landing page / Hero / CTA / Feature card / Trust strip / `_landing.md`)
 
 ---
 
@@ -88,12 +88,31 @@ Parsed via `gray-matter`. Ovellum cares about:
 The frontmatter parser used by `@ovellum/reader` and `@ovellum/site`. Splits
 a Markdown file into `{ data, content }`.
 
+### CTA (call to action)
+
+A button on the landing-page hero or feature section that invites the
+reader to do something — "Get started", "View on GitHub". Configured
+under `site.landing.hero.ctas`. First button defaults to `primary`
+style (accent fill), the rest default to `secondary` (outlined).
+
+### Feature card
+
+One cell of the landing-page feature grid: optional icon + title + short
+description. Configured under `site.landing.features[]`. Material for
+MkDocs-style; auto-fits 1–4 columns by viewport.
+
 ### Heading anchor (UI)
 
 A small clickable `#` link prepended to each `<h2>`/`<h3>` in rendered HTML
 by `rehype-autolink-headings`. Different from anchors (the merge-engine
 concept above). The styled `.heading-anchor` class is what users see; the
 `<!-- ovellum:anchor -->` comments are invisible.
+
+### Hero
+
+The full-width title + subtitle + CTA buttons block at the top of a
+landing page. Configured under `site.landing.hero`. Renders only when
+`site.landing.enabled === true`.
 
 ### Hybrid mode
 
@@ -120,6 +139,23 @@ The typed shape passed from `@ovellum/parser` to `@ovellum/generator`.
 Comprises `DocNode`, `DocFile`, `DocProject` plus the `DocParam` and
 `DocReturn` value objects. Decouples parsing from rendering — a future
 non-TS parser could produce the same IR and reuse the generator.
+
+### `_landing.md`
+
+Optional content file (`{input}/_landing.md`) that supplies free-form
+Markdown prose for the "Why" section of the landing page. Rendered
+between the feature grid and the trust strip. Underscore prefix keeps
+it out of the regular sidebar / page walk.
+
+### Landing page
+
+A wider, marketing-style page rendered at `/` when
+`site.landing.enabled === true`. Hero + feature grid + optional pitch
+prose + optional trust strip. Doc pages keep their existing URLs; the
+top-bar gains a Docs link (configurable via `site.landing.docsHref`).
+Disabled by default — manual-mode sites without landing config
+continue to use `content/index.md` for `/`. Inspired by Material for
+MkDocs.
 
 ### Manual mode
 
@@ -201,6 +237,14 @@ The unified ecosystem markdown/HTML pipeline used by `@ovellum/site`.
 remark parses Markdown to mdast; remark-rehype converts to hast; rehype
 plugins decorate (anchors, slugs); rehype-stringify emits HTML. Shiki is
 applied as a hast transform.
+
+### Trust strip
+
+The optional row of partner / sponsor / "powered by" links rendered at
+the bottom of a landing page, above the footer. Configured under
+`site.landing.trustStrip`. Each item is `{ name, href?, image? }` —
+items with an `image` render as `<img>`s, items without render as
+text badges.
 
 ### shiki
 

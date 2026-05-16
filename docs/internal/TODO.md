@@ -1,7 +1,7 @@
 # TODO
 
 Living checklist for code / automation work. Update in place as work progresses.
-Last updated: 2026-05-16 (added FEATURES / CONFIG / CLI / GLOSSARY internal docs; doc-update cadence now per-commit)
+Last updated: 2026-05-16 (configurable landing page added to manual mode — hero + features + optional `_landing.md` pitch + trust strip)
 
 > Manual items — prose, decisions, releases, things only a human can do —
 > live in [`TODO-Human.md`](./TODO-Human.md). When in doubt: if the work
@@ -228,6 +228,23 @@ New phase introduced 2026-05-15. Design lives in [`SITE.md`](./SITE.md).
 > right-side ToC, syntax-highlighted code, and an auto/light/dark theme
 > toggle. All deferred items above are nice-to-haves; the core path is
 > shippable.
+
+### Phase 4.5 follow-up: landing page (2026-05-16)
+
+Configurable landing / homepage rendered at `/` when enabled. Inspired by
+Material for MkDocs. Disabled by default.
+
+- [x] `OvellumLandingConfig` type + DEFAULT_CONFIG + merge + validate in `@ovellum/core`
+- [x] `renderLanding()` in `@ovellum/site/src/template.ts` (hero + feature grid + pitch + trust strip)
+- [x] `buildSite()` detects `site.landing.enabled`; reads optional `content/_landing.md` body; writes landing to `dist/index.html`; warns + skips `content/index.md` when present
+- [x] Topbar gains a Docs link via `site.landing.docsHref` (falls back to first sidebar child)
+- [x] CSS: `.ov-hero`, `.ov-hero-title`, `.ov-cta-row`, `.ov-cta--primary/--secondary`, `.ov-feature-grid`, `.ov-feature-card`, `.ov-pitch`, `.ov-trust`, responsive collapses
+- [x] `examples/manual-site` switched to demo the landing
+- [x] 7 vitest cases for the landing renderer
+- [x] Docs updated: CONFIG.md (§4 `site.landing`), FEATURES.md, GLOSSARY.md (Landing page / Hero / CTA / Feature card / Trust strip / `_landing.md`), SITE.md (§2a)
+- [ ] Multiple bundled landing templates / hero variants
+- [ ] Live GitHub stars / sponsor APIs in trust strip
+- [ ] Image / video hero variants
 
 ---
 

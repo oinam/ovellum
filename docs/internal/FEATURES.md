@@ -8,7 +8,7 @@ deferred items see [`TODO.md`](./TODO.md). For human-only tasks (writing prose,
 product decisions, release) see [`TODO-Human.md`](./TODO-Human.md). For
 terminology see [`GLOSSARY.md`](./GLOSSARY.md).
 
-Last updated: 2026-05-16
+Last updated: 2026-05-16 (configurable landing page added)
 
 Status legend:
 
@@ -164,29 +164,30 @@ Exit codes: `0` success · `1` build error · `3` config invalid · `2` (strict)
 
 Powers `mode: 'manual'`. Design lives in [`SITE.md`](./SITE.md).
 
-| Feature                                                                            | Status | Notes                                                                                                                                                                |
-| ---------------------------------------------------------------------------------- | ------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `buildSite({ config, cwd })`                                                       | ✅     | Returns `{ pages, warnings, outputDir, assetsDir }`.                                                                                                                 |
-| Markdown → HTML via unified + remark + rehype                                      | ✅     |                                                                                                                                                                      |
-| Heading slugs (`rehype-slug`) + clickable `#` anchors (`rehype-autolink-headings`) | ✅     |                                                                                                                                                                      |
-| Shiki dual-theme code highlighting                                                 | ✅     | `github-light` + `github-dark` via CSS variables. Zero runtime JS for highlighting. Supported langs: ts, tsx, js, jsx, json, bash, shell, markdown, yaml, html, css. |
-| Auto-generated sidebar from file tree                                              | ✅     | Titles: frontmatter `title:` → first `# H1` → filename.                                                                                                              |
-| `_meta.json` per-directory override                                                | ✅     | Sets directory `title` and `order` (slug list).                                                                                                                      |
-| Right-side "On this page" ToC                                                      | ✅     | h2/h3 only.                                                                                                                                                          |
-| Pretty URLs (`name/index.html`)                                                    | ✅     |                                                                                                                                                                      |
-| Static asset passthrough                                                           | ✅     | Non-`.md` files (images, etc.) copied as-is.                                                                                                                         |
-| Top bar with theme toggle                                                          | ✅     | Auto → light → dark cycle; localStorage-backed; applied pre-paint.                                                                                                   |
-| Copy buttons on code blocks                                                        | ✅     | Injected client-side; ~50 lines of vanilla JS.                                                                                                                       |
-| Default light + dark themes                                                        | ✅     | From `STYLES.md` Tier 2 tokens (hand-ported into `style.css`).                                                                                                       |
-| Nord / Solarized themes in switcher                                                | 🚧     | Tokens already in `STYLES.md`.                                                                                                                                       |
-| Footer with build timestamp                                                        | ✅     | Configurable; empty string disables.                                                                                                                                 |
-| Canonical `<link>` + OG meta                                                       | ✅     | When `site.baseUrl` is set.                                                                                                                                          |
-| Search                                                                             | 🚧     | Pagefind candidate.                                                                                                                                                  |
-| Sitemap.xml / RSS                                                                  | 🚧     |                                                                                                                                                                      |
-| MDX rendering                                                                      | 🚧     | `.md` only in v1.                                                                                                                                                    |
-| Multiple bundled templates                                                         | 🚧     | One default for now.                                                                                                                                                 |
-| Live reload                                                                        | 🚧     | Pairs with `ovellum watch`.                                                                                                                                          |
-| Plugin API for custom templates                                                    | 🚧     |                                                                                                                                                                      |
+| Feature                                                                            | Status | Notes                                                                                                                                                                                          |
+| ---------------------------------------------------------------------------------- | ------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `buildSite({ config, cwd })`                                                       | ✅     | Returns `{ pages, warnings, outputDir, assetsDir }`.                                                                                                                                           |
+| Markdown → HTML via unified + remark + rehype                                      | ✅     |                                                                                                                                                                                                |
+| Heading slugs (`rehype-slug`) + clickable `#` anchors (`rehype-autolink-headings`) | ✅     |                                                                                                                                                                                                |
+| Shiki dual-theme code highlighting                                                 | ✅     | `github-light` + `github-dark` via CSS variables. Zero runtime JS for highlighting. Supported langs: ts, tsx, js, jsx, json, bash, shell, markdown, yaml, html, css.                           |
+| Auto-generated sidebar from file tree                                              | ✅     | Titles: frontmatter `title:` → first `# H1` → filename.                                                                                                                                        |
+| `_meta.json` per-directory override                                                | ✅     | Sets directory `title` and `order` (slug list).                                                                                                                                                |
+| Right-side "On this page" ToC                                                      | ✅     | h2/h3 only.                                                                                                                                                                                    |
+| Pretty URLs (`name/index.html`)                                                    | ✅     |                                                                                                                                                                                                |
+| Static asset passthrough                                                           | ✅     | Non-`.md` files (images, etc.) copied as-is.                                                                                                                                                   |
+| **Landing page** (`site.landing.enabled`)                                          | ✅     | Disabled by default. When enabled: full-width hero + feature grid + optional `_landing.md` prose + optional trust strip rendered at `/`. Doc pages keep their URLs. Top-bar gains a Docs link. |
+| Top bar with theme toggle                                                          | ✅     | Auto → light → dark cycle; localStorage-backed; applied pre-paint.                                                                                                                             |
+| Copy buttons on code blocks                                                        | ✅     | Injected client-side; ~50 lines of vanilla JS.                                                                                                                                                 |
+| Default light + dark themes                                                        | ✅     | From `STYLES.md` Tier 2 tokens (hand-ported into `style.css`).                                                                                                                                 |
+| Nord / Solarized themes in switcher                                                | 🚧     | Tokens already in `STYLES.md`.                                                                                                                                                                 |
+| Footer with build timestamp                                                        | ✅     | Configurable; empty string disables.                                                                                                                                                           |
+| Canonical `<link>` + OG meta                                                       | ✅     | When `site.baseUrl` is set.                                                                                                                                                                    |
+| Search                                                                             | 🚧     | Pagefind candidate.                                                                                                                                                                            |
+| Sitemap.xml / RSS                                                                  | 🚧     |                                                                                                                                                                                                |
+| MDX rendering                                                                      | 🚧     | `.md` only in v1.                                                                                                                                                                              |
+| Multiple bundled templates                                                         | 🚧     | One default for now.                                                                                                                                                                           |
+| Live reload                                                                        | 🚧     | Pairs with `ovellum watch`.                                                                                                                                                                    |
+| Plugin API for custom templates                                                    | 🚧     |                                                                                                                                                                                                |
 
 **Tests:** 11 vitest cases across markdown, nav, template.
 
@@ -246,7 +247,7 @@ Generated outputs are gitignored per-example.
 | `@ovellum/generator` | 4      | function rendering, output paths, multi-file                                        |
 | `@ovellum/reader`    | 9      | frontmatter, zones (explicit + positional ids), anchor association, all error paths |
 | `@ovellum/merger`    | 8      | splice, orphan quarantine, multi-block, anchorless warning                          |
-| `@ovellum/site`      | 11     | markdown pipeline, nav tree, page template                                          |
-| **Total**            | **67** |                                                                                     |
+| `@ovellum/site`      | 18     | markdown pipeline, nav tree, page template, landing renderer                        |
+| **Total**            | **74** |                                                                                     |
 
 Per the cadence rule, this count updates with each commit that adds or removes tests.

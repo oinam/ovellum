@@ -27,6 +27,50 @@ bottom so they don't get lost.
 - Custom shortcodes / directives beyond what remark gives natively
 - RSS / sitemap.xml (small follow-up; not v1)
 
+## 2a. Landing page (added 2026-05-16)
+
+Optional homepage rendered at `/` when `site.landing.enabled === true`.
+Disabled by default — existing manual-mode sites keep using
+`content/index.md` for `/`. Inspired by Material for MkDocs.
+
+**Sections, in order, on the landing page:**
+
+1. **Hero** — full-width title + subtitle + CTA row. Title falls back to
+   `site.title`. First CTA gets `primary` style by default, the rest
+   `secondary`.
+2. **Feature grid** — responsive grid of cards (icon + title + description).
+   `auto-fit, minmax(260px, 1fr)` — collapses to 1 column on narrow
+   viewports.
+3. **Pitch (optional)** — free-form Markdown from `{input}/_landing.md` if
+   present. Renders between feature grid and trust strip. The underscore
+   prefix keeps the file out of the regular sidebar walk.
+4. **Trust strip (optional)** — small row of partner/sponsor links. Each
+   item is text or an `<img>` (path is passed through as a static asset).
+
+**Routing model:** the landing replaces `content/index.md`'s output at `/`.
+If both exist, `index.md` is skipped with a warning during the build.
+All other pages keep their slugged URLs. The topbar gains a **Docs** link
+(`site.landing.docsHref`, falling back to the first child in the sidebar
+nav) so users always have a one-click path into the documentation.
+
+**Why not put hero/features in Markdown?** Two reasons:
+
+- Structured config validates at load time (typos in field names error
+  cleanly).
+- The CSS layout has to know which slot is which; encoding that in
+  Markdown would require either custom directives or a brittle "first h1
+  is the hero" convention.
+
+The hybrid lets writers keep their prose voice for the "Why" section while
+the structured bits (hero, features, trust) stay in config.
+
+**Deferred (post-v1):**
+
+- Multiple bundled landing templates / hero variants
+- Live GitHub stars / sponsor APIs
+- Image hero / video hero
+- Per-section show-if-viewport / animation directives
+
 ## 3. Architecture
 
 ```
@@ -65,16 +109,16 @@ CLI (`packages/cli`) routes to `buildSite()` when `config.mode === 'manual'`.
 
 Build-time only. Nothing ships to the browser except a small theme/copy script.
 
-| Package | Purpose |
-|---|---|
-| `unified` | pipeline orchestrator |
-| `remark-parse` | Markdown → mdast |
-| `remark-rehype` | mdast → hast |
-| `rehype-stringify` | hast → HTML string |
-| `rehype-slug` | id="" attrs on headings (for anchors + ToC) |
-| `rehype-autolink-headings` | clickable `#` links on headings |
-| `shiki` | code-block syntax highlighting (TextMate grammars; theme-loadable from JSON) |
-| `unist-util-visit` | AST traversal helper |
+| Package                    | Purpose                                                                      |
+| -------------------------- | ---------------------------------------------------------------------------- |
+| `unified`                  | pipeline orchestrator                                                        |
+| `remark-parse`             | Markdown → mdast                                                             |
+| `remark-rehype`            | mdast → hast                                                                 |
+| `rehype-stringify`         | hast → HTML string                                                           |
+| `rehype-slug`              | id="" attrs on headings (for anchors + ToC)                                  |
+| `rehype-autolink-headings` | clickable `#` links on headings                                              |
+| `shiki`                    | code-block syntax highlighting (TextMate grammars; theme-loadable from JSON) |
+| `unist-util-visit`         | AST traversal helper                                                         |
 
 Reader already supplies `gray-matter` for frontmatter.
 
@@ -104,6 +148,7 @@ export interface OvellumConfig {
 
 All optional, all sane-defaulted in `DEFAULT_CONFIG`. Existing config fields
 that already apply:
+
 - `input` — root of `.md` content (defaults to `./src`; for manual sites the
   example uses `./content`)
 - `output` — `dist/` directory
@@ -134,6 +179,7 @@ Auto-generated from the file tree. Per directory:
    then alphabetical.
 
 Optional `_meta.json` per directory:
+
 ```json
 {
   "title": "Guides",
@@ -145,7 +191,7 @@ Optional `_meta.json` per directory:
 
 ## 8. Page layout
 
-```
+````
 ┌──────────────────────────────────────────────────────────────────┐
 │  TopBar   [site title] ··················· [theme toggle]        │
 ├──────────────────────────────────────────────────────────────────┤
@@ -162,9 +208,10 @@ Optional `_meta.json` per directory:
 ├──────────────────────────────────────────────────────────────────┤
 │  Footer   ··· Built with Ovellum · 2026-05-15 ···                │
 └──────────────────────────────────────────────────────────────────┘
-```
+````
 
 Grid:
+
 ```css
 display: grid;
 grid-template-columns: 240px minmax(0, 1fr) 200px;
@@ -177,13 +224,14 @@ a hamburger button.
 ## 9. Theme integration
 
 The stylesheet sources its tokens from `docs/internal/STYLES.md` (Tier 1 +
-Tier 2 default-light / default-dark blocks).  Authoritative copy lives in
+Tier 2 default-light / default-dark blocks). Authoritative copy lives in
 `packages/site/src/templates/default/style.css`; if `STYLES.md` changes, we
 hand-port the relevant token values. (Future: a small token-extraction script
 could automate this, but a hand-port is fine for v1 — the palette doesn't move
 weekly.)
 
 The theme toggle (`script.js`):
+
 - Reads `localStorage.getItem('ovellum-theme')` synchronously before paint
 - Writes `<html data-theme="…">` accordingly
 - Cycles auto → light → dark on click
@@ -195,6 +243,7 @@ toggle to a select.
 ## 10. Page metadata + `<head>`
 
 For each page:
+
 - `<title>` = `{page.title} · {site.title}` (or just `{site.title}` for the index)
 - `<meta name="description">` from frontmatter `description:` or site default
 - `<link rel="canonical">` if `site.baseUrl` is set
@@ -226,11 +275,11 @@ For each page:
 
 ## 13. Decisions log
 
-| Decision | Why |
-|---|---|
-| One default template | Faster to ship; plugin API can come once there's a second template demanding it. |
-| Shiki at build time, zero runtime highlighter | Output quality matters for a docs tool; baked-in shiki output is the right default. |
-| Pretty URLs (`name/index.html`) | Standard for static sites; works on any host without server-side rewrites. |
-| `_meta.json` for nav overrides | JSON over YAML so we don't drag in another parser; per-directory locality > root-config nav tree. |
-| No live reload in v1 | Phase 6 watch ticket already exists; site builder shouldn't ship a second watcher. |
-| Hand-port STYLES.md tokens into `style.css` | Avoid a token-extraction step for v1; revisit when tokens drift. |
+| Decision                                      | Why                                                                                               |
+| --------------------------------------------- | ------------------------------------------------------------------------------------------------- |
+| One default template                          | Faster to ship; plugin API can come once there's a second template demanding it.                  |
+| Shiki at build time, zero runtime highlighter | Output quality matters for a docs tool; baked-in shiki output is the right default.               |
+| Pretty URLs (`name/index.html`)               | Standard for static sites; works on any host without server-side rewrites.                        |
+| `_meta.json` for nav overrides                | JSON over YAML so we don't drag in another parser; per-directory locality > root-config nav tree. |
+| No live reload in v1                          | Phase 6 watch ticket already exists; site builder shouldn't ship a second watcher.                |
+| Hand-port STYLES.md tokens into `style.css`   | Avoid a token-extraction step for v1; revisit when tokens drift.                                  |
