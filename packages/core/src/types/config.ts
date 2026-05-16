@@ -18,6 +18,59 @@ export interface ProtectConfig {
 
 export type OvellumDefaultTheme = 'auto' | 'light' | 'dark';
 
+export type OvellumCtaStyle = 'primary' | 'secondary';
+
+export interface OvellumLandingCta {
+  label: string;
+  href: string;
+  /** Visual style. Defaults to `'primary'` for the first CTA, `'secondary'` thereafter. */
+  style?: OvellumCtaStyle;
+}
+
+export interface OvellumLandingHero {
+  /** Defaults to `site.title`. */
+  title?: string;
+  /** Short tagline rendered under the title. */
+  subtitle?: string;
+  /** Hero call-to-action buttons. Render in order. */
+  ctas: OvellumLandingCta[];
+}
+
+export interface OvellumLandingFeature {
+  /** Emoji, short string, or raw HTML (e.g. SVG). Rendered as-is. */
+  icon?: string;
+  title: string;
+  description: string;
+}
+
+export interface OvellumLandingTrustItem {
+  name: string;
+  /** Optional external link. */
+  href?: string;
+  /** Path (relative to `input/`) to an SVG/PNG passed through as a static asset. */
+  image?: string;
+}
+
+export interface OvellumLandingTrustStrip {
+  /** Section label, e.g. `"Trusted by"`. */
+  label?: string;
+  items: OvellumLandingTrustItem[];
+}
+
+export interface OvellumLandingConfig {
+  /** Render a landing page at `/` instead of the regular doc index. */
+  enabled: boolean;
+  /**
+   * Destination of the top-bar "Docs" link. If unset, falls back to the first
+   * page in the auto-generated sidebar nav.
+   */
+  docsHref?: string;
+  hero: OvellumLandingHero;
+  features: OvellumLandingFeature[];
+  /** Trust strip rendered after the prose body, if any. */
+  trustStrip?: OvellumLandingTrustStrip;
+}
+
 export interface OvellumSiteConfig {
   /** Site title. Defaults to `OvellumConfig.name` or `'Ovellum site'`. */
   title?: string;
@@ -29,6 +82,8 @@ export interface OvellumSiteConfig {
   defaultTheme: OvellumDefaultTheme;
   /** Footer text. Empty string disables the footer entirely. */
   footer: string;
+  /** Landing-page settings. Disabled by default. */
+  landing: OvellumLandingConfig;
 }
 
 export interface OvellumConfig {
@@ -77,6 +132,11 @@ export const DEFAULT_CONFIG: OvellumConfig = {
   site: {
     defaultTheme: 'auto',
     footer: 'Built with Ovellum',
+    landing: {
+      enabled: false,
+      hero: { ctas: [] },
+      features: [],
+    },
   },
 };
 

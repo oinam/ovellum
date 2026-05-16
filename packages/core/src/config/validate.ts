@@ -5,6 +5,7 @@ const MODES = ['hybrid', 'manual', 'auto'] as const;
 const FORMATS = ['md', 'mdx'] as const;
 const ORPHAN_STRATEGIES = ['quarantine', 'warn'] as const;
 const THEMES = ['auto', 'light', 'dark'] as const;
+const CTA_STYLES = ['primary', 'secondary'] as const;
 
 function isPlainObject(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
@@ -116,7 +117,94 @@ export function validateUserConfig(input: unknown): OvellumUserConfig {
     ) {
       throw new ConfigError(`\`site.defaultTheme\` must be one of: ${THEMES.join(', ')}.`);
     }
+    if (s.landing !== undefined) validateLanding(s.landing);
   }
 
   return c as OvellumUserConfig;
+}
+
+function validateLanding(value: unknown): void {
+  if (!isPlainObject(value)) {
+    throw new ConfigError('`site.landing` must be an object.');
+  }
+  const l = value;
+  if (l.enabled !== undefined && typeof l.enabled !== 'boolean') {
+    throw new ConfigError('`site.landing.enabled` must be a boolean.');
+  }
+  if (l.docsHref !== undefined && typeof l.docsHref !== 'string') {
+    throw new ConfigError('`site.landing.docsHref` must be a string URL or path.');
+  }
+  if (l.hero !== undefined) {
+    if (!isPlainObject(l.hero)) {
+      throw new ConfigError('`site.landing.hero` must be an object.');
+    }
+    const h = l.hero;
+    if (h.title !== undefined && typeof h.title !== 'string') {
+      throw new ConfigError('`site.landing.hero.title` must be a string.');
+    }
+    if (h.subtitle !== undefined && typeof h.subtitle !== 'string') {
+      throw new ConfigError('`site.landing.hero.subtitle` must be a string.');
+    }
+    if (h.ctas !== undefined) {
+      if (!Array.isArray(h.ctas)) {
+        throw new ConfigError('`site.landing.hero.ctas` must be an array.');
+      }
+      h.ctas.forEach((cta, i) => validateCta(cta, `site.landing.hero.ctas[${i}]`));
+    }
+  }
+  if (l.features !== undefined) {
+    if (!Array.isArray(l.features)) {
+      throw new ConfigError('`site.landing.features` must be an array.');
+    }
+    l.features.forEach((f, i) => validateFeature(f, `site.landing.features[${i}]`));
+  }
+  if (l.trustStrip !== undefined) {
+    if (!isPlainObject(l.trustStrip)) {
+      throw new ConfigError('`site.landing.trustStrip` must be an object.');
+    }
+    const ts = l.trustStrip;
+    if (ts.label !== undefined && typeof ts.label !== 'string') {
+      throw new ConfigError('`site.landing.trustStrip.label` must be a string.');
+    }
+    if (ts.items !== undefined) {
+      if (!Array.isArray(ts.items)) {
+        throw new ConfigError('`site.landing.trustStrip.items` must be an array.');
+      }
+      ts.items.forEach((it, i) => validateTrustItem(it, `site.landing.trustStrip.items[${i}]`));
+    }
+  }
+}
+
+function validateCta(value: unknown, path: string): void {
+  if (!isPlainObject(value)) throw new ConfigError(`\`${path}\` must be an object.`);
+  const c = value;
+  if (typeof c.label !== 'string') throw new ConfigError(`\`${path}.label\` must be a string.`);
+  if (typeof c.href !== 'string') throw new ConfigError(`\`${path}.href\` must be a string.`);
+  if (c.style !== undefined && !CTA_STYLES.includes(c.style as (typeof CTA_STYLES)[number])) {
+    throw new ConfigError(`\`${path}.style\` must be one of: ${CTA_STYLES.join(', ')}.`);
+  }
+}
+
+function validateFeature(value: unknown, path: string): void {
+  if (!isPlainObject(value)) throw new ConfigError(`\`${path}\` must be an object.`);
+  const f = value;
+  if (typeof f.title !== 'string') throw new ConfigError(`\`${path}.title\` must be a string.`);
+  if (typeof f.description !== 'string') {
+    throw new ConfigError(`\`${path}.description\` must be a string.`);
+  }
+  if (f.icon !== undefined && typeof f.icon !== 'string') {
+    throw new ConfigError(`\`${path}.icon\` must be a string.`);
+  }
+}
+
+function validateTrustItem(value: unknown, path: string): void {
+  if (!isPlainObject(value)) throw new ConfigError(`\`${path}\` must be an object.`);
+  const t = value;
+  if (typeof t.name !== 'string') throw new ConfigError(`\`${path}.name\` must be a string.`);
+  if (t.href !== undefined && typeof t.href !== 'string') {
+    throw new ConfigError(`\`${path}.href\` must be a string.`);
+  }
+  if (t.image !== undefined && typeof t.image !== 'string') {
+    throw new ConfigError(`\`${path}.image\` must be a string path.`);
+  }
 }

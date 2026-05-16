@@ -1,5 +1,6 @@
 import type {
   OvellumConfig,
+  OvellumLandingConfig,
   OvellumSiteConfig,
   OvellumUserConfig,
   ProtectConfig,
@@ -7,8 +8,9 @@ import type {
 
 /**
  * Shallow merge a user override onto a resolved config. Arrays are replaced
- * wholesale (no concat); the nested `protect` and `site` objects are merged
- * field-by-field. Child wins on every conflict.
+ * wholesale (no concat); the nested `protect`, `site`, `site.landing`, and
+ * `site.landing.hero` objects are merged field-by-field. Child wins on every
+ * conflict.
  */
 export function mergeConfig(base: OvellumConfig, override: OvellumUserConfig): OvellumConfig {
   const merged: OvellumConfig = { ...base };
@@ -20,10 +22,34 @@ export function mergeConfig(base: OvellumConfig, override: OvellumUserConfig): O
       continue;
     }
     if (key === 'site') {
-      merged.site = { ...base.site, ...(value as Partial<OvellumSiteConfig>) };
+      merged.site = mergeSite(base.site, value as Partial<OvellumSiteConfig>);
       continue;
     }
     (merged as unknown as Record<string, unknown>)[key] = value;
   }
   return merged;
+}
+
+function mergeSite(
+  base: OvellumSiteConfig,
+  override: Partial<OvellumSiteConfig>,
+): OvellumSiteConfig {
+  const out: OvellumSiteConfig = { ...base, ...override };
+  if (override.landing !== undefined) {
+    out.landing = mergeLanding(base.landing, override.landing as Partial<OvellumLandingConfig>);
+  }
+  return out;
+}
+
+function mergeLanding(
+  base: OvellumLandingConfig,
+  override: Partial<OvellumLandingConfig>,
+): OvellumLandingConfig {
+  const out: OvellumLandingConfig = { ...base, ...override };
+  if (override.hero !== undefined) {
+    out.hero = { ...base.hero, ...override.hero };
+  }
+  // `features` and `trustStrip` follow the array-wholesale-replacement rule;
+  // nothing extra to do here.
+  return out;
 }
