@@ -1,6 +1,7 @@
 import { defineCommand, runMain } from 'citty';
 import { buildCommand } from './commands/build.js';
 import { checkCommand } from './commands/check.js';
+import { initCommand } from './commands/init.js';
 import { watchCommand } from './commands/watch.js';
 
 const main = defineCommand({
@@ -9,6 +10,7 @@ const main = defineCommand({
     description: 'Ovellum - documentation tool for TypeScript and JavaScript projects.',
   },
   subCommands: {
+    init: initCommand,
     build: buildCommand,
     check: checkCommand,
     watch: watchCommand,

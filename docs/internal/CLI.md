@@ -33,12 +33,12 @@ two fixture projects.
 
 | Subcommand                | Status | Summary                                                                  |
 | ------------------------- | ------ | ------------------------------------------------------------------------ |
+| [`init`](#ovellum-init)   | done     | Interactive scaffolder for `ovellum.config.json` + first content.        |
 | [`build`](#ovellum-build) | done     | Run the configured pipeline (parse + generate + merge, or build a site). |
 | [`check`](#ovellum-check) | done     | Validate config + check for broken internal links without writing.        |
 | [`watch`](#ovellum-watch) | done     | Build, then rebuild on every change under `input/` (debounced 300 ms).    |
-| `orphans`                 | deferred     | List / inspect / reattach quarantined manual blocks.                     |
-| `init`                    | deferred     | Interactive scaffolder for `ovellum.config.ts` + first content.          |
-| `clean`                   | deferred     | Remove auto-generated outputs while preserving manual files.             |
+| `orphans`                 | deferred | List / inspect / reattach quarantined manual blocks.                     |
+| `clean`                   | deferred | Remove auto-generated outputs while preserving manual files.             |
 
 ---
 
@@ -151,9 +151,7 @@ ovellum build --config ./config/ovellum.prod.ts
 
 ---
 
-## Deferred subcommands
-
-Scoped specs live in [`TODO.md`](./TODO.md) Phase 6. Short version:
+## Other subcommands
 
 ### `ovellum check`
 
@@ -250,10 +248,52 @@ Browse `.ovellum/orphans/`:
 - `--stale`: filter to orphans older than `protect.orphanRetention` days
 - `--interactive`: reattach / delete / skip prompts (via `@inquirer/prompts`)
 
-### `ovellum init` (deferred)
+## `ovellum init`
 
-Interactive scaffolder. Prompts: name, mode, input, output, format. Writes
-`ovellum.config.ts`, creates the output directory stub, updates `.gitignore`.
+Scaffold a new project in the current (or given) directory. Refuses to
+clobber an existing `ovellum.config.json` unless `--force` is passed.
+
+### Synopsis
+
+```
+ovellum init [--cwd <dir>] [--yes] [--force]
+```
+
+### Flags
+
+| Flag           | Type    | Default         | Notes                                                                                |
+| -------------- | ------- | --------------- | ------------------------------------------------------------------------------------ |
+| `--cwd <dir>`  | path    | `process.cwd()` | Project root.                                                                        |
+| `--yes`, `-y`  | boolean | `false`         | Non-interactive: accept every default. Useful in CI / smoke tests.                   |
+| `--force`      | boolean | `false`         | Overwrite an existing `ovellum.config.json`. By default the command exits with `2`. |
+
+### Prompts (interactive)
+
+1. **Project name** — defaults to `package.json#name` or the folder name.
+2. **Mode** — `manual` (default), `auto`, or `hybrid`.
+3. **Site title** — defaults to title-cased project name.
+4. **Description** — used for `<meta name="description">`.
+5. (manual) **Content dir** / **Output dir** / **Landing page?**
+6. (auto / hybrid) **`tsconfig`** / **Output dir**.
+7. **Default theme** — `auto`, `light`, or `dark`.
+
+### Output
+
+Writes only files that don't already exist (unless `--force`):
+
+- `ovellum.config.json`
+- `<input>/index.md` (manual + hybrid modes only) with a friendly starter.
+- `.gitignore` — appends `<output>/` and `.orphans/` if absent.
+
+Prints a numbered next-steps list keyed to the chosen mode.
+
+### Exit codes
+
+| Code | Meaning                                                                |
+| ---- | ---------------------------------------------------------------------- |
+| `0`  | Project initialised.                                                   |
+| `2`  | `ovellum.config.json` already exists; re-run with `--force` to replace. |
+| `130`| User cancelled the prompts (Ctrl-C).                                   |
 
 ### `ovellum clean` (deferred)
 
