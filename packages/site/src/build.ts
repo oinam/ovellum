@@ -5,7 +5,7 @@ import { fileURLToPath } from 'node:url';
 import matter from 'gray-matter';
 import type { OvellumConfig, OvellumSiteConfig } from '@ovellum/core';
 import { renderMarkdown, type Heading } from './markdown.js';
-import { buildNav, type NavNode } from './nav.js';
+import { buildNav, findAdjacent, type NavNode } from './nav.js';
 import { generateSitemap } from './sitemap.js';
 import { renderLanding, renderPage } from './template.js';
 
@@ -112,6 +112,7 @@ export async function buildSite(options: BuildSiteOptions): Promise<BuildSiteRes
         continue;
       }
       const outputPath = path.join(outputAbs, urlToOutputPath(url));
+      const { prev, next } = findAdjacent(nav, url);
       const result = await renderOne({
         absInput: file,
         url,
@@ -119,6 +120,8 @@ export async function buildSite(options: BuildSiteOptions): Promise<BuildSiteRes
         nav,
         generatedAt: now.toISOString(),
         docsHref,
+        prev: prev ? { title: prev.title, url: prev.url } : undefined,
+        next: next ? { title: next.title, url: next.url } : undefined,
       });
       await mkdir(path.dirname(outputPath), { recursive: true });
       await writeFile(outputPath, result.html, 'utf8');
@@ -170,6 +173,8 @@ interface RenderOneInput {
   nav: NavNode;
   generatedAt: string;
   docsHref?: string;
+  prev?: { title: string; url: string };
+  next?: { title: string; url: string };
 }
 
 interface RenderOneResult {
@@ -195,6 +200,8 @@ async function renderOne(input: RenderOneInput): Promise<RenderOneResult> {
     headings,
     generatedAt: input.generatedAt,
     docsHref: input.docsHref,
+    prev: input.prev,
+    next: input.next,
   });
   return { html, title, warnings: [] };
 }

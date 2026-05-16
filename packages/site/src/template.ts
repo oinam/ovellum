@@ -77,6 +77,11 @@ function renderFooter(site: OvellumSiteConfig & { title: string }, generatedAt: 
 
 // -- doc pages -----------------------------------------------------------
 
+export interface PrevNextPage {
+  title: string;
+  url: string;
+}
+
 export interface RenderPageInput {
   site: OvellumSiteConfig & { title: string };
   /** Root nav. Children are rendered as the sidebar tree. */
@@ -97,6 +102,10 @@ export interface RenderPageInput {
   assetsPrefix?: string;
   /** Optional Docs link added to the topbar (typically only used when a landing page exists). */
   docsHref?: string;
+  /** Previous page in the sidebar's reading order, if any. */
+  prev?: PrevNextPage;
+  /** Next page in the sidebar's reading order, if any. */
+  next?: PrevNextPage;
 }
 
 /**
@@ -110,11 +119,13 @@ export function renderPage(input: RenderPageInput): string {
 
   const sidebar = renderSidebar(input.nav, input.url);
   const toc = renderToc(input.headings);
+  const prevNext = renderPrevNext(input.prev, input.next);
 
   const body = `<div class="ov-layout">
     <aside class="ov-sidebar" aria-label="Site navigation">${sidebar}</aside>
     <main class="ov-content">
       <article class="ov-prose">${input.bodyHtml}</article>
+      ${prevNext}
     </main>
     <aside class="ov-toc" aria-label="On this page">${toc}</aside>
   </div>`;
@@ -259,6 +270,29 @@ function navList(nodes: NavNode[], activeUrl: string): string {
       return `<li>${link}${children}</li>`;
     })
     .join('');
+}
+
+function renderPrevNext(
+  prev: PrevNextPage | undefined,
+  next: PrevNextPage | undefined,
+): string {
+  if (!prev && !next) return '';
+  const prevHtml = prev
+    ? `<a class="ov-prevnext-link ov-prevnext-prev" href="${escapeAttr(prev.url)}">
+         <span class="ov-prevnext-label">Previous</span>
+         <span class="ov-prevnext-title">${escapeHtml(prev.title)}</span>
+       </a>`
+    : '<span class="ov-prevnext-spacer" aria-hidden="true"></span>';
+  const nextHtml = next
+    ? `<a class="ov-prevnext-link ov-prevnext-next" href="${escapeAttr(next.url)}">
+         <span class="ov-prevnext-label">Next</span>
+         <span class="ov-prevnext-title">${escapeHtml(next.title)}</span>
+       </a>`
+    : '<span class="ov-prevnext-spacer" aria-hidden="true"></span>';
+  return `<nav class="ov-prevnext" aria-label="Page navigation">
+    ${prevHtml}
+    ${nextHtml}
+  </nav>`;
 }
 
 function renderToc(headings: Heading[]): string {

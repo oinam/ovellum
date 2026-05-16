@@ -13,6 +13,43 @@ export interface NavNode {
   children: NavNode[];
 }
 
+/**
+ * Flatten a nav tree to the linear reading order — depth-first, root first.
+ * Used to compute prev/next links on each doc page.
+ *
+ * Includes only nodes that point to a real source file (`sourcePath !== undefined`).
+ * Directory-only group nodes are skipped.
+ */
+export function flattenNav(root: NavNode): NavNode[] {
+  const out: NavNode[] = [];
+  function walk(node: NavNode): void {
+    if (node.sourcePath !== undefined) out.push(node);
+    for (const child of node.children) walk(child);
+  }
+  walk(root);
+  return out;
+}
+
+export interface AdjacentPages {
+  prev?: NavNode;
+  next?: NavNode;
+}
+
+/**
+ * Find the prev / next page for `url` in the flattened nav order.
+ * Returns `{}` when `url` is not in the nav (e.g. the root landing page) or
+ * when there's no neighbour on a given side.
+ */
+export function findAdjacent(root: NavNode, url: string): AdjacentPages {
+  const flat = flattenNav(root);
+  const idx = flat.findIndex((p) => p.url === url);
+  if (idx === -1) return {};
+  return {
+    prev: idx > 0 ? flat[idx - 1] : undefined,
+    next: idx + 1 < flat.length ? flat[idx + 1] : undefined,
+  };
+}
+
 interface MetaJson {
   title?: string;
   order?: string[];

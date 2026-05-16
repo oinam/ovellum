@@ -182,8 +182,9 @@ Powers `mode: 'manual'`. Design lives in [`SITE.md`](./SITE.md).
 | Nord / Solarized themes in switcher                                                | deferred | Tokens already in `STYLES.md`.                                                                                                                                                                 |
 | Footer with build timestamp                                                        | done     | Configurable; empty string disables.                                                                                                                                                           |
 | Canonical `<link>` + OG meta                                                       | done     | When `site.baseUrl` is set.                                                                                                                                                                    |
+| Prev / next page navigation                                                        | done     | Auto-rendered at the bottom of each doc page from the sidebar order.                                                                                                                          |
+| `sitemap.xml`                                                                      | done     | Auto-generated when `site.baseUrl` is set. `/404/` excluded by default. `<lastmod>` from git mtime deferred.                                                                                  |
 | Search                                                                             | deferred | Pagefind candidate.                                                                                                                                                                            |
-| `sitemap.xml`                                                                      | done     | Auto-generated when `site.baseUrl` is set. `/404/` excluded by default. `lastmod` from git mtime deferred.                                                                                    |
 | RSS                                                                                | deferred |                                                                                                                                                                                                |
 | MDX rendering                                                                      | deferred | `.md` only in v1.                                                                                                                                                                              |
 | Multiple bundled templates                                                         | deferred | One default for now.                                                                                                                                                                           |
@@ -194,7 +195,7 @@ Powers `mode: 'manual'`. Design lives in [`SITE.md`](./SITE.md).
 piece is in, and how to change the design — see
 [`SITE.md` §9a](./SITE.md#9a-template-anatomy).
 
-**Tests:** 24 vitest cases across markdown, nav, template, landing, sitemap.
+**Tests:** 27 vitest cases across markdown, nav (flatten + findAdjacent), template, landing, sitemap.
 
 ---
 

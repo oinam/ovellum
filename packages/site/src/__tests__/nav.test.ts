@@ -2,7 +2,39 @@ import { mkdtempSync, mkdirSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-import { buildNav } from '../nav.js';
+import { buildNav, findAdjacent, flattenNav, type NavNode } from '../nav.js';
+
+const NAV: NavNode = {
+  title: 'Home',
+  url: '/',
+  sourcePath: 'content/index.md',
+  children: [
+    {
+      title: 'Getting started',
+      url: '/getting-started/',
+      sourcePath: 'content/getting-started.md',
+      children: [],
+    },
+    {
+      title: 'Guides',
+      url: '/guides/',
+      children: [
+        {
+          title: 'Install',
+          url: '/guides/install/',
+          sourcePath: 'content/guides/install.md',
+          children: [],
+        },
+        {
+          title: 'Deploy',
+          url: '/guides/deploy/',
+          sourcePath: 'content/guides/deploy.md',
+          children: [],
+        },
+      ],
+    },
+  ],
+};
 
 describe('buildNav', () => {
   let tmp: string;
@@ -46,6 +78,28 @@ describe('buildNav', () => {
     expect(guides).toBeDefined();
     expect(guides!.title).toBe('Guides');
     expect(guides!.children.map((c) => c.url)).toEqual(['/guides/deploy/', '/guides/install/']);
+  });
+
+  it('flattenNav returns pages in depth-first order, skipping group nodes', () => {
+    const flat = flattenNav(NAV);
+    expect(flat.map((n) => n.url)).toEqual([
+      '/',
+      '/getting-started/',
+      '/guides/install/',
+      '/guides/deploy/',
+    ]);
+  });
+
+  it('findAdjacent returns prev/next around a page', () => {
+    expect(findAdjacent(NAV, '/').prev).toBeUndefined();
+    expect(findAdjacent(NAV, '/').next?.url).toBe('/getting-started/');
+    expect(findAdjacent(NAV, '/getting-started/').prev?.url).toBe('/');
+    expect(findAdjacent(NAV, '/getting-started/').next?.url).toBe('/guides/install/');
+    expect(findAdjacent(NAV, '/guides/deploy/').next).toBeUndefined();
+  });
+
+  it('findAdjacent returns empty when the URL is not in the nav', () => {
+    expect(findAdjacent(NAV, '/nowhere/')).toEqual({});
   });
 
   it('skips files prefixed with `_`', async () => {
