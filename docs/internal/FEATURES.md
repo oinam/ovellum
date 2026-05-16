@@ -143,8 +143,8 @@ See [`CLI.md`](./CLI.md) for full reference.
 | Subcommand        | Status   |
 | ----------------- | -------- |
 | `ovellum build`   | done     |
+| `ovellum check`   | done     |
 | `ovellum watch`   | deferred |
-| `ovellum check`   | deferred |
 | `ovellum orphans` | deferred |
 | `ovellum init`    | deferred |
 | `ovellum clean`   | deferred |

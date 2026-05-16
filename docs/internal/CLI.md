@@ -34,8 +34,8 @@ two fixture projects.
 | Subcommand                | Status | Summary                                                                  |
 | ------------------------- | ------ | ------------------------------------------------------------------------ |
 | [`build`](#ovellum-build) | done     | Run the configured pipeline (parse + generate + merge, or build a site). |
+| [`check`](#ovellum-check) | done     | Validate config + check for broken internal links without writing.        |
 | `watch`                   | deferred     | Rebuild on file changes. Tracked in [`TODO.md`](./TODO.md) Phase 6.      |
-| `check`                   | deferred     | Validate config + docs without writing.                                  |
 | `orphans`                 | deferred     | List / inspect / reattach quarantined manual blocks.                     |
 | `init`                    | deferred     | Interactive scaffolder for `ovellum.config.ts` + first content.          |
 | `clean`                   | deferred     | Remove auto-generated outputs while preserving manual files.             |
@@ -160,11 +160,55 @@ Scoped specs live in [`TODO.md`](./TODO.md) Phase 6. Short version:
 `chokidar`-driven rebuild on changes to source, content, or config. Debounce
 300ms. Incremental: only affected files re-process.
 
-### `ovellum check` (deferred)
+### `ovellum check`
 
-Validation pass only — no writes. Loads config, runs the reader in
-validation mode (link checking + required frontmatter), lists any orphans.
-Exit `0` clean, `1` issues found.
+Validation pass only — no writes. Loads config, walks every `.md` file
+under `input/`, extracts links via remark (so fenced code blocks are
+correctly ignored), and verifies every internal link resolves to a real
+page URL in the sidebar nav.
+
+```
+ovellum check [--cwd <dir>] [--config <path>]
+```
+
+#### Output
+
+Clean:
+
+```
+ovellum check complete in 76ms
+  config:    .../ovellum.config.json
+  mode:      manual
+  pages:     14
+  issues:    0
+```
+
+With broken links:
+
+```
+ovellum check complete in 87ms
+  config:    .../ovellum.config.json
+  mode:      manual
+  pages:     14
+  issues:    1
+  details:
+    content/getting-started.md:112  broken internal link to /no/such/page/ (raw: /no/such/page/)
+```
+
+#### Exit codes
+
+- `0` clean
+- `1` one or more issues found
+- `3` config invalid
+
+#### Scope today
+
+Manual mode only. Hybrid and auto modes exit `1` with a "not yet
+supported" message — broken-link coverage for the auto-generated half
+of the pipeline is tracked in TODO.md Phase 6.
+
+Frontmatter validation, required-fields checking, and orphan listing
+for hybrid mode are deferred.
 
 ### `ovellum orphans` (deferred)
 

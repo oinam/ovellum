@@ -65,6 +65,9 @@ importers:
       citty:
         specifier: ^0.2.2
         version: 0.2.2
+      gray-matter:
+        specifier: ^4.0.3
+        version: 4.0.3
 
   packages/core:
     dependencies:
@@ -144,6 +147,9 @@ importers:
       '@types/hast':
         specifier: ^3.0.4
         version: 3.0.4
+      '@types/mdast':
+        specifier: ^4.0.4
+        version: 4.0.4
 
 packages:
 
