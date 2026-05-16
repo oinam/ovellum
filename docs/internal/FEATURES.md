@@ -12,9 +12,9 @@ Last updated: 2026-05-16 (configurable landing page added)
 
 Status legend:
 
-- ✅ shipped and exercised end-to-end
-- 🟡 partial — a v0 slice exists; named gaps live in `TODO.md`
-- 🚧 designed but not yet built (tracked in `TODO.md`)
+- `done` — shipped and exercised end-to-end
+- `partial` — a v0 slice exists; named gaps live in `TODO.md`
+- `deferred` — designed but not yet built (tracked in `TODO.md`)
 
 ---
 
@@ -24,9 +24,9 @@ Ovellum runs in one of three modes, set via `mode:` in `ovellum.config.{json,ts,
 
 | Mode     | Status | What it does                                                                                                                                         |
 | -------- | ------ | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `hybrid` | ✅     | Default. Auto-generates Markdown from TS/JS source, then merges existing `<!-- @manual:start -->` blocks back in. Orphans go to `.ovellum/orphans/`. |
-| `manual` | ✅     | Pure static-site builder from `.md` files → HTML. No source parsing. See §4 ([`@ovellum/site`](#4-site-builder---ovellumsite)).                      |
-| `auto`   | ✅     | Auto-generate Markdown only. Existing output is overwritten. No merge step.                                                                          |
+| `hybrid` | done     | Default. Auto-generates Markdown from TS/JS source, then merges existing `<!-- @manual:start -->` blocks back in. Orphans go to `.ovellum/orphans/`. |
+| `manual` | done     | Pure static-site builder from `.md` files → HTML. No source parsing. See §4 ([`@ovellum/site`](#4-site-builder---ovellumsite)).                      |
+| `auto`   | done     | Auto-generate Markdown only. Existing output is overwritten. No merge step.                                                                          |
 
 ---
 
@@ -36,15 +36,15 @@ Shared types, config schema, error class. Consumed by every other package.
 
 | Feature                                                                | Status | Notes                                                                                          |
 | ---------------------------------------------------------------------- | ------ | ---------------------------------------------------------------------------------------------- |
-| IR types (`DocNode`, `DocFile`, `DocProject`, `DocParam`, `DocReturn`) | ✅     | Per [`DESIGN.md` §6](./DESIGN.md#6-intermediate-representation-ir)                             |
-| `OvellumConfig` schema                                                 | ✅     | Full reference in [`CONFIG.md`](./CONFIG.md). Includes `site`, `protect`, format, mode, paths. |
-| `defineConfig()` helper                                                | ✅     | Identity function for type-safe `ovellum.config.ts`.                                           |
-| `loadOvellumConfig({ cwd, configFile })`                               | ✅     | Loads via `c12`; applies defaults; validates. Returns `{ config, configFile, cwd }`.           |
-| `loadDirectoryOverride(rootCwd, targetDir, root)`                      | ✅     | Walks from root → target, merges every nested `ovellum.config.*` (deepest wins).               |
-| `parseFrontmatterOverride(frontmatter)`                                | ✅     | Extracts `ovellum:` block from `.md` frontmatter for per-file mode overrides.                  |
-| `mergeConfig(base, override)`                                          | ✅     | Shallow merge; arrays replaced wholesale; `protect` and `site` merged field-by-field.          |
-| `validateUserConfig(input)`                                            | ✅     | Hand-rolled validator; throws `ConfigError` with `code` + `hint`.                              |
-| `OvellumError` / `ConfigError`                                         | ✅     | Typed error base + config-specific subclass.                                                   |
+| IR types (`DocNode`, `DocFile`, `DocProject`, `DocParam`, `DocReturn`) | done     | Per [`DESIGN.md` §6](./DESIGN.md#6-intermediate-representation-ir)                             |
+| `OvellumConfig` schema                                                 | done     | Full reference in [`CONFIG.md`](./CONFIG.md). Includes `site`, `protect`, format, mode, paths. |
+| `defineConfig()` helper                                                | done     | Identity function for type-safe `ovellum.config.ts`.                                           |
+| `loadOvellumConfig({ cwd, configFile })`                               | done     | Loads via `c12`; applies defaults; validates. Returns `{ config, configFile, cwd }`.           |
+| `loadDirectoryOverride(rootCwd, targetDir, root)`                      | done     | Walks from root → target, merges every nested `ovellum.config.*` (deepest wins).               |
+| `parseFrontmatterOverride(frontmatter)`                                | done     | Extracts `ovellum:` block from `.md` frontmatter for per-file mode overrides.                  |
+| `mergeConfig(base, override)`                                          | done     | Shallow merge; arrays replaced wholesale; `protect` and `site` merged field-by-field.          |
+| `validateUserConfig(input)`                                            | done     | Hand-rolled validator; throws `ConfigError` with `code` + `hint`.                              |
+| `OvellumError` / `ConfigError`                                         | done     | Typed error base + config-specific subclass.                                                   |
 
 **Tests:** 29 vitest cases — defaults, full config, every validation error, merge rules, frontmatter overrides, per-directory loading.
 
@@ -56,35 +56,35 @@ Shared types, config schema, error class. Consumed by every other package.
 
 | Symbol kind             | Status | Notes                                                                |
 | ----------------------- | ------ | -------------------------------------------------------------------- |
-| `function`              | ✅     | Generics + JSDoc + params + return type. Overloads 🚧.               |
-| `class`                 | 🟡     | Methods + properties + extends + implements. Constructor section 🚧. |
-| `interface`             | ✅     | Properties + methods + extends.                                      |
-| `type` alias            | ✅     | Name + RHS + generics.                                               |
-| `enum`                  | ✅     | Members with optional initializer values.                            |
-| `const` / `let` / `var` | 🚧     | Deferred.                                                            |
-| Module-level `@module`  | 🟡     | Only when attached to the first statement of the file.               |
+| `function`              | done     | Generics + JSDoc + params + return type. Overloads deferred.               |
+| `class`                 | partial     | Methods + properties + extends + implements. Constructor section deferred. |
+| `interface`             | done     | Properties + methods + extends.                                      |
+| `type` alias            | done     | Name + RHS + generics.                                               |
+| `enum`                  | done     | Members with optional initializer values.                            |
+| `const` / `let` / `var` | deferred     | Deferred.                                                            |
+| Module-level `@module`  | partial     | Only when attached to the first statement of the file.               |
 
 | JSDoc tag                        | Status                                                   |
 | -------------------------------- | -------------------------------------------------------- |
-| `@param`, `@returns` / `@return` | ✅                                                       |
-| `@throws` / `@exception`         | ✅                                                       |
-| `@example`                       | ✅                                                       |
-| `@deprecated`                    | ✅                                                       |
-| `@since`, `@see`                 | ✅ extracted (`@see`/`@since` rendering 🚧 in generator) |
-| `@remarks`, `@description`       | ✅                                                       |
-| `@preserve` flag                 | ✅ (auto-wrapping in the generator 🚧)                   |
-| `@internal` flag                 | ✅                                                       |
-| Unknown tags                     | ✅ collected into `tags` bag                             |
+| `@param`, `@returns` / `@return` | done                                                       |
+| `@throws` / `@exception`         | done                                                       |
+| `@example`                       | done                                                       |
+| `@deprecated`                    | done                                                       |
+| `@since`, `@see`                 | partial (extracted; rendering in generator deferred)     |
+| `@remarks`, `@description`       | done                                                     |
+| `@preserve` flag                 | partial (flag on `DocNode`; auto-wrapping deferred)      |
+| `@internal` flag                 | done                                                     |
+| Unknown tags                     | done (collected into the `tags` bag)                     |
 
 | Edge case                      | Status |
 | ------------------------------ | ------ |
-| Re-exports / barrel files      | 🚧     |
-| Circular imports               | 🚧     |
-| Overloaded functions           | 🚧     |
-| Namespace exports              | 🚧     |
-| `declare module` augmentations | 🚧     |
+| Re-exports / barrel files      | deferred     |
+| Circular imports               | deferred     |
+| Overloaded functions           | deferred     |
+| Namespace exports              | deferred     |
+| `declare module` augmentations | deferred     |
 
-Anchor IDs: ✅ `{relativeFilePath}::{symbolPath}` per [`DESIGN.md` §8.3](./DESIGN.md#83-anchor-ids-and-stability).
+Anchor IDs: done `{relativeFilePath}::{symbolPath}` per [`DESIGN.md` §8.3](./DESIGN.md#83-anchor-ids-and-stability).
 
 **Tests:** 6 vitest smoke tests across symbol types and filtering.
 
@@ -92,20 +92,20 @@ Anchor IDs: ✅ `{relativeFilePath}::{symbolPath}` per [`DESIGN.md` §8.3](./DES
 
 | Feature                                                                    | Status | Notes                                        |
 | -------------------------------------------------------------------------- | ------ | -------------------------------------------- |
-| `generateDocs(project, config)` → `Map<outputPath, markdown>`              | ✅     |                                              |
-| Output path mapping `src/foo.ts` → `docs/foo.md`                           | ✅     | `.mdx` extension wired but JSX detection 🚧. |
-| Frontmatter (`title`, `source`, `generated`, `ovellum: true`)              | ✅     |                                              |
-| Function template (signature + params table + returns + throws + examples) | ✅     |                                              |
-| Class template (heritage + methods table + properties table)               | 🟡     | Constructor section 🚧.                      |
-| Interface template (members table)                                         | ✅     |                                              |
-| Type alias template                                                        | ✅     |                                              |
-| Enum template (members with values)                                        | ✅     |                                              |
-| Variable / const template                                                  | 🚧     |                                              |
-| Anchor comments `<!-- ovellum:anchor id="…" generated="…" -->`             | ✅     | On every top-level + child node.             |
-| `@deprecated` callout                                                      | 🟡     | Plain blockquote. Styled callout 🚧.         |
-| `@since` / `@see` rendering                                                | 🚧     |                                              |
-| Sidebar / `_index.md` generator                                            | 🚧     |                                              |
-| MDX mode (JSX-in-`@example` detection)                                     | 🚧     |                                              |
+| `generateDocs(project, config)` → `Map<outputPath, markdown>`              | done     |                                              |
+| Output path mapping `src/foo.ts` → `docs/foo.md`                           | done     | `.mdx` extension wired but JSX detection deferred. |
+| Frontmatter (`title`, `source`, `generated`, `ovellum: true`)              | done     |                                              |
+| Function template (signature + params table + returns + throws + examples) | done     |                                              |
+| Class template (heritage + methods table + properties table)               | partial     | Constructor section deferred.                      |
+| Interface template (members table)                                         | done     |                                              |
+| Type alias template                                                        | done     |                                              |
+| Enum template (members with values)                                        | done     |                                              |
+| Variable / const template                                                  | deferred     |                                              |
+| Anchor comments `<!-- ovellum:anchor id="…" generated="…" -->`             | done     | On every top-level + child node.             |
+| `@deprecated` callout                                                      | partial     | Plain blockquote. Styled callout deferred.         |
+| `@since` / `@see` rendering                                                | deferred     |                                              |
+| Sidebar / `_index.md` generator                                            | deferred     |                                              |
+| MDX mode (JSX-in-`@example` detection)                                     | deferred     |                                              |
 
 **Tests:** 4 vitest cases (function rendering, mdx path mapping, multi-file).
 
@@ -113,13 +113,13 @@ Anchor IDs: ✅ `{relativeFilePath}::{symbolPath}` per [`DESIGN.md` §8.3](./DES
 
 | Feature                                                              | Status | Notes                                                                                     |
 | -------------------------------------------------------------------- | ------ | ----------------------------------------------------------------------------------------- |
-| `readManualDoc(path)` / `parseManualDoc(raw, path)`                  | ✅     |                                                                                           |
-| Frontmatter via `gray-matter`                                        | ✅     |                                                                                           |
-| Protected zone extraction (`<!-- @manual:start id="…" -->` / `:end`) | ✅     | Regex-based; positional fallback IDs when `id` omitted.                                   |
-| Anchor association (block → nearest preceding `ovellum:anchor`)      | ✅     |                                                                                           |
-| Error: unclosed / nested / stray `@manual:end`                       | ✅     | `OvellumError` with codes `UNCLOSED_MANUAL_TAG`, `NESTED_MANUAL_TAG`, `STRAY_MANUAL_END`. |
-| Positional-fallback warning                                          | 🚧     | Silent today.                                                                             |
-| Validation mode (link checker, required frontmatter)                 | 🚧     | Needs `remark` stack.                                                                     |
+| `readManualDoc(path)` / `parseManualDoc(raw, path)`                  | done     |                                                                                           |
+| Frontmatter via `gray-matter`                                        | done     |                                                                                           |
+| Protected zone extraction (`<!-- @manual:start id="…" -->` / `:end`) | done     | Regex-based; positional fallback IDs when `id` omitted.                                   |
+| Anchor association (block → nearest preceding `ovellum:anchor`)      | done     |                                                                                           |
+| Error: unclosed / nested / stray `@manual:end`                       | done     | `OvellumError` with codes `UNCLOSED_MANUAL_TAG`, `NESTED_MANUAL_TAG`, `STRAY_MANUAL_END`. |
+| Positional-fallback warning                                          | deferred     | Silent today.                                                                             |
+| Validation mode (link checker, required frontmatter)                 | deferred     | Needs `remark` stack.                                                                     |
 
 **Tests:** 9 vitest cases.
 
@@ -127,12 +127,12 @@ Anchor IDs: ✅ `{relativeFilePath}::{symbolPath}` per [`DESIGN.md` §8.3](./DES
 
 | Feature                                                                     | Status | Notes                                               |
 | --------------------------------------------------------------------------- | ------ | --------------------------------------------------- |
-| `merge(generated, manual, opts?)` → `{ content, orphans, warnings }`        | ✅     |                                                     |
-| Section detection (anchor → next heading boundary)                          | ✅     | Splices manual blocks at section end.               |
-| Orphan quarantine                                                           | ✅     | Writes `.ovellum/orphans/{YYYY-MM-DD}_{slug}.md`.   |
-| `OrphanRecord` metadata (orphaned, source_file, anchor_id, manual_block_id) | ✅     |                                                     |
-| Anchor last-seen timestamp on orphans                                       | 🚧     | Needs persisted IR history.                         |
-| `@preserve` auto-wrapping in generator                                      | 🚧     | IR carries `isPreserved`; generator wiring pending. |
+| `merge(generated, manual, opts?)` → `{ content, orphans, warnings }`        | done     |                                                     |
+| Section detection (anchor → next heading boundary)                          | done     | Splices manual blocks at section end.               |
+| Orphan quarantine                                                           | done     | Writes `.ovellum/orphans/{YYYY-MM-DD}_{slug}.md`.   |
+| `OrphanRecord` metadata (orphaned, source_file, anchor_id, manual_block_id) | done     |                                                     |
+| Anchor last-seen timestamp on orphans                                       | deferred     | Needs persisted IR history.                         |
+| `@preserve` auto-wrapping in generator                                      | deferred     | IR carries `isPreserved`; generator wiring pending. |
 
 **Tests:** 8 vitest cases.
 
@@ -142,21 +142,21 @@ See [`CLI.md`](./CLI.md) for full reference.
 
 | Subcommand        | Status |
 | ----------------- | ------ |
-| `ovellum build`   | ✅     |
-| `ovellum watch`   | 🚧     |
-| `ovellum check`   | 🚧     |
-| `ovellum orphans` | 🚧     |
-| `ovellum init`    | 🚧     |
-| `ovellum clean`   | 🚧     |
+| `ovellum build`   | done     |
+| `ovellum watch`   | deferred     |
+| `ovellum check`   | deferred     |
+| `ovellum orphans` | deferred     |
+| `ovellum init`    | deferred     |
+| `ovellum clean`   | deferred     |
 
 | Flag               | Status          |
 | ------------------ | --------------- |
-| `--cwd <dir>`      | ✅ (on `build`) |
-| `--config <path>`  | ✅ (on `build`) |
-| `--strict` global  | 🚧              |
-| `--verbose` global | 🚧              |
+| `--cwd <dir>`      | done (on `build`) |
+| `--config <path>`  | done (on `build`) |
+| `--strict` global  | deferred              |
+| `--verbose` global | deferred              |
 
-Exit codes: `0` success · `1` build error · `3` config invalid · `2` (strict) 🚧.
+Exit codes: `0` success · `1` build error · `3` config invalid · `2` (strict) deferred.
 
 ---
 
@@ -166,28 +166,28 @@ Powers `mode: 'manual'`. Design lives in [`SITE.md`](./SITE.md).
 
 | Feature                                                                            | Status | Notes                                                                                                                                                                                          |
 | ---------------------------------------------------------------------------------- | ------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `buildSite({ config, cwd })`                                                       | ✅     | Returns `{ pages, warnings, outputDir, assetsDir }`.                                                                                                                                           |
-| Markdown → HTML via unified + remark + rehype                                      | ✅     |                                                                                                                                                                                                |
-| Heading slugs (`rehype-slug`) + clickable `#` anchors (`rehype-autolink-headings`) | ✅     |                                                                                                                                                                                                |
-| Shiki dual-theme code highlighting                                                 | ✅     | `github-light` + `github-dark` via CSS variables. Zero runtime JS for highlighting. Supported langs: ts, tsx, js, jsx, json, bash, shell, markdown, yaml, html, css.                           |
-| Auto-generated sidebar from file tree                                              | ✅     | Titles: frontmatter `title:` → first `# H1` → filename.                                                                                                                                        |
-| `_meta.json` per-directory override                                                | ✅     | Sets directory `title` and `order` (slug list).                                                                                                                                                |
-| Right-side "On this page" ToC                                                      | ✅     | h2/h3 only.                                                                                                                                                                                    |
-| Pretty URLs (`name/index.html`)                                                    | ✅     |                                                                                                                                                                                                |
-| Static asset passthrough                                                           | ✅     | Non-`.md` files (images, etc.) copied as-is.                                                                                                                                                   |
-| **Landing page** (`site.landing.enabled`)                                          | ✅     | Disabled by default. When enabled: full-width hero + feature grid + optional `_landing.md` prose + optional trust strip rendered at `/`. Doc pages keep their URLs. Top-bar gains a Docs link. |
-| Top bar with theme toggle                                                          | ✅     | Auto → light → dark cycle; localStorage-backed; applied pre-paint.                                                                                                                             |
-| Copy buttons on code blocks                                                        | ✅     | Injected client-side; ~50 lines of vanilla JS.                                                                                                                                                 |
-| Default light + dark themes                                                        | ✅     | From `STYLES.md` Tier 2 tokens (hand-ported into `style.css`).                                                                                                                                 |
-| Nord / Solarized themes in switcher                                                | 🚧     | Tokens already in `STYLES.md`.                                                                                                                                                                 |
-| Footer with build timestamp                                                        | ✅     | Configurable; empty string disables.                                                                                                                                                           |
-| Canonical `<link>` + OG meta                                                       | ✅     | When `site.baseUrl` is set.                                                                                                                                                                    |
-| Search                                                                             | 🚧     | Pagefind candidate.                                                                                                                                                                            |
-| Sitemap.xml / RSS                                                                  | 🚧     |                                                                                                                                                                                                |
-| MDX rendering                                                                      | 🚧     | `.md` only in v1.                                                                                                                                                                              |
-| Multiple bundled templates                                                         | 🚧     | One default for now.                                                                                                                                                                           |
-| Live reload                                                                        | 🚧     | Pairs with `ovellum watch`.                                                                                                                                                                    |
-| Plugin API for custom templates                                                    | 🚧     |                                                                                                                                                                                                |
+| `buildSite({ config, cwd })`                                                       | done     | Returns `{ pages, warnings, outputDir, assetsDir }`.                                                                                                                                           |
+| Markdown → HTML via unified + remark + rehype                                      | done     |                                                                                                                                                                                                |
+| Heading slugs (`rehype-slug`) + clickable `#` anchors (`rehype-autolink-headings`) | done     |                                                                                                                                                                                                |
+| Shiki dual-theme code highlighting                                                 | done     | `github-light` + `github-dark` via CSS variables. Zero runtime JS for highlighting. Supported langs: ts, tsx, js, jsx, json, bash, shell, markdown, yaml, html, css.                           |
+| Auto-generated sidebar from file tree                                              | done     | Titles: frontmatter `title:` → first `# H1` → filename.                                                                                                                                        |
+| `_meta.json` per-directory override                                                | done     | Sets directory `title` and `order` (slug list).                                                                                                                                                |
+| Right-side "On this page" ToC                                                      | done     | h2/h3 only.                                                                                                                                                                                    |
+| Pretty URLs (`name/index.html`)                                                    | done     |                                                                                                                                                                                                |
+| Static asset passthrough                                                           | done     | Non-`.md` files (images, etc.) copied as-is.                                                                                                                                                   |
+| **Landing page** (`site.landing.enabled`)                                          | done     | Disabled by default. When enabled: full-width hero + feature grid + optional `_landing.md` prose + optional trust strip rendered at `/`. Doc pages keep their URLs. Top-bar gains a Docs link. |
+| Top bar with theme toggle                                                          | done     | Auto → light → dark cycle; localStorage-backed; applied pre-paint.                                                                                                                             |
+| Copy buttons on code blocks                                                        | done     | Injected client-side; ~50 lines of vanilla JS.                                                                                                                                                 |
+| Default light + dark themes                                                        | done     | From `STYLES.md` Tier 2 tokens (hand-ported into `style.css`).                                                                                                                                 |
+| Nord / Solarized themes in switcher                                                | deferred     | Tokens already in `STYLES.md`.                                                                                                                                                                 |
+| Footer with build timestamp                                                        | done     | Configurable; empty string disables.                                                                                                                                                           |
+| Canonical `<link>` + OG meta                                                       | done     | When `site.baseUrl` is set.                                                                                                                                                                    |
+| Search                                                                             | deferred     | Pagefind candidate.                                                                                                                                                                            |
+| Sitemap.xml / RSS                                                                  | deferred     |                                                                                                                                                                                                |
+| MDX rendering                                                                      | deferred     | `.md` only in v1.                                                                                                                                                                              |
+| Multiple bundled templates                                                         | deferred     | One default for now.                                                                                                                                                                           |
+| Live reload                                                                        | deferred     | Pairs with `ovellum watch`.                                                                                                                                                                    |
+| Plugin API for custom templates                                                    | deferred     |                                                                                                                                                                                                |
 
 **Tests:** 11 vitest cases across markdown, nav, template.
 
@@ -200,13 +200,13 @@ stylesheet **hand-ports** from this.
 
 | Token group                                                | Status                            |
 | ---------------------------------------------------------- | --------------------------------- |
-| OKLCH palette: 4 neutrals + 8 accents, 50–950              | ✅                                |
-| Type scale (Major Third → Perfect Fourth, fluid)           | ✅                                |
-| Space scale (Utopia static + fluid pairs)                  | ✅                                |
-| Themes: default light + dark                               | ✅ in stylesheet                  |
-| Themes: Nord (light + dark)                                | ✅ in STYLES.md, 🚧 in stylesheet |
-| Themes: Solarized (light + dark)                           | ✅ in STYLES.md, 🚧 in stylesheet |
-| Token-extraction script (auto-sync stylesheet ← STYLES.md) | 🚧                                |
+| OKLCH palette: 4 neutrals + 8 accents, 50–950              | done                                |
+| Type scale (Major Third → Perfect Fourth, fluid)           | done                                |
+| Space scale (Utopia static + fluid pairs)                  | done                                |
+| Themes: default light + dark                               | done                                |
+| Themes: Nord (light + dark)                                | partial (in STYLES.md; not in stylesheet) |
+| Themes: Solarized (light + dark)                           | partial (in STYLES.md; not in stylesheet) |
+| Token-extraction script (auto-sync stylesheet ← STYLES.md) | deferred                                |
 
 ---
 
@@ -225,16 +225,16 @@ Generated outputs are gitignored per-example.
 
 | Feature                                          | Status | Notes                                                                                                                                                                      |
 | ------------------------------------------------ | ------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| pnpm workspaces + Turborepo                      | ✅     | Topological build / test / lint / typecheck.                                                                                                                               |
-| TypeScript project references                    | ✅     | Every package `composite: true` with `tsBuildInfoFile` inside `dist/`.                                                                                                     |
-| Build pattern `tsup && tsc -b --force`           | ✅     | Required for multi-file packages with composite refs. Documented in [`TODO.md` Phase 1 build note](./TODO.md#phase-1---core-types--config-ovellumcore) and project memory. |
-| ESM-only for `@ovellum/site`                     | ✅     | Uses `import.meta.url` to resolve bundled template dir.                                                                                                                    |
-| Post-build asset copy (site templates → `dist/`) | ✅     | `node -e "require('fs').cpSync(...)"` step.                                                                                                                                |
-| Prettier                                         | ✅     | `pnpm format` / `format:check`.                                                                                                                                            |
-| ESLint flat config + typescript-eslint           | ✅     | `src/templates/**` excluded for browser-globals.                                                                                                                           |
-| changesets                                       | ✅     | Configured; no releases yet.                                                                                                                                               |
-| GitHub Actions CI                                | ✅     | `ci.yml` (lint + typecheck + test + build) and `release.yml` (changesets publish).                                                                                         |
-| Demo scripts                                     | ✅     | `demo`, `demo:clean`, `demo:site`, `demo:site:clean`.                                                                                                                      |
+| pnpm workspaces + Turborepo                      | done     | Topological build / test / lint / typecheck.                                                                                                                               |
+| TypeScript project references                    | done     | Every package `composite: true` with `tsBuildInfoFile` inside `dist/`.                                                                                                     |
+| Build pattern `tsup && tsc -b --force`           | done     | Required for multi-file packages with composite refs. Documented in [`TODO.md` Phase 1 build note](./TODO.md#phase-1---core-types--config-ovellumcore) and project memory. |
+| ESM-only for `@ovellum/site`                     | done     | Uses `import.meta.url` to resolve bundled template dir.                                                                                                                    |
+| Post-build asset copy (site templates → `dist/`) | done     | `node -e "require('fs').cpSync(...)"` step.                                                                                                                                |
+| Prettier                                         | done     | `pnpm format` / `format:check`.                                                                                                                                            |
+| ESLint flat config + typescript-eslint           | done     | `src/templates/**` excluded for browser-globals.                                                                                                                           |
+| changesets                                       | done     | Configured; no releases yet.                                                                                                                                               |
+| GitHub Actions CI                                | done     | `ci.yml` (lint + typecheck + test + build) and `release.yml` (changesets publish).                                                                                         |
+| Demo scripts                                     | done     | `demo`, `demo:clean`, `demo:site`, `demo:site:clean`.                                                                                                                      |
 
 ---
 

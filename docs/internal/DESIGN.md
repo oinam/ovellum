@@ -364,7 +364,7 @@ manual_block_id: intro-paragraph
 2. Ovellum prints a warning on stdout:
 
 ```
-⚠  3 orphaned manual section(s) detected.
+Warning:  3 orphaned manual section(s) detected.
    Run `ovellum orphans` to review.
    Archived to: .ovellum/orphans/
 ```

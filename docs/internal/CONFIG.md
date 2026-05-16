@@ -78,10 +78,10 @@ interface ProtectConfig {
 | Field             | Type                     | Default              | Used by                      | Notes                                                                                                      |
 | ----------------- | ------------------------ | -------------------- | ---------------------------- | ---------------------------------------------------------------------------------------------------------- |
 | `blockTag`        | `string`                 | `'@manual'`          | reader                       | The Markdown comment tag, used as `<!-- {blockTag}:start id="…" -->`. Customise only with a strong reason. |
-| `inlineTag`       | `string`                 | `'@preserve'`        | parser, generator (🚧)       | JSDoc tag that marks a doc comment as human-managed.                                                       |
+| `inlineTag`       | `string`                 | `'@preserve'`        | parser, generator (deferred)       | JSDoc tag that marks a doc comment as human-managed.                                                       |
 | `orphanStrategy`  | `'quarantine' \| 'warn'` | `'quarantine'`       | merger                       | `'quarantine'` writes to `orphanDir`; `'warn'` prints only.                                                |
 | `orphanDir`       | `string`                 | `'.ovellum/orphans'` | merger                       | Relative to project root. Should be committed to VCS.                                                      |
-| `orphanRetention` | `number`                 | `90`                 | `ovellum orphans --stale` 🚧 | Days before an orphan is flagged stale.                                                                    |
+| `orphanRetention` | `number`                 | `90`                 | `ovellum orphans --stale` deferred | Days before an orphan is flagged stale.                                                                    |
 
 ---
 

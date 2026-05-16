@@ -188,7 +188,7 @@ Metadata for a protected zone whose anchor disappeared. Carries
 
 A protected zone whose source anchor no longer exists in the current IR
 (symbol was renamed, deleted, or moved). Quarantined, never silently
-dropped. Reviewed via [`ovellum orphans`](./CLI.md#ovellum-orphans-) 🚧.
+dropped. Reviewed via [`ovellum orphans`](./CLI.md#ovellum-orphans-) deferred.
 
 ### `ovellum.config.*`
 
@@ -209,7 +209,7 @@ JSDoc tag (the default [inline tag](#inline-tag)) on a source comment that
 asks the generator to wrap the comment's description in a
 [protected zone](#protected-zone--manual-block) automatically — so user
 edits to that description survive regeneration. The flag is captured on
-`DocNode.isPreserved`; generator-side auto-wrapping is 🚧.
+`DocNode.isPreserved`; generator-side auto-wrapping is deferred.
 
 ### Pretty URL
 

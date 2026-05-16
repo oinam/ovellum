@@ -33,12 +33,12 @@ two fixture projects.
 
 | Subcommand                | Status | Summary                                                                  |
 | ------------------------- | ------ | ------------------------------------------------------------------------ |
-| [`build`](#ovellum-build) | ✅     | Run the configured pipeline (parse + generate + merge, or build a site). |
-| `watch`                   | 🚧     | Rebuild on file changes. Tracked in [`TODO.md`](./TODO.md) Phase 6.      |
-| `check`                   | 🚧     | Validate config + docs without writing.                                  |
-| `orphans`                 | 🚧     | List / inspect / reattach quarantined manual blocks.                     |
-| `init`                    | 🚧     | Interactive scaffolder for `ovellum.config.ts` + first content.          |
-| `clean`                   | 🚧     | Remove auto-generated outputs while preserving manual files.             |
+| [`build`](#ovellum-build) | done     | Run the configured pipeline (parse + generate + merge, or build a site). |
+| `watch`                   | deferred     | Rebuild on file changes. Tracked in [`TODO.md`](./TODO.md) Phase 6.      |
+| `check`                   | deferred     | Validate config + docs without writing.                                  |
+| `orphans`                 | deferred     | List / inspect / reattach quarantined manual blocks.                     |
+| `init`                    | deferred     | Interactive scaffolder for `ovellum.config.ts` + first content.          |
+| `clean`                   | deferred     | Remove auto-generated outputs while preserving manual files.             |
 
 ---
 
@@ -131,7 +131,7 @@ ovellum build complete in 207ms
 | ---- | ----------------------------------------------------------- |
 | `0`  | Success.                                                    |
 | `1`  | Build error (parser failure, write failure, unknown mode).  |
-| `2`  | Reserved for `--strict` (warnings promoted to errors). 🚧   |
+| `2`  | Reserved for `--strict` (warnings promoted to errors). deferred   |
 | `3`  | `ConfigError` — config schema invalid, file not found, etc. |
 
 `stderr` carries per-warning lines (`warning: …`). `stdout` carries the summary.
@@ -155,18 +155,18 @@ ovellum build --config ./config/ovellum.prod.ts
 
 Scoped specs live in [`TODO.md`](./TODO.md) Phase 6. Short version:
 
-### `ovellum watch` 🚧
+### `ovellum watch` (deferred)
 
 `chokidar`-driven rebuild on changes to source, content, or config. Debounce
 300ms. Incremental: only affected files re-process.
 
-### `ovellum check` 🚧
+### `ovellum check` (deferred)
 
 Validation pass only — no writes. Loads config, runs the reader in
 validation mode (link checking + required frontmatter), lists any orphans.
 Exit `0` clean, `1` issues found.
 
-### `ovellum orphans` 🚧
+### `ovellum orphans` (deferred)
 
 Browse `.ovellum/orphans/`:
 
@@ -174,12 +174,12 @@ Browse `.ovellum/orphans/`:
 - `--stale`: filter to orphans older than `protect.orphanRetention` days
 - `--interactive`: reattach / delete / skip prompts (via `@inquirer/prompts`)
 
-### `ovellum init` 🚧
+### `ovellum init` (deferred)
 
 Interactive scaffolder. Prompts: name, mode, input, output, format. Writes
 `ovellum.config.ts`, creates the output directory stub, updates `.gitignore`.
 
-### `ovellum clean` 🚧
+### `ovellum clean` (deferred)
 
 Removes auto-generated files (identified by `ovellum: true` frontmatter)
 while preserving manual files. Dry-run by default; `--confirm` actually
@@ -192,6 +192,6 @@ writing).
 
 | Flag                | Status        | Notes                                                  |
 | ------------------- | ------------- | ------------------------------------------------------ |
-| `--strict`          | 🚧            | Promote warnings to errors; exit `2`.                  |
-| `--verbose`         | 🚧            | Print debug output (parser stages, merge details).     |
-| `--cwd`, `--config` | ✅ on `build` | Will be promoted to global when more subcommands land. |
+| `--strict`          | deferred            | Promote warnings to errors; exit `2`.                  |
+| `--verbose`         | deferred            | Print debug output (parser stages, merge details).     |
+| `--cwd`, `--config` | done (on `build`) | Will be promoted to global when more subcommands land. |
