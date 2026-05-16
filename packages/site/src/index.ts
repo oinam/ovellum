@@ -2,7 +2,7 @@ export { buildSite } from './build.js';
 export type { BuildSiteOptions, BuildSiteResult, PageOutput } from './build.js';
 export { renderMarkdown } from './markdown.js';
 export type { RenderedMarkdown, Heading } from './markdown.js';
-export { buildNav, flattenNav, findAdjacent } from './nav.js';
+export { buildNav, findAdjacent, findBreadcrumbs, flattenNav } from './nav.js';
 export type { AdjacentPages, NavNode } from './nav.js';
 export { extractMarkdownLinks } from './links.js';
 export type { MarkdownLink } from './links.js';

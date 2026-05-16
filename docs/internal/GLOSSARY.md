@@ -5,7 +5,7 @@ and CLI output. Linked from `DESIGN.md`, `SITE.md`, `FEATURES.md`, `CLI.md`,
 `CONFIG.md`. Update in the same commit as any change that introduces a new
 term.
 
-Last updated: 2026-05-16 (added Landing page / Hero / CTA / Feature card / Trust strip / `_landing.md`)
+Last updated: 2026-05-16 (added Breadcrumbs)
 
 ---
 
@@ -87,6 +87,14 @@ Parsed via `gray-matter`. Ovellum cares about:
 
 The frontmatter parser used by `@ovellum/reader` and `@ovellum/site`. Splits
 a Markdown file into `{ data, content }`.
+
+### Breadcrumbs
+
+The horizontal "Section › Page" trail rendered above the article on
+nested doc pages. Computed from the nav tree by walking from the root
+to the current page (`findBreadcrumbs()` in `@ovellum/site/src/nav.ts`).
+Top-level pages get none. The final entry is the current page, marked
+`aria-current="page"`.
 
 ### CTA (call to action)
 

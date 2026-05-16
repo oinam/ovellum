@@ -30,6 +30,29 @@ export function flattenNav(root: NavNode): NavNode[] {
   return out;
 }
 
+/**
+ * Walk the nav tree to find the chain of ancestors ending at `url`, root-first.
+ * Returns `[]` when the url isn't present in the tree.
+ *
+ * The result includes the root node and the matching node itself, so the last
+ * entry is the current page. Callers typically render this as the breadcrumb
+ * trail and skip the leading root entry.
+ */
+export function findBreadcrumbs(root: NavNode, url: string): NavNode[] {
+  const path: NavNode[] = [];
+  function walk(node: NavNode): boolean {
+    path.push(node);
+    if (node.url === url) return true;
+    for (const child of node.children) {
+      if (walk(child)) return true;
+    }
+    path.pop();
+    return false;
+  }
+  walk(root);
+  return path;
+}
+
 export interface AdjacentPages {
   prev?: NavNode;
   next?: NavNode;

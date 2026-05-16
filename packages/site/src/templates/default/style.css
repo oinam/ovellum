@@ -604,6 +604,89 @@ a:hover {
 }
 
 /* ====================================================================== */
+/* 404                                                                     */
+/* ====================================================================== */
+
+/* On the not-found page, drop the sidebar and ToC, centre the article. */
+body.ov-body-404 .ov-layout {
+  grid-template-columns: minmax(0, 1fr);
+  max-inline-size: 60ch;
+  padding-block-start: var(--space-2xl);
+  text-align: center;
+}
+body.ov-body-404 .ov-sidebar,
+body.ov-body-404 .ov-toc,
+body.ov-body-404 .ov-prevnext,
+body.ov-body-404 .ov-breadcrumbs,
+body.ov-body-404 .ov-edit-page {
+  display: none;
+}
+body.ov-body-404 .ov-prose h1 {
+  font-size: var(--font-size-4);
+  letter-spacing: -0.03em;
+}
+
+/* ====================================================================== */
+/* Print                                                                   */
+/* ====================================================================== */
+
+@media print {
+  :root {
+    --color-bg: #ffffff;
+    --color-fg: #000000;
+  }
+  .ov-topbar,
+  .ov-sidebar,
+  .ov-toc,
+  .ov-prevnext,
+  .ov-edit-page,
+  .ov-search,
+  .ov-theme-toggle,
+  .heading-anchor,
+  .ov-copy-btn {
+    display: none !important;
+  }
+  .ov-layout {
+    display: block;
+    max-inline-size: none;
+    padding: 0;
+  }
+  .ov-content {
+    max-inline-size: none;
+  }
+  .ov-prose {
+    max-inline-size: none;
+  }
+  .ov-prose a {
+    color: inherit;
+    text-decoration: underline;
+  }
+  /* Print external link URLs inline after the anchor text so paper readers
+     still have the destination. Internal links are noisier than helpful
+     because the slug doesn't convey anything; skip those. */
+  .ov-prose a[href^='http']::after {
+    content: ' (' attr(href) ')';
+    font-size: 0.85em;
+    color: #555;
+  }
+  .ov-prose pre {
+    page-break-inside: avoid;
+    border: 1px solid #ccc;
+    background: #f6f6f6;
+    color: #000;
+  }
+  .ov-prose h1,
+  .ov-prose h2,
+  .ov-prose h3 {
+    page-break-after: avoid;
+  }
+  .ov-footer {
+    border-block-start: 1px solid #ccc;
+    color: #555;
+  }
+}
+
+/* ====================================================================== */
 /* Landing page                                                            */
 /* ====================================================================== */
 

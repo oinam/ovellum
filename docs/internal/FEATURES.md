@@ -186,6 +186,9 @@ Powers `mode: 'manual'`. Design lives in [`SITE.md`](./SITE.md).
 | Prev / next page navigation                                                        | done     | Auto-rendered at the bottom of each doc page from the sidebar order.                                                                                                                          |
 | `sitemap.xml`                                                                      | done     | Auto-generated when `site.baseUrl` is set. `/404/` excluded by default. `<lastmod>` from git mtime deferred.                                                                                  |
 | Search (Pagefind)                                                                  | done     | Opt-in via `site.search.enabled`. `ovellum build` runs the Pagefind indexer against `dist/` and the topbar mounts the default Pagefind UI (themed via CSS variables to match Ovellum's tokens). |
+| Breadcrumbs                                                                        | done     | Auto-rendered above the article when the page sits at least two levels deep in the nav (top-level pages get none). Last entry marked `aria-current="page"`.                                  |
+| Custom 404 layout                                                                  | done     | `/404/` gets `body.ov-body-404`: sidebar, ToC, prev/next, breadcrumbs, and edit-this-page are hidden; the article centres on a narrower column with a larger heading.                        |
+| Print stylesheet                                                                   | done     | `@media print` hides chrome (topbar, sidebar, ToC, search, prev/next, edit link), widens content to full width, prints external link URLs inline, and avoids page-breaks inside code blocks. |
 | RSS                                                                                | deferred |                                                                                                                                                                                                |
 | MDX rendering                                                                      | deferred | `.md` only in v1.                                                                                                                                                                              |
 | Multiple bundled templates                                                         | deferred | One default for now.                                                                                                                                                                           |
@@ -196,7 +199,7 @@ Powers `mode: 'manual'`. Design lives in [`SITE.md`](./SITE.md).
 piece is in, and how to change the design — see
 [`SITE.md` §9a](./SITE.md#9a-template-anatomy).
 
-**Tests:** 27 vitest cases across markdown, nav (flatten + findAdjacent), template, landing, sitemap.
+**Tests:** 42 vitest cases across markdown, nav (flatten + findAdjacent + findBreadcrumbs), template, landing, sitemap, url helpers.
 
 ---
 

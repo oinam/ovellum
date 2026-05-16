@@ -131,6 +131,10 @@ export interface RenderPageInput {
   next?: PrevNextPage;
   /** Resolved "Edit this page" URL (already had `{path}` substituted), if set. */
   editUrl?: string;
+  /** Breadcrumb trail, root-first. The current page is the last entry. */
+  breadcrumbs?: Array<{ title: string; url: string }>;
+  /** Optional class added to `<body>`. Used today for the special 404 layout. */
+  bodyClass?: string;
 }
 
 /**
@@ -146,6 +150,7 @@ export function renderPage(input: RenderPageInput): string {
   const sidebar = renderSidebar(input.nav, input.url, basePath);
   const toc = renderToc(input.headings);
   const prevNext = renderPrevNext(input.prev, input.next, basePath);
+  const breadcrumbs = renderBreadcrumbs(input.breadcrumbs, basePath);
   const editLink = input.editUrl
     ? `<p class="ov-edit-page"><a class="ov-edit-link" href="${escapeAttr(input.editUrl)}" rel="noopener" target="_blank">Edit this page</a></p>`
     : '';
@@ -153,6 +158,7 @@ export function renderPage(input: RenderPageInput): string {
   const body = `<div class="ov-layout">
     <aside class="ov-sidebar" aria-label="Site navigation">${sidebar}</aside>
     <main class="ov-content">
+      ${breadcrumbs}
       <article class="ov-prose">${input.bodyHtml}</article>
       ${editLink}
       ${prevNext}
@@ -169,6 +175,7 @@ export function renderPage(input: RenderPageInput): string {
     docsHref: input.docsHref,
     generatedAt: input.generatedAt,
     body,
+    bodyClass: input.bodyClass,
   });
 }
 
@@ -307,6 +314,31 @@ function navList(nodes: NavNode[], activeUrl: string, basePath: string): string 
       return `<li>${link}${children}</li>`;
     })
     .join('');
+}
+
+function renderBreadcrumbs(
+  trail: Array<{ title: string; url: string }> | undefined,
+  basePath: string,
+): string {
+  // The trail includes the synthetic root node, so a top-level page like
+  // /getting-started/ has length 2. Only render when there's at least one
+  // real group between the root and the current page.
+  if (!trail || trail.length < 3) return '';
+  const visible = trail.slice(1);
+  const items = visible
+    .map((node, i) => {
+      const isLast = i === visible.length - 1;
+      if (isLast) {
+        return `<li class="ov-crumb is-current" aria-current="page">${escapeHtml(node.title)}</li>`;
+      }
+      return `<li class="ov-crumb"><a href="${escapeAttr(siteUrl(node.url, basePath))}">${escapeHtml(node.title)}</a></li>`;
+    })
+    .join('\n      ');
+  return `<nav class="ov-breadcrumbs" aria-label="Breadcrumb">
+    <ol>
+      ${items}
+    </ol>
+  </nav>`;
 }
 
 function renderPrevNext(

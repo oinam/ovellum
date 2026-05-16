@@ -5,7 +5,7 @@ import { fileURLToPath } from 'node:url';
 import matter from 'gray-matter';
 import type { OvellumConfig, OvellumSiteConfig } from '@ovellum/core';
 import { renderMarkdown, type Heading } from './markdown.js';
-import { buildNav, findAdjacent, type NavNode } from './nav.js';
+import { buildNav, findAdjacent, findBreadcrumbs, type NavNode } from './nav.js';
 import { indexSite } from './search.js';
 import { generateSitemap } from './sitemap.js';
 import { renderLanding, renderPage } from './template.js';
@@ -114,6 +114,7 @@ export async function buildSite(options: BuildSiteOptions): Promise<BuildSiteRes
       }
       const outputPath = path.join(outputAbs, urlToOutputPath(url));
       const { prev, next } = findAdjacent(nav, url);
+      const breadcrumbs = findBreadcrumbs(nav, url).map((n) => ({ title: n.title, url: n.url }));
       const sourceRelFromCwd = path.relative(cwd, file).replace(/\\/g, '/');
       const result = await renderOne({
         absInput: file,
@@ -124,6 +125,7 @@ export async function buildSite(options: BuildSiteOptions): Promise<BuildSiteRes
         docsHref,
         prev: prev ? { title: prev.title, url: prev.url } : undefined,
         next: next ? { title: next.title, url: next.url } : undefined,
+        breadcrumbs,
         sourceRelFromCwd,
       });
       await mkdir(path.dirname(outputPath), { recursive: true });
@@ -186,6 +188,7 @@ interface RenderOneInput {
   docsHref?: string;
   prev?: { title: string; url: string };
   next?: { title: string; url: string };
+  breadcrumbs?: Array<{ title: string; url: string }>;
   /** Page's source path relative to the project root; substituted into the edit URL. */
   sourceRelFromCwd: string;
 }
@@ -219,7 +222,9 @@ async function renderOne(input: RenderOneInput): Promise<RenderOneResult> {
     docsHref: input.docsHref,
     prev: input.prev,
     next: input.next,
+    breadcrumbs: input.breadcrumbs,
     editUrl,
+    bodyClass: input.url === '/404/' ? 'ov-body-404' : undefined,
   });
   return { html, title, warnings: [] };
 }
