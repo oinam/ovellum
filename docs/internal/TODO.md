@@ -1,12 +1,23 @@
 # TODO
 
 Living checklist for code / automation work. Update in place as work progresses.
-Last updated: 2026-05-15 (manual-mode static site builder v0 landed — @ovellum/site + CLI wiring + examples/manual-site demo)
+Last updated: 2026-05-16 (added FEATURES / CONFIG / CLI / GLOSSARY internal docs; doc-update cadence now per-commit)
 
 > Manual items — prose, decisions, releases, things only a human can do —
 > live in [`TODO-Human.md`](./TODO-Human.md). When in doubt: if the work
 > needs `git`, `pnpm`, or a code edit, it belongs here; if it needs a brain,
 > an account, or a real-world action, it goes there.
+
+**Reference docs (kept current alongside code):**
+
+- [`FEATURES.md`](./FEATURES.md) — what works **right now**, status per item, links to where each feature lives.
+- [`CONFIG.md`](./CONFIG.md) — every field in `ovellum.config.*` with types, defaults, and effect.
+- [`CLI.md`](./CLI.md) — `ovellum` subcommand reference with flags, exit codes, summary output.
+- [`GLOSSARY.md`](./GLOSSARY.md) — definitions for anchor, protected zone, orphan, etc.
+
+These four update **in the same commit** as any feature change that touches
+them. Design intent stays in [`DESIGN.md`](./DESIGN.md), [`SITE.md`](./SITE.md),
+[`STYLES.md`](./STYLES.md).
 
 Legend: `[ ]` not started · `[~]` in progress · `[x]` done · `[!]` blocked
 
