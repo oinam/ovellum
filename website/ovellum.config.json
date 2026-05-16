@@ -1,0 +1,67 @@
+{
+  "name": "Ovellum",
+  "version": "0.1.0",
+  "mode": "manual",
+  "input": "./content",
+  "output": "./dist",
+  "defaultFormat": "md",
+  "site": {
+    "title": "Ovellum",
+    "description": "Markdown documentation for TypeScript and JavaScript projects. A merge engine that lets auto-generated API docs and hand-written prose coexist in the same files, plus a Jekyll-style static-site builder for purely manual docs.",
+    "baseUrl": "https://ovellum.oss.oinam.com",
+    "defaultTheme": "auto",
+    "footer": "Ovellum is MIT-licensed. Built with itself.",
+    "landing": {
+      "enabled": true,
+      "docsHref": "/getting-started/",
+      "hero": {
+        "title": "Documentation that doesn't drift.",
+        "subtitle": "Ovellum is an open-source documentation tool for TypeScript and JavaScript. Auto-generate from source, hand-write narrative pages, or mix both in the same file. Your prose never gets silently overwritten.",
+        "ctas": [
+          { "label": "Get started", "href": "/getting-started/", "style": "primary" },
+          {
+            "label": "View on GitHub",
+            "href": "https://github.com/oinam/ovellum",
+            "style": "secondary"
+          }
+        ]
+      },
+      "features": [
+        {
+          "title": "Merge engine, not overwrite engine",
+          "description": "Tag sections of your Markdown as human-owned with a single comment pair. Ovellum updates the auto-generated parts around them; your prose survives every rebuild."
+        },
+        {
+          "title": "Three modes, one tool",
+          "description": "`auto` regenerates from source. `manual` builds a static site from Markdown. `hybrid` (default) merges the two. Switch per-project or per-file."
+        },
+        {
+          "title": "Orphans are quarantined, never lost",
+          "description": "When you rename or delete a documented symbol, any hand-written prose tied to it gets archived to `.ovellum/orphans/`. Reviewable in PRs, recoverable any time."
+        },
+        {
+          "title": "Markdown-first, no lock-in",
+          "description": "Plain `.md` files everywhere. No proprietary format, no required MDX, no special syntax beyond a tagging comment. Your content stays portable."
+        },
+        {
+          "title": "Fluid type and OKLCH themes",
+          "description": "Utopia-derived type and space scales. OKLCH palette with auto/light/dark themes. The pre-paint script keeps theme switches flash-free."
+        },
+        {
+          "title": "Build-time syntax highlighting",
+          "description": "Code blocks render through shiki with dual `github-light` / `github-dark` themes baked into the HTML. Zero runtime JavaScript for syntax colour."
+        }
+      ],
+      "trustStrip": {
+        "label": "Powered by",
+        "items": [
+          { "name": "TypeScript", "href": "https://www.typescriptlang.org/" },
+          { "name": "ts-morph", "href": "https://ts-morph.com/" },
+          { "name": "unified", "href": "https://unifiedjs.com/" },
+          { "name": "shiki", "href": "https://shiki.style/" },
+          { "name": "pnpm", "href": "https://pnpm.io/" }
+        ]
+      }
+    }
+  }
+}
