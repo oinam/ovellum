@@ -6,7 +6,7 @@ import matter from 'gray-matter';
 import type { OvellumConfig, OvellumSiteConfig } from '@ovellum/core';
 import { renderMarkdown, type Heading } from './markdown.js';
 import { buildNav, type NavNode } from './nav.js';
-import { renderPage } from './template.js';
+import { renderLanding, renderPage } from './template.js';
 
 export interface BuildSiteOptions {
   config: OvellumConfig;
@@ -27,9 +27,12 @@ export interface BuildSiteResult {
   warnings: string[];
   outputDir: string;
   assetsDir: string;
+  /** True when a landing page was rendered at `/`. */
+  landingRendered: boolean;
 }
 
 const TEMPLATE_DIR_NAME = 'templates/default';
+const LANDING_BODY_FILE = '_landing.md';
 
 /**
  * Build a static site from a folder of `.md` files. Wired by the CLI when
@@ -39,6 +42,10 @@ const TEMPLATE_DIR_NAME = 'templates/default';
  *   content/getting-started.md →  dist/getting-started/index.html
  *   content/guides/install.md  →  dist/guides/install/index.html
  *   content/img/logo.svg       →  dist/img/logo.svg   (passthrough)
+ *
+ * When `config.site.landing.enabled` is true, `dist/index.html` is rendered
+ * from the landing template (hero + features + optional `_landing.md` pitch
+ * + trust strip), and any `content/index.md` is skipped with a warning.
  *
  * Also writes `dist/assets/ovellum.css` and `dist/assets/ovellum.js` from the
  * bundled default template.
@@ -64,19 +71,53 @@ export async function buildSite(options: BuildSiteOptions): Promise<BuildSiteRes
   await mkdir(assetsAbs, { recursive: true });
   await writeStaticAssets(assetsAbs);
 
+  const landingEnabled = site.landing.enabled === true;
+  const docsHref = landingEnabled ? (site.landing.docsHref ?? firstNavUrl(nav)) : undefined;
+
   const pages: PageOutput[] = [];
+  let landingRendered = false;
+
+  // Render the landing page first (if enabled) so `content/index.md`
+  // can be detected as a conflict during the walk.
+  if (landingEnabled) {
+    const landingBody = await readLandingBody(inputAbs);
+    const html = renderLanding({
+      site,
+      landing: site.landing,
+      pitchHtml: landingBody?.html,
+      generatedAt: now.toISOString(),
+      docsHref,
+    });
+    await writeFile(path.join(outputAbs, 'index.html'), html, 'utf8');
+    pages.push({
+      sourcePath: landingBody?.sourcePath ?? '(landing config)',
+      outputPath: path.relative(cwd, path.join(outputAbs, 'index.html')).replace(/\\/g, '/'),
+      url: '/',
+      title: site.landing.hero.title ?? site.title,
+    });
+    landingRendered = true;
+  }
+
   for await (const file of walkContent(inputAbs)) {
     const relFromInput = path.relative(inputAbs, file).replace(/\\/g, '/');
     if (isMarkdown(file)) {
       const url = urlFor(relFromInput);
+      if (landingEnabled && url === '/') {
+        warnings.push(
+          `Skipped ${relFromInput} because site.landing.enabled is true; ` +
+            `the landing template renders / instead. Move prose to ${LANDING_BODY_FILE} ` +
+            `or rename this file.`,
+        );
+        continue;
+      }
       const outputPath = path.join(outputAbs, urlToOutputPath(url));
       const result = await renderOne({
         absInput: file,
-        relFromCwd: path.relative(cwd, file).replace(/\\/g, '/'),
         url,
         site,
         nav,
         generatedAt: now.toISOString(),
+        docsHref,
       });
       await mkdir(path.dirname(outputPath), { recursive: true });
       await writeFile(outputPath, result.html, 'utf8');
@@ -95,24 +136,29 @@ export async function buildSite(options: BuildSiteOptions): Promise<BuildSiteRes
     }
   }
 
-  // Sort pages for deterministic output order in the summary.
-  pages.sort((a, b) => a.url.localeCompare(b.url));
+  // Sort pages for deterministic summary output (but keep `/` first).
+  pages.sort((a, b) => {
+    if (a.url === '/') return -1;
+    if (b.url === '/') return 1;
+    return a.url.localeCompare(b.url);
+  });
 
   return {
     pages,
     warnings,
     outputDir: path.relative(cwd, outputAbs).replace(/\\/g, '/'),
     assetsDir: path.relative(cwd, assetsAbs).replace(/\\/g, '/'),
+    landingRendered,
   };
 }
 
 interface RenderOneInput {
   absInput: string;
-  relFromCwd: string;
   url: string;
   site: OvellumSiteConfig & { title: string };
   nav: NavNode;
   generatedAt: string;
+  docsHref?: string;
 }
 
 interface RenderOneResult {
@@ -137,8 +183,29 @@ async function renderOne(input: RenderOneInput): Promise<RenderOneResult> {
     bodyHtml,
     headings,
     generatedAt: input.generatedAt,
+    docsHref: input.docsHref,
   });
   return { html, title, warnings: [] };
+}
+
+interface LandingBody {
+  html: string;
+  sourcePath: string;
+}
+
+async function readLandingBody(inputAbs: string): Promise<LandingBody | undefined> {
+  const abs = path.join(inputAbs, LANDING_BODY_FILE);
+  if (!existsSync(abs)) return undefined;
+  const raw = await readFile(abs, 'utf8');
+  const { content } = matter(raw);
+  if (!content.trim()) return undefined;
+  const { html } = await renderMarkdown(content);
+  return { html, sourcePath: path.join(path.basename(inputAbs), LANDING_BODY_FILE) };
+}
+
+function firstNavUrl(nav: NavNode): string | undefined {
+  const first = nav.children.find((c) => c.sourcePath !== undefined);
+  return first?.url;
 }
 
 function resolveSiteConfig(config: OvellumConfig): OvellumSiteConfig & { title: string } {

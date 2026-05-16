@@ -4,4 +4,5 @@ export { renderMarkdown } from './markdown.js';
 export type { RenderedMarkdown, Heading } from './markdown.js';
 export { buildNav } from './nav.js';
 export type { NavNode } from './nav.js';
-export { renderPage } from './template.js';
+export { renderPage, renderLanding } from './template.js';
+export type { RenderPageInput, RenderLandingInput } from './template.js';

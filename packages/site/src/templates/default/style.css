@@ -163,7 +163,6 @@ a:hover {
   z-index: 10;
   display: flex;
   align-items: center;
-  justify-content: space-between;
   gap: var(--space-s);
   padding: var(--space-xs) var(--space-m);
   border-block-end: 1px solid var(--color-border);
@@ -175,6 +174,24 @@ a:hover {
   text-decoration: none;
   color: var(--color-fg);
   font-size: var(--font-size-1);
+}
+.ov-topbar-nav {
+  flex: 1;
+  display: flex;
+  gap: var(--space-s);
+  justify-content: flex-end;
+  padding-inline-end: var(--space-s);
+}
+.ov-topbar-link {
+  text-decoration: none;
+  color: var(--color-fg-muted);
+  font-weight: 500;
+  padding: var(--space-3xs) var(--space-2xs);
+  border-radius: var(--radius-md);
+}
+.ov-topbar-link:hover {
+  color: var(--color-fg);
+  background: var(--color-bg-subtle);
 }
 .ov-theme-toggle {
   inline-size: 2rem;
@@ -478,4 +495,205 @@ a:hover {
 ::selection {
   background: var(--color-blue-200);
   color: var(--color-blue-900);
+}
+
+/* ====================================================================== */
+/* Landing page                                                            */
+/* ====================================================================== */
+
+body.ov-body-landing {
+  /* Landing pages span the full viewport — no sidebar grid. */
+}
+
+.ov-landing {
+  max-inline-size: 1100px;
+  margin-inline: auto;
+  padding: var(--space-xl) var(--space-m) var(--space-l);
+}
+
+/* Hero */
+.ov-hero {
+  text-align: center;
+  padding-block: var(--space-l) var(--space-m);
+}
+.ov-hero-title {
+  font-size: var(--font-size-5, var(--font-size-4));
+  line-height: 1.05;
+  letter-spacing: -0.03em;
+  margin: 0 auto var(--space-s);
+  max-inline-size: 18ch;
+  font-weight: 700;
+}
+.ov-hero-subtitle {
+  font-size: var(--font-size-1);
+  line-height: 1.45;
+  color: var(--color-fg-muted);
+  max-inline-size: 60ch;
+  margin: 0 auto var(--space-l);
+}
+.ov-cta-row {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--space-s);
+  margin-block-start: var(--space-m);
+}
+.ov-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2xs);
+  padding: var(--space-2xs) var(--space-m);
+  border-radius: var(--radius-md);
+  font-weight: 600;
+  text-decoration: none;
+  font-size: var(--font-size-0);
+  transition:
+    background-color 120ms ease,
+    color 120ms ease,
+    border-color 120ms ease;
+}
+.ov-cta--primary {
+  background: var(--color-accent);
+  color: var(--color-bg);
+  border: 1px solid var(--color-accent);
+}
+.ov-cta--primary:hover {
+  background: var(--color-accent-hover);
+  border-color: var(--color-accent-hover);
+  color: var(--color-bg);
+}
+.ov-cta--secondary {
+  background: transparent;
+  color: var(--color-fg);
+  border: 1px solid var(--color-border-strong);
+}
+.ov-cta--secondary:hover {
+  background: var(--color-bg-subtle);
+  border-color: var(--color-fg-subtle);
+  color: var(--color-fg);
+}
+
+/* Feature grid */
+.ov-feature-grid-wrap {
+  margin-block: var(--space-xl) var(--space-l);
+}
+.ov-feature-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: var(--space-m);
+}
+.ov-feature-card {
+  background: var(--color-bg-subtle);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-m);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2xs);
+  transition: border-color 120ms ease;
+}
+.ov-feature-card:hover {
+  border-color: var(--color-border-strong);
+}
+.ov-feature-icon {
+  font-size: var(--font-size-2);
+  line-height: 1;
+}
+.ov-feature-title {
+  margin: 0;
+  font-size: var(--font-size-1);
+  line-height: 1.2;
+  font-weight: 600;
+}
+.ov-feature-description {
+  margin: 0;
+  color: var(--color-fg-muted);
+  font-size: var(--font-size-0);
+  line-height: 1.5;
+}
+
+/* Pitch section (from _landing.md prose body) */
+.ov-pitch {
+  margin-block: var(--space-xl) var(--space-l);
+  padding-block: var(--space-l);
+  border-block-start: 1px solid var(--color-border);
+}
+.ov-pitch-inner {
+  max-inline-size: 60ch;
+  margin-inline: auto;
+  font-size: var(--font-size-0);
+  line-height: 1.65;
+  color: var(--color-fg-muted);
+}
+.ov-pitch-inner h2 {
+  font-size: var(--font-size-2);
+  line-height: 1.2;
+  margin-block: 0 var(--space-s);
+  color: var(--color-fg);
+}
+.ov-pitch-inner h3 {
+  font-size: var(--font-size-1);
+  margin-block: var(--space-m) var(--space-s);
+  color: var(--color-fg);
+}
+.ov-pitch-inner p,
+.ov-pitch-inner ul,
+.ov-pitch-inner ol {
+  margin-block: 0 var(--space-s);
+}
+.ov-pitch-inner a {
+  color: var(--color-link);
+}
+
+/* Trust strip */
+.ov-trust {
+  margin-block: var(--space-l) var(--space-xl);
+  padding-block: var(--space-m);
+  border-block-start: 1px solid var(--color-border);
+  text-align: center;
+}
+.ov-trust-label {
+  font-size: 0.78em;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--color-fg-subtle);
+  margin-block: 0 var(--space-s);
+  font-weight: 600;
+}
+.ov-trust-items {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: var(--space-l);
+}
+.ov-trust-item {
+  color: var(--color-fg-muted);
+  text-decoration: none;
+  font-weight: 500;
+}
+.ov-trust-item:hover {
+  color: var(--color-fg);
+}
+.ov-trust-image {
+  block-size: 1.75rem;
+  inline-size: auto;
+  opacity: 0.7;
+  transition: opacity 120ms ease;
+}
+.ov-trust-item:hover .ov-trust-image {
+  opacity: 1;
+}
+
+/* Landing-page responsive */
+@media (max-width: 720px) {
+  .ov-landing {
+    padding: var(--space-l) var(--space-s);
+  }
+  .ov-hero {
+    padding-block: var(--space-m) var(--space-s);
+  }
+  .ov-feature-grid {
+    grid-template-columns: 1fr;
+  }
 }
