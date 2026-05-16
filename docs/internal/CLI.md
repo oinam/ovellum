@@ -35,7 +35,7 @@ two fixture projects.
 | ------------------------- | ------ | ------------------------------------------------------------------------ |
 | [`build`](#ovellum-build) | done     | Run the configured pipeline (parse + generate + merge, or build a site). |
 | [`check`](#ovellum-check) | done     | Validate config + check for broken internal links without writing.        |
-| `watch`                   | deferred     | Rebuild on file changes. Tracked in [`TODO.md`](./TODO.md) Phase 6.      |
+| [`watch`](#ovellum-watch) | done     | Build, then rebuild on every change under `input/` (debounced 300 ms).    |
 | `orphans`                 | deferred     | List / inspect / reattach quarantined manual blocks.                     |
 | `init`                    | deferred     | Interactive scaffolder for `ovellum.config.ts` + first content.          |
 | `clean`                   | deferred     | Remove auto-generated outputs while preserving manual files.             |
@@ -155,11 +155,6 @@ ovellum build --config ./config/ovellum.prod.ts
 
 Scoped specs live in [`TODO.md`](./TODO.md) Phase 6. Short version:
 
-### `ovellum watch` (deferred)
-
-`chokidar`-driven rebuild on changes to source, content, or config. Debounce
-300ms. Incremental: only affected files re-process.
-
 ### `ovellum check`
 
 Validation pass only — no writes. Loads config, walks every `.md` file
@@ -209,6 +204,43 @@ of the pipeline is tracked in TODO.md Phase 6.
 
 Frontmatter validation, required-fields checking, and orphan listing
 for hybrid mode are deferred.
+
+### `ovellum watch`
+
+Builds once, then rebuilds on every change under `input/` or to the
+config file itself. Debounced 300 ms so a single editor save doesn't
+trigger two builds.
+
+```
+ovellum watch [--cwd <dir>] [--config <path>]
+```
+
+Watches via `chokidar`:
+
+- `input/` (entire tree, including `_landing.md` and `_meta.json` files
+  used by the build).
+- The resolved `ovellum.config.*` file itself; touched configs reload
+  before the next rebuild.
+
+The watcher doesn't run its own dev server in v1. Pair it with anything
+that serves a static directory:
+
+```bash
+# terminal 1
+ovellum watch
+
+# terminal 2
+npx serve dist
+```
+
+On every rebuild the summary prints to stdout; warnings (if any) go to
+stderr. `Ctrl-C` shuts the watcher down cleanly.
+
+#### Scope today
+
+Manual mode only. Live-reload (browser auto-refresh) is deferred; you
+re-press the browser refresh button after a rebuild logs in the
+terminal.
 
 ### `ovellum orphans` (deferred)
 
