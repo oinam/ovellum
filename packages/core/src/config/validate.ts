@@ -139,6 +139,24 @@ export function validateUserConfig(input: unknown): OvellumUserConfig {
         throw new ConfigError('`site.search.enabled` must be a boolean.');
       }
     }
+    if (s.topbarNav !== undefined) {
+      if (!Array.isArray(s.topbarNav)) {
+        throw new ConfigError('`site.topbarNav` must be an array.');
+      }
+      s.topbarNav.forEach((item, i) => {
+        const path = `site.topbarNav[${i}]`;
+        if (!isPlainObject(item)) throw new ConfigError(`\`${path}\` must be an object.`);
+        if (typeof item.label !== 'string') {
+          throw new ConfigError(`\`${path}.label\` must be a string.`);
+        }
+        if (typeof item.href !== 'string') {
+          throw new ConfigError(`\`${path}.href\` must be a string.`);
+        }
+        if (item.external !== undefined && typeof item.external !== 'boolean') {
+          throw new ConfigError(`\`${path}.external\` must be a boolean.`);
+        }
+      });
+    }
     if (s.pageMeta !== undefined) {
       if (!isPlainObject(s.pageMeta)) {
         throw new ConfigError('`site.pageMeta` must be an object.');

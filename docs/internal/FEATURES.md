@@ -176,7 +176,10 @@ Powers `mode: 'manual'`. Design lives in [`SITE.md`](./SITE.md).
 | Pretty URLs (`name/index.html`)                                                    | done     |                                                                                                                                                                                                |
 | Static asset passthrough                                                           | done     | Non-`.md` files (images, etc.) copied as-is.                                                                                                                                                   |
 | **Landing page** (`site.landing.enabled`)                                          | done     | Disabled by default. When enabled: full-width hero + feature grid + optional `_landing.md` prose + optional trust strip rendered at `/`. Doc pages keep their URLs. Top-bar gains a Docs link. |
-| Top bar with theme toggle                                                          | done     | Auto → light → dark cycle; localStorage-backed; applied pre-paint.                                                                                                                             |
+| Top bar with theme toggle                                                          | done     | Auto → light → dark cycle; localStorage-backed; applied pre-paint. Icons (monitor/sun/moon) swap by `data-theme`.                                                                              |
+| Right-aligned topbar nav with mobile sheet                                         | done     | Driven by `site.topbarNav`. External links get a small SVG arrow. Below 720px the nav collapses into a hamburger that opens a full-width sheet.                                                |
+| Inline SVG icon registry (Lucide-shaped)                                           | done     | `renderIcon(name)` returns a 24×24 currentColor SVG matching Lucide's spec (1.5 stroke, round caps). Starter set: menu, close, sun, moon, monitor, chevron-down, github, external-link, search, check. Future swap-in to real Lucide is a drop-in. |
+| Hero with dotted-noise + spotlight bg                                              | done     | Landing hero gets two stacked pseudo-elements: a 24px dotted SVG pattern (theme-aware, masked to fade at the edges) and a radial accent spotlight. No images shipped; both are data-URL/CSS-only. |
 | Copy buttons on code blocks                                                        | done     | Injected client-side; ~50 lines of vanilla JS.                                                                                                                                                 |
 | Default light + dark themes                                                        | done     | From `STYLES.md` Tier 2 tokens (hand-ported into `style.css`).                                                                                                                                 |
 | Nord / Solarized themes in switcher                                                | deferred | Tokens already in `STYLES.md`.                                                                                                                                                                 |
@@ -200,7 +203,7 @@ Powers `mode: 'manual'`. Design lives in [`SITE.md`](./SITE.md).
 piece is in, and how to change the design — see
 [`SITE.md` §9a](./SITE.md#9a-template-anatomy).
 
-**Tests:** 62 vitest cases in `@ovellum/site` (markdown incl. sanitization, nav, template, landing, sitemap, url helpers, page-meta incl. command-injection resistance) plus 8 in `ovellum` (CLI URL-scheme allowlist).
+**Tests:** 71 vitest cases in `@ovellum/site` (markdown incl. sanitization, nav, template, landing, sitemap, url helpers, page-meta incl. command-injection resistance, icons) plus 8 in `ovellum` (CLI URL-scheme allowlist).
 
 **Security:** sanitization policy, shell-out hardening, and URL-scheme allowlist are documented in [`SECURITY.md`](./SECURITY.md).
 

@@ -1,6 +1,7 @@
 // Ovellum default template — client-side enhancements.
 // 1) Theme toggle (auto → light → dark) wired to <html data-theme="…">.
 // 2) Copy button on every <pre> code block.
+// 3) Mobile menu toggle (hamburger ↔ sheet).
 (function () {
   var STORAGE_KEY = 'ovellum-theme';
   var ORDER = ['auto', 'light', 'dark'];
@@ -28,6 +29,27 @@
       var current = readStored();
       var next = ORDER[(ORDER.indexOf(current) + 1) % ORDER.length];
       apply(next);
+    });
+  }
+
+  // Mobile menu
+  var menuBtn = document.querySelector('[data-ov-menu-toggle]');
+  var mobileNav = document.getElementById('ov-mobile-nav');
+  if (menuBtn && mobileNav) {
+    menuBtn.addEventListener('click', function () {
+      var open = menuBtn.getAttribute('aria-expanded') === 'true';
+      menuBtn.setAttribute('aria-expanded', open ? 'false' : 'true');
+      mobileNav.classList.toggle('is-open', !open);
+      document.body.classList.toggle('ov-menu-open', !open);
+    });
+    // Close the sheet when a link is tapped so the page doesn't paint with
+    // it still open after navigation.
+    mobileNav.addEventListener('click', function (e) {
+      if (e.target && e.target.tagName === 'A') {
+        menuBtn.setAttribute('aria-expanded', 'false');
+        mobileNav.classList.remove('is-open');
+        document.body.classList.remove('ov-menu-open');
+      }
     });
   }
 

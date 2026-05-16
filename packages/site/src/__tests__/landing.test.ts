@@ -124,7 +124,9 @@ describe('renderLanding', () => {
       generatedAt: '2026-05-16T00:00:00.000Z',
       docsHref: '/start/',
     });
-    expect(html).toContain('<a class="ov-topbar-link" href="/start/">Docs</a>');
+    expect(html).toContain(
+      '<a class="ov-topbar-link ov-topbar-link--docs" href="/start/">Docs</a>',
+    );
   });
 
   it('uses the landing body class on <body>', () => {

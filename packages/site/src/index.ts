@@ -8,6 +8,8 @@ export { extractMarkdownLinks } from './links.js';
 export type { MarkdownLink } from './links.js';
 export { countWords, lastModifiedISO, readingMinutes } from './page-meta.js';
 export type { LastModifiedInput } from './page-meta.js';
+export { ICONS, renderIcon } from './icons.js';
+export type { IconName, RenderIconOptions } from './icons.js';
 export { generateSitemap } from './sitemap.js';
 export type { GenerateSitemapInput } from './sitemap.js';
 export { assetsPrefix, normaliseBasePath, siteUrl } from './url.js';

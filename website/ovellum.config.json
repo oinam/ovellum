@@ -13,6 +13,12 @@
     "footer": "Ovellum is MIT-licensed. Built with itself.",
     "editUrlPattern": "https://github.com/oinam/ovellum/edit/main/website/{path}",
     "search": { "enabled": true },
+    "topbarNav": [
+      { "label": "Guides", "href": "/guides/manual-mode/" },
+      { "label": "Reference", "href": "/reference/config/" },
+      { "label": "Glossary", "href": "/reference/glossary/" },
+      { "label": "GitHub", "href": "https://github.com/oinam/ovellum", "external": true }
+    ],
     "landing": {
       "enabled": true,
       "docsHref": "/getting-started/",

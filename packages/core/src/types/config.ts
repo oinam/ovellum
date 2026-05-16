@@ -62,6 +62,19 @@ export interface OvellumSiteSearchConfig {
   enabled: boolean;
 }
 
+export interface OvellumTopbarNavItem {
+  /** Visible label. */
+  label: string;
+  /** Site-relative or external href. */
+  href: string;
+  /**
+   * When `true`, link opens in a new tab with `rel="noopener"` and a small
+   * external-link icon is appended. Defaults to `false` (or auto-detected
+   * from `href` starting with `http://`/`https://` if you want).
+   */
+  external?: boolean;
+}
+
 export interface OvellumSitePageMetaConfig {
   /** Show "N min read" above the article. Default `true`. ~200 wpm. */
   readingTime: boolean;
@@ -126,6 +139,11 @@ export interface OvellumSiteConfig {
   search: OvellumSiteSearchConfig;
   /** Per-page meta line (reading time + last-modified) above the article. */
   pageMeta: OvellumSitePageMetaConfig;
+  /**
+   * Right-aligned topbar nav items, rendered to the right of the brand on
+   * every page (including the landing). Empty by default. Order is preserved.
+   */
+  topbarNav: OvellumTopbarNavItem[];
   /** Landing-page settings. Disabled by default. */
   landing: OvellumLandingConfig;
 }
@@ -178,6 +196,7 @@ export const DEFAULT_CONFIG: OvellumConfig = {
     footer: 'Built with Ovellum',
     search: { enabled: false },
     pageMeta: { readingTime: true, lastModified: true },
+    topbarNav: [],
     landing: {
       enabled: false,
       hero: { ctas: [] },

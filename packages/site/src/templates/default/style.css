@@ -161,10 +161,14 @@ a:hover {
   position: sticky;
   top: 0;
   z-index: 10;
-  display: flex;
+  display: grid;
+  grid-template-columns: auto 1fr auto;
   align-items: center;
-  gap: var(--space-s);
-  padding: var(--space-xs) var(--space-m);
+  gap: var(--space-m);
+  padding: var(--space-2xs) var(--space-m);
+  max-inline-size: 1320px;
+  margin-inline: auto;
+  inline-size: 100%;
   border-block-end: 1px solid var(--color-border);
   background: color-mix(in oklch, var(--color-bg) 88%, transparent);
   backdrop-filter: saturate(180%) blur(8px);
@@ -174,24 +178,38 @@ a:hover {
   text-decoration: none;
   color: var(--color-fg);
   font-size: var(--font-size-1);
+  letter-spacing: -0.01em;
 }
 .ov-topbar-nav {
-  flex: 1;
   display: flex;
-  gap: var(--space-s);
+  gap: var(--space-xs);
   justify-content: flex-end;
-  padding-inline-end: var(--space-s);
+  align-items: center;
+  min-inline-size: 0;
 }
 .ov-topbar-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35em;
   text-decoration: none;
   color: var(--color-fg-muted);
   font-weight: 500;
-  padding: var(--space-3xs) var(--space-2xs);
+  font-size: 0.94em;
+  padding: var(--space-3xs) var(--space-xs);
   border-radius: var(--radius-md);
+  transition: color 120ms ease, background-color 120ms ease;
 }
 .ov-topbar-link:hover {
   color: var(--color-fg);
   background: var(--color-bg-subtle);
+}
+.ov-topbar-icon {
+  opacity: 0.7;
+}
+.ov-topbar-right {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2xs);
 }
 
 /* Search box (Pagefind UI overlay) */
@@ -220,35 +238,97 @@ a:hover {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-inline-size: 4rem;
-  block-size: 2rem;
-  padding: 0 var(--space-2xs);
-  border: 1px solid var(--color-border-strong);
-  background: var(--color-bg-subtle);
+  inline-size: 2.25rem;
+  block-size: 2.25rem;
+  padding: 0;
+  border: 1px solid transparent;
+  background: transparent;
   color: var(--color-fg-muted);
   border-radius: var(--radius-md);
   cursor: pointer;
-  font: inherit;
-  font-size: 0.72em;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  transition:
-    color 120ms ease,
-    border-color 120ms ease;
+  transition: color 120ms ease, background-color 120ms ease, border-color 120ms ease;
 }
 .ov-theme-toggle:hover {
   color: var(--color-fg);
-  border-color: var(--color-fg-subtle);
+  background: var(--color-bg-subtle);
+  border-color: var(--color-border);
 }
-.ov-theme-toggle::after {
-  content: 'Auto';
+.ov-theme-icon {
+  display: none;
+  line-height: 0;
 }
-:root[data-theme='light'] .ov-theme-toggle::after {
-  content: 'Light';
+:root[data-theme='auto'] .ov-theme-icon-auto,
+:root[data-theme='light'] .ov-theme-icon-light,
+:root[data-theme='dark'] .ov-theme-icon-dark {
+  display: inline-flex;
 }
-:root[data-theme='dark'] .ov-theme-toggle::after {
-  content: 'Dark';
+
+/* Mobile menu button — hidden on desktop, shown below the breakpoint. */
+.ov-topbar-menu {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  inline-size: 2.25rem;
+  block-size: 2.25rem;
+  padding: 0;
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--color-fg-muted);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+}
+.ov-topbar-menu:hover {
+  color: var(--color-fg);
+  background: var(--color-bg-subtle);
+  border-color: var(--color-border);
+}
+.ov-topbar-menu-open {
+  display: inline-flex;
+  line-height: 0;
+}
+.ov-topbar-menu-close {
+  display: none;
+  line-height: 0;
+}
+[data-ov-menu-toggle][aria-expanded='true'] .ov-topbar-menu-open {
+  display: none;
+}
+[data-ov-menu-toggle][aria-expanded='true'] .ov-topbar-menu-close {
+  display: inline-flex;
+}
+
+/* Mobile nav sheet — hidden on desktop, slides down on mobile when open. */
+.ov-mobile-nav {
+  display: none;
+  position: fixed;
+  top: 3.25rem;
+  inset-inline: 0;
+  z-index: 9;
+  flex-direction: column;
+  padding: var(--space-s) var(--space-m) var(--space-m);
+  gap: var(--space-3xs);
+  background: var(--color-bg);
+  border-block-end: 1px solid var(--color-border);
+  box-shadow: 0 24px 48px -24px color-mix(in oklch, var(--color-fg) 12%, transparent);
+}
+.ov-mobile-nav.is-open {
+  display: flex;
+}
+.ov-mobile-nav .ov-topbar-link {
+  padding: var(--space-xs) var(--space-s);
+  font-size: 1.05em;
+}
+body.ov-menu-open {
+  overflow: hidden;
+}
+
+@media (max-width: 720px) {
+  .ov-topbar-nav {
+    display: none;
+  }
+  .ov-topbar-menu {
+    display: inline-flex;
+  }
 }
 
 /* Layout */
@@ -711,30 +791,79 @@ body.ov-body-landing {
 .ov-landing {
   max-inline-size: 1100px;
   margin-inline: auto;
-  padding: var(--space-xl) var(--space-m) var(--space-l);
+  padding: 0 var(--space-m) var(--space-l);
 }
 
-/* Hero */
+/* Hero
+   ===
+   Two stacked background layers behind the centred prose:
+     ::before  dotted noise pattern (faint, neutral, theme-aware)
+     ::after   radial spotlight gradient (accent-tinted, low alpha)
+   Both use `pointer-events: none` and live above body bg but below content.
+   The dotted pattern is a data-URL SVG so there's no extra HTTP request and
+   no images to ship. */
 .ov-hero {
+  position: relative;
+  isolation: isolate;
   text-align: center;
-  padding-block: var(--space-l) var(--space-m);
+  padding-block: clamp(var(--space-2xl), 12vw, var(--space-3xl))
+                 clamp(var(--space-xl), 8vw, var(--space-2xl));
+  margin-inline: calc(-1 * var(--space-m));
+  overflow: hidden;
+}
+.ov-hero::before,
+.ov-hero::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: -1;
+}
+.ov-hero::before {
+  /* 24×24 grid of 1px dots in fg-subtle (currentColor would require
+     `color`, but we'd rather not inherit). Mask to fade at the edges. */
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'><circle cx='12' cy='12' r='1' fill='%23000' fill-opacity='0.18'/></svg>");
+  background-size: 24px 24px;
+  background-repeat: repeat;
+  -webkit-mask-image: radial-gradient(ellipse 80% 70% at 50% 40%, black 0%, transparent 80%);
+          mask-image: radial-gradient(ellipse 80% 70% at 50% 40%, black 0%, transparent 80%);
+  opacity: 0.9;
+}
+:root[data-theme='dark'] .ov-hero::before {
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'><circle cx='12' cy='12' r='1' fill='%23fff' fill-opacity='0.18'/></svg>");
+}
+@media (prefers-color-scheme: dark) {
+  :root[data-theme='auto'] .ov-hero::before {
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'><circle cx='12' cy='12' r='1' fill='%23fff' fill-opacity='0.18'/></svg>");
+  }
+}
+.ov-hero::after {
+  /* Spotlight: a soft accent-tinted ellipse, low alpha, no hard edges. */
+  background: radial-gradient(
+    ellipse 50% 38% at 50% 35%,
+    color-mix(in oklch, var(--color-accent) 22%, transparent) 0%,
+    transparent 70%
+  );
 }
 .ov-hero-title {
-  font-size: var(--font-size-5, var(--font-size-4));
-  line-height: 1.05;
-  letter-spacing: -0.03em;
+  position: relative;
+  font-size: clamp(var(--font-size-4), 7vw, var(--font-size-5, 3.5rem));
+  line-height: 1.02;
+  letter-spacing: -0.035em;
   margin: 0 auto var(--space-s);
-  max-inline-size: 18ch;
+  max-inline-size: 16ch;
   font-weight: 700;
 }
 .ov-hero-subtitle {
+  position: relative;
   font-size: var(--font-size-1);
-  line-height: 1.45;
+  line-height: 1.5;
   color: var(--color-fg-muted);
-  max-inline-size: 60ch;
+  max-inline-size: 56ch;
   margin: 0 auto var(--space-l);
 }
 .ov-cta-row {
+  position: relative;
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
@@ -891,12 +1020,19 @@ body.ov-body-landing {
 /* Landing-page responsive */
 @media (max-width: 720px) {
   .ov-landing {
-    padding: var(--space-l) var(--space-s);
+    padding: 0 var(--space-s) var(--space-l);
   }
   .ov-hero {
-    padding-block: var(--space-m) var(--space-s);
+    margin-inline: calc(-1 * var(--space-s));
+    padding-block: var(--space-xl) var(--space-l);
+  }
+  .ov-hero-title {
+    letter-spacing: -0.03em;
   }
   .ov-feature-grid {
     grid-template-columns: 1fr;
+  }
+  .ov-trust-items {
+    gap: var(--space-m);
   }
 }

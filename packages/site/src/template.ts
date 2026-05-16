@@ -1,4 +1,5 @@
 import type { OvellumLandingConfig, OvellumSiteConfig } from '@ovellum/core';
+import { renderIcon } from './icons.js';
 import type { Heading } from './markdown.js';
 import type { NavNode } from './nav.js';
 import { assetsPrefix as assetsPrefixFor, normaliseBasePath, siteUrl } from './url.js';
@@ -65,7 +66,7 @@ function renderShell(opts: ShellOptions): string {
   </script>
 </head>
 <body${opts.bodyClass ? ` class="${escapeAttr(opts.bodyClass)}"` : ''}>
-  ${renderTopbar(opts.site, assets, opts.docsHref ? siteUrl(opts.docsHref, basePath) : undefined, searchEnabled)}
+  ${renderTopbar(opts.site, assets, opts.docsHref ? siteUrl(opts.docsHref, basePath) : undefined, searchEnabled, basePath)}
   ${opts.body}
   ${renderFooter(opts.site, opts.generatedAt)}
   ${searchScripts}
@@ -80,16 +81,52 @@ function renderTopbar(
   assets: string,
   docsHref: string | undefined,
   searchEnabled: boolean,
+  basePath: string,
 ): string {
-  const docsLink = docsHref
-    ? `<a class="ov-topbar-link" href="${escapeAttr(docsHref)}">Docs</a>`
-    : '';
+  // Compose the right-side nav: configured items first, then the implicit
+  // Docs link (only on the landing page — where docsHref is non-undefined).
+  const navItems = site.topbarNav ?? [];
+  const items: string[] = navItems.map((item) => {
+    const external =
+      item.external === true || /^https?:\/\//i.test(item.href);
+    const href = external ? item.href : siteUrl(item.href, basePath);
+    const rel = external ? ' rel="noopener" target="_blank"' : '';
+    const icon = external
+      ? ` ${renderIcon('external-link', { class: 'ov-topbar-icon', size: 14 })}`
+      : '';
+    return `<a class="ov-topbar-link" href="${escapeAttr(href)}"${rel}>${escapeHtml(item.label)}${icon}</a>`;
+  });
+  if (docsHref) {
+    items.push(
+      `<a class="ov-topbar-link ov-topbar-link--docs" href="${escapeAttr(docsHref)}">Docs</a>`,
+    );
+  }
+  const navLinks = items.join('\n      ');
   const search = searchEnabled ? `<div id="ov-search" class="ov-search"></div>` : '';
+  // The hamburger only appears below the responsive breakpoint via CSS.
+  const menuButton = `<button class="ov-topbar-menu" type="button"
+      aria-label="Open menu" aria-expanded="false" aria-controls="ov-mobile-nav"
+      data-ov-menu-toggle>
+      <span class="ov-topbar-menu-open">${renderIcon('menu', { size: 22 })}</span>
+      <span class="ov-topbar-menu-close">${renderIcon('close', { size: 22 })}</span>
+    </button>`;
+  const themeButton = `<button class="ov-theme-toggle" type="button"
+      aria-label="Toggle theme" title="Toggle theme" data-ov-theme-toggle>
+      <span class="ov-theme-icon ov-theme-icon-auto">${renderIcon('monitor')}</span>
+      <span class="ov-theme-icon ov-theme-icon-light">${renderIcon('sun')}</span>
+      <span class="ov-theme-icon ov-theme-icon-dark">${renderIcon('moon')}</span>
+    </button>`;
   return `<header class="ov-topbar">
     <a class="ov-brand" href="${escapeAttr(assets)}">${escapeHtml(site.title)}</a>
-    <nav class="ov-topbar-nav">${docsLink}</nav>
-    ${search}
-    <button class="ov-theme-toggle" type="button" aria-label="Toggle theme" title="Toggle theme" data-ov-theme-toggle></button>
+    <nav class="ov-topbar-nav" aria-label="Primary">${navLinks}</nav>
+    <div class="ov-topbar-right">
+      ${search}
+      ${themeButton}
+      ${menuButton}
+    </div>
+    <nav id="ov-mobile-nav" class="ov-mobile-nav" aria-label="Mobile">
+      ${navLinks}
+    </nav>
   </header>`;
 }
 
