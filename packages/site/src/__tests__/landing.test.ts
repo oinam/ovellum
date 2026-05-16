@@ -54,18 +54,27 @@ describe('renderLanding', () => {
   });
 
   it('renders a feature card for each entry, with optional icon', () => {
+    // The `icon` field accepts arbitrary HTML/SVG/text — when set, the
+    // template wraps it in `.ov-feature-icon`. When omitted, the card
+    // renders without the icon slot. Examples should leave it empty per the
+    // no-emoji style rule; if a project wants an icon they can pass a
+    // monochrome inline SVG.
     const html = renderLanding({
       site: SITE,
       landing: landingConfig({
         features: [
-          { icon: '⚡', title: 'Fast', description: 'Builds in seconds.' },
+          {
+            icon: '<svg viewBox="0 0 24 24" aria-hidden="true"></svg>',
+            title: 'Fast',
+            description: 'Builds in seconds.',
+          },
           { title: 'No icon', description: 'No icon variant.' },
         ],
       }),
       generatedAt: '2026-05-16T00:00:00.000Z',
     });
     expect(html.match(/class="ov-feature-card"/g)?.length).toBe(2);
-    expect(html).toContain('⚡');
+    expect(html).toContain('<svg viewBox="0 0 24 24"');
     expect(html).toContain('Builds in seconds.');
     expect(html).toContain('No icon variant.');
     // The second card has no icon: <div class="ov-feature-icon"> appears only once.
