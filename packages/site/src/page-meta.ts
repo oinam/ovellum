@@ -1,8 +1,12 @@
-import { exec } from 'node:child_process';
+import { execFile } from 'node:child_process';
 import { stat } from 'node:fs/promises';
 import { promisify } from 'node:util';
 
-const execAsync = promisify(exec);
+// `execFile` does NOT spawn a shell — args are passed verbatim. This is the
+// security-critical difference vs. `exec`: a path containing `$(...)`, `;`,
+// backticks, etc. is treated as a literal filename argument to `git`, never
+// interpreted by sh/zsh.
+const execFileAsync = promisify(execFile);
 
 const WORDS_PER_MINUTE = 200;
 
@@ -73,8 +77,9 @@ export async function lastModifiedISO(input: LastModifiedInput): Promise<string 
 
 async function tryGitLog(input: LastModifiedInput): Promise<string | undefined> {
   try {
-    const { stdout } = await execAsync(
-      `git log -1 --format=%cI -- "${input.absPath.replace(/"/g, '\\"')}"`,
+    const { stdout } = await execFileAsync(
+      'git',
+      ['log', '-1', '--format=%cI', '--', input.absPath],
       { cwd: input.cwd, timeout: 2000 },
     );
     const value = stdout.trim();

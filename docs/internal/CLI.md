@@ -157,8 +157,12 @@ ovellum build --config ./config/ovellum.prod.ts
 
 Validation pass only — no writes. Loads config, walks every `.md` file
 under `input/`, extracts links via remark (so fenced code blocks are
-correctly ignored), and verifies every internal link resolves to a real
-page URL in the sidebar nav.
+correctly ignored), and verifies:
+
+1. Every internal link resolves to a real page URL in the sidebar nav.
+2. No link uses an unsafe URL scheme (`javascript:`, `vbscript:`, `data:`,
+   `file:`). Even though `renderMarkdown` strips these at render time, we
+   flag them here so authors can remove them at the source.
 
 ```
 ovellum check [--cwd <dir>] [--config <path>]
@@ -173,18 +177,21 @@ ovellum check complete in 76ms
   config:    .../ovellum.config.json
   mode:      manual
   pages:     14
-  issues:    0
+  broken links:    0
+  unsafe schemes:  0
 ```
 
-With broken links:
+With issues:
 
 ```
 ovellum check complete in 87ms
   config:    .../ovellum.config.json
   mode:      manual
   pages:     14
-  issues:    1
+  broken links:    1
+  unsafe schemes:  1
   details:
+    content/getting-started.md:42   [SECURITY] unsafe URL scheme 'javascript:' — link will be stripped by the HTML sanitizer (raw: javascript:alert(1))
     content/getting-started.md:112  broken internal link to /no/such/page/ (raw: /no/such/page/)
 ```
 

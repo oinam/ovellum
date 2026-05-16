@@ -1,6 +1,8 @@
 import { unified } from 'unified';
 import remarkParse from 'remark-parse';
 import remarkRehype from 'remark-rehype';
+import rehypeRaw from 'rehype-raw';
+import rehypeSanitize, { defaultSchema, type Options as Schema } from 'rehype-sanitize';
 import rehypeSlug from 'rehype-slug';
 import rehypeAutolinkHeadings from 'rehype-autolink-headings';
 import rehypeStringify from 'rehype-stringify';
@@ -35,6 +37,30 @@ const SHIKI_LANGS = [
   'css',
 ] as const;
 
+// HTML-in-Markdown sanitization policy.
+//
+// We accept raw HTML inside Markdown so authors can mix in <details>, <kbd>,
+// an SVG, etc., but every Markdown source — even one written by a trusted
+// teammate — is sanitized BEFORE shiki injects its highlighted HAST. That
+// order matters: shiki output relies on inline `style` attributes that the
+// sanitizer would strip, so we keep shiki's emissions out of the sanitization
+// path entirely.
+//
+// Removed: <script>, <iframe>, <object>, <embed>, on* event-handler attrs,
+// and any URL whose scheme isn't on the per-attribute allowlist below
+// (so `javascript:`, `vbscript:`, and `data:` URLs are all dropped — including
+// from <img src>, because data:image/svg+xml can carry executable JS).
+const SANITIZE_SCHEMA: Schema = {
+  ...defaultSchema,
+  attributes: {
+    ...defaultSchema.attributes,
+    // Authors writing raw <code> blocks should keep their language class
+    // so shiki picks them up on the next pass; defaultSchema already permits
+    // `className`, but we widen `code` explicitly to be defensive.
+    code: [...(defaultSchema.attributes?.code ?? []), 'className'],
+  },
+};
+
 let highlighterPromise: Promise<Highlighter> | null = null;
 
 function getHighlighter(): Promise<Highlighter> {
@@ -65,6 +91,14 @@ export async function renderMarkdown(md: string): Promise<RenderedMarkdown> {
   const file = await unified()
     .use(remarkParse)
     .use(remarkRehype, { allowDangerousHtml: true })
+    // rehype-raw parses `raw` HAST nodes (the literal HTML that survived
+    // remark-rehype because of allowDangerousHtml) into real element nodes
+    // so rehype-sanitize can actually walk them. Without this, raw HTML
+    // would either pass straight through or be wholesale dropped — neither
+    // is what we want.
+    .use(rehypeRaw)
+    // Sanitize BEFORE shiki — see SANITIZE_SCHEMA comment above.
+    .use(rehypeSanitize, SANITIZE_SCHEMA)
     .use(rehypeSlug)
     .use(rehypeAutolinkHeadings, {
       behavior: 'prepend',
@@ -75,6 +109,8 @@ export async function renderMarkdown(md: string): Promise<RenderedMarkdown> {
       collectHeadings(tree, headings);
       highlightCodeBlocks(tree, highlighter);
     })
+    // allowDangerousHtml stays true so shiki's hast (which has been generated
+    // post-sanitize and is trusted) renders without re-escaping.
     .use(rehypeStringify, { allowDangerousHtml: true })
     .process(md);
 

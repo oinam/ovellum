@@ -200,7 +200,9 @@ Powers `mode: 'manual'`. Design lives in [`SITE.md`](./SITE.md).
 piece is in, and how to change the design — see
 [`SITE.md` §9a](./SITE.md#9a-template-anatomy).
 
-**Tests:** 50 vitest cases across markdown, nav (flatten + findAdjacent + findBreadcrumbs), template, landing, sitemap, url helpers, page-meta (word count + reading-time).
+**Tests:** 62 vitest cases in `@ovellum/site` (markdown incl. sanitization, nav, template, landing, sitemap, url helpers, page-meta incl. command-injection resistance) plus 8 in `ovellum` (CLI URL-scheme allowlist).
+
+**Security:** sanitization policy, shell-out hardening, and URL-scheme allowlist are documented in [`SECURITY.md`](./SECURITY.md).
 
 ---
 

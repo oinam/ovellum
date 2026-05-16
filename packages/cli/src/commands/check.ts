@@ -4,11 +4,13 @@ import { defineCommand } from 'citty';
 import matter from 'gray-matter';
 import { ConfigError, loadOvellumConfig } from '@ovellum/core';
 import { buildNav, extractMarkdownLinks, flattenNav, type NavNode } from '@ovellum/site';
+import { detectUnsafeScheme } from './check-utils.js';
 
 interface Issue {
   file: string;
   line: number;
   message: string;
+  kind: 'broken-link' | 'unsafe-scheme';
 }
 
 export const checkCommand = defineCommand({
@@ -64,12 +66,23 @@ export const checkCommand = defineCommand({
       const { content } = matter(raw);
       const url = urlForPage(file, inputAbs);
       for (const { target, line } of extractMarkdownLinks(content)) {
+        const unsafe = detectUnsafeScheme(target);
+        if (unsafe) {
+          issues.push({
+            file: rel,
+            line,
+            kind: 'unsafe-scheme',
+            message: `unsafe URL scheme '${unsafe}:' — link will be stripped by the HTML sanitizer (raw: ${target})`,
+          });
+          continue;
+        }
         const resolved = resolveLink(target, url);
         if (resolved === undefined) continue; // external / mailto / fragment / unparseable
         if (!validUrls.has(resolved)) {
           issues.push({
             file: rel,
             line,
+            kind: 'broken-link',
             message: `broken internal link to ${resolved} (raw: ${target})`,
           });
         }
@@ -77,16 +90,22 @@ export const checkCommand = defineCommand({
     }
 
     const elapsed = Date.now() - startedAt;
+    const unsafeCount = issues.filter((i) => i.kind === 'unsafe-scheme').length;
+    const brokenCount = issues.length - unsafeCount;
     const lines = [
       `ovellum check complete in ${elapsed}ms`,
       `  config:    ${configFile ?? '(defaults)'}`,
       `  mode:      ${config.mode}`,
       `  pages:     ${files.length}`,
-      `  issues:    ${issues.length}`,
+      `  broken links:    ${brokenCount}`,
+      `  unsafe schemes:  ${unsafeCount}`,
     ];
     if (issues.length > 0) {
       lines.push('  details:');
-      for (const it of issues) lines.push(`    ${it.file}:${it.line}  ${it.message}`);
+      for (const it of issues) {
+        const tag = it.kind === 'unsafe-scheme' ? '[SECURITY] ' : '';
+        lines.push(`    ${it.file}:${it.line}  ${tag}${it.message}`);
+      }
     }
     process.stdout.write(lines.join('\n') + '\n');
 
