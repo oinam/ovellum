@@ -6,6 +6,7 @@ import matter from 'gray-matter';
 import type { OvellumConfig, OvellumSiteConfig } from '@ovellum/core';
 import { renderMarkdown, type Heading } from './markdown.js';
 import { buildNav, type NavNode } from './nav.js';
+import { generateSitemap } from './sitemap.js';
 import { renderLanding, renderPage } from './template.js';
 
 export interface BuildSiteOptions {
@@ -142,6 +143,16 @@ export async function buildSite(options: BuildSiteOptions): Promise<BuildSiteRes
     if (b.url === '/') return 1;
     return a.url.localeCompare(b.url);
   });
+
+  // Emit sitemap.xml when site.baseUrl is configured.
+  if (site.baseUrl) {
+    const xml = generateSitemap({ pages, baseUrl: site.baseUrl });
+    if (xml) await writeFile(path.join(outputAbs, 'sitemap.xml'), xml, 'utf8');
+  } else {
+    warnings.push(
+      'sitemap.xml not generated: set `site.baseUrl` in your config to enable it.',
+    );
+  }
 
   return {
     pages,

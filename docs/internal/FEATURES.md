@@ -183,7 +183,8 @@ Powers `mode: 'manual'`. Design lives in [`SITE.md`](./SITE.md).
 | Footer with build timestamp                                                        | done     | Configurable; empty string disables.                                                                                                                                                           |
 | Canonical `<link>` + OG meta                                                       | done     | When `site.baseUrl` is set.                                                                                                                                                                    |
 | Search                                                                             | deferred | Pagefind candidate.                                                                                                                                                                            |
-| Sitemap.xml / RSS                                                                  | deferred |                                                                                                                                                                                                |
+| `sitemap.xml`                                                                      | done     | Auto-generated when `site.baseUrl` is set. `/404/` excluded by default. `lastmod` from git mtime deferred.                                                                                    |
+| RSS                                                                                | deferred |                                                                                                                                                                                                |
 | MDX rendering                                                                      | deferred | `.md` only in v1.                                                                                                                                                                              |
 | Multiple bundled templates                                                         | deferred | One default for now.                                                                                                                                                                           |
 | Live reload                                                                        | deferred | Pairs with `ovellum watch`.                                                                                                                                                                    |
@@ -193,7 +194,7 @@ Powers `mode: 'manual'`. Design lives in [`SITE.md`](./SITE.md).
 piece is in, and how to change the design — see
 [`SITE.md` §9a](./SITE.md#9a-template-anatomy).
 
-**Tests:** 18 vitest cases across markdown, nav, template, landing.
+**Tests:** 24 vitest cases across markdown, nav, template, landing, sitemap.
 
 ---
 
