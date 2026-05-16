@@ -62,6 +62,9 @@ importers:
       '@ovellum/site':
         specifier: workspace:*
         version: link:../site
+      chokidar:
+        specifier: ^5.0.0
+        version: 5.0.0
       citty:
         specifier: ^0.2.2
         version: 0.2.2
