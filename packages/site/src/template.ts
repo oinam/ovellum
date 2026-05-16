@@ -25,6 +25,19 @@ export interface ShellOptions {
 function renderShell(opts: ShellOptions): string {
   const assets = opts.assetsPrefix ?? '/';
   const desc = opts.description ?? opts.site.description ?? '';
+  const searchEnabled = opts.site.search.enabled === true;
+  const searchHead = searchEnabled
+    ? `<link rel="stylesheet" href="${escapeAttr(assets)}pagefind/pagefind-ui.css">`
+    : '';
+  const searchScripts = searchEnabled
+    ? `<script src="${escapeAttr(assets)}pagefind/pagefind-ui.js" defer></script>
+  <script>
+    window.addEventListener('DOMContentLoaded', function () {
+      if (typeof PagefindUI === 'undefined') return;
+      new PagefindUI({ element: '#ov-search', showSubResults: true, resetStyles: false });
+    });
+  </script>`
+    : '';
   return `<!doctype html>
 <html lang="en" data-theme="${escapeAttr(opts.site.defaultTheme)}">
 <head>
@@ -34,6 +47,7 @@ function renderShell(opts: ShellOptions): string {
   ${desc ? `<meta name="description" content="${escapeAttr(desc)}">` : ''}
   ${opts.site.baseUrl ? `<link rel="canonical" href="${escapeAttr(join(opts.site.baseUrl, opts.url))}">` : ''}
   <link rel="stylesheet" href="${escapeAttr(assets)}assets/ovellum.css">
+  ${searchHead}
   <script>
     (function () {
       try {
@@ -46,9 +60,10 @@ function renderShell(opts: ShellOptions): string {
   </script>
 </head>
 <body${opts.bodyClass ? ` class="${escapeAttr(opts.bodyClass)}"` : ''}>
-  ${renderTopbar(opts.site, assets, opts.docsHref)}
+  ${renderTopbar(opts.site, assets, opts.docsHref, searchEnabled)}
   ${opts.body}
   ${renderFooter(opts.site, opts.generatedAt)}
+  ${searchScripts}
   <script src="${escapeAttr(assets)}assets/ovellum.js" defer></script>
 </body>
 </html>
@@ -59,13 +74,16 @@ function renderTopbar(
   site: OvellumSiteConfig & { title: string },
   assets: string,
   docsHref: string | undefined,
+  searchEnabled: boolean,
 ): string {
   const docsLink = docsHref
     ? `<a class="ov-topbar-link" href="${escapeAttr(docsHref)}">Docs</a>`
     : '';
+  const search = searchEnabled ? `<div id="ov-search" class="ov-search"></div>` : '';
   return `<header class="ov-topbar">
     <a class="ov-brand" href="${escapeAttr(assets)}">${escapeHtml(site.title)}</a>
     <nav class="ov-topbar-nav">${docsLink}</nav>
+    ${search}
     <button class="ov-theme-toggle" type="button" aria-label="Toggle theme" title="Toggle theme" data-ov-theme-toggle></button>
   </header>`;
 }

@@ -120,6 +120,14 @@ export function validateUserConfig(input: unknown): OvellumUserConfig {
     ) {
       throw new ConfigError(`\`site.defaultTheme\` must be one of: ${THEMES.join(', ')}.`);
     }
+    if (s.search !== undefined) {
+      if (!isPlainObject(s.search)) {
+        throw new ConfigError('`site.search` must be an object.');
+      }
+      if (s.search.enabled !== undefined && typeof s.search.enabled !== 'boolean') {
+        throw new ConfigError('`site.search.enabled` must be a boolean.');
+      }
+    }
     if (s.landing !== undefined) validateLanding(s.landing);
   }
 

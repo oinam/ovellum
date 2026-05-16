@@ -57,6 +57,11 @@ export interface OvellumLandingTrustStrip {
   items: OvellumLandingTrustItem[];
 }
 
+export interface OvellumSiteSearchConfig {
+  /** When `true`, Pagefind runs after `ovellum build` and the topbar gains a search box. */
+  enabled: boolean;
+}
+
 export interface OvellumLandingConfig {
   /** Render a landing page at `/` instead of the regular doc index. */
   enabled: boolean;
@@ -95,6 +100,8 @@ export interface OvellumSiteConfig {
    *   `'https://github.com/owner/repo/edit/main/website/{path}'`.
    */
   editUrlPattern?: string;
+  /** Build-time search indexing via Pagefind. Disabled by default. */
+  search: OvellumSiteSearchConfig;
   /** Landing-page settings. Disabled by default. */
   landing: OvellumLandingConfig;
 }
@@ -145,6 +152,7 @@ export const DEFAULT_CONFIG: OvellumConfig = {
   site: {
     defaultTheme: 'auto',
     footer: 'Built with Ovellum',
+    search: { enabled: false },
     landing: {
       enabled: false,
       hero: { ctas: [] },

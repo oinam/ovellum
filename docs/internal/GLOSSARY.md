@@ -246,6 +246,15 @@ the bottom of a landing page, above the footer. Configured under
 items with an `image` render as `<img>`s, items without render as
 text badges.
 
+### Pagefind
+
+The static-site search indexer used when `site.search.enabled` is
+`true`. Runs at the end of `ovellum build` against the output
+directory, produces `dist/pagefind/` (index + bundled UI), and the
+topbar mounts Pagefind's default UI via a small init script. Build-time
+indexing; the only runtime JavaScript is what Pagefind itself ships
+for the search overlay.
+
 ### shiki
 
 The TextMate-grammar-based syntax highlighter used at build time. Emits

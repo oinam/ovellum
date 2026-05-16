@@ -6,6 +6,7 @@ import matter from 'gray-matter';
 import type { OvellumConfig, OvellumSiteConfig } from '@ovellum/core';
 import { renderMarkdown, type Heading } from './markdown.js';
 import { buildNav, findAdjacent, type NavNode } from './nav.js';
+import { indexSite } from './search.js';
 import { generateSitemap } from './sitemap.js';
 import { renderLanding, renderPage } from './template.js';
 
@@ -157,6 +158,14 @@ export async function buildSite(options: BuildSiteOptions): Promise<BuildSiteRes
     warnings.push(
       'sitemap.xml not generated: set `site.baseUrl` in your config to enable it.',
     );
+  }
+
+  // Run Pagefind search indexing when enabled.
+  if (site.search.enabled) {
+    const idx = await indexSite({ outputAbs });
+    if (idx.exitCode !== 0) {
+      for (const err of idx.errors) warnings.push(`search: ${err}`);
+    }
   }
 
   return {

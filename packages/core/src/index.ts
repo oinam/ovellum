@@ -8,6 +8,7 @@ export type {
   OvellumCtaStyle,
   ProtectConfig,
   OvellumSiteConfig,
+  OvellumSiteSearchConfig,
   OvellumLandingConfig,
   OvellumLandingHero,
   OvellumLandingCta,

@@ -8,5 +8,7 @@ export { extractMarkdownLinks } from './links.js';
 export type { MarkdownLink } from './links.js';
 export { generateSitemap } from './sitemap.js';
 export type { GenerateSitemapInput } from './sitemap.js';
+export { indexSite } from './search.js';
+export type { IndexSiteInput, IndexSiteResult } from './search.js';
 export { renderPage, renderLanding } from './template.js';
 export type { PrevNextPage, RenderPageInput, RenderLandingInput } from './template.js';

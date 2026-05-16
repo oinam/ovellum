@@ -193,6 +193,29 @@ a:hover {
   color: var(--color-fg);
   background: var(--color-bg-subtle);
 }
+
+/* Search box (Pagefind UI overlay) */
+.ov-search {
+  min-inline-size: 220px;
+}
+/* Theme the bundled Pagefind UI to fit Ovellum's tokens. */
+.ov-search .pagefind-ui {
+  --pagefind-ui-scale: 0.9;
+  --pagefind-ui-primary: var(--color-accent);
+  --pagefind-ui-text: var(--color-fg);
+  --pagefind-ui-background: var(--color-bg-subtle);
+  --pagefind-ui-border: var(--color-border-strong);
+  --pagefind-ui-tag: var(--color-bg-muted);
+  --pagefind-ui-border-width: 1px;
+  --pagefind-ui-border-radius: var(--radius-md);
+  --pagefind-ui-font: var(--font-sans);
+}
+@media (max-width: 720px) {
+  .ov-search {
+    display: none;
+  }
+}
+
 .ov-theme-toggle {
   display: inline-flex;
   align-items: center;
