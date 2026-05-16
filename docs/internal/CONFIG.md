@@ -107,6 +107,7 @@ interface OvellumSiteConfig {
 | `footer`       | `string`                      | `'Built with Ovellum'`    | template (footer)                             | Empty string disables the footer entirely.                        |
 | `editUrlPattern` | `string?`                   | `undefined`               | template (per-page edit link)                 | URL pattern with `{path}` placeholder. `{path}` is the page's source path relative to the **build cwd** (`--cwd`). Include any repo prefix yourself, e.g. `'https://github.com/owner/repo/edit/main/website/{path}'`. When unset the link is not rendered. |
 | `search`       | `{ enabled: boolean }`        | `{ enabled: false }`      | build-time indexer + template                 | When `true`, `ovellum build` runs Pagefind against the output dir and the topbar gains a search box. Adds `dist/pagefind/` to the build output. |
+| `pageMeta`     | `{ readingTime, lastModified }` | both `true`             | template (meta line above each article)       | `readingTime`: estimate at ~200 wpm (code blocks/HTML stripped). `lastModified`: prefers `git log -1 --format=%cI`; falls back to filesystem mtime; omits the line if neither resolves. Set either to `false` to hide that half. |
 | `landing`      | `OvellumLandingConfig`        | `{ enabled: false, … }`   | landing renderer                              | See §4.                                                           |
 
 ---

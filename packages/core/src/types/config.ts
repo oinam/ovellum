@@ -62,6 +62,17 @@ export interface OvellumSiteSearchConfig {
   enabled: boolean;
 }
 
+export interface OvellumSitePageMetaConfig {
+  /** Show "N min read" above the article. Default `true`. ~200 wpm. */
+  readingTime: boolean;
+  /**
+   * Show "Updated YYYY-MM-DD" above the article. Default `true`. Uses the
+   * page's last git-commit time when available, otherwise the filesystem
+   * mtime. Falls back to omitting the line if neither is readable.
+   */
+  lastModified: boolean;
+}
+
 export interface OvellumLandingConfig {
   /** Render a landing page at `/` instead of the regular doc index. */
   enabled: boolean;
@@ -113,6 +124,8 @@ export interface OvellumSiteConfig {
   editUrlPattern?: string;
   /** Build-time search indexing via Pagefind. Disabled by default. */
   search: OvellumSiteSearchConfig;
+  /** Per-page meta line (reading time + last-modified) above the article. */
+  pageMeta: OvellumSitePageMetaConfig;
   /** Landing-page settings. Disabled by default. */
   landing: OvellumLandingConfig;
 }
@@ -164,6 +177,7 @@ export const DEFAULT_CONFIG: OvellumConfig = {
     defaultTheme: 'auto',
     footer: 'Built with Ovellum',
     search: { enabled: false },
+    pageMeta: { readingTime: true, lastModified: true },
     landing: {
       enabled: false,
       hero: { ctas: [] },

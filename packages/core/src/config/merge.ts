@@ -38,6 +38,12 @@ function mergeSite(
   if (override.landing !== undefined) {
     out.landing = mergeLanding(base.landing, override.landing as Partial<OvellumLandingConfig>);
   }
+  if (override.search !== undefined) {
+    out.search = { ...base.search, ...override.search };
+  }
+  if (override.pageMeta !== undefined) {
+    out.pageMeta = { ...base.pageMeta, ...override.pageMeta };
+  }
   return out;
 }
 

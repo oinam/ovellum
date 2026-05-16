@@ -6,6 +6,7 @@ import matter from 'gray-matter';
 import type { OvellumConfig, OvellumSiteConfig } from '@ovellum/core';
 import { renderMarkdown, type Heading } from './markdown.js';
 import { buildNav, findAdjacent, findBreadcrumbs, type NavNode } from './nav.js';
+import { countWords, lastModifiedISO, readingMinutes } from './page-meta.js';
 import { indexSite } from './search.js';
 import { generateSitemap } from './sitemap.js';
 import { renderLanding, renderPage } from './template.js';
@@ -121,6 +122,7 @@ export async function buildSite(options: BuildSiteOptions): Promise<BuildSiteRes
         url,
         site,
         nav,
+        cwd,
         generatedAt: now.toISOString(),
         docsHref,
         prev: prev ? { title: prev.title, url: prev.url } : undefined,
@@ -184,6 +186,7 @@ interface RenderOneInput {
   url: string;
   site: OvellumSiteConfig & { title: string };
   nav: NavNode;
+  cwd: string;
   generatedAt: string;
   docsHref?: string;
   prev?: { title: string; url: string };
@@ -210,6 +213,14 @@ async function renderOne(input: RenderOneInput): Promise<RenderOneResult> {
     ? input.site.editUrlPattern.replace('{path}', input.sourceRelFromCwd)
     : undefined;
 
+  const pageMetaCfg = input.site.pageMeta;
+  const readingMin = pageMetaCfg.readingTime
+    ? readingMinutes(countWords(parsed.content))
+    : undefined;
+  const lastModified = pageMetaCfg.lastModified
+    ? await lastModifiedISO({ absPath: input.absInput, cwd: input.cwd })
+    : undefined;
+
   const html = renderPage({
     site: input.site,
     nav: input.nav,
@@ -224,6 +235,8 @@ async function renderOne(input: RenderOneInput): Promise<RenderOneResult> {
     next: input.next,
     breadcrumbs: input.breadcrumbs,
     editUrl,
+    readingMinutes: readingMin,
+    lastModified,
     bodyClass: input.url === '/404/' ? 'ov-body-404' : undefined,
   });
   return { html, title, warnings: [] };

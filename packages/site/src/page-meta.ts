@@ -1,0 +1,85 @@
+import { exec } from 'node:child_process';
+import { stat } from 'node:fs/promises';
+import { promisify } from 'node:util';
+
+const execAsync = promisify(exec);
+
+const WORDS_PER_MINUTE = 200;
+
+/**
+ * Count visible-prose words in a Markdown source. Strips fenced code blocks,
+ * inline code, link / image syntax, and frontmatter delimiters before counting
+ * so the reading-time estimate reflects what a reader actually reads.
+ *
+ * Conservative on purpose — it isn't trying to be a perfect linguist; it just
+ * needs to be stable and roughly correct.
+ */
+export function countWords(markdown: string): number {
+  const stripped = markdown
+    // Fenced code blocks (``` … ```)
+    .replace(/```[\s\S]*?```/g, ' ')
+    // Indented code blocks (4-space leading)
+    .replace(/^( {4}|\t).*$/gm, ' ')
+    // Inline code (`foo`)
+    .replace(/`[^`\n]*`/g, ' ')
+    // Image markup keeps the alt text as words; just strip the URL part.
+    .replace(/!\[([^\]]*)\]\([^)]*\)/g, '$1')
+    // Link markup keeps the link text.
+    .replace(/\[([^\]]*)\]\([^)]*\)/g, '$1')
+    // HTML tags
+    .replace(/<[^>]+>/g, ' ')
+    // Heading / list / blockquote punctuation
+    .replace(/^[#>\-*+]+\s+/gm, '');
+  // Words = runs of non-whitespace.
+  const matches = stripped.match(/\S+/g);
+  return matches ? matches.length : 0;
+}
+
+/**
+ * Estimate reading time in whole minutes, rounded up. Always at least 1.
+ */
+export function readingMinutes(words: number): number {
+  if (words <= 0) return 0;
+  return Math.max(1, Math.ceil(words / WORDS_PER_MINUTE));
+}
+
+export interface LastModifiedInput {
+  /** Absolute path of the source file. */
+  absPath: string;
+  /** Project root — git commands run with this as cwd. */
+  cwd: string;
+}
+
+/**
+ * Resolve a page's last-modified timestamp. Prefers `git log -1 --format=%cI`
+ * because mtime is unreliable in CI (every checkout sets every file to "now");
+ * falls back to filesystem mtime when:
+ *   - git isn't available
+ *   - the directory isn't a git repo
+ *   - the file isn't tracked yet
+ *
+ * Returns an ISO-8601 string, or `undefined` if neither source produced a value.
+ */
+export async function lastModifiedISO(input: LastModifiedInput): Promise<string | undefined> {
+  const gitTime = await tryGitLog(input);
+  if (gitTime) return gitTime;
+  try {
+    const s = await stat(input.absPath);
+    return s.mtime.toISOString();
+  } catch {
+    return undefined;
+  }
+}
+
+async function tryGitLog(input: LastModifiedInput): Promise<string | undefined> {
+  try {
+    const { stdout } = await execAsync(
+      `git log -1 --format=%cI -- "${input.absPath.replace(/"/g, '\\"')}"`,
+      { cwd: input.cwd, timeout: 2000 },
+    );
+    const value = stdout.trim();
+    return value.length > 0 ? value : undefined;
+  } catch {
+    return undefined;
+  }
+}

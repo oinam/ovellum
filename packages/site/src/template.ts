@@ -133,6 +133,10 @@ export interface RenderPageInput {
   editUrl?: string;
   /** Breadcrumb trail, root-first. The current page is the last entry. */
   breadcrumbs?: Array<{ title: string; url: string }>;
+  /** Reading-time estimate in whole minutes (already computed and rounded). */
+  readingMinutes?: number;
+  /** ISO-8601 timestamp of the source file's last modification. */
+  lastModified?: string;
   /** Optional class added to `<body>`. Used today for the special 404 layout. */
   bodyClass?: string;
 }
@@ -151,6 +155,7 @@ export function renderPage(input: RenderPageInput): string {
   const toc = renderToc(input.headings);
   const prevNext = renderPrevNext(input.prev, input.next, basePath);
   const breadcrumbs = renderBreadcrumbs(input.breadcrumbs, basePath);
+  const pageMeta = renderPageMeta(input.readingMinutes, input.lastModified);
   const editLink = input.editUrl
     ? `<p class="ov-edit-page"><a class="ov-edit-link" href="${escapeAttr(input.editUrl)}" rel="noopener" target="_blank">Edit this page</a></p>`
     : '';
@@ -159,6 +164,7 @@ export function renderPage(input: RenderPageInput): string {
     <aside class="ov-sidebar" aria-label="Site navigation">${sidebar}</aside>
     <main class="ov-content">
       ${breadcrumbs}
+      ${pageMeta}
       <article class="ov-prose">${input.bodyHtml}</article>
       ${editLink}
       ${prevNext}
@@ -339,6 +345,24 @@ function renderBreadcrumbs(
       ${items}
     </ol>
   </nav>`;
+}
+
+function renderPageMeta(
+  readingMin: number | undefined,
+  lastModifiedISO: string | undefined,
+): string {
+  const parts: string[] = [];
+  if (typeof readingMin === 'number' && readingMin > 0) {
+    parts.push(`<span class="ov-page-meta-read">${readingMin} min read</span>`);
+  }
+  if (lastModifiedISO) {
+    const date = lastModifiedISO.slice(0, 10);
+    parts.push(
+      `<span class="ov-page-meta-updated">Updated <time datetime="${escapeAttr(lastModifiedISO)}">${escapeHtml(date)}</time></span>`,
+    );
+  }
+  if (parts.length === 0) return '';
+  return `<p class="ov-page-meta">${parts.join('<span class="ov-page-meta-sep"> · </span>')}</p>`;
 }
 
 function renderPrevNext(

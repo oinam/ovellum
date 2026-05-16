@@ -6,6 +6,8 @@ export { buildNav, findAdjacent, findBreadcrumbs, flattenNav } from './nav.js';
 export type { AdjacentPages, NavNode } from './nav.js';
 export { extractMarkdownLinks } from './links.js';
 export type { MarkdownLink } from './links.js';
+export { countWords, lastModifiedISO, readingMinutes } from './page-meta.js';
+export type { LastModifiedInput } from './page-meta.js';
 export { generateSitemap } from './sitemap.js';
 export type { GenerateSitemapInput } from './sitemap.js';
 export { assetsPrefix, normaliseBasePath, siteUrl } from './url.js';

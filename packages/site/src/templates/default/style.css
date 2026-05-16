@@ -453,6 +453,20 @@ a:hover {
 .ov-copy-btn:focus-visible {
   opacity: 1;
 }
+/* Page meta line (reading time + last-modified) above the article */
+.ov-page-meta {
+  margin: 0 0 var(--space-s);
+  font-size: 0.88em;
+  color: var(--color-fg-muted);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25em;
+  align-items: baseline;
+}
+.ov-page-meta-sep {
+  opacity: 0.6;
+}
+
 /* Edit-this-page link */
 .ov-edit-page {
   margin-block: var(--space-l) 0;

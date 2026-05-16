@@ -189,6 +189,7 @@ Powers `mode: 'manual'`. Design lives in [`SITE.md`](./SITE.md).
 | Breadcrumbs                                                                        | done     | Auto-rendered above the article when the page sits at least two levels deep in the nav (top-level pages get none). Last entry marked `aria-current="page"`.                                  |
 | Custom 404 layout                                                                  | done     | `/404/` gets `body.ov-body-404`: sidebar, ToC, prev/next, breadcrumbs, and edit-this-page are hidden; the article centres on a narrower column with a larger heading.                        |
 | Print stylesheet                                                                   | done     | `@media print` hides chrome (topbar, sidebar, ToC, search, prev/next, edit link), widens content to full width, prints external link URLs inline, and avoids page-breaks inside code blocks. |
+| Reading time + last-modified                                                       | done     | Per-page meta line above the article: `N min read · Updated YYYY-MM-DD`. Word count strips code blocks/HTML; ~200 wpm. Date prefers `git log -1`, falls back to fs mtime. Toggle each half via `site.pageMeta.{readingTime,lastModified}`. |
 | RSS                                                                                | deferred |                                                                                                                                                                                                |
 | MDX rendering                                                                      | deferred | `.md` only in v1.                                                                                                                                                                              |
 | Multiple bundled templates                                                         | deferred | One default for now.                                                                                                                                                                           |
@@ -199,7 +200,7 @@ Powers `mode: 'manual'`. Design lives in [`SITE.md`](./SITE.md).
 piece is in, and how to change the design — see
 [`SITE.md` §9a](./SITE.md#9a-template-anatomy).
 
-**Tests:** 42 vitest cases across markdown, nav (flatten + findAdjacent + findBreadcrumbs), template, landing, sitemap, url helpers.
+**Tests:** 50 vitest cases across markdown, nav (flatten + findAdjacent + findBreadcrumbs), template, landing, sitemap, url helpers, page-meta (word count + reading-time).
 
 ---
 
