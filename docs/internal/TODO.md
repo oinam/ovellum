@@ -1,7 +1,7 @@
 # TODO
 
 Living checklist for code / automation work. Update in place as work progresses.
-Last updated: 2026-05-16 (official `website/` + GitHub Pages deploy workflow; design in `DEPLOY.md`)
+Last updated: 2026-05-16 (template anatomy documented in SITE.md §9a + themes.md)
 
 > Manual items — prose, decisions, releases, things only a human can do —
 > live in [`TODO-Human.md`](./TODO-Human.md). When in doubt: if the work

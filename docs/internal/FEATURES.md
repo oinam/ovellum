@@ -8,7 +8,7 @@ deferred items see [`TODO.md`](./TODO.md). For human-only tasks (writing prose,
 product decisions, release) see [`TODO-Human.md`](./TODO-Human.md). For
 terminology see [`GLOSSARY.md`](./GLOSSARY.md).
 
-Last updated: 2026-05-16 (official website + GitHub Pages deployment)
+Last updated: 2026-05-16 (template anatomy documented in SITE.md §9a + guides/themes.md)
 
 Status legend:
 
@@ -189,7 +189,12 @@ Powers `mode: 'manual'`. Design lives in [`SITE.md`](./SITE.md).
 | Live reload                                                                        | deferred | Pairs with `ovellum watch`.                                                                                                                                                                    |
 | Plugin API for custom templates                                                    | deferred |                                                                                                                                                                                                |
 
-**Tests:** 11 vitest cases across markdown, nav, template.
+**Template anatomy**: where the bundled template lives, what format each
+piece is in, and how to change the design — see
+[`SITE.md` §9a](./SITE.md#9a-template-anatomy). User-facing pointer in
+[`website/content/guides/themes.md`](../../website/content/guides/themes.md#where-the-template-lives).
+
+**Tests:** 18 vitest cases across markdown, nav, template, landing.
 
 ---
 

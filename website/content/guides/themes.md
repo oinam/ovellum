@@ -49,10 +49,25 @@ To set the initial theme for first-time visitors:
 }
 ```
 
+## Where the template lives
+
+Before customising, it helps to know where each piece of the bundled
+template sits and what format it's in.
+
+| Concern             | Path                                                | Format                                |
+| ------------------- | --------------------------------------------------- | ------------------------------------- |
+| HTML structure      | `packages/site/src/template.ts`                     | TypeScript template literals          |
+| Visual design (CSS) | `packages/site/src/templates/default/style.css`     | Vanilla CSS + custom properties       |
+| Client behaviour    | `packages/site/src/templates/default/script.js`     | Vanilla browser JS (~50 lines)        |
+
+There's one bundled template, named `default`. The choice of "no template
+engine, vanilla CSS, vanilla JS" is intentional — every override path
+below works without any extra build tooling on your end.
+
 ## Customising the default theme
 
-Today, the simplest override is a follow-up stylesheet. Drop a CSS file
-in `content/` (it'll pass through as a static asset), then reference it
+The simplest override is a follow-up stylesheet. Drop a CSS file in
+`content/` (it'll pass through as a static asset), then reference it
 from your pages or — better — extend the template later via a plugin
 system (planned, not built yet).
 

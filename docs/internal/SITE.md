@@ -240,6 +240,102 @@ Nord / Solarized exist in `STYLES.md` but aren't wired into the toggle in v1.
 They're swappable later by emitting their CSS blocks too and extending the
 toggle to a select.
 
+## 9a. Template anatomy
+
+Where each piece of the bundled template lives, what format it's in, and
+how to make a change.
+
+### File map
+
+```
+packages/site/
+├── src/
+│   ├── template.ts                          ← HTML structure
+│   └── templates/
+│       └── default/                         ← one bundled template, named `default`
+│           ├── style.css                    ← visual design
+│           └── script.js                    ← client behaviour
+└── dist/
+    └── templates/default/                   ← shipped to npm; produced at build time
+        ├── style.css
+        └── script.js
+```
+
+### Three formats, deliberately chosen
+
+| Concern | File | Format | Why |
+|---|---|---|---|
+| HTML structure | `src/template.ts` | TypeScript template literals | No template engine, no extra dep. Escape helpers (`escapeHtml`, `escapeAttr`) are real TS functions the type-checker watches; IDE autocomplete and import navigation work. |
+| Visual design | `src/templates/default/style.css` | Vanilla CSS with custom properties | One file, no preprocessor, no PostCSS, no bundler. Tier 1 + Tier 2 OKLCH tokens hand-ported from `STYLES.md`. Themes swap at runtime via `[data-theme]`. |
+| Client behaviour | `src/templates/default/script.js` | Vanilla browser JS | Zero framework cost. Two responsibilities: theme cycle + copy buttons. Ships under 2 KB. |
+
+`template.ts` exports three render functions:
+
+- `renderShell({ site, body, … })` — outermost `<html>` / `<head>` / `<body>`
+  chrome, topbar, footer, pre-paint theme bootstrap. Shared.
+- `renderPage(input)` — doc-page body: sidebar + content + right-side ToC.
+- `renderLanding(input)` — landing-page body: hero + feature grid +
+  optional pitch + trust strip.
+
+### How the template ships
+
+At `pnpm --filter @ovellum/site build`:
+
+1. `tsup` bundles `src/index.ts` → `dist/index.js` (the package entry).
+2. `tsc -b --force` emits `.d.ts` files alongside.
+3. A `node -e "require('fs').cpSync(...)"` step copies `src/templates/`
+   to `dist/templates/` so the runtime can find them.
+
+At runtime, `buildSite()` calls `resolveTemplateDir()` which uses
+`import.meta.url` to find the bundled template next to the running module:
+
+```typescript
+const here = path.dirname(fileURLToPath(import.meta.url));
+const candidates = [
+  path.join(here, 'templates/default'),        // dist/index.js → dist/templates/default
+  path.join(here, '..', 'src/templates/default'), // vitest / dev
+];
+```
+
+`writeStaticAssets()` then copies the CSS and JS into the consumer's
+`{output}/assets/` directory on every build.
+
+### How to change the design
+
+In increasing order of friction:
+
+| You want to… | Do this |
+|---|---|
+| Tweak colours / spacing / type | Override Tier 2 CSS variables (`--color-accent`, `--color-bg`, `--space-m`, etc.) in a follow-up stylesheet. The override path for end users is documented in `website/content/guides/themes.md`. |
+| Tweak the markup / layout | Edit `packages/site/src/template.ts`. Add a `data-…` attribute, rearrange the topbar, change the heading rendering, etc. Run `pnpm --filter @ovellum/site test` to keep the template tests green, then `pnpm --filter @ovellum/site build` and `pnpm -w run build:website` to verify. |
+| Add a new section (e.g., right-side action buttons, breadcrumbs) | Edit `template.ts` to render the new markup, then add the corresponding selectors to `templates/default/style.css`. Tests in `__tests__/template.test.ts` cover that the active link still works, ToC renders, etc.; add a test for any new section. |
+| Replace the template wholesale | Fork `packages/site/src/templates/default/` (plus the `template.ts` render functions if you need different markup), maintain your own version, point your build at the fork. The plugin / template-override API for cleanly swapping templates is on the roadmap and tracked in TODO.md Phase 4.5 follow-ups. |
+
+### What's intentionally not in v1
+
+- **A plugin / template-override API.** Adding it before the customisation
+  surface stabilises locks us into bad shapes. Deferred until external
+  demand says otherwise.
+- **Multiple bundled templates / hero variants.** Same reasoning. The
+  current `default` is the only template; the `templates/` directory uses
+  the plural form so a `templates/<name>/` siblings layout adds cleanly.
+- **MDX rendering.** `.md` only for v1; reader already parses MDX
+  frontmatter but the render path through remark-mdx is wired off.
+- **Token-extraction script** (auto-sync `style.css` ← `STYLES.md`).
+  Hand-port is fine while the palette is stable. Add when tokens drift.
+- **`<base href>` / `site.basePath`** for sub-path hosting. Needed only if
+  serving from `<user>.github.io/<repo>/` rather than a custom domain.
+
+### When this section changes
+
+This section is part of the architectural record. Update it whenever:
+
+- A new file joins `src/templates/default/`.
+- A new render function lands in `src/template.ts`.
+- The build-time copy step changes.
+- The runtime template-resolution path changes.
+- A new bundled template appears (one day).
+
 ## 10. Page metadata + `<head>`
 
 For each page:
