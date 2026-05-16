@@ -25,7 +25,10 @@ export interface ShellOptions {
 function renderShell(opts: ShellOptions): string {
   const assets = opts.assetsPrefix ?? '/';
   const desc = opts.description ?? opts.site.description ?? '';
-  const searchEnabled = opts.site.search.enabled === true;
+  // Optional-chain because `site.search` may be undefined when callers pass a
+  // partial site object (template/landing tests cast partial fixtures to the
+  // full type). DEFAULT_CONFIG sets `search.enabled: false`.
+  const searchEnabled = opts.site.search?.enabled === true;
   const searchHead = searchEnabled
     ? `<link rel="stylesheet" href="${escapeAttr(assets)}pagefind/pagefind-ui.css">`
     : '';
