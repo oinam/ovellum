@@ -53,3 +53,28 @@ The detailed technical architecture, package structure, config schema, tagging s
 - Output is Markdown - the rendering and hosting layer is a separate, later concern.
 - No GUI - CLI only.
 - No plugin system - designed for extensibility, but extension points are not built yet.
+
+## Development
+
+Scaffold a site, watch it, check it, build it:
+
+```bash
+npx ovellum init       # scaffold a new project
+npx ovellum watch      # rebuild on every change to content/
+npx ovellum check      # broken-link + unsafe-URL lint
+npx ovellum build      # one-shot production build
+```
+
+Full walkthrough — prerequisites, the iteration loop, the recommended
+two-terminal setup, working with multiple sites in one repo — lives in
+the [Development guide](https://ovellum.oss.oinam.com/guides/development/).
+
+Working on Ovellum itself (the monorepo, packages, tests, this
+website)? See [Contributing](https://ovellum.oss.oinam.com/contributing/).
+
+## Deployment
+
+`ovellum build` produces a self-contained `dist/` directory. Any
+static-file host serves it as-is. Concrete recipes for GitHub Pages,
+Netlify, Vercel, Cloudflare Pages, and plain Nginx / S3 are in the
+[Deploy guide](https://ovellum.oss.oinam.com/guides/deploy/).

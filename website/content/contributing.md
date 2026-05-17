@@ -21,20 +21,75 @@ pnpm exec turbo run build --filter='@ovellum/*' --filter='ovellum'
 pnpm exec turbo run test --filter='@ovellum/*' --filter='ovellum'
 ```
 
-Run the two demo fixtures end-to-end:
+> If you're a user (not a contributor) and just want the iteration
+> loop for your own site, the [Development guide](/guides/development/)
+> covers `ovellum init` / `watch` / `check` / `build`. This page is the
+> contributor-side: working inside the Ovellum monorepo itself.
+
+## Run this website locally
+
+The site you're reading is a fully-fledged Ovellum site that lives at
+`website/` in the repo. Two scripts cover the common workflows.
+
+### One-shot rebuild
+
+```bash
+pnpm -w run build:website
+```
+
+This runs `ovellum build --cwd website` after first making sure the
+packages are built. Output lands in `website/dist/`. Serve it with any
+static-file server:
+
+```bash
+npx serve website/dist
+```
+
+### Iterate while editing
+
+For the writing loop, use `ovellum watch` against the website directory
+so changes to `website/content/**/*.md` trigger an instant rebuild:
+
+```bash
+# Build the workspace packages once so the CLI is up to date
+pnpm exec turbo run build --filter='@ovellum/*' --filter='ovellum'
+
+# Watch for changes
+node packages/cli/dist/index.js watch --cwd website
+
+# In another terminal: serve the output
+npx serve website/dist
+```
+
+Why `node packages/cli/dist/index.js` instead of `npx ovellum`?
+Inside this repo we're working on Ovellum itself — running through `npx`
+would download the published version. The local binary is the
+just-built one and reflects your edits.
+
+If you're iterating on the CLI or `@ovellum/site` source, re-run the
+package build (or `pnpm exec turbo run build --filter='@ovellum/site'`,
+`--filter='ovellum'`) to pick up your changes; the watcher only reloads
+the site, not the tooling that builds it.
+
+### Demo fixtures
+
+The two `examples/` projects double as end-to-end smoke tests:
 
 ```bash
 pnpm -w run demo        # auto/hybrid demo against examples/simple-ts/
 pnpm -w run demo:site   # manual demo against examples/manual-site/
 ```
 
-Build this website:
+Output lands inside each example directory; both are gitignored.
+
+### Validate before pushing
 
 ```bash
-pnpm -w run build:website
+node packages/cli/dist/index.js check --cwd website
 ```
 
-Output lands in `website/dist/`.
+Catches broken internal links and unsafe URL schemes. CI runs the same
+command, so green here means green there.
 
 ## Repo layout
 
