@@ -3,6 +3,9 @@ name: Release
 on:
   push:
     branches: [main]
+  # Manual trigger so we can retry a failed publish (e.g. after rotating
+  # NPM_TOKEN) without having to push an unrelated commit.
+  workflow_dispatch:
 
 concurrency:
   group: release-${{ github.ref }}
