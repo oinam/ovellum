@@ -29,9 +29,9 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Setup pnpm
+        # Version is read from package.json's `packageManager` field —
+        # don't duplicate it here, action-setup@v4 refuses both at once.
         uses: pnpm/action-setup@v4
-        with:
-          version: 10
 
       - name: Setup Node
         uses: actions/setup-node@v4
