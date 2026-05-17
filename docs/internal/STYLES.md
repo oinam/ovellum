@@ -88,7 +88,7 @@ Eight steps from `-2` (fine print) to `5` (display).
 | ---- | ----- | ------ | ------------------------------- |
 | `-2` | 10.24 | 10.69  | Footnotes, legal small print    |
 | `-1` | 12.80 | 14.25  | Captions, table cells, metadata |
-| `0`  | 16.00 | 19.00  | Body                            |
+| `0`  | 15.00 | 16.00  | Body (tightened from Utopia 16→19) |
 | `1`  | 20.00 | 25.33  | Lead paragraphs, `<h4>`         |
 | `2`  | 25.00 | 33.76  | `<h3>`                          |
 | `3`  | 31.25 | 45.00  | `<h2>`                          |
@@ -99,7 +99,7 @@ Eight steps from `-2` (fine print) to `5` (display).
 :root {
   --font-size--2: clamp(0.64rem, 0.6302rem + 0.0489vw, 0.6681rem);
   --font-size--1: clamp(0.8rem, 0.7685rem + 0.1576vw, 0.8906rem);
-  --font-size-0: clamp(1rem, 0.9348rem + 0.3261vw, 1.1875rem);
+  --font-size-0: clamp(0.9375rem, 0.9158rem + 0.1087vw, 1rem);
   --font-size-1: clamp(1.25rem, 1.1341rem + 0.5793vw, 1.5831rem);
   --font-size-2: clamp(1.5625rem, 1.3721rem + 0.9522vw, 2.11rem);
   --font-size-3: clamp(1.9531rem, 1.6542rem + 1.4946vw, 2.8125rem);
