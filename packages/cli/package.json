@@ -3,6 +3,7 @@
   "version": "0.0.0",
   "description": "Ovellum CLI - documentation tool for TypeScript and JavaScript projects.",
   "license": "MIT",
+  "private": true,
   "type": "module",
   "main": "./dist/index.cjs",
   "module": "./dist/index.js",
