@@ -83,13 +83,77 @@ docs.example.com
 ```
 
 Ovellum copies non-`.md` files through verbatim, so `CNAME` lands in
-`dist/CNAME` and Pages picks it up. Point a `CNAME` DNS record from
-`docs.example.com` to `<your-user>.github.io` and you're done.
+`dist/CNAME` and Pages picks it up automatically on the next deploy.
 
-If you don't set a custom domain, the site is served from
-`https://<user>.github.io/<repo>/` — note the subpath. See
-[Hosting under a subpath](#hosting-under-a-subpath) below for the
-config change that makes this work.
+Then point DNS at GitHub Pages. The exact steps depend on your DNS
+provider — Cloudflare is by far the most common, and it has one
+non-obvious gotcha worth calling out.
+
+#### DNS via Cloudflare (the common case)
+
+1. In Cloudflare's DNS panel, add a record:
+   - **Type**: `CNAME`
+   - **Name**: the subdomain part of your custom domain
+     (e.g. `docs` for `docs.example.com`, or `ovellum.oss` for
+     `ovellum.oss.oinam.com`)
+   - **Target**: `<your-user>.github.io` (no protocol, no path,
+     no trailing dot)
+   - **Proxy status**: **DNS only (grey cloud).** This is the gotcha.
+
+2. In your GitHub repo, go to **Settings → Pages**. Confirm:
+   - **Source** is "GitHub Actions" (so the workflow's artifact is
+     what gets served).
+   - The **Custom domain** field shows the value from your `CNAME`
+     file. GitHub picks it up from `dist/CNAME` on the first deploy.
+
+3. Wait a few minutes. GitHub Pages issues a Let's Encrypt certificate
+   for the custom domain automatically once DNS resolves to its
+   servers. Refresh the Pages settings page until **Enforce HTTPS**
+   becomes available, then check it.
+
+That's it — `https://docs.example.com/` now serves your site over HTTPS.
+
+#### Why grey cloud (DNS-only)?
+
+When Cloudflare's proxy is on (orange cloud), Cloudflare terminates
+SSL itself and answers the HTTP-01 challenge that Let's Encrypt sends
+to issue GitHub Pages' certificate. The challenge never reaches
+GitHub, the cert never issues, and GitHub Pages serves the bare
+github.io URL instead. Grey cloud (DNS-only) bypasses Cloudflare's
+proxy so the challenge reaches GitHub directly.
+
+You **can** flip to orange-cloud (proxy on) later, once the cert is
+issued. If you do:
+
+- Set Cloudflare **SSL/TLS mode** to **Full (strict)** — anything less
+  and Cloudflare may either serve cleartext or warn about an invalid
+  cert downstream.
+- Don't disable the GitHub-issued cert. GitHub Pages will keep
+  re-issuing it; Cloudflare's edge cert is served to visitors.
+
+For most documentation sites, grey-cloud is enough: GitHub Pages is
+already on a CDN, and Cloudflare's analytics-on-proxy / rule-engine
+features are usually overkill for a docs subdomain.
+
+#### DNS via other providers
+
+Same idea, different UI:
+
+- **Namecheap / GoDaddy / Route 53 / etc.** — add a CNAME record from
+  your subdomain to `<your-user>.github.io`. No proxy concerns to
+  worry about.
+- **Apex domain (`example.com`, not `docs.example.com`)** — most DNS
+  providers don't allow CNAMEs at the apex. Use four A records
+  pointing at GitHub Pages' IPs instead. See
+  [GitHub's docs](https://docs.github.com/en/pages/configuring-a-custom-domain-for-your-github-pages-site/managing-a-custom-domain-for-your-github-pages-site#configuring-an-apex-domain)
+  for the current IP list.
+
+#### If you skip the custom domain
+
+The site is served from `https://<user>.github.io/<repo>/` — note the
+subpath. Internal links will break unless you also set
+`site.basePath`. See [Hosting under a subpath](#hosting-under-a-subpath)
+below.
 
 ## Hosting under a subpath
 
