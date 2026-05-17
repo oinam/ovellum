@@ -25,7 +25,7 @@ describe('renderIcon', () => {
     expect(svg).toContain('<svg');
     expect(svg).toContain('viewBox="0 0 24 24"');
     expect(svg).toContain('stroke="currentColor"');
-    expect(svg).toContain('stroke-width="1.5"');
+    expect(svg).toContain('stroke-width="2"');
     expect(svg).toContain('stroke-linecap="round"');
     expect(svg).toContain('width="20"');
     expect(svg).toContain('height="20"');
