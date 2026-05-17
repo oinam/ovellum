@@ -21,7 +21,7 @@ describe('renderMarkdown', () => {
     );
   });
 
-  it('syntax-highlights fenced code blocks via shiki dual themes', async () => {
+  it('syntax-highlights fenced code blocks via shiki dual themes (default github)', async () => {
     const { html } = await renderMarkdown(
       ['```typescript', 'const x: number = 42;', '```'].join('\n'),
     );
@@ -29,6 +29,29 @@ describe('renderMarkdown', () => {
     expect(html).toContain('--shiki-light');
     expect(html).toContain('--shiki-dark');
     expect(html).toContain('const');
+    // github-light's keyword colour is a deep red (#d73a49 / #cf222e).
+    expect(html.toLowerCase()).toMatch(/--shiki-light:#(d73a49|cf222e)/);
+  });
+
+  it('switches code-block colours when codeTheme is solarized', async () => {
+    const { html } = await renderMarkdown(
+      ['```typescript', 'const x = 42;', '```'].join('\n'),
+      { codeTheme: 'solarized' },
+    );
+    // solarized-light's keyword colour is the well-known cyan #859900 (green
+    // in solarized's palette). Different from github-light.
+    expect(html).toContain('class="shiki');
+    expect(html.toLowerCase()).not.toMatch(/--shiki-light:#(d73a49|cf222e)/);
+  });
+
+  it('switches to nord + min-light when codeTheme is nord', async () => {
+    const { html } = await renderMarkdown(
+      ['```typescript', 'const x = 42;', '```'].join('\n'),
+      { codeTheme: 'nord' },
+    );
+    expect(html).toContain('class="shiki');
+    // Nord uses the "frost" #81a1c1-family for keywords in dark mode.
+    expect(html.toLowerCase()).toMatch(/--shiki-dark:#[0-9a-f]{6}/);
   });
 
   it('passes unknown / missing languages through unstyled', async () => {

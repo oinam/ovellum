@@ -6,8 +6,8 @@ Ovellum is an open source documentation tool for TypeScript and JavaScript proje
 
 Technical identifier: `ovellum` - for npm, CLI, folders, and domains.
 
-Site: https://ovellum.oss.oinam.com
-Git: https://github.com/oinam/ovellum
+- Site https://ovellum.oss.oinam.com
+- Source https://github.com/oinam/ovellum
 
 ---
 

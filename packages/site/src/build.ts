@@ -83,7 +83,7 @@ export async function buildSite(options: BuildSiteOptions): Promise<BuildSiteRes
   // Render the landing page first (if enabled) so `content/index.md`
   // can be detected as a conflict during the walk.
   if (landingEnabled) {
-    const landingBody = await readLandingBody(inputAbs);
+    const landingBody = await readLandingBody(inputAbs, site);
     const html = renderLanding({
       site,
       landing: site.landing,
@@ -206,7 +206,9 @@ async function renderOne(input: RenderOneInput): Promise<RenderOneResult> {
   const raw = await readFile(input.absInput, 'utf8');
   const parsed = matter(raw);
   const frontmatter = parsed.data as { title?: string; description?: string };
-  const { html: bodyHtml, headings } = await renderMarkdown(parsed.content);
+  const { html: bodyHtml, headings } = await renderMarkdown(parsed.content, {
+    codeTheme: input.site.codeTheme,
+  });
   const title = frontmatter.title ?? firstHeading(headings) ?? input.site.title;
 
   const editUrl = input.site.editUrlPattern
@@ -247,13 +249,16 @@ interface LandingBody {
   sourcePath: string;
 }
 
-async function readLandingBody(inputAbs: string): Promise<LandingBody | undefined> {
+async function readLandingBody(
+  inputAbs: string,
+  site: OvellumSiteConfig,
+): Promise<LandingBody | undefined> {
   const abs = path.join(inputAbs, LANDING_BODY_FILE);
   if (!existsSync(abs)) return undefined;
   const raw = await readFile(abs, 'utf8');
   const { content } = matter(raw);
   if (!content.trim()) return undefined;
-  const { html } = await renderMarkdown(content);
+  const { html } = await renderMarkdown(content, { codeTheme: site.codeTheme });
   return { html, sourcePath: path.join(path.basename(inputAbs), LANDING_BODY_FILE) };
 }
 

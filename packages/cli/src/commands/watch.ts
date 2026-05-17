@@ -32,16 +32,9 @@ export const watchCommand = defineCommand({
       throw err;
     }
     const { config, configFile } = loaded;
-
-    if (config.mode !== 'manual') {
-      process.stderr.write(
-        `'watch' currently supports manual mode only. Got '${config.mode}'. ` +
-          `Auto / hybrid coverage is tracked in TODO.md Phase 6.\n`,
-      );
-      process.exit(1);
-    }
-
-    process.stdout.write(`ovellum watch starting from ${configFile ?? '(defaults)'}\n`);
+    process.stdout.write(
+      `ovellum watch starting from ${configFile ?? '(defaults)'} (mode: ${config.mode})\n`,
+    );
 
     const watcher = await watchAndBuild({ cwd, config, configFile });
 

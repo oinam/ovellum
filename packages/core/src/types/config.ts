@@ -18,6 +18,13 @@ export interface ProtectConfig {
 
 export type OvellumDefaultTheme = 'auto' | 'light' | 'dark';
 
+/**
+ * Code-block theme pair (passed to shiki). Each option resolves to a
+ * `{ light, dark }` pair so a single build serves both colour schemes
+ * via CSS variables. Defaults to `'github'`.
+ */
+export type OvellumCodeTheme = 'github' | 'nord' | 'solarized';
+
 export type OvellumCtaStyle = 'primary' | 'secondary';
 
 export interface OvellumLandingCta {
@@ -135,6 +142,8 @@ export interface OvellumSiteConfig {
    *   `'https://github.com/owner/repo/edit/main/website/{path}'`.
    */
   editUrlPattern?: string;
+  /** Syntax-highlighting theme for fenced code blocks. Default `'github'`. */
+  codeTheme: OvellumCodeTheme;
   /** Build-time search indexing via Pagefind. Disabled by default. */
   search: OvellumSiteSearchConfig;
   /** Per-page meta line (reading time + last-modified) above the article. */
@@ -193,6 +202,7 @@ export const DEFAULT_CONFIG: OvellumConfig = {
   },
   site: {
     defaultTheme: 'auto',
+    codeTheme: 'github',
     footer: 'Built with Ovellum',
     search: { enabled: false },
     pageMeta: { readingTime: true, lastModified: true },

@@ -151,12 +151,25 @@ the accent re-skins the hero atmosphere for free.
 ## Code-block themes
 
 Code blocks are rendered with [shiki](https://shiki.style/) at build
-time. The default uses `github-light` + `github-dark` paired through CSS
-variables — the same single piece of HTML serves both light and dark
-without a runtime highlighter.
+time. Each theme is a `{ light, dark }` pair emitted through CSS
+variables — the same HTML serves both colour schemes; switching
+`[data-theme]` on `<html>` swaps the palette with zero runtime cost.
 
-Today the theme pair isn't configurable. A future `site.codeTheme` field
-will let you pick from any shiki bundled theme.
+Pick one via `site.codeTheme`:
+
+```json
+{
+  "site": {
+    "codeTheme": "nord"
+  }
+}
+```
+
+| Value         | Light          | Dark              | Notes                              |
+| ------------- | -------------- | ----------------- | ---------------------------------- |
+| `'github'`    | github-light   | github-dark       | Default. Matches Ovellum's defaults. |
+| `'nord'`      | min-light      | nord              | Nord ships dark-only in shiki; paired with min-light for a clean, low-saturation light. |
+| `'solarized'` | solarized-light| solarized-dark    | Ethan Schoonover's solarized.      |
 
 ## What's bundled today vs. planned
 
@@ -174,14 +187,12 @@ will let you pick from any shiki bundled theme.
 - Custom 404 layout (narrower column, larger heading, no chrome).
 - Copy buttons on every code block.
 
-**Defined in `STYLES.md` but not yet wired into the toggle:**
-
-- Nord (light + dark).
-- Solarized (light + dark).
-
 **Roadmap:**
 
-- A `site.theme` config to switch the bundled theme by name.
+- A `site.theme` config to switch the **page** theme tokens (palette /
+  type / chrome) by name — Nord and Solarized are defined in
+  `STYLES.md` but not yet wired into the toggle. Today only
+  `site.codeTheme` is selectable.
 - A plugin API for fully custom templates.
 - Per-page `extraStyles` for one-off page-specific CSS.
 

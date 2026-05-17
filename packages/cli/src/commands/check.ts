@@ -1,8 +1,9 @@
+import { existsSync } from 'node:fs';
 import { readFile, readdir, stat } from 'node:fs/promises';
 import path from 'node:path';
 import { defineCommand } from 'citty';
 import matter from 'gray-matter';
-import { ConfigError, loadOvellumConfig } from '@ovellum/core';
+import { ConfigError, loadOvellumConfig, type OvellumConfig } from '@ovellum/core';
 import { buildNav, extractMarkdownLinks, flattenNav, type NavNode } from '@ovellum/site';
 import { detectUnsafeScheme } from './check-utils.js';
 
@@ -44,49 +45,22 @@ export const checkCommand = defineCommand({
     }
     const { config, configFile } = loaded;
 
-    if (config.mode !== 'manual') {
-      process.stderr.write(
-        `'check' currently supports manual mode only. Got '${config.mode}'. ` +
-          `Hybrid / auto coverage is tracked in TODO.md Phase 6.\n`,
-      );
-      process.exit(1);
-    }
-
     const startedAt = Date.now();
-    const inputAbs = path.resolve(cwd, config.input);
-    const nav = await buildNav(config.input, cwd);
-    const validUrls = collectValidUrls(nav, config);
-
-    const issues: Issue[] = [];
-    const files: string[] = [];
-    for await (const file of walkMarkdown(inputAbs)) {
-      files.push(file);
-      const rel = path.relative(cwd, file).replace(/\\/g, '/');
-      const raw = await readFile(file, 'utf8');
-      const { content } = matter(raw);
-      const url = urlForPage(file, inputAbs);
-      for (const { target, line } of extractMarkdownLinks(content)) {
-        const unsafe = detectUnsafeScheme(target);
-        if (unsafe) {
-          issues.push({
-            file: rel,
-            line,
-            kind: 'unsafe-scheme',
-            message: `unsafe URL scheme '${unsafe}:' — link will be stripped by the HTML sanitizer (raw: ${target})`,
-          });
-          continue;
-        }
-        const resolved = resolveLink(target, url);
-        if (resolved === undefined) continue; // external / mailto / fragment / unparseable
-        if (!validUrls.has(resolved)) {
-          issues.push({
-            file: rel,
-            line,
-            kind: 'broken-link',
-            message: `broken internal link to ${resolved} (raw: ${target})`,
-          });
-        }
+    let issues: Issue[];
+    let files: string[];
+    try {
+      if (config.mode === 'manual') {
+        ({ issues, files } = await checkManual({ config, cwd }));
+      } else {
+        ({ issues, files } = await checkGenerated({ config, cwd }));
       }
+    } catch (err) {
+      if (err instanceof ConfigError) {
+        process.stderr.write(`check error: ${err.message}\n`);
+        if (err.hint) process.stderr.write(`hint: ${err.hint}\n`);
+        process.exit(1);
+      }
+      throw err;
     }
 
     const elapsed = Date.now() - startedAt;
@@ -113,15 +87,145 @@ export const checkCommand = defineCommand({
   },
 });
 
-function collectValidUrls(
-  nav: NavNode,
-  config: import('@ovellum/core').OvellumConfig,
-): Set<string> {
+function collectValidUrls(nav: NavNode, config: OvellumConfig): Set<string> {
   const urls = new Set<string>();
   for (const page of flattenNav(nav)) urls.add(page.url);
   // Landing replaces `/` when enabled.
   if (config.site.landing.enabled) urls.add('/');
   return urls;
+}
+
+interface CheckRun {
+  issues: Issue[];
+  files: string[];
+}
+
+interface CheckInput {
+  config: OvellumConfig;
+  cwd: string;
+}
+
+/**
+ * Manual mode: walk `input/`, validate every internal link against the
+ * sidebar nav. This is the original behaviour.
+ */
+async function checkManual({ config, cwd }: CheckInput): Promise<CheckRun> {
+  const inputAbs = path.resolve(cwd, config.input);
+  const nav = await buildNav(config.input, cwd);
+  const validUrls = collectValidUrls(nav, config);
+
+  const issues: Issue[] = [];
+  const files: string[] = [];
+  for await (const file of walkMarkdown(inputAbs)) {
+    files.push(file);
+    const rel = path.relative(cwd, file).replace(/\\/g, '/');
+    const raw = await readFile(file, 'utf8');
+    const { content } = matter(raw);
+    const url = urlForPage(file, inputAbs);
+    for (const { target, line } of extractMarkdownLinks(content)) {
+      const unsafe = detectUnsafeScheme(target);
+      if (unsafe) {
+        issues.push({
+          file: rel,
+          line,
+          kind: 'unsafe-scheme',
+          message: `unsafe URL scheme '${unsafe}:' — link will be stripped by the HTML sanitizer (raw: ${target})`,
+        });
+        continue;
+      }
+      const resolved = resolveLink(target, url);
+      if (resolved === undefined) continue; // external / mailto / fragment / unparseable
+      if (!validUrls.has(resolved)) {
+        issues.push({
+          file: rel,
+          line,
+          kind: 'broken-link',
+          message: `broken internal link to ${resolved} (raw: ${target})`,
+        });
+      }
+    }
+  }
+  return { issues, files };
+}
+
+/**
+ * Hybrid / auto modes: the .md files we want to validate are the
+ * *generated* ones in `config.output`. Internal links are resolved
+ * against the actual files present on disk, since there's no
+ * sidebar nav in auto-generated docs.
+ *
+ * Exits early with a clear message when the output directory doesn't
+ * exist — usually because the user hasn't run `ovellum build` yet.
+ */
+async function checkGenerated({ config, cwd }: CheckInput): Promise<CheckRun> {
+  const outputAbs = path.resolve(cwd, config.output);
+  if (!existsSync(outputAbs)) {
+    throw new ConfigError(
+      `output directory does not exist: ${path.relative(cwd, outputAbs)}`,
+      { hint: 'Run `ovellum build` first; `ovellum check` validates the generated Markdown.' },
+    );
+  }
+
+  // Collect every .md path in the output dir so we can check links against
+  // real files. Keys are stored both with and without the `.md` suffix so a
+  // link to `./foo` and a link to `./foo.md` both resolve.
+  const fileSet = new Set<string>();
+  for await (const file of walkMarkdown(outputAbs)) {
+    const rel = path.relative(outputAbs, file).replace(/\\/g, '/');
+    fileSet.add('/' + rel);
+    fileSet.add('/' + rel.replace(/\.md$/i, ''));
+  }
+
+  const issues: Issue[] = [];
+  const files: string[] = [];
+  for await (const file of walkMarkdown(outputAbs)) {
+    files.push(file);
+    const rel = path.relative(cwd, file).replace(/\\/g, '/');
+    const raw = await readFile(file, 'utf8');
+    const { content } = matter(raw);
+    const pageRel = '/' + path.relative(outputAbs, file).replace(/\\/g, '/');
+    for (const { target, line } of extractMarkdownLinks(content)) {
+      const unsafe = detectUnsafeScheme(target);
+      if (unsafe) {
+        issues.push({
+          file: rel,
+          line,
+          kind: 'unsafe-scheme',
+          message: `unsafe URL scheme '${unsafe}:' — link will be stripped by the HTML sanitizer (raw: ${target})`,
+        });
+        continue;
+      }
+      const resolved = resolveGeneratedLink(target, pageRel);
+      if (resolved === undefined) continue;
+      if (!fileSet.has(resolved)) {
+        issues.push({
+          file: rel,
+          line,
+          kind: 'broken-link',
+          message: `broken internal link to ${resolved} (raw: ${target})`,
+        });
+      }
+    }
+  }
+  return { issues, files };
+}
+
+/**
+ * Resolve a link in a generated Markdown file to a path within the output
+ * dir (rooted at `/`). Returns undefined for external / fragment / unparseable
+ * links — those are not validated.
+ */
+function resolveGeneratedLink(target: string, pageRel: string): string | undefined {
+  if (!target) return undefined;
+  if (/^(https?:|mailto:|tel:|data:|ftp:|ssh:)/i.test(target)) return undefined;
+  if (target.startsWith('#')) return undefined;
+  const cleaned = target.replace(/[?#].*$/, '');
+  if (!cleaned) return undefined;
+  if (cleaned.startsWith('/')) return cleaned;
+  // Relative: resolve against the directory of pageRel.
+  const baseDir = pageRel.slice(0, pageRel.lastIndexOf('/') + 1);
+  const joined = new URL(cleaned, `https://x.test${baseDir}`).pathname;
+  return joined;
 }
 
 async function* walkMarkdown(dirAbs: string): AsyncGenerator<string> {

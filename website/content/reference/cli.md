@@ -231,7 +231,7 @@ built 17 page(s) in 60ms
 | Code | Meaning                                                            |
 | ---- | ------------------------------------------------------------------ |
 | `0`  | Clean shutdown (Ctrl-C).                                           |
-| `1`  | Mode unsupported (`dev` is manual-mode only today).                |
+| `1`  | Mode unsupported. `dev` is manual-only because auto/hybrid produce `.md`, not browsable HTML. Use `ovellum watch` for those modes. |
 | `3`  | Config invalid.                                                    |
 
 ### Examples
@@ -328,11 +328,16 @@ ovellum check complete in 87ms
 - `1` one or more issues found
 - `3` config invalid
 
-### Scope today
+### Behaviour by mode
 
-Manual mode only. Hybrid and auto modes exit `1` with a "not yet
-supported" message — broken-link coverage for the auto-generated half
-of the pipeline is on the roadmap.
+**Manual mode** — walks `input/` for `.md` files and validates every
+internal link against the sidebar nav.
+
+**Hybrid / auto mode** — walks the **output** directory (the
+auto-generated Markdown), validates every internal link against the
+actual files on disk, and flags unsafe URL schemes the same way.
+If the output dir doesn't exist, `check` exits `1` with a hint to
+run `ovellum build` first.
 
 Frontmatter validation, required-fields checking, and orphan listing
 for hybrid mode are deferred.
@@ -342,13 +347,15 @@ for hybrid mode are deferred.
 Build, then watch `input/` (and the config file) for changes and rebuild
 on every change. Debounced at 300 ms with `chokidar`'s
 `awaitWriteFinish` enabled so partial writes don't trigger a half-state
-rebuild.
+rebuild. Works in every mode (manual, hybrid, auto) — the watcher
+dispatches to the right build path automatically.
 
-For the common "rebuild + serve + auto-refresh" loop, you almost
-certainly want [`ovellum dev`](#ovellum-dev) instead. `watch` is the
-primitive — useful when you want to run a different server (a CDN
-emulator, a reverse proxy, your own process manager) or pipe build
-notifications somewhere.
+For the common "rebuild + serve + auto-refresh" loop (manual mode), you
+almost certainly want [`ovellum dev`](#ovellum-dev) instead. `watch` is
+the primitive — useful when you want to run a different server (a CDN
+emulator, a reverse proxy, your own process manager), pipe build
+notifications somewhere, or you're in auto / hybrid mode (no HTML to
+live-reload, just regenerated Markdown).
 
 ### Synopsis
 

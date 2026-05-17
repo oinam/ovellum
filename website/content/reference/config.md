@@ -88,6 +88,7 @@ interface OvellumSiteConfig {
   baseUrl?: string;
   basePath?: string;
   defaultTheme: 'auto' | 'light' | 'dark';
+  codeTheme: 'github' | 'nord' | 'solarized';
   footer: string;
   editUrlPattern?: string;
   search: { enabled: boolean };
@@ -104,6 +105,7 @@ interface OvellumSiteConfig {
 | `baseUrl`        | `string?`                           | `undefined`                   | E.g. `'https://docs.example.com'`. Used for `<link rel="canonical">`, OG cards, and the `sitemap.xml`. Omit for relative-link output.                                                                                          |
 | `basePath`       | `string?`                           | `''`                          | Jekyll-style subpath. Leading slash, no trailing slash (e.g. `'/ovellum'`). Prepended to every internal URL, asset path, canonical link, and sitemap entry. Authors keep writing root-relative links; the build adds the prefix. |
 | `defaultTheme`   | `'auto' \| 'light' \| 'dark'`       | `'auto'`                      | Initial theme before user preference loads.                                                                                                                                                                                    |
+| `codeTheme`      | `'github' \| 'nord' \| 'solarized'` | `'github'`                    | Shiki theme pair for fenced code blocks. Both halves of the pair are emitted via CSS variables so a single build serves both light and dark. `github` → github-light + github-dark; `nord` → min-light + nord (nord ships dark-only); `solarized` → solarized-light + solarized-dark. |
 | `footer`         | `string`                            | `'Built with Ovellum'`        | Empty string disables the footer entirely.                                                                                                                                                                                     |
 | `editUrlPattern` | `string?`                           | `undefined`                   | URL pattern with a `{path}` placeholder. `{path}` is the page's source path **relative to the build cwd** (`--cwd`). Include any repo prefix yourself, e.g. `'https://github.com/owner/repo/edit/main/website/{path}'`. When unset, the "Edit this page" link is not rendered. |
 | `search`         | `{ enabled: boolean }`              | `{ enabled: false }`          | When `true`, `ovellum build` runs Pagefind against the output dir and the topbar gains a search box. Adds `dist/pagefind/` to the build.                                                                                       |
@@ -241,8 +243,28 @@ auto-generated file is **not** a mode override. The parser distinguishes
 
 ## Per-page frontmatter (manual mode)
 
-Recognised inside the frontmatter of any `.md` page (orthogonal to the
-`ovellum:` override above):
+**Frontmatter is optional.** A `.md` file with no YAML preamble at the
+top builds fine. Ovellum infers what it needs from the body and the
+filename:
+
+| Resolved field             | Frontmatter key | Fallback 1                  | Fallback 2                    | Fallback 3 |
+| -------------------------- | --------------- | --------------------------- | ----------------------------- | ---------- |
+| Sidebar label              | `title:`        | First `# H1` in the body    | Title-cased filename          | `Untitled` |
+| Page `<title>`             | `title:`        | First heading in the body   | `site.title`                  | —          |
+| `<meta name="description">`| `description:`  | — (omitted if absent)       | —                             | —          |
+
+So in practice:
+
+- **Skip `title:`** if your file starts with a clean `# Heading` — the
+  sidebar and `<title>` will both use that H1. Add `title:` only when
+  you want the sidebar label to differ from the page heading
+  (e.g. short sidebar label, longer page heading).
+- **Add `description:`** for any page you expect to be linked from
+  social cards or search results, since there's no inferred fallback —
+  the meta tag is omitted when this field is absent.
+
+Recognised keys inside the frontmatter of any `.md` page (orthogonal
+to the `ovellum:` override above):
 
 | Key           | Type     | Effect                                                      |
 | ------------- | -------- | ----------------------------------------------------------- |

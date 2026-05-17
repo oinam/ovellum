@@ -5,6 +5,7 @@ export type {
   OvellumFormat,
   OrphanStrategy,
   OvellumDefaultTheme,
+  OvellumCodeTheme,
   OvellumCtaStyle,
   ProtectConfig,
   OvellumSiteConfig,

@@ -9,6 +9,7 @@ import rehypeStringify from 'rehype-stringify';
 import { visit } from 'unist-util-visit';
 import { createHighlighter, type Highlighter } from 'shiki';
 import type { Root, Element, ElementContent } from 'hast';
+import type { OvellumCodeTheme } from '@ovellum/core';
 
 export interface Heading {
   depth: number;
@@ -21,7 +22,30 @@ export interface RenderedMarkdown {
   headings: Heading[];
 }
 
-const SHIKI_THEMES = { light: 'github-light', dark: 'github-dark' } as const;
+export interface RenderMarkdownOptions {
+  /** Shiki theme pair to highlight code blocks with. Defaults to `'github'`. */
+  codeTheme?: OvellumCodeTheme;
+}
+
+/**
+ * Each `OvellumCodeTheme` maps to a `{ light, dark }` shiki pair. Both halves
+ * are emitted into the HTML through CSS variables; switching `[data-theme]`
+ * on `<html>` swaps the colours with zero runtime cost.
+ *
+ * Nord ships dark-only in shiki, so we pair it with `min-light` — a clean
+ * low-saturation light theme that doesn't clash with Nord's frosty palette.
+ */
+const CODE_THEME_PAIRS: Record<OvellumCodeTheme, { light: string; dark: string }> = {
+  github: { light: 'github-light', dark: 'github-dark' },
+  nord: { light: 'min-light', dark: 'nord' },
+  solarized: { light: 'solarized-light', dark: 'solarized-dark' },
+};
+
+const ALL_SHIKI_THEMES = Array.from(
+  new Set(
+    Object.values(CODE_THEME_PAIRS).flatMap((pair) => [pair.light, pair.dark]),
+  ),
+);
 
 const SHIKI_LANGS = [
   'typescript',
@@ -61,12 +85,16 @@ const SANITIZE_SCHEMA: Schema = {
   },
 };
 
+// One highlighter holds every supported theme; the choice per page is just
+// which two names from that bundle we pass to `codeToHast`. Avoids the cost
+// of re-instantiating shiki when a site uses multiple code themes (rare, but
+// possible across separate builds in one process — e.g. tests).
 let highlighterPromise: Promise<Highlighter> | null = null;
 
 function getHighlighter(): Promise<Highlighter> {
   if (!highlighterPromise) {
     highlighterPromise = createHighlighter({
-      themes: [SHIKI_THEMES.light, SHIKI_THEMES.dark],
+      themes: ALL_SHIKI_THEMES,
       langs: [...SHIKI_LANGS],
     });
   }
@@ -80,12 +108,17 @@ function getHighlighter(): Promise<Highlighter> {
  * - rehype-slug adds `id="…"` to every heading.
  * - rehype-autolink-headings wraps each heading text in an `<a href="#…">` so
  *   clicking the heading copies its URL.
- * - Code fences are rendered with shiki using dual `github-light` /
- *   `github-dark` themes via CSS variables; switching `[data-theme]` on
- *   `<html>` swaps the colors with no runtime cost.
+ * - Code fences are rendered with shiki, using the theme pair chosen via
+ *   `opts.codeTheme` (defaults to `github`) and emitted through CSS
+ *   variables — switching `[data-theme]` on `<html>` swaps the colours
+ *   with no runtime cost.
  */
-export async function renderMarkdown(md: string): Promise<RenderedMarkdown> {
+export async function renderMarkdown(
+  md: string,
+  opts: RenderMarkdownOptions = {},
+): Promise<RenderedMarkdown> {
   const highlighter = await getHighlighter();
+  const themes = CODE_THEME_PAIRS[opts.codeTheme ?? 'github'] ?? CODE_THEME_PAIRS.github;
   const headings: Heading[] = [];
 
   const file = await unified()
@@ -109,7 +142,7 @@ export async function renderMarkdown(md: string): Promise<RenderedMarkdown> {
     })
     .use(() => (tree: Root) => {
       collectHeadings(tree, headings);
-      highlightCodeBlocks(tree, highlighter);
+      highlightCodeBlocks(tree, highlighter, themes);
     })
     // allowDangerousHtml stays true so shiki's hast (which has been generated
     // post-sanitize and is trusted) renders without re-escaping.
@@ -130,7 +163,11 @@ function collectHeadings(tree: Root, into: Heading[]): void {
   });
 }
 
-function highlightCodeBlocks(tree: Root, highlighter: Highlighter): void {
+function highlightCodeBlocks(
+  tree: Root,
+  highlighter: Highlighter,
+  themes: { light: string; dark: string },
+): void {
   visit(tree, 'element', (node: Element, index, parent) => {
     if (node.tagName !== 'pre' || !parent || typeof index !== 'number' || !node.children?.length) {
       return;
@@ -147,7 +184,7 @@ function highlightCodeBlocks(tree: Root, highlighter: Highlighter): void {
     const source = textOf(code);
     const hast = highlighter.codeToHast(source, {
       lang: lang as (typeof SHIKI_LANGS)[number],
-      themes: SHIKI_THEMES,
+      themes,
       defaultColor: false,
     });
     const replacement = hast.children[0];

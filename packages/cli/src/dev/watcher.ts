@@ -1,7 +1,7 @@
 import path from 'node:path';
 import chokidar, { type FSWatcher } from 'chokidar';
 import { ConfigError, loadOvellumConfig, type OvellumConfig } from '@ovellum/core';
-import { buildSite, type BuildSiteResult } from '@ovellum/site';
+import { runBuild, type BuildSummary } from './run-build.js';
 
 const DEBOUNCE_MS = 300;
 
@@ -16,7 +16,7 @@ export interface WatchAndBuildOptions {
    * Called after every successful build (initial + each rebuild). Use this
    * hook to broadcast live-reload events or log custom output.
    */
-  onBuild?: (result: BuildSiteResult) => void | Promise<void>;
+  onBuild?: (result: BuildSummary) => void | Promise<void>;
   /**
    * Called when a build fails. Default: log to stderr. Override to keep a
    * dev server alive instead of crashing.
@@ -103,12 +103,12 @@ async function safeBuild(
   onBuild: WatchAndBuildOptions['onBuild'],
   onError: (err: Error) => void,
 ): Promise<void> {
-  const startedAt = Date.now();
   try {
-    const result = await buildSite({ config, cwd });
-    const elapsed = Date.now() - startedAt;
+    const result = await runBuild({ config, cwd });
+    const count = result.mode === 'manual' ? result.pages?.length ?? 0 : result.written?.length ?? 0;
+    const unit = result.mode === 'manual' ? 'page' : 'file';
     process.stdout.write(
-      `built ${result.pages.length} page(s) in ${elapsed}ms` +
+      `built ${count} ${unit}(s) in ${result.elapsedMs}ms` +
         (result.warnings.length > 0 ? ` (${result.warnings.length} warning(s))` : '') +
         '\n',
     );
