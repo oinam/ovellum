@@ -47,6 +47,58 @@ importers:
       '@inquirer/prompts':
         specifier: ^8.4.3
         version: 8.4.3(@types/node@20.19.41)
+      c12:
+        specifier: 3.3.4
+        version: 3.3.4
+      chokidar:
+        specifier: ^5.0.0
+        version: 5.0.0
+      citty:
+        specifier: ^0.2.2
+        version: 0.2.2
+      gray-matter:
+        specifier: ^4.0.3
+        version: 4.0.3
+      lucide:
+        specifier: ^1.16.0
+        version: 1.16.0
+      pagefind:
+        specifier: ^1.5.2
+        version: 1.5.2
+      rehype-autolink-headings:
+        specifier: ^7.1.0
+        version: 7.1.0
+      rehype-raw:
+        specifier: ^7.0.0
+        version: 7.0.0
+      rehype-sanitize:
+        specifier: ^6.0.0
+        version: 6.0.0
+      rehype-slug:
+        specifier: ^6.0.0
+        version: 6.0.0
+      rehype-stringify:
+        specifier: ^10.0.1
+        version: 10.0.1
+      remark-parse:
+        specifier: ^11.0.0
+        version: 11.0.0
+      remark-rehype:
+        specifier: ^11.1.2
+        version: 11.1.2
+      shiki:
+        specifier: ^4.0.2
+        version: 4.0.2
+      ts-morph:
+        specifier: ^28.0.0
+        version: 28.0.0
+      unified:
+        specifier: ^11.0.5
+        version: 11.0.5
+      unist-util-visit:
+        specifier: ^5.1.0
+        version: 5.1.0
+    devDependencies:
       '@ovellum/core':
         specifier: workspace:*
         version: link:../core
@@ -65,15 +117,6 @@ importers:
       '@ovellum/site':
         specifier: workspace:*
         version: link:../site
-      chokidar:
-        specifier: ^5.0.0
-        version: 5.0.0
-      citty:
-        specifier: ^0.2.2
-        version: 0.2.2
-      gray-matter:
-        specifier: ^4.0.3
-        version: 4.0.3
 
   packages/core:
     dependencies:
