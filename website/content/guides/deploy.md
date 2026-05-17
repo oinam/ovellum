@@ -87,10 +87,57 @@ Ovellum copies non-`.md` files through verbatim, so `CNAME` lands in
 `docs.example.com` to `<your-user>.github.io` and you're done.
 
 If you don't set a custom domain, the site is served from
-`https://<user>.github.io/<repo>/` — note the subpath. Internal links in
-the current template use site-absolute paths (`/getting-started/`), so a
-subpath setup needs DNS or a custom domain to work cleanly. A
-`site.basePath` config is on the roadmap.
+`https://<user>.github.io/<repo>/` — note the subpath. See
+[Hosting under a subpath](#hosting-under-a-subpath) below for the
+config change that makes this work.
+
+## Hosting under a subpath
+
+Two patterns where the site doesn't live at the origin's root:
+
+1. **Docs as part of an existing site** — e.g. `example.com/docs/`.
+2. **GitHub Pages without a custom domain** — e.g. `<user>.github.io/<repo>/`.
+
+Both need the same fix: tell Ovellum the subpath so it can prefix every
+internal link, asset URL, canonical, and sitemap entry. Set
+`site.basePath` in `ovellum.config.json`:
+
+```json
+{
+  "site": {
+    "basePath": "/docs",
+    "baseUrl": "https://example.com"
+  }
+}
+```
+
+Rules:
+
+- Leading slash, no trailing slash. `/docs` ✓, `docs` ✗, `/docs/` ✗.
+- Authors keep writing root-relative links (`/getting-started/`,
+  `/reference/config/`). The build adds the `/docs` prefix at render
+  time.
+- The deployed site is reachable at `https://example.com/docs/`.
+- `baseUrl` is the origin only (no path); the path lives in `basePath`.
+
+What changes in the output:
+
+```html
+<!-- Without basePath -->
+<a href="/getting-started/">Getting started</a>
+<link rel="stylesheet" href="/assets/ovellum.css">
+
+<!-- With basePath: "/docs" -->
+<a href="/docs/getting-started/">Getting started</a>
+<link rel="stylesheet" href="/docs/assets/ovellum.css">
+```
+
+External links, fragment-only links (`#anchor`), and `mailto:` /
+absolute URLs are passed through unchanged.
+
+If you're hosting the docs site standalone (`docs.example.com` or
+similar), leave `basePath` empty — that's the default. Setting it for
+a root-served site would prefix every link incorrectly.
 
 ## Netlify
 
