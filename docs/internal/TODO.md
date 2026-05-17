@@ -1,7 +1,7 @@
 # TODO
 
 Living checklist for code / automation work. Update in place as work progresses.
-Last updated: 2026-05-16 (template anatomy documented in SITE.md §9a)
+Last updated: 2026-05-17 (v0.2.0 published to npm; manual-mode site builder is feature-complete; CLI smoke tests landed; CI publish auth still needs a fix)
 
 > Manual items — prose, decisions, releases, things only a human can do —
 > live in [`TODO-Human.md`](./TODO-Human.md). When in doubt: if the work
@@ -20,6 +20,34 @@ them. Design intent stays in [`DESIGN.md`](./DESIGN.md), [`SITE.md`](./SITE.md),
 [`STYLES.md`](./STYLES.md).
 
 Legend: `[ ]` not started · `[~]` in progress · `[x]` done · `[!]` blocked
+
+---
+
+## Current state (2026-05-17)
+
+**Live and shipped:**
+- `ovellum@0.2.0` on npm — <https://www.npmjs.com/package/ovellum>
+- Docs site live with TLS — <https://ovellum.oss.oinam.com>
+- All six CLI commands working: `init`, `build`, `dev`, `watch`, `serve`, `check`
+- Manual-mode static site builder is feature-complete for a real docs site
+- 169 vitest cases across the workspace
+
+**Three known loose ends:**
+
+1. **CI publishing 404s** — the Release workflow's `npm publish` step gets `404 Not Found - PUT https://registry.npmjs.org/ovellum` even with a granular token that has Read+Write, bypass-2FA, and exact-package scope (confirmed via `npm access list packages`). Hypothesis: `actions/setup-node@v4`'s `registry-url` option writes a `~/.npmrc` that conflicts with `changesets/action@v1`'s own auth setup. **Workaround in use:** run `npm publish` locally from `packages/cli/` after each `Version Packages` PR is merged (user's existing `oinam` npm session works fine). **Fix to try next session:** add `NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}` to the workflow's env block alongside `NPM_TOKEN`, and/or drop `registry-url` from setup-node so changesets/action manages auth alone.
+
+2. **`@ovellum/*` workspace deps are bundled into `ovellum` at build time** (tsup `noExternal: [/^@ovellum\//]`). Internal packages stay private. Templates copied from `packages/site/src/templates` to `packages/cli/dist/templates` by `scripts/cli-copy-templates.mjs` because `@ovellum/site` resolves templates via `import.meta.url`. If anyone asks for direct `@ovellum/*` imports, the bundling decision needs to flip.
+
+3. **Plugin API for templates is deferred** — multi-day scope; deserves its own design pass. Page-level Nord/Solarized themes (palettes are in `STYLES.md`) are also deferred; `site.codeTheme` ships the code-block theme picker today.
+
+**npm token expires** ~mid-August 2026 (90 days). User has 2FA on; the token has Bypass-2FA checked.
+
+**Where to find things:**
+- Public docs source: `website/content/`
+- Internal design docs: `docs/internal/{DESIGN,SITE,STYLES,DEPLOY,SECURITY}.md`
+- The four "what is" reference docs that update in step with code: `docs/internal/{FEATURES,CONFIG,CLI,GLOSSARY}.md`
+- Site builder package: `packages/site/`
+- CLI: `packages/cli/`
 
 ---
 
@@ -217,17 +245,38 @@ New phase introduced 2026-05-15. Design lives in [`SITE.md`](./SITE.md).
 - [ ] `_meta.json` title fallback for directories without their own `index.md`
 - [ ] Search (Pagefind integration as a separate package or `--search` flag)
 - [ ] Sitemap.xml + RSS
+- [x] Search via Pagefind (`site.search.enabled`; client + indexer)
+- [x] Sitemap.xml (auto-emitted when `site.baseUrl` set; basePath-aware)
+- [x] `site.basePath` (Jekyll-style sub-path hosting)
+- [x] `site.editUrlPattern` per-page edit link
+- [x] Breadcrumbs above the article on nested pages
+- [x] Per-page meta line (reading time + last-modified via `git log` → mtime)
+- [x] Print stylesheet (`@media print`)
+- [x] Custom 404 layout (`/404/` → `body.ov-body-404`)
+- [x] Topbar redesigned (right-aligned `site.topbarNav` + mobile sheet)
+- [x] Lucide-backed icon registry (`renderIcon(name, opts)`)
+- [x] Hero with dotted-noise SVG pattern + radial accent spotlight
+- [x] Cmd/Ctrl+K to focus search + platform-aware kbd hint
+- [x] Live reload via SSE (paired with `ovellum dev`)
+- [x] `site.codeTheme: 'github' | 'nord' | 'solarized'`
+- [x] HTML sanitization (rehype-raw + rehype-sanitize before shiki)
+- [x] Body type tightened to 15→16 px (Option A)
+- [ ] Page-level Nord + Solarized themes (palettes in STYLES.md; `codeTheme` ships but a full Tier-2 page theme switcher is still TODO)
+- [ ] Token-extraction script: pull current `STYLES.md` values into `style.css` automatically
+- [ ] `_meta.json` title fallback for directories without their own `index.md`
+- [ ] RSS feed auto-emit
 - [ ] MDX rendering via `remark-mdx`
-- [ ] Plugin API for custom templates
+- [ ] Plugin API for custom templates (deferred — needs its own design pass)
 - [ ] Multi-version / multi-language docs
-- [ ] Live reload (pairs with the `ovellum watch` ticket in Phase 6)
 
-> Phase 4.5 v0 slice (2026-05-15): a Jekyll-style static site can be built
-> from a folder of Markdown files with `ovellum build` (mode: manual). Demo
-> at `examples/manual-site/` produces 5 pretty-URL pages with sidebar,
-> right-side ToC, syntax-highlighted code, and an auto/light/dark theme
-> toggle. All deferred items above are nice-to-haves; the core path is
-> shippable.
+> Phase 4.5 v0 (2026-05-15): a Jekyll-style static site can be built from
+> a folder of Markdown files with `ovellum build` (mode: manual). Demo at
+> `examples/manual-site/`.
+>
+> Phase 4.5 v1 (2026-05-17): feature-complete for a real docs site — search,
+> sitemap, basePath, breadcrumbs, page-meta, print, 404, redesigned topbar
+> with Lucide icons, hero artwork, Cmd+K, live reload via `ovellum dev`,
+> code-theme picker, HTML sanitization. 73 vitest cases in `@ovellum/site`.
 
 ### Phase 4.5 follow-up: landing page (2026-05-16)
 
@@ -262,15 +311,23 @@ deploy design in [`DEPLOY.md`](./DEPLOY.md).
 - [x] Concurrency cancellation (`group: pages, cancel-in-progress: true`)
 - [x] pnpm + Node 20 caching
 - [x] `docs/internal/DEPLOY.md` internal-design doc + user-facing `website/content/guides/deploy.md`
-- [ ] `site.basePath` config for project-page subpath hosting
-- [ ] Pagefind search wired into both workflows
-- [ ] Sitemap.xml + RSS auto-emit
+- [x] `site.basePath` config (documented in `guides/deploy.md` Hosting-under-a-subpath section)
+- [x] Pagefind search wired into the website (`site.search.enabled: true` in `website/ovellum.config.json`)
+- [x] Sitemap.xml auto-emit (basePath-aware)
+- [x] DNS + cert verified live at <https://ovellum.oss.oinam.com>
+- [x] Cloudflare grey-cloud DNS setup documented in `guides/deploy.md`
+- [x] `reference/security.md` public page (HTML sanitization, command-injection resistance, URL allowlist)
+- [x] `guides/development.md` (init → dev → check → build workflow)
+- [ ] RSS auto-emit
 - [ ] Lighthouse CI workflow
 
 > Phase 4.6 v0 (2026-05-16): the site builds locally (`pnpm -w run build:website`)
-> with 15 pages and zero warnings. Deploy workflow is committed but not yet
-> verified end-to-end against live GitHub Pages — that happens on the next
-> push to `main`. DNS for `ovellum.oss.oinam.com` is a TODO-Human item.
+> with 15 pages and zero warnings. Deploy workflow committed.
+>
+> Phase 4.6 v1 (2026-05-17): live at <https://ovellum.oss.oinam.com> via
+> GH Pages + Cloudflare DNS (grey cloud, Let's Encrypt cert from GH).
+> 16 published pages. `ovellum check` on the rebuilt site reports 0 broken
+> links, 0 unsafe schemes.
 
 ---
 
@@ -314,47 +371,34 @@ deploy design in [`DEPLOY.md`](./DEPLOY.md).
 ## Phase 6 - CLI (`ovellum`)
 
 - [x] Install `citty` for CLI framework
-- [~] Implement `ovellum build`:
-  - [x] Load config
-  - [~] Determine mode — accepts `auto`/`hybrid`; `manual` exits with "not implemented" message
-  - [x] Run appropriate pipeline — auto: parse → generate → write; hybrid: also reads existing output via @ovellum/reader, runs @ovellum/merger, writes orphans to `.ovellum/orphans/`
-  - [x] Print summary: N sources, N written, N merged, N orphans, N warnings, quarantine paths
-  - [x] Exit codes: 0 (success), 1 (error), 3 (config invalid). `--strict` (code 2) still deferred.
-- [ ] Implement `ovellum watch`:
-  - [ ] Install `chokidar`
-  - [ ] Watch source files, docs files, config file
-  - [ ] Debounce (300ms)
-  - [ ] Incremental rebuild (only affected files)
-  - [ ] Print rebuild summary on each change
-- [ ] Implement `ovellum check`:
-  - [ ] Validate config
-  - [ ] Run reader in validation mode (link check, frontmatter check)
-  - [ ] List any orphans
-  - [ ] Exit 0 if clean, 1 if issues found
+- [x] Implement `ovellum build` (manual / hybrid / auto). Summary lines per mode. Exit codes 0/1/3.
+- [x] Implement `ovellum init` (interactive scaffolder via `@inquirer/prompts`; `--yes` for non-interactive)
+- [x] Implement `ovellum watch` (chokidar + 300 ms debounce; dispatches to manual / auto / hybrid via shared `runBuild` helper)
+- [x] Implement `ovellum check` (broken-link + unsafe-URL-scheme lint; manual walks input, auto/hybrid walks output)
+- [x] Implement `ovellum dev` (manual-only — build + watch + serve + live-reload via SSE)
+- [x] Implement `ovellum serve` (pure static server for `dist/`)
+- [x] CLI smoke tests (8 spawn-based vitest cases in `packages/cli/src/__tests__/cli-smoke.test.ts`)
+- [x] Wire `bin.ovellum` in `packages/cli/package.json`
 - [ ] Implement `ovellum orphans`:
   - [ ] List mode (default)
   - [ ] `--stale` flag
   - [ ] Interactive reattach / delete (optional `--interactive` flag)
-- [ ] Implement `ovellum init`:
-  - [ ] Install `@inquirer/prompts`
-  - [ ] Prompt: name, mode, input, output, format
-  - [ ] Write `ovellum.config.ts`
-  - [ ] Create output dir stub
-  - [ ] Update `.gitignore`
-  - [ ] Print next steps
 - [ ] Implement `ovellum clean`:
   - [ ] Identify and remove auto-generated files (by `ovellum: true` frontmatter)
   - [ ] Preserve manual-only files
   - [ ] Dry-run mode by default; `--confirm` to actually delete
+- [ ] `ovellum dev` for auto / hybrid (today manual-only; auto/hybrid produce `.md` so there's nothing to live-reload but a "rebuild on TS change" loop would still be useful — overlaps with `watch`)
 - [ ] Add `--strict` global flag
-- [~] Add `--config <path>` global flag — supported as `build --config <path>` only
+- [x] `--config` + `--cwd` available on `build`, `check`, `watch`, `dev`, `serve`
 - [ ] Add `--verbose` global flag (debug output)
-- [ ] Write unit tests for CLI argument parsing and exit codes
-- [x] Wire `bin.ovellum` in `packages/cli/package.json`
+- [ ] Write unit tests for citty argument parsing (smoke tests cover the end-to-end behaviour)
 
-> Phase 6 v0 slice (2026-05-13): only `ovellum build` is wired. Run via
-> `pnpm -w run demo` to exercise it against `examples/simple-ts/`. Deferred:
-> watch / check / orphans / init / clean subcommands and the global flags.
+> Phase 6 v0 (2026-05-13): only `ovellum build` was wired.
+>
+> Phase 6 v1 (2026-05-17): init, build, dev, watch, serve, check all
+> implemented and tested. `orphans` and `clean` remain deferred (no
+> blocker — surface area on top of features that exist). Workspace test
+> count: 169.
 
 ---
 
