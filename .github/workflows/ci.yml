@@ -45,3 +45,41 @@ jobs:
 
       - name: Build
         run: pnpm build
+
+  # Guard against PRs that change a publishable package without recording a
+  # changeset. The Release workflow on `main` is a clean no-op when there's
+  # nothing to release, so this isn't a publish-time blocker — it's just a
+  # reminder to author the release note alongside the change.
+  #
+  # Limits / known gaps:
+  # - Runs on PRs only; pushes to `main` skip it.
+  # - Workspace packages in `.changeset/config.json`'s `ignore` list don't
+  #   trigger this check on their own. Since the `@ovellum/*` workspace
+  #   packages are bundled into `ovellum` at build time, touching their
+  #   source still affects what users install — author a changeset for
+  #   `ovellum` when changing internal package source.
+  changeset-status:
+    name: Changeset status (PRs)
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # `changeset status --since=...` needs git history beyond the
+          # latest commit to diff against the base branch.
+          fetch-depth: 0
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Check for changeset
+        run: pnpm exec changeset status --since=origin/${{ github.base_ref }}
