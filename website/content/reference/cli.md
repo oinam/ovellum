@@ -16,8 +16,10 @@ package manager's task runner.
 | ---------- | --------- | ------------------------------------------------------------------------ |
 | `init`     | available | Scaffold a new project (config + starter content + `.gitignore` entry).  |
 | `build`    | available | Run the configured pipeline (parse + generate + merge, or build a site). |
-| `check`    | available | Validate config + check for broken internal links + flag unsafe URLs.    |
+| `dev`      | available | Build, watch, serve, and live-reload connected browsers — the one-command dev loop. |
 | `watch`    | available | Build, then rebuild on every change under `input/` (debounced 300 ms).   |
+| `serve`    | available | Serve the built site over HTTP. No watch, no live reload.                |
+| `check`    | available | Validate config + check for broken internal links + flag unsafe URLs.    |
 | `orphans`  | planned   | List / inspect / reattach quarantined manual blocks.                     |
 | `clean`    | planned   | Remove auto-generated outputs while preserving manual files.             |
 
@@ -172,6 +174,110 @@ npx ovellum build --cwd ./website
 npx ovellum build --config ./config/ovellum.prod.ts
 ```
 
+## `ovellum dev`
+
+The combined build + watch + serve + live-reload loop. The one command
+you want running while writing.
+
+### Synopsis
+
+```
+ovellum dev [--cwd <dir>] [--config <path>] [--port <n>] [--host <addr>]
+```
+
+### Flags
+
+| Flag              | Type    | Default     | Notes                                                                                |
+| ----------------- | ------- | ----------- | ------------------------------------------------------------------------------------ |
+| `--cwd <dir>`     | path    | `cwd`       | Project root.                                                                        |
+| `--config <path>` | path    | auto        | Skip discovery and load this file directly.                                          |
+| `--port <n>`      | integer | `3000`      | Starting port. If busy, auto-bumps up to 19 ports forward before giving up.          |
+| `--host <addr>`   | string  | `127.0.0.1` | Bind address. Pass `0.0.0.0` to expose on the local network.                         |
+
+### Behaviour
+
+1. Loads the config and resolves `config.output` (the build's `dist/` dir).
+2. Starts an HTTP server bound to `--host:--port`.
+3. Runs an initial build, then watches `input/` and the config file for
+   changes (same debounce as `ovellum watch` — 300 ms).
+4. On every successful rebuild, pushes a `reload` event over
+   Server-Sent Events to every connected browser tab; the injected
+   client script calls `location.reload()`.
+5. `Ctrl-C` shuts down both the watcher and the server cleanly.
+
+The injected reload script is added only for HTML responses, only when
+`dev` is the running command. `ovellum build` output is never modified.
+
+### Output
+
+```
+ovellum dev starting from .../ovellum.config.json
+built 17 page(s) in 720ms
+
+watching content for changes…
+local:   http://127.0.0.1:3000/
+press Ctrl-C to exit.
+```
+
+After a save:
+
+```
+changed: content/getting-started.md
+built 17 page(s) in 60ms
+```
+
+### Exit codes
+
+| Code | Meaning                                                            |
+| ---- | ------------------------------------------------------------------ |
+| `0`  | Clean shutdown (Ctrl-C).                                           |
+| `1`  | Mode unsupported (`dev` is manual-mode only today).                |
+| `3`  | Config invalid.                                                    |
+
+### Examples
+
+```bash
+# Default: localhost:3000
+npx ovellum dev
+
+# Pick a port
+npx ovellum dev --port 4000
+
+# Expose to the LAN (useful for mobile testing)
+npx ovellum dev --host 0.0.0.0
+
+# Multi-site monorepo
+npx ovellum dev --cwd ./website
+```
+
+## `ovellum serve`
+
+Pure static-file server, no watching. Useful for previewing a
+production build exactly as it'll be served, or wiring into a process
+manager that handles rebuilds elsewhere.
+
+### Synopsis
+
+```
+ovellum serve [--cwd <dir>] [--config <path>] [--port <n>] [--host <addr>]
+```
+
+Flags are identical to `ovellum dev`. The server reads from
+`config.output`; if that directory doesn't exist, `serve` exits with
+`1` and points you at `ovellum build` or `ovellum dev`.
+
+### Differences vs. `ovellum dev`
+
+| | `dev` | `serve` |
+|---|---|---|
+| Initial build | yes (via watcher) | no — requires existing `dist/` |
+| Watches files | yes | no |
+| Injects reload script | yes | no |
+| Cache headers | `no-store` | `public, max-age=0` |
+
+If you only want the server (e.g. you're running `ovellum watch` in
+another shell yourself), `serve` is the right command.
+
 ## `ovellum check`
 
 Validation pass only — no writes. Loads config, walks every `.md` file
@@ -238,6 +344,12 @@ on every change. Debounced at 300 ms with `chokidar`'s
 `awaitWriteFinish` enabled so partial writes don't trigger a half-state
 rebuild.
 
+For the common "rebuild + serve + auto-refresh" loop, you almost
+certainly want [`ovellum dev`](#ovellum-dev) instead. `watch` is the
+primitive — useful when you want to run a different server (a CDN
+emulator, a reverse proxy, your own process manager) or pipe build
+notifications somewhere.
+
 ### Synopsis
 
 ```
@@ -251,8 +363,8 @@ ovellum watch [--cwd <dir>] [--config <path>]
 - Changes to the **config file itself** reload it before the next build.
 - `Ctrl-C` shuts the watcher down cleanly.
 
-Live reload (auto-refreshing the browser) is not bundled yet; you re-press
-refresh after the rebuild line appears in your terminal.
+No HTTP server, no live reload — pair with `ovellum serve` in another
+terminal, or hit a different static server of your choice.
 
 ## Planned subcommands
 

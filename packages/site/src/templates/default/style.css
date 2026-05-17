@@ -212,22 +212,108 @@ a:hover {
   gap: var(--space-2xs);
 }
 
-/* Search box (Pagefind UI overlay) */
+/* Search box (Pagefind UI as a floating dropdown)
+   ===
+   The Pagefind UI defaults render the results drawer inline below the input
+   — that works for a full-page search but collapses the topbar when used in
+   a header. We:
+   1. Pin the input compactly inside the topbar.
+   2. Float the drawer absolutely under it, with shadow/scroll, like a
+      popover. Standard Mintlify-style behaviour.
+   3. Decorate the input with a small `kbd` hint (added by script.js).
+*/
 .ov-search {
+  position: relative;
+  inline-size: 100%;
   min-inline-size: 220px;
+  max-inline-size: 320px;
 }
-/* Theme the bundled Pagefind UI to fit Ovellum's tokens. */
 .ov-search .pagefind-ui {
-  --pagefind-ui-scale: 0.9;
+  --pagefind-ui-scale: 0.6;
   --pagefind-ui-primary: var(--color-accent);
   --pagefind-ui-text: var(--color-fg);
-  --pagefind-ui-background: var(--color-bg-subtle);
+  --pagefind-ui-background: var(--color-bg);
   --pagefind-ui-border: var(--color-border-strong);
   --pagefind-ui-tag: var(--color-bg-muted);
   --pagefind-ui-border-width: 1px;
   --pagefind-ui-border-radius: var(--radius-md);
   --pagefind-ui-font: var(--font-sans);
 }
+.ov-search .pagefind-ui__search-input {
+  font-weight: 500;
+  color: var(--color-fg);
+}
+.ov-search .pagefind-ui__search-input::placeholder {
+  color: var(--color-fg-muted);
+  opacity: 0.7;
+  font-weight: 500;
+}
+.ov-search .pagefind-ui__search-input:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: -1px;
+}
+
+/* The drawer floats as a popover anchored to the input. */
+.ov-search .pagefind-ui__drawer {
+  position: absolute;
+  top: calc(100% + 6px);
+  inset-inline-end: 0;
+  inset-inline-start: auto;
+  inline-size: min(420px, 90vw);
+  max-block-size: min(70vh, 560px);
+  overflow-y: auto;
+  padding: var(--space-s) var(--space-m);
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 24px 48px -24px color-mix(in oklch, var(--color-fg) 24%, transparent);
+  z-index: 50;
+}
+.ov-search .pagefind-ui__results-area {
+  margin-block-start: 0;
+}
+.ov-search .pagefind-ui__message {
+  font-size: var(--font-size-0);
+  color: var(--color-fg-muted);
+  padding-block: var(--space-2xs);
+}
+.ov-search .pagefind-ui__result {
+  border-color: var(--color-border);
+  padding-block: var(--space-s);
+}
+.ov-search .pagefind-ui__result-title {
+  font-size: var(--font-size-0);
+  font-weight: 600;
+}
+.ov-search .pagefind-ui__result-excerpt {
+  font-size: 0.92em;
+  color: var(--color-fg-muted);
+  min-inline-size: 0;
+}
+
+/* Small platform-aware shortcut chip rendered by script.js after Pagefind mounts. */
+.ov-search-kbd {
+  position: absolute;
+  top: 50%;
+  inset-inline-end: 0.6em;
+  transform: translateY(-50%);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.15em;
+  font-family: var(--font-mono);
+  font-size: 0.72em;
+  color: var(--color-fg-muted);
+  background: var(--color-bg-subtle);
+  border: 1px solid var(--color-border);
+  border-radius: 4px;
+  padding: 1px 6px;
+  pointer-events: none;
+  user-select: none;
+}
+.ov-search:focus-within .ov-search-kbd {
+  display: none;
+}
+
 @media (max-width: 720px) {
   .ov-search {
     display: none;
@@ -466,17 +552,27 @@ body.ov-menu-open {
   font-weight: 600;
 }
 
-/* Heading anchors */
+/* Heading anchors
+   ===
+   Anchor link is appended after the heading text (`behavior: 'append'`
+   in the markdown pipeline), so headings stay flush-left with the
+   surrounding prose. The `#` only fades in on hover or keyboard focus —
+   it never reserves layout space because `margin-inline-start` is set
+   on the inline element when visible, not as a default. */
 .heading-anchor {
-  margin-inline-end: 0.4em;
+  margin-inline-start: 0.4em;
   color: var(--color-fg-subtle);
   text-decoration: none;
   opacity: 0;
-  transition: opacity 120ms ease;
+  font-weight: 400;
+  transition: opacity 120ms ease, color 120ms ease;
 }
 .ov-prose :is(h1, h2, h3, h4):hover .heading-anchor,
 .heading-anchor:focus-visible {
   opacity: 1;
+}
+.heading-anchor:hover {
+  color: var(--color-accent);
 }
 
 /* Code blocks (shiki dual-theme) */

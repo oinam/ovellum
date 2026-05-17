@@ -14,10 +14,10 @@ describe('renderMarkdown', () => {
     expect(headings.map((h) => h.depth)).toEqual([2, 3, 2]);
   });
 
-  it('prepends a clickable anchor link to each heading', async () => {
+  it('appends a clickable anchor link to each heading (heading text stays flush-left)', async () => {
     const { html } = await renderMarkdown('## Hello\nbody');
     expect(html).toMatch(
-      /<h2 id="hello"><a class="heading-anchor"[^>]*href="#hello">#<\/a>Hello<\/h2>/,
+      /<h2 id="hello">Hello<a class="heading-anchor"[^>]*href="#hello">#<\/a><\/h2>/,
     );
   });
 

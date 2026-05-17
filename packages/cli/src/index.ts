@@ -1,7 +1,9 @@
 import { defineCommand, runMain } from 'citty';
 import { buildCommand } from './commands/build.js';
 import { checkCommand } from './commands/check.js';
+import { devCommand } from './commands/dev.js';
 import { initCommand } from './commands/init.js';
+import { serveCommand } from './commands/serve.js';
 import { watchCommand } from './commands/watch.js';
 
 const main = defineCommand({
@@ -12,8 +14,10 @@ const main = defineCommand({
   subCommands: {
     init: initCommand,
     build: buildCommand,
-    check: checkCommand,
+    dev: devCommand,
     watch: watchCommand,
+    serve: serveCommand,
+    check: checkCommand,
   },
 });
 

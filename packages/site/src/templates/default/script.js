@@ -2,6 +2,7 @@
 // 1) Theme toggle (auto → light → dark) wired to <html data-theme="…">.
 // 2) Copy button on every <pre> code block.
 // 3) Mobile menu toggle (hamburger ↔ sheet).
+// 4) Cmd/Ctrl+K → focus the search input; small kbd hint chip in the box.
 (function () {
   var STORAGE_KEY = 'ovellum-theme';
   var ORDER = ['auto', 'light', 'dark'];
@@ -50,6 +51,71 @@
         mobileNav.classList.remove('is-open');
         document.body.classList.remove('ov-menu-open');
       }
+    });
+  }
+
+  // Search: Cmd/Ctrl+K shortcut + a small kbd hint chip.
+  var searchContainer = document.getElementById('ov-search');
+  if (searchContainer) {
+    var isMac = /Mac|iPhone|iPad|iPod/.test(navigator.platform);
+
+    // Pagefind UI mounts asynchronously. Poll briefly for its input, then add
+    // the platform-aware hint chip and wire the shortcut.
+    function withSearchInput(cb) {
+      var input = searchContainer.querySelector('.pagefind-ui__search-input');
+      if (input) {
+        cb(input);
+        return;
+      }
+      var tries = 0;
+      var timer = setInterval(function () {
+        var el = searchContainer.querySelector('.pagefind-ui__search-input');
+        tries += 1;
+        if (el) {
+          clearInterval(timer);
+          cb(el);
+        } else if (tries > 40) {
+          // ~4 s of waiting — Pagefind probably failed to load; give up
+          // silently rather than spinning forever.
+          clearInterval(timer);
+        }
+      }, 100);
+    }
+
+    withSearchInput(function (input) {
+      if (!searchContainer.querySelector('.ov-search-kbd')) {
+        var hint = document.createElement('span');
+        hint.className = 'ov-search-kbd';
+        hint.setAttribute('aria-hidden', 'true');
+        hint.textContent = isMac ? '⌘ K' : 'Ctrl K';
+        searchContainer.appendChild(hint);
+      }
+    });
+
+    document.addEventListener('keydown', function (e) {
+      // Only react to plain Cmd+K (Mac) / Ctrl+K (Win/Linux). Ignore the
+      // combo when the user is already typing in a field — they almost
+      // certainly meant a browser shortcut (e.g. Ctrl+K to focus the
+      // URL bar is still available in this case via the same input).
+      if (e.key !== 'k' && e.key !== 'K') return;
+      if (!(e.metaKey || e.ctrlKey)) return;
+      if (e.altKey || e.shiftKey) return;
+      var t = e.target;
+      if (
+        t &&
+        (t.tagName === 'INPUT' ||
+          t.tagName === 'TEXTAREA' ||
+          (t.getAttribute && t.getAttribute('contenteditable') === 'true'))
+      ) {
+        // Allow if it's our own search input (Cmd+K inside the search
+        // field is a no-op rather than an annoying preventDefault).
+        if (!searchContainer.contains(t)) return;
+      }
+      var input = searchContainer.querySelector('.pagefind-ui__search-input');
+      if (!input) return;
+      e.preventDefault();
+      input.focus();
+      input.select();
     });
   }
 

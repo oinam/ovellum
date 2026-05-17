@@ -144,8 +144,10 @@ See [`CLI.md`](./CLI.md) for full reference.
 | ----------------- | -------- |
 | `ovellum init`    | done     |
 | `ovellum build`   | done     |
-| `ovellum check`   | done     |
+| `ovellum dev`     | done     |
 | `ovellum watch`   | done     |
+| `ovellum serve`   | done     |
+| `ovellum check`   | done     |
 | `ovellum orphans` | deferred |
 | `ovellum clean`   | deferred |
 

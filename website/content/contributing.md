@@ -29,47 +29,33 @@ pnpm exec turbo run test --filter='@ovellum/*' --filter='ovellum'
 ## Run this website locally
 
 The site you're reading is a fully-fledged Ovellum site that lives at
-`website/` in the repo. Two scripts cover the common workflows.
+`website/` in the repo. Four workspace scripts cover everything:
 
-### One-shot rebuild
+| Script                          | What it does                                                          |
+| ------------------------------- | --------------------------------------------------------------------- |
+| `pnpm -w run dev:website`       | Build packages, then run `ovellum dev` against `website/`. The one-command loop: build + watch + serve + live reload. Open the URL it prints. |
+| `pnpm -w run build:website`     | One-shot production build into `website/dist/`. CI runs this.         |
+| `pnpm -w run serve:website`     | Serve `website/dist/` without watching (assumes a prior build).       |
+| `pnpm -w run check:website`     | Broken-link + unsafe-URL lint.                                        |
 
-```bash
-pnpm -w run build:website
-```
-
-This runs `ovellum build --cwd website` after first making sure the
-packages are built. Output lands in `website/dist/`. Serve it with any
-static-file server:
-
-```bash
-npx serve website/dist
-```
-
-### Iterate while editing
-
-For the writing loop, use `ovellum watch` against the website directory
-so changes to `website/content/**/*.md` trigger an instant rebuild:
+The day-to-day loop:
 
 ```bash
-# Build the workspace packages once so the CLI is up to date
-pnpm exec turbo run build --filter='@ovellum/*' --filter='ovellum'
-
-# Watch for changes
-node packages/cli/dist/index.js watch --cwd website
-
-# In another terminal: serve the output
-npx serve website/dist
+pnpm -w run dev:website
+# edit anything under website/content/, browser auto-refreshes
 ```
 
-Why `node packages/cli/dist/index.js` instead of `npx ovellum`?
-Inside this repo we're working on Ovellum itself — running through `npx`
-would download the published version. The local binary is the
-just-built one and reflects your edits.
+### Why these scripts wrap the CLI
 
-If you're iterating on the CLI or `@ovellum/site` source, re-run the
-package build (or `pnpm exec turbo run build --filter='@ovellum/site'`,
-`--filter='ovellum'`) to pick up your changes; the watcher only reloads
-the site, not the tooling that builds it.
+Inside this repo we're working on Ovellum itself. The scripts run the
+**locally-built** CLI (`node packages/cli/dist/index.js`) so your edits
+to packages take effect immediately. Using `npx ovellum` would fetch
+the published version and miss your changes.
+
+If you're iterating on `@ovellum/site`, `@ovellum/core`, or the CLI
+itself, the scripts re-run the package build before invoking the
+command — so a change in `packages/site/src/...` shows up in the next
+website rebuild without extra steps.
 
 ### Demo fixtures
 
@@ -81,15 +67,6 @@ pnpm -w run demo:site   # manual demo against examples/manual-site/
 ```
 
 Output lands inside each example directory; both are gitignored.
-
-### Validate before pushing
-
-```bash
-node packages/cli/dist/index.js check --cwd website
-```
-
-Catches broken internal links and unsafe URL schemes. CI runs the same
-command, so green here means green there.
 
 ## Repo layout
 

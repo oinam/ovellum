@@ -91,60 +91,68 @@ description: Install Ovellum and build your first docs.
 See [`_meta.json`](/reference/config/#_metajson-per-directory-manual-mode)
 in the config reference for the full spec.
 
-## Iterate with `ovellum watch`
+## Iterate with `ovellum dev`
 
-The watch command is the heart of the writing loop. It runs an initial
-build, then watches the input directory and the config file and
-rebuilds on every change.
+The dev command is the heart of the writing loop. One command does
+everything: initial build, watch for changes, serve on
+`http://127.0.0.1:3000/`, and auto-refresh open browser tabs on every
+rebuild.
 
 ```bash
-npx ovellum watch
+npx ovellum dev
 ```
 
-Behaviour:
+What happens:
 
 - **Initial build** on start.
-- **Re-build** on any change under `input/` — debounced 300 ms, with
-  `chokidar`'s `awaitWriteFinish` enabled so partial writes from your
-  editor don't trigger half-state rebuilds.
+- **HTTP server** starts on the next available port (3000 by default;
+  bumps if busy).
+- **Watcher** runs the rebuild on every change under `input/` —
+  debounced 300 ms, with `chokidar`'s `awaitWriteFinish` enabled so
+  partial writes from your editor don't trigger half-state rebuilds.
+- **Live reload** pushes a Server-Sent Event to every connected browser
+  tab on each successful build; the tiny client script injected into
+  HTML responses calls `location.reload()`.
 - **Config reload** when `ovellum.config.*` itself changes — the next
   build picks up the new settings.
 - **Clean shutdown** on `Ctrl-C`.
 
-Live reload (auto-refreshing the browser) isn't bundled yet — you
-re-press refresh after the rebuild line appears in your terminal.
+Open the URL it prints and start editing. Save → see the page refresh
+within ~100 ms.
 
-## Serve the output
-
-Ovellum produces a self-contained `dist/` directory. Any static-file
-server will serve it. The most common choices:
+### Flags
 
 ```bash
-# Node, no install
-npx serve dist
-
-# Python (built-in on most systems)
-python3 -m http.server -d dist 8000
-
-# A favourite for tight feedback loops
-npx http-server dist -c-1
+npx ovellum dev --port 4000          # pick a port
+npx ovellum dev --host 0.0.0.0       # expose on the local network
+npx ovellum dev --cwd ./website      # multi-site monorepo
 ```
 
-`-c-1` (in `http-server`) disables caching so refreshes always see your
-latest build.
+See the [CLI reference for `dev`](/reference/cli/#ovellum-dev) for the
+full flag list.
 
-The typical inner loop becomes two terminal windows:
+## Manual two-process loop (optional)
+
+`ovellum dev` covers the common case. If you want to run your own
+server (a CDN emulator, a reverse proxy, a process manager that
+restarts the watcher), the primitives are still available:
 
 ```bash
-# Terminal 1
+# Terminal 1: watch only
 npx ovellum watch
 
-# Terminal 2
+# Terminal 2: serve the dist/ directory
+npx ovellum serve
+
+# …or any other static server you prefer:
 npx serve dist
+python3 -m http.server -d dist 8000
+npx http-server dist -c-1     # -c-1 disables caching
 ```
 
-Edit a Markdown file → terminal 1 logs the rebuild → refresh the
-browser → see the change.
+`ovellum serve` is a pure static server — no watching, no reload
+injection. Cache headers are `public, max-age=0` so refreshes still
+fetch the latest build.
 
 ## Check before you ship
 
@@ -197,10 +205,7 @@ The whole loop, end-to-end:
 npx ovellum init             # once, when starting
 git init && git add . && git commit -m 'scaffold'
 
-npx ovellum watch            # while writing — keep running
-
-# (other terminal)
-npx serve dist               # while writing — keep running
+npx ovellum dev              # while writing — keep running
 
 npx ovellum check            # before committing
 npx ovellum build            # once, before pushing — confirms a cold build works
@@ -209,13 +214,15 @@ git add . && git commit -m 'docs: explain how the merger works'
 git push                     # CI runs `ovellum build` and deploys
 ```
 
+One terminal for the dev loop, no juggling.
+
 ## Working with multiple sites in one repo
 
 If your repo hosts both code and docs (a monorepo, for example), pass
 `--cwd` to scope each Ovellum command to a sub-directory:
 
 ```bash
-npx ovellum watch --cwd ./website
+npx ovellum dev   --cwd ./website
 npx ovellum build --cwd ./website
 npx ovellum check --cwd ./website
 ```

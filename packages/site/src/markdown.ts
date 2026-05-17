@@ -101,7 +101,9 @@ export async function renderMarkdown(md: string): Promise<RenderedMarkdown> {
     .use(rehypeSanitize, SANITIZE_SCHEMA)
     .use(rehypeSlug)
     .use(rehypeAutolinkHeadings, {
-      behavior: 'prepend',
+      // `append` keeps the heading text flush-left along with the prose;
+      // the `#` indicator floats in after the text on hover (see styles).
+      behavior: 'append',
       properties: { className: ['heading-anchor'], 'aria-label': 'Permalink' },
       content: { type: 'text', value: '#' },
     })
