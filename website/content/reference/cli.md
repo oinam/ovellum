@@ -12,14 +12,61 @@ package manager's task runner.
 
 ## Subcommands
 
-| Subcommand | Status    | Summary                                                         |
-| ---------- | --------- | --------------------------------------------------------------- |
-| `build`    | available | Run the configured pipeline.                                    |
-| `watch`    | not yet   | Rebuild on file changes.                                        |
-| `check`    | not yet   | Validate config + docs without writing.                         |
-| `orphans`  | not yet   | List / inspect / reattach quarantined manual blocks.            |
-| `init`     | not yet   | Interactive scaffolder for `ovellum.config.ts` + first content. |
-| `clean`    | not yet   | Remove auto-generated outputs while preserving manual files.    |
+| Subcommand | Status    | Summary                                                                  |
+| ---------- | --------- | ------------------------------------------------------------------------ |
+| `init`     | available | Scaffold a new project (config + starter content + `.gitignore` entry).  |
+| `build`    | available | Run the configured pipeline (parse + generate + merge, or build a site). |
+| `check`    | available | Validate config + check for broken internal links + flag unsafe URLs.    |
+| `watch`    | available | Build, then rebuild on every change under `input/` (debounced 300 ms).   |
+| `orphans`  | planned   | List / inspect / reattach quarantined manual blocks.                     |
+| `clean`    | planned   | Remove auto-generated outputs while preserving manual files.             |
+
+## `ovellum init`
+
+Scaffold a new project in the current (or given) directory. Refuses to
+clobber an existing `ovellum.config.json` unless `--force` is passed.
+
+### Synopsis
+
+```
+ovellum init [--cwd <dir>] [--yes] [--force]
+```
+
+### Flags
+
+| Flag          | Type    | Default         | Notes                                                                                |
+| ------------- | ------- | --------------- | ------------------------------------------------------------------------------------ |
+| `--cwd <dir>` | path    | `process.cwd()` | Project root.                                                                        |
+| `--yes`, `-y` | boolean | `false`         | Non-interactive: accept every default. Useful in CI / smoke tests.                   |
+| `--force`     | boolean | `false`         | Overwrite an existing `ovellum.config.json`. By default the command exits with `2`. |
+
+### Prompts (interactive)
+
+1. **Project name** — defaults to `package.json#name` or the folder name.
+2. **Mode** — `manual` (default), `auto`, or `hybrid`.
+3. **Site title** — defaults to a title-cased project name.
+4. **Description** — used for `<meta name="description">`.
+5. (manual) **Content dir** / **Output dir** / **Generate landing page?**
+6. (auto / hybrid) **`tsconfig`** / **Output dir**.
+7. **Default theme** — `auto`, `light`, or `dark`.
+
+### Output
+
+Writes only files that don't already exist (unless `--force`):
+
+- `ovellum.config.json`
+- `<input>/index.md` (manual + hybrid modes only) with a friendly starter.
+- `.gitignore` — appends `<output>/` and `.orphans/` if absent.
+
+Prints a numbered next-steps list keyed to the chosen mode.
+
+### Exit codes
+
+| Code  | Meaning                                                                |
+| ----- | ---------------------------------------------------------------------- |
+| `0`   | Project initialised.                                                   |
+| `2`   | `ovellum.config.json` already exists; re-run with `--force` to replace. |
+| `130` | User cancelled the prompts (Ctrl-C).                                   |
 
 ## `ovellum build`
 
@@ -58,11 +105,13 @@ Same as `auto`, then for each generated file:
 #### `manual`
 
 1. Walk `input/` for `.md` files.
-2. Render each to HTML.
-3. Build a sidebar nav.
-4. Wrap each page in the default template.
+2. Render each to HTML (Markdown is sanitised — see [Security](/reference/security/)).
+3. Build a sidebar nav and breadcrumb trail.
+4. Wrap each page in the default template (topbar, sidebar, ToC, prev/next, page meta).
 5. Write pretty URLs to `output/`.
 6. Copy `assets/ovellum.css` + `assets/ovellum.js` from the bundled template.
+7. When `site.baseUrl` is set, emit `sitemap.xml`.
+8. When `site.search.enabled` is `true`, run Pagefind against the output and emit `dist/pagefind/`.
 
 ### Summary output
 
@@ -123,18 +172,89 @@ npx ovellum build --cwd ./website
 npx ovellum build --config ./config/ovellum.prod.ts
 ```
 
+## `ovellum check`
+
+Validation pass only — no writes. Loads config, walks every `.md` file
+under `input/`, extracts links via remark (so fenced code blocks are
+correctly ignored), and verifies:
+
+1. Every internal link resolves to a real page URL in the sidebar nav.
+2. No link uses an unsafe URL scheme (`javascript:`, `vbscript:`, `data:`,
+   `file:`). Even though `renderMarkdown` strips these at render time,
+   `check` flags them here so authors can remove them at the source.
+
+### Synopsis
+
+```
+ovellum check [--cwd <dir>] [--config <path>]
+```
+
+### Output
+
+Clean:
+
+```
+ovellum check complete in 76ms
+  config:    .../ovellum.config.json
+  mode:      manual
+  pages:     14
+  broken links:    0
+  unsafe schemes:  0
+```
+
+With issues:
+
+```
+ovellum check complete in 87ms
+  config:    .../ovellum.config.json
+  mode:      manual
+  pages:     14
+  broken links:    1
+  unsafe schemes:  1
+  details:
+    content/getting-started.md:42   [SECURITY] unsafe URL scheme 'javascript:' — link will be stripped by the HTML sanitizer (raw: javascript:alert(1))
+    content/getting-started.md:112  broken internal link to /no/such/page/ (raw: /no/such/page/)
+```
+
+### Exit codes
+
+- `0` clean
+- `1` one or more issues found
+- `3` config invalid
+
+### Scope today
+
+Manual mode only. Hybrid and auto modes exit `1` with a "not yet
+supported" message — broken-link coverage for the auto-generated half
+of the pipeline is on the roadmap.
+
+Frontmatter validation, required-fields checking, and orphan listing
+for hybrid mode are deferred.
+
+## `ovellum watch`
+
+Build, then watch `input/` (and the config file) for changes and rebuild
+on every change. Debounced at 300 ms with `chokidar`'s
+`awaitWriteFinish` enabled so partial writes don't trigger a half-state
+rebuild.
+
+### Synopsis
+
+```
+ovellum watch [--cwd <dir>] [--config <path>]
+```
+
+### Behaviour
+
+- An initial build runs once on start.
+- Changes to any file under `input/` re-trigger the same pipeline.
+- Changes to the **config file itself** reload it before the next build.
+- `Ctrl-C` shuts the watcher down cleanly.
+
+Live reload (auto-refreshing the browser) is not bundled yet; you re-press
+refresh after the rebuild line appears in your terminal.
+
 ## Planned subcommands
-
-### `ovellum watch`
-
-`chokidar`-driven rebuild on changes to source, content, or config.
-Debounce 300 ms. Incremental: only affected files re-process.
-
-### `ovellum check`
-
-Validation pass only — no writes. Loads config, runs the reader in
-validation mode (link checking + required frontmatter), lists any
-orphans. Exit `0` clean, `1` issues found.
 
 ### `ovellum orphans`
 
@@ -143,12 +263,6 @@ Browse `.ovellum/orphans/`:
 - default: list with metadata
 - `--stale`: filter to orphans older than `protect.orphanRetention` days
 - `--interactive`: reattach / delete / skip prompts
-
-### `ovellum init`
-
-Interactive scaffolder. Prompts: name, mode, input, output, format.
-Writes `ovellum.config.ts`, creates the output directory stub, updates
-`.gitignore`.
 
 ### `ovellum clean`
 
@@ -164,5 +278,5 @@ manual writing).
 | `--strict`  | Promote warnings to errors; exit `2`.              |
 | `--verbose` | Print debug output (parser stages, merge details). |
 
-`--cwd` and `--config` are available on `build` today; they'll be
-promoted to global once more subcommands land.
+`--cwd` and `--config` are available on `build`, `check`, and `watch`
+today; they'll be promoted to global once more subcommands land.

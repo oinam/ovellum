@@ -1,16 +1,18 @@
 ---
 title: Theming
-description: How the default theme is structured and where to override.
+description: How the default theme is structured, where to override, and what the topbar / hero / icon system give you for free.
 ---
 
 # Theming
 
 The default site template ships with a small, opinionated design system:
 OKLCH palette, fluid Utopia type and space scales, system fonts,
-auto/light/dark themes. Out of the box, you get something that looks
+auto/light/dark themes, an icon set, and a centred hero with subtle
+background imagery. Out of the box, you get something that looks
 finished without writing a single line of CSS.
 
-This page covers how the theme is structured and how to override it.
+This page covers how the theme is structured and how to override the
+parts you'll most often want to.
 
 ## The token model
 
@@ -24,7 +26,7 @@ Every visual decision is a CSS custom property at one of three tiers:
 - **Tier 3 — component.** Optional per-component overrides
   (`--feature-card-bg`, etc.) that default to Tier 2 values.
 
-The full token list is in the project's
+The full token list lives in the project's
 [`docs/internal/STYLES.md`](https://github.com/oinam/ovellum/blob/main/docs/internal/STYLES.md).
 
 ## Switching themes
@@ -35,7 +37,8 @@ Three values for `<html data-theme>`:
 - `light` — force light.
 - `dark` — force dark.
 
-The topbar toggle cycles between them. The selection is saved in
+The topbar toggle cycles between them with a monitor / sun / moon icon
+that swaps based on the current `data-theme`. The selection is saved in
 `localStorage` and applied before paint, so revisits never flash the
 wrong colours.
 
@@ -49,10 +52,68 @@ To set the initial theme for first-time visitors:
 }
 ```
 
+## Topbar
+
+The default topbar is a three-column grid: brand on the left,
+right-aligned nav, and a controls cluster (search slot + theme toggle
++ mobile menu button).
+
+Add nav items via `site.topbarNav`:
+
+```json
+{
+  "site": {
+    "topbarNav": [
+      { "label": "Guides", "href": "/guides/manual-mode/" },
+      { "label": "Reference", "href": "/reference/config/" },
+      { "label": "GitHub", "href": "https://github.com/you/repo", "external": true }
+    ]
+  }
+}
+```
+
+External links (`external: true` or any `http(s)://` URL) open in a new
+tab with `rel="noopener"` and a small external-link icon. Below 720px
+the nav collapses into a hamburger that opens a full-width sheet
+anchored under the topbar — no extra config required.
+
+## Hero
+
+The landing-page hero (when `site.landing.enabled` is `true`) is
+centred and gets two stacked background layers, applied via
+pseudo-elements so no images ship with the site:
+
+- A 24 px dotted SVG pattern (theme-aware fill, masked to fade at the
+  edges).
+- A radial spotlight gradient in your accent color, low alpha.
+
+Hero typography uses `clamp()` so it scales from mobile to desktop
+without a media-query forest. Title max-width is 16 ch; subtitle 56 ch.
+
+## Icons
+
+The template uses [Lucide](https://lucide.dev/) icons throughout —
+each one is an inline SVG with `stroke="currentColor"` and
+`stroke-width="2"`, so they pick up colors from the surrounding text
+in every theme automatically. No icon font, no separate request.
+
+Available icons in the current bundle:
+`menu`, `close`, `sun`, `moon`, `monitor`, `chevron-down`, `github`,
+`external-link`, `search`, `check`.
+
+Adding a new one is one import in `packages/site/src/icons.ts` and one
+entry in the `REGISTRY` map — the package tree-shakes the rest of
+Lucide away, so each icon adds roughly 100 bytes to the bundle.
+
+> Lucide v1 dropped brand marks (trademark concerns), so `github` is
+> a hand-rolled exception drawn to match Lucide's stroke language. If
+> you need more brand logos, [simple-icons](https://simpleicons.org/)
+> is the standard companion.
+
 ## Customising the default theme
 
 Today, the simplest override is a follow-up stylesheet. Drop a CSS file
-in `content/` (it'll pass through as a static asset), then reference it
+in `content/` (it passes through as a static asset), then reference it
 from your pages or — better — extend the template later via a plugin
 system (planned, not built yet).
 
@@ -76,17 +137,16 @@ Save as `content/css/override.css` and reference it from each page's
 frontmatter via a future `extraStyles` field (planned).
 
 > The override pattern is still being formalised — for now, expect to
-> fork the default template if you want anything more than colour tweaks.
-> Plugin / template-override APIs are on the roadmap.
+> fork the default template if you want anything more than colour
+> tweaks. Plugin / template-override APIs are on the roadmap.
 
 ## Theming the landing page
 
 If you've enabled `site.landing`, the landing inherits the same tokens.
 Hero, feature cards, and trust strip read `--color-fg`, `--color-bg`,
-`--color-accent`, and `--color-border` like every other component.
-
-Setting `--color-accent` per-theme (above) is usually enough to make the
-landing feel like your brand.
+`--color-accent`, and `--color-border` like every other component. The
+hero spotlight tint follows `--color-accent` automatically, so changing
+the accent re-skins the hero atmosphere for free.
 
 ## Code-block themes
 
@@ -105,6 +165,13 @@ will let you pick from any shiki bundled theme.
 - Default light + default dark.
 - Auto-follow-OS via `prefers-color-scheme`.
 - Pre-paint theme script (no flash).
+- Lucide-backed icon registry with a `renderIcon(name)` helper.
+- Right-aligned topbar nav with mobile sheet (hamburger below 720 px).
+- Centred hero with dotted-noise + accent spotlight background.
+- Breadcrumbs above the article on nested pages.
+- Per-page meta line (reading time + last-modified) above the article.
+- Print stylesheet that strips chrome and widens the article.
+- Custom 404 layout (narrower column, larger heading, no chrome).
 - Copy buttons on every code block.
 
 **Defined in `STYLES.md` but not yet wired into the toggle:**

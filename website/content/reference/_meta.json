@@ -1,4 +1,4 @@
 {
   "title": "Reference",
-  "order": ["config", "cli", "glossary"]
+  "order": ["config", "cli", "security", "glossary"]
 }

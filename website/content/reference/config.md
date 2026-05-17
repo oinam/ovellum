@@ -86,20 +86,65 @@ interface OvellumSiteConfig {
   title?: string;
   description?: string;
   baseUrl?: string;
+  basePath?: string;
   defaultTheme: 'auto' | 'light' | 'dark';
   footer: string;
+  editUrlPattern?: string;
+  search: { enabled: boolean };
+  pageMeta: { readingTime: boolean; lastModified: boolean };
+  topbarNav: Array<{ label: string; href: string; external?: boolean }>;
   landing: OvellumLandingConfig;
 }
 ```
 
-| Field          | Type                          | Default                   | Notes                                                                                        |
-| -------------- | ----------------------------- | ------------------------- | -------------------------------------------------------------------------------------------- |
-| `title`        | `string?`                     | `name` ↦ `'Ovellum site'` | Used in the topbar and `<title>`.                                                            |
-| `description`  | `string?`                     | `undefined`               | Used in `<meta>` and the footer.                                                             |
-| `baseUrl`      | `string?`                     | `undefined`               | E.g. `'https://docs.example.com'`. Used for canonical and OG. Omit for relative-link output. |
-| `defaultTheme` | `'auto' \| 'light' \| 'dark'` | `'auto'`                  | Initial theme before user preference loads.                                                  |
-| `footer`       | `string`                      | `'Built with Ovellum'`    | Empty string disables the footer entirely.                                                   |
-| `landing`      | `OvellumLandingConfig`        | `{ enabled: false, … }`   | See below.                                                                                   |
+| Field            | Type                                | Default                       | Notes                                                                                                                                                                                                                          |
+| ---------------- | ----------------------------------- | ----------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `title`          | `string?`                           | `name` ↦ `'Ovellum site'`     | Used in the topbar and `<title>`.                                                                                                                                                                                              |
+| `description`    | `string?`                           | `undefined`                   | Used in `<meta>` and the footer.                                                                                                                                                                                               |
+| `baseUrl`        | `string?`                           | `undefined`                   | E.g. `'https://docs.example.com'`. Used for `<link rel="canonical">`, OG cards, and the `sitemap.xml`. Omit for relative-link output.                                                                                          |
+| `basePath`       | `string?`                           | `''`                          | Jekyll-style subpath. Leading slash, no trailing slash (e.g. `'/ovellum'`). Prepended to every internal URL, asset path, canonical link, and sitemap entry. Authors keep writing root-relative links; the build adds the prefix. |
+| `defaultTheme`   | `'auto' \| 'light' \| 'dark'`       | `'auto'`                      | Initial theme before user preference loads.                                                                                                                                                                                    |
+| `footer`         | `string`                            | `'Built with Ovellum'`        | Empty string disables the footer entirely.                                                                                                                                                                                     |
+| `editUrlPattern` | `string?`                           | `undefined`                   | URL pattern with a `{path}` placeholder. `{path}` is the page's source path **relative to the build cwd** (`--cwd`). Include any repo prefix yourself, e.g. `'https://github.com/owner/repo/edit/main/website/{path}'`. When unset, the "Edit this page" link is not rendered. |
+| `search`         | `{ enabled: boolean }`              | `{ enabled: false }`          | When `true`, `ovellum build` runs Pagefind against the output dir and the topbar gains a search box. Adds `dist/pagefind/` to the build.                                                                                       |
+| `pageMeta`       | `{ readingTime, lastModified }`     | both `true`                   | Per-page meta line above the article: `N min read · Updated YYYY-MM-DD`. `readingTime` estimates at ~200 wpm after stripping code/HTML. `lastModified` prefers `git log -1 --format=%cI` then falls back to filesystem mtime; the line is omitted if neither resolves. Set either to `false` to hide that half. |
+| `topbarNav`      | `Array<{label, href, external?}>`   | `[]`                          | Items render right-aligned, in order, on every page. External links (`external: true` or `href` starting with `http(s)://`) open in a new tab with `rel="noopener"` and a small external-link icon. Below 720px the nav collapses into a hamburger sheet. |
+| `landing`        | `OvellumLandingConfig`              | `{ enabled: false, … }`       | See below.                                                                                                                                                                                                                     |
+
+### `topbarNav[]`
+
+| Field      | Type      | Notes                                                                                                                            |
+| ---------- | --------- | -------------------------------------------------------------------------------------------------------------------------------- |
+| `label`    | `string`  | Visible link text.                                                                                                               |
+| `href`     | `string`  | Internal path (`/guides/themes/`) or absolute URL.                                                                               |
+| `external` | `boolean?`| Force the external treatment (new tab + icon + `rel="noopener"`). Auto-true when `href` starts with `http://` or `https://`.    |
+
+### `search`
+
+`{ enabled: boolean }`. When `true`, the build:
+
+1. Runs [Pagefind](https://pagefind.app/) against the output directory to
+   produce a static search index under `dist/pagefind/`.
+2. Adds the Pagefind UI to the topbar, themed via Ovellum's design tokens
+   so it inherits your accent / fg / bg colors automatically.
+
+There is no runtime indexer — search results come from the static index
+shipped with the site, so it works on any static host with no server.
+
+### `pageMeta`
+
+`{ readingTime: boolean, lastModified: boolean }`. Both default `true`.
+
+- **`readingTime`** — counts visible-prose words (code blocks, inline
+  code, link URLs, HTML, and heading punctuation stripped) and divides
+  by ~200 wpm, rounded up. Always at least `1 min read`.
+- **`lastModified`** — first tries
+  `git log -1 --format=%cI -- <path>` for the file. Falls back to the
+  filesystem mtime if the file isn't tracked or git is unavailable.
+  Omitted if neither resolves.
+
+Set either to `false` to hide that half of the line. Set both to `false`
+to hide the meta line entirely.
 
 ## `site.landing`
 

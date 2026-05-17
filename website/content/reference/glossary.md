@@ -25,6 +25,14 @@ The stable identifier for an anchor. Format:
 `src/utils/format.ts::formatDate`,
 `src/models/User.ts::User.constructor`, `src/index.ts::__module__`.
 
+### `basePath`
+
+Jekyll-style subpath the site is served from. Set via `site.basePath`
+(e.g. `'/ovellum'`). Prepended to every internal URL, asset path,
+canonical link, and `sitemap.xml` entry at render time. Authors keep
+writing root-relative links (`/getting-started/`); the build adds the
+prefix. Empty by default — the site is served from the root.
+
 ### Auto mode
 
 The simplest pipeline: source to IR to Markdown. Existing output is
@@ -36,10 +44,25 @@ The Markdown HTML-comment tag pair (default `<!-- @manual:start -->` /
 `<!-- @manual:end -->`) that fences a [protected zone](#protected-zone).
 Configurable via `protect.blockTag`.
 
+### Breadcrumbs
+
+The "Section › Page" trail rendered above the article on pages two or
+more levels deep in the nav. Computed from the nav tree by walking from
+the root to the current page; the final entry carries
+`aria-current="page"`. Top-level pages get none.
+
 ### CTA (call to action)
 
 A button on the landing-page hero that invites the reader to do
 something. Configured under `site.landing.hero.ctas`.
+
+### Edit-this-page link
+
+The "Edit this page" link rendered under each article when
+`site.editUrlPattern` is set. The `{path}` placeholder is substituted
+with the page's source path relative to the build's working directory,
+so the pattern usually points at the GitHub/GitLab/Bitbucket "edit
+file" URL for that path.
 
 ### Feature card
 
@@ -56,6 +79,14 @@ overrides, and more.
 
 The full-width title + subtitle + CTA block at the top of a landing
 page.
+
+### Icon registry
+
+The small inline-SVG icon set the default template ships with, backed
+by [Lucide](https://lucide.dev/). Each icon renders at 24×24 with
+`stroke="currentColor"` and `stroke-width="2"`, so it inherits color
+from the surrounding text and works for free in every theme. Public
+helper: `renderIcon(name, opts)` from the `@ovellum/site` package.
 
 ### Hybrid mode
 
@@ -79,6 +110,14 @@ A wider, marketing-style page rendered at `/` when
 
 - optional trust strip. Doc pages keep their existing URLs.
 
+### Last modified
+
+The "Updated YYYY-MM-DD" half of the [page meta](#page-meta) line. Read
+from `git log -1 --format=%cI -- <path>` when the file is tracked,
+otherwise from the filesystem mtime. Falls back to omitting the line if
+neither resolves. Controlled by `site.pageMeta.lastModified` (default
+`true`).
+
 ### Manual mode
 
 Markdown-first static-site builder. No source parsing. Produces HTML +
@@ -100,6 +139,20 @@ A protected zone whose source anchor no longer exists in the current
 IR. Quarantined to `.ovellum/orphans/` with metadata; never silently
 dropped. See [Concepts → Orphans](/concepts/orphans/).
 
+### Page meta
+
+The small line above each article showing reading time and last-modified
+date: `2 min read · Updated 2026-05-17`. Configured via `site.pageMeta`;
+either half can be toggled off, or you can hide the whole line by
+disabling both.
+
+### Pagefind
+
+The static search indexer Ovellum ships behind `site.search.enabled`.
+[Pagefind](https://pagefind.app/) produces a static index from the
+built HTML and ships a small client that loads it on demand — no
+server, no runtime indexer. Output lands at `dist/pagefind/`.
+
 ### Pretty URL
 
 Output path shape in manual mode: each page becomes
@@ -112,17 +165,50 @@ A `<!-- @manual:start id="…" -->` … `<!-- @manual:end -->` region in a
 Markdown file whose contents are preserved verbatim across regeneration.
 See [Concepts → Anchors and zones](/concepts/anchors-and-zones/).
 
+### Print stylesheet
+
+The `@media print` rules in the default template that hide the chrome
+(topbar, sidebar, ToC, search, prev/next, edit link), widen the article,
+print external link URLs inline, and avoid page-breaks inside code
+blocks. No config required — it kicks in whenever a reader prints.
+
 ### Quarantine
 
 The act of writing an orphan record to disk under `protect.orphanDir`
 rather than discarding it. Orphan files are human-readable Markdown,
 reviewable in PRs.
 
+### Reading time
+
+The "N min read" half of the [page meta](#page-meta) line. Counts visible
+prose at ~200 wpm after stripping code blocks, inline code, link URLs,
+HTML, and heading punctuation. Always at least 1 minute. Controlled by
+`site.pageMeta.readingTime` (default `true`).
+
+### Sanitization
+
+The pass that strips dangerous HTML from rendered Markdown.
+`renderMarkdown` runs every source through
+[rehype-sanitize](https://github.com/rehypejs/rehype-sanitize) before
+shiki highlights code blocks. Removed: `<script>`, `<iframe>`,
+`<object>`, `<embed>`, `on*` event handlers, and any URL whose scheme
+isn't on the allowlist (`javascript:`, `vbscript:`, and `data:` are all
+dropped — including `data:` on `<img>` because
+`data:image/svg+xml` can carry executable JS). See
+[Security](/reference/security/) for the full policy.
+
 ### `@preserve`
 
 JSDoc tag (the default inline tag) on a source comment that asks the
 generator to wrap the comment's description in a protected zone
 automatically — so user edits to that description survive regeneration.
+
+### Topbar nav
+
+The right-aligned navigation in the topbar, driven by `site.topbarNav`.
+Links render in order beside the brand on every page. External links
+get a small icon and open in a new tab. Below 720px the nav collapses
+into a hamburger button that opens a full-width sheet.
 
 ### Trust strip
 
