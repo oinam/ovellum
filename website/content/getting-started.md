@@ -47,6 +47,11 @@ static site to `./dist/`. Replace `mode` with `auto` if you want to generate
 docs from TypeScript source instead, or `hybrid` if you want to mix both in
 the same files. See [Concepts → Modes](/concepts/modes/) for the differences.
 
+By default `/` renders `content/index.md` straight into the doc layout —
+readers land directly in the docs. If you want a marketing-style homepage
+at `/` instead, set `site.landing.enabled: true`; see
+[Landing page](/guides/manual-mode/#landing) for the full config.
+
 A TypeScript config (`ovellum.config.ts`) works too and gives you
 autocomplete via the exported `defineConfig` helper:
 

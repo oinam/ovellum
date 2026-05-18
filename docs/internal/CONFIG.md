@@ -117,10 +117,21 @@ interface OvellumSiteConfig {
 
 ## 4. `site.landing` block (homepage / landing page)
 
-Opt-in landing page rendered at `/` instead of the regular doc index.
-Disabled by default; existing manual-mode sites are unchanged. When
-enabled, `content/index.md` is skipped with a warning (the landing
-replaces it).
+Controls what happens at `/`. Two modes, picked by `site.landing.enabled`:
+
+- **`enabled: false`** (default) — `/` renders `content/index.md` with
+  the regular doc layout (sidebar, content, ToC). Straight-to-docs
+  experience. If `content/index.md` doesn't exist, the root will 404 —
+  create one (or rename your "getting started" page to `index.md`).
+- **`enabled: true`** — `/` renders the landing template (hero +
+  feature grid + optional `_landing.md` prose + optional trust strip),
+  and the topbar gains a "Docs" link pointing at `site.landing.docsHref`
+  (or the first sidebar page if unset). Any `content/index.md` is
+  skipped with a build-time warning telling the author to move prose
+  to `_landing.md` or rename the file.
+
+Existing manual-mode sites that omit the `landing` block keep behaving
+as before (default `enabled: false`).
 
 ```typescript
 interface OvellumLandingConfig {

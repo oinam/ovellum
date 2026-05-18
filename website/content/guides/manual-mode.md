@@ -162,14 +162,25 @@ dist/
 
 ## Landing page <a id="landing"></a>
 
-Manual mode has an opt-in landing template for the root URL. Disabled by
-default — if you don't set `site.landing.enabled: true`, `/` renders
-whatever `content/index.md` says, with the regular doc layout.
+Manual mode ships an optional marketing-style homepage. The behavior
+at `/` depends on a single flag:
 
-When you do enable it, `/` becomes a Material for MkDocs-inspired
-homepage: hero, feature grid, optional prose body, optional trust strip.
-The topbar gains a "Docs" link so readers always have a path into the
-documentation proper.
+- `site.landing.enabled: false` (the default) — `/` is just a doc
+  page. It renders `content/index.md` with the regular layout
+  (sidebar, content, on-this-page ToC). Use this if you want readers
+  to land straight in the documentation.
+- `site.landing.enabled: true` — `/` becomes a marketing-style page:
+  hero, feature grid, optional `_landing.md` prose body, optional
+  trust strip. The topbar grows a "Docs" link so readers always have
+  a one-click path into the documentation proper, and the build
+  ignores `content/index.md` with a warning (move that prose to
+  `_landing.md` or rename the file).
+
+> [!TIP]
+> If you flip from landing-on to landing-off, rename `_landing.md` to
+> `index.md` (or write a fresh `index.md`) so `/` still has content.
+
+When enabled, the config looks like this:
 
 ```json
 {
