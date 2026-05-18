@@ -245,8 +245,8 @@ New phase introduced 2026-05-15. Design lives in [`SITE.md`](./SITE.md).
 - [ ] Token-extraction script: pull current `STYLES.md` values into `style.css` automatically (avoid manual resync)
 - [ ] Nord + Solarized themes wired into the theme switcher (palettes already in STYLES.md)
 - [ ] `_meta.json` title fallback for directories without their own `index.md`
-- [ ] Search (Pagefind integration as a separate package or `--search` flag)
-- [ ] Sitemap.xml + RSS
+- [x] Search (Pagefind integration as a separate package or `--search` flag)
+- [x] Sitemap.xml + RSS
 - [x] Search via Pagefind (`site.search.enabled`; client + indexer)
 - [x] Sitemap.xml (auto-emitted when `site.baseUrl` set; basePath-aware)
 - [x] `site.basePath` (Jekyll-style sub-path hosting)
@@ -266,7 +266,7 @@ New phase introduced 2026-05-15. Design lives in [`SITE.md`](./SITE.md).
 - [ ] Page-level Nord + Solarized themes (palettes in STYLES.md; `codeTheme` ships but a full Tier-2 page theme switcher is still TODO)
 - [ ] Token-extraction script: pull current `STYLES.md` values into `style.css` automatically
 - [ ] `_meta.json` title fallback for directories without their own `index.md`
-- [ ] RSS feed auto-emit
+- [x] RSS feed auto-emit
 - [ ] MDX rendering via `remark-mdx`
 - [ ] Plugin API for custom templates (deferred — needs its own design pass)
 - [ ] Multi-version / multi-language docs
@@ -320,7 +320,7 @@ deploy design in [`DEPLOY.md`](./DEPLOY.md).
 - [x] Cloudflare grey-cloud DNS setup documented in `guides/deploy.md`
 - [x] `reference/security.md` public page (HTML sanitization, command-injection resistance, URL allowlist)
 - [x] `guides/development.md` (init → dev → check → build workflow)
-- [ ] RSS auto-emit
+- [x] RSS auto-emit
 - [ ] Lighthouse CI workflow
 
 > Phase 4.6 v0 (2026-05-16): the site builds locally (`pnpm -w run build:website`)

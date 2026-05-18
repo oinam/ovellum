@@ -195,7 +195,7 @@ Powers `mode: 'manual'`. Design lives in [`SITE.md`](./SITE.md).
 | Custom 404 layout                                                                  | done     | `/404/` gets `body.ov-body-404`: sidebar, ToC, prev/next, breadcrumbs, and edit-this-page are hidden; the article centres on a narrower column with a larger heading.                        |
 | Print stylesheet                                                                   | done     | `@media print` hides chrome (topbar, sidebar, ToC, search, prev/next, edit link), widens content to full width, prints external link URLs inline, and avoids page-breaks inside code blocks. |
 | Reading time + last-modified                                                       | done     | Per-page meta line above the article: `N min read · Updated YYYY-MM-DD`. Word count strips code blocks/HTML; ~200 wpm. Date prefers `git log -1`, falls back to fs mtime. Toggle each half via `site.pageMeta.{readingTime,lastModified}`. |
-| RSS                                                                                | deferred |                                                                                                                                                                                                |
+| RSS feed (`feed.xml`)                                                              | done     | Auto-generated when `site.baseUrl` is set. Items sorted by `lastModified` desc, capped at 20; `/` and `/404/` excluded; channel-level `<atom:link rel="self">`; head `<link rel="alternate">` on every page for auto-discovery. |
 | MDX rendering                                                                      | deferred | `.md` only in v1.                                                                                                                                                                              |
 | Multiple bundled templates                                                         | deferred | One default for now.                                                                                                                                                                           |
 | Live reload                                                                        | deferred | Pairs with `ovellum watch`.                                                                                                                                                                    |
@@ -205,7 +205,7 @@ Powers `mode: 'manual'`. Design lives in [`SITE.md`](./SITE.md).
 piece is in, and how to change the design — see
 [`SITE.md` §9a](./SITE.md#9a-template-anatomy).
 
-**Tests:** 71 vitest cases in `@ovellum/site` (markdown incl. sanitization, nav, template, landing, sitemap, url helpers, page-meta incl. command-injection resistance, icons) plus 8 in `ovellum` (CLI URL-scheme allowlist).
+**Tests:** 81 vitest cases in `@ovellum/site` (markdown incl. sanitization, nav, template, landing, sitemap, rss, url helpers, page-meta incl. command-injection resistance, icons) plus 8 in `ovellum` (CLI URL-scheme allowlist).
 
 **Security:** sanitization policy, shell-out hardening, and URL-scheme allowlist are documented in [`SECURITY.md`](./SECURITY.md).
 
@@ -255,7 +255,7 @@ GitHub Pages on every push to `main`. Lives in
 | pnpm + Node cache in CI                     | done     | `actions/setup-node@v4` with `cache: pnpm`.                                                                        |
 | `site.basePath` for subpath hosting         | deferred | Needed only if hosting from `<user>.github.io/<repo>/` instead of a custom domain.                                 |
 | Pagefind search integration                 | deferred | Post-build indexer + ~50 KB client. Separate slice.                                                                |
-| Sitemap.xml / RSS                           | deferred |                                                                                                                    |
+| Sitemap.xml / RSS                           | done     | Both auto-emit when `site.baseUrl` is set. RSS items sorted by lastmod desc, capped at 20.                          |
 | Lighthouse CI                               | deferred |                                                                                                                    |
 
 ---

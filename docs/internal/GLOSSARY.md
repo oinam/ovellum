@@ -254,6 +254,16 @@ the bottom of a landing page, above the footer. Configured under
 items with an `image` render as `<img>`s, items without render as
 text badges.
 
+### RSS feed (`feed.xml`)
+
+An RSS 2.0 feed auto-emitted at `<output>/feed.xml` when `site.baseUrl`
+is set. Items are the manual-mode pages (`/` and `/404/` excluded by
+default), sorted by `lastModified` desc and capped at 20. Each item
+carries title, link, GUID, description (from frontmatter `description`),
+and `pubDate` from the page's git-mtime fallback. Every page's `<head>`
+also includes `<link rel="alternate" type="application/rss+xml">` for
+reader auto-discovery.
+
 ### Pagefind
 
 The static-site search indexer used when `site.search.enabled` is

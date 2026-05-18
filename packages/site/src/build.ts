@@ -8,6 +8,7 @@ import { renderMarkdown, type Heading } from './markdown.js';
 import { buildNav, findAdjacent, findBreadcrumbs, type NavNode } from './nav.js';
 import { countWords, lastModifiedISO, readingMinutes } from './page-meta.js';
 import { indexSite } from './search.js';
+import { generateRss } from './rss.js';
 import { generateSitemap } from './sitemap.js';
 import { renderLanding, renderPage } from './template.js';
 
@@ -23,6 +24,10 @@ export interface PageOutput {
   outputPath: string;
   url: string;
   title: string;
+  /** Frontmatter `description`, when set. Used by the RSS feed and metadata. */
+  description?: string;
+  /** ISO-8601 last-modified timestamp from git → fs mtime fallback. */
+  lastModified?: string;
 }
 
 export interface BuildSiteResult {
@@ -137,6 +142,8 @@ export async function buildSite(options: BuildSiteOptions): Promise<BuildSiteRes
         outputPath: path.relative(cwd, outputPath).replace(/\\/g, '/'),
         url,
         title: result.title,
+        description: result.description,
+        lastModified: result.lastModified,
       });
       warnings.push(...result.warnings);
     } else {
@@ -154,13 +161,24 @@ export async function buildSite(options: BuildSiteOptions): Promise<BuildSiteRes
     return a.url.localeCompare(b.url);
   });
 
-  // Emit sitemap.xml when site.baseUrl is configured.
+  // Emit sitemap.xml and feed.xml when site.baseUrl is configured.
   if (site.baseUrl) {
     const xml = generateSitemap({ pages, baseUrl: site.baseUrl, basePath: site.basePath });
     if (xml) await writeFile(path.join(outputAbs, 'sitemap.xml'), xml, 'utf8');
+
+    const rss = generateRss({
+      pages,
+      baseUrl: site.baseUrl,
+      basePath: site.basePath,
+      title: site.title,
+      description: site.description,
+      exclude: ['/404/', '/'],
+      generatedAt: now,
+    });
+    if (rss) await writeFile(path.join(outputAbs, 'feed.xml'), rss, 'utf8');
   } else {
     warnings.push(
-      'sitemap.xml not generated: set `site.baseUrl` in your config to enable it.',
+      'sitemap.xml and feed.xml not generated: set `site.baseUrl` in your config to enable them.',
     );
   }
 
@@ -199,6 +217,8 @@ interface RenderOneInput {
 interface RenderOneResult {
   html: string;
   title: string;
+  description?: string;
+  lastModified?: string;
   warnings: string[];
 }
 
@@ -241,7 +261,13 @@ async function renderOne(input: RenderOneInput): Promise<RenderOneResult> {
     lastModified,
     bodyClass: input.url === '/404/' ? 'ov-body-404' : undefined,
   });
-  return { html, title, warnings: [] };
+  return {
+    html,
+    title,
+    description: frontmatter.description,
+    lastModified,
+    warnings: [],
+  };
 }
 
 interface LandingBody {
