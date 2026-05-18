@@ -664,9 +664,14 @@ body.ov-menu-open {
 .ov-prose code:not(pre code) {
   font-family: var(--font-mono);
   background: var(--color-code-bg);
-  padding: 0.1em 0.4em;
-  border-radius: 4px;
-  font-size: 0.92em;
+  padding: 0.1em 0.38em;
+  border-radius: var(--radius-sm);
+  font-size: 0.88em;
+  color: var(--color-fg);
+  white-space: nowrap;
+}
+.ov-prose a > code:not(pre code) {
+  color: var(--color-link);
 }
 .ov-prose img {
   max-inline-size: 100%;
@@ -713,14 +718,19 @@ body.ov-menu-open {
   color: var(--color-accent);
 }
 
-/* Code blocks (shiki dual-theme) */
+/* Code blocks (shiki dual-theme)
+   ===
+   Padding bumped on top to clear the language eyebrow injected via
+   `pre[data-language]::before`. On hover the eyebrow fades and the
+   copy button (added by script.js) fades in at the same corner —
+   they trade places rather than compete for space. */
 .ov-prose pre {
   position: relative;
-  padding: var(--space-s);
+  padding: var(--space-m) var(--space-s) var(--space-s);
   border-radius: var(--radius-md);
   overflow-x: auto;
   font-family: var(--font-mono);
-  font-size: 0.92em;
+  font-size: 0.9em;
   line-height: var(--leading-mono);
 }
 .ov-prose pre.shiki {
@@ -747,25 +757,53 @@ body.ov-menu-open {
   color: var(--shiki-dark);
 }
 
-/* Copy button (injected by script.js) */
-.ov-copy-btn {
+/* Language eyebrow (top-right of every highlighted fenced block) */
+.ov-prose pre[data-language]::before {
+  content: attr(data-language);
   position: absolute;
   top: var(--space-2xs);
+  right: var(--space-s);
+  font-family: var(--font-mono);
+  font-size: 0.66em;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--color-fg-subtle);
+  opacity: 0.85;
+  pointer-events: none;
+  transition: opacity 120ms ease;
+}
+.ov-prose pre:hover[data-language]::before {
+  opacity: 0;
+}
+
+/* Copy button (injected by script.js) — shares the top-right corner
+   with the language eyebrow, swaps in on hover. */
+.ov-copy-btn {
+  position: absolute;
+  top: var(--space-3xs);
   right: var(--space-2xs);
-  padding: var(--space-3xs) var(--space-2xs);
-  font-size: 0.78em;
+  padding: 2px var(--space-2xs);
+  font-size: 0.72em;
   font-family: var(--font-sans);
-  background: var(--color-bg-subtle);
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  background: transparent;
   color: var(--color-fg-muted);
-  border: 1px solid var(--color-border-strong);
-  border-radius: 4px;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
   cursor: pointer;
   opacity: 0;
-  transition: opacity 120ms ease;
+  transition: opacity 120ms ease, color 120ms ease, background-color 120ms ease, border-color 120ms ease;
 }
 .ov-prose pre:hover .ov-copy-btn,
 .ov-copy-btn:focus-visible {
   opacity: 1;
+}
+.ov-copy-btn:hover {
+  color: var(--color-fg);
+  background: var(--color-bg-subtle);
+  border-color: var(--color-border);
 }
 /* Page meta line (reading time + last-modified) above the article */
 .ov-page-meta {
@@ -855,7 +893,8 @@ body.ov-menu-open {
 }
 
 .ov-copy-btn.is-copied {
-  color: var(--color-accent);
+  color: var(--callout-tip-fg);
+  opacity: 1;
 }
 
 /* Right ToC */

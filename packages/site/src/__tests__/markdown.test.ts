@@ -58,6 +58,16 @@ describe('renderMarkdown', () => {
     );
   });
 
+  it('tags highlighted code blocks with data-language so the template can show the eyebrow label', async () => {
+    const { html: ts } = await renderMarkdown(['```typescript', 'let n = 1;', '```'].join('\n'));
+    expect(ts).toContain('data-language="ts"');
+    expect(ts).toContain('data-copy="true"');
+    const { html: bash } = await renderMarkdown(['```bash', 'echo hi', '```'].join('\n'));
+    expect(bash).toContain('data-language="bash"');
+    const { html: text } = await renderMarkdown(['```', 'plain', '```'].join('\n'));
+    expect(text).not.toContain('data-language=');
+  });
+
   it('syntax-highlights fenced code blocks via shiki dual themes (default github)', async () => {
     const { html } = await renderMarkdown(
       ['```typescript', 'const x: number = 42;', '```'].join('\n'),

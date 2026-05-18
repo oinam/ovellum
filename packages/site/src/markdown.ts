@@ -267,9 +267,36 @@ function highlightCodeBlocks(
     });
     const replacement = hast.children[0];
     if (!replacement || replacement.type !== 'element') return;
+    // Tag the rendered <pre> with its language so CSS can surface a
+    // subtle eyebrow label (top-right of every fenced block). Also
+    // tag a `data-copy` attribute that the client-side copy button
+    // hook (script.js) looks for to know which blocks are eligible.
+    replacement.properties = {
+      ...(replacement.properties ?? {}),
+      'data-language': LANG_LABEL[lang as (typeof SHIKI_LANGS)[number]] ?? lang,
+      'data-copy': 'true',
+    };
     (parent.children as ElementContent[])[index] = replacement;
   });
 }
+
+/**
+ * Display labels for the shiki language IDs we support. Lowercase,
+ * short — sits in the corner of the code block as a quiet eyebrow.
+ */
+const LANG_LABEL: Record<(typeof SHIKI_LANGS)[number], string> = {
+  typescript: 'ts',
+  tsx: 'tsx',
+  javascript: 'js',
+  jsx: 'jsx',
+  json: 'json',
+  bash: 'bash',
+  shell: 'shell',
+  markdown: 'md',
+  yaml: 'yaml',
+  html: 'html',
+  css: 'css',
+};
 
 function readClassNames(node: Element): string[] {
   const cn = node.properties?.className;
