@@ -83,6 +83,46 @@ content/
 `order` is a list of slugs (file or subdirectory names without `.md`).
 Anything not listed sorts alphabetically after the explicit set.
 
+## Callouts
+
+Five labelled callout types — `[!NOTE]`, `[!TIP]`, `[!IMPORTANT]`,
+`[!WARNING]`, `[!CAUTION]` — render by writing GitHub-flavored alert
+blockquotes:
+
+```markdown
+> [!NOTE]
+> Background context that's useful but skippable.
+
+> [!TIP]
+> A shortcut or a sharper way of doing the thing above.
+
+> [!IMPORTANT]
+> Something the reader has to internalize before going further.
+
+> [!WARNING]
+> Footgun. Action causes mild damage.
+
+> [!CAUTION]
+> Footgun. Action causes severe damage. Data loss, broken state, etc.
+```
+
+Each renders as a panel with a coloured left rule, a small uppercase
+label, and the body content. Mix any inline Markdown inside —
+links, code spans, even nested lists.
+
+> [!NOTE]
+> Like this one. The label disappears when the syntax matches; if it
+> doesn't, you get a plain blockquote — handy for short pull-quotes.
+
+> [!TIP]
+> Drop the `[!TYPE]` marker on its own line, then leave a blank
+> blockquote line before the body, if you want a clean visual break in
+> the source.
+
+> [!WARNING]
+> Use callouts sparingly — three per page is plenty. They're meant to
+> interrupt the reader, so each one should earn the interruption.
+
 ## Adding the right-side ToC
 
 There's nothing to enable — the right column populates automatically from

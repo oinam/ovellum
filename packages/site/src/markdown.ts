@@ -132,6 +132,10 @@ export async function renderMarkdown(
     .use(rehypeRaw)
     // Sanitize BEFORE shiki — see SANITIZE_SCHEMA comment above.
     .use(rehypeSanitize, SANITIZE_SCHEMA)
+    // Transform `> [!NOTE]` etc. blockquotes into ov-callout panels. Runs
+    // post-sanitize so the className we add is trusted — the HAST we emit
+    // here doesn't go back through sanitization.
+    .use(rehypeCallouts)
     .use(rehypeSlug)
     .use(rehypeAutolinkHeadings, {
       // `append` keeps the heading text flush-left along with the prose;
@@ -150,6 +154,80 @@ export async function renderMarkdown(
     .process(md);
 
   return { html: String(file), headings };
+}
+
+const CALLOUT_TYPES = ['note', 'tip', 'important', 'warning', 'caution'] as const;
+type CalloutType = (typeof CALLOUT_TYPES)[number];
+const CALLOUT_RE = /^\s*\[!(NOTE|TIP|IMPORTANT|WARNING|CAUTION)\][^\S\n]*\n?/i;
+const CALLOUT_LABEL: Record<CalloutType, string> = {
+  note: 'Note',
+  tip: 'Tip',
+  important: 'Important',
+  warning: 'Warning',
+  caution: 'Caution',
+};
+
+/**
+ * remark/rehype plugin that turns GitHub-flavored alert blockquotes into
+ * `.ov-callout` panels.
+ *
+ *   > [!NOTE]
+ *   > Body content.
+ *
+ * becomes
+ *
+ *   <div class="ov-callout ov-callout--note">
+ *     <div class="ov-callout-label">Note</div>
+ *     <p>Body content.</p>
+ *   </div>
+ *
+ * The blockquote must open with `[!TYPE]` on its first text node. Anything
+ * else is left as a normal blockquote.
+ */
+function rehypeCallouts() {
+  return (tree: Root): void => {
+    visit(tree, 'element', (node: Element) => {
+      if (node.tagName !== 'blockquote') return;
+      const firstP = node.children.find(
+        (c): c is Element => c.type === 'element' && c.tagName === 'p',
+      );
+      if (!firstP) return;
+      const firstText = firstP.children[0];
+      if (!firstText || firstText.type !== 'text') return;
+      const m = CALLOUT_RE.exec(firstText.value);
+      if (!m) return;
+
+      const type = m[1]!.toLowerCase() as CalloutType;
+      firstText.value = firstText.value.slice(m[0].length);
+      // If stripping the marker left only whitespace, drop the paragraph
+      // (and any line break that preceded the body).
+      const stripped = firstText.value.replace(/^\s+/, '');
+      if (
+        firstP.children.length === 1 &&
+        firstText.type === 'text' &&
+        stripped.length === 0
+      ) {
+        node.children = node.children.filter((c) => c !== firstP);
+      } else {
+        // Keep the paragraph but normalize the leading newline / whitespace
+        // we left behind on the first text node.
+        firstText.value = stripped;
+      }
+
+      node.tagName = 'div';
+      node.properties = {
+        ...(node.properties ?? {}),
+        className: ['ov-callout', `ov-callout--${type}`],
+      };
+      const label: Element = {
+        type: 'element',
+        tagName: 'div',
+        properties: { className: ['ov-callout-label'] },
+        children: [{ type: 'text', value: CALLOUT_LABEL[type] }],
+      };
+      node.children = [label, ...node.children];
+    });
+  };
 }
 
 function collectHeadings(tree: Root, into: Heading[]): void {

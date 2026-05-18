@@ -14,6 +14,43 @@ describe('renderMarkdown', () => {
     expect(headings.map((h) => h.depth)).toEqual([2, 3, 2]);
   });
 
+  it('transforms `> [!NOTE]` blockquotes into ov-callout panels', async () => {
+    const { html } = await renderMarkdown(['> [!NOTE]', '> Body text here.', ''].join('\n'));
+    expect(html).toContain('<div class="ov-callout ov-callout--note">');
+    expect(html).toContain('<div class="ov-callout-label">Note</div>');
+    expect(html).toContain('Body text here.');
+    expect(html).not.toContain('[!NOTE]');
+    expect(html).not.toContain('<blockquote');
+  });
+
+  it('supports all five GFM alert types', async () => {
+    for (const type of ['note', 'tip', 'important', 'warning', 'caution']) {
+      const { html } = await renderMarkdown([`> [!${type.toUpperCase()}]`, '> Body.', ''].join('\n'));
+      expect(html).toContain(`ov-callout--${type}`);
+      expect(html).toContain('ov-callout-label');
+    }
+  });
+
+  it('handles a callout label on its own line followed by a separate paragraph', async () => {
+    const { html } = await renderMarkdown(
+      ['> [!WARNING]', '>', '> Heads up — this is non-trivial.', ''].join('\n'),
+    );
+    expect(html).toContain('ov-callout--warning');
+    expect(html).toContain('Heads up — this is non-trivial.');
+    expect(html).not.toContain('[!WARNING]');
+  });
+
+  it('is case-insensitive on the alert type token', async () => {
+    const { html } = await renderMarkdown(['> [!Tip]', '> Casual case.', ''].join('\n'));
+    expect(html).toContain('ov-callout--tip');
+  });
+
+  it('leaves a regular blockquote alone', async () => {
+    const { html } = await renderMarkdown('> just a quote\n');
+    expect(html).toContain('<blockquote');
+    expect(html).not.toContain('ov-callout');
+  });
+
   it('appends a clickable anchor link to each heading (heading text stays flush-left)', async () => {
     const { html } = await renderMarkdown('## Hello\nbody');
     expect(html).toMatch(

@@ -102,7 +102,7 @@ Anchor IDs: done `{relativeFilePath}::{symbolPath}` per [`DESIGN.md` §8.3](./DE
 | Enum template (members with values)                                        | done     |                                                    |
 | Variable / const template                                                  | deferred |                                                    |
 | Anchor comments `<!-- ovellum:anchor id="…" generated="…" -->`             | done     | On every top-level + child node.                   |
-| `@deprecated` callout                                                      | partial  | Plain blockquote. Styled callout deferred.         |
+| `@deprecated` callout                                                      | partial  | Plain blockquote. Could wrap in `> [!WARNING]` for the rendered site to pick up the styled callout. |
 | `@since` / `@see` rendering                                                | deferred |                                                    |
 | Sidebar / `_index.md` generator                                            | deferred |                                                    |
 | MDX mode (JSX-in-`@example` detection)                                     | deferred |                                                    |
@@ -197,6 +197,7 @@ Powers `mode: 'manual'`. Design lives in [`SITE.md`](./SITE.md).
 | Print stylesheet                                                                   | done     | `@media print` hides chrome (topbar, sidebar, ToC, search, prev/next, edit link), widens content to full width, prints external link URLs inline, and avoids page-breaks inside code blocks. |
 | Reading time + last-modified                                                       | done     | Per-page meta line above the article: `N min read · Updated YYYY-MM-DD`. Word count strips code blocks/HTML; ~200 wpm. Date prefers `git log -1`, falls back to fs mtime. Toggle each half via `site.pageMeta.{readingTime,lastModified}`. |
 | RSS feed (`feed.xml`)                                                              | done     | Auto-generated when `site.baseUrl` is set. Items sorted by `lastModified` desc, capped at 20; `/` and `/404/` excluded; channel-level `<atom:link rel="self">`; head `<link rel="alternate">` on every page for auto-discovery. |
+| Callouts (GitHub alert syntax)                                                     | done     | `> [!NOTE]`, `> [!TIP]`, `> [!IMPORTANT]`, `> [!WARNING]`, `> [!CAUTION]` blockquotes render as labelled panels via a rehype plugin. Editorial-calm styling: 3px left rule + uppercase eyebrow + faint type-color tint. Tokens (`--callout-{type}-{fg,bg}`) live in style.css and pull from STYLES.md palette ramps via `pnpm extract-tokens`. |
 | MDX rendering                                                                      | deferred | `.md` only in v1.                                                                                                                                                                              |
 | Multiple bundled templates                                                         | deferred | One default for now.                                                                                                                                                                           |
 | Live reload                                                                        | deferred | Pairs with `ovellum watch`.                                                                                                                                                                    |
@@ -206,7 +207,7 @@ Powers `mode: 'manual'`. Design lives in [`SITE.md`](./SITE.md).
 piece is in, and how to change the design — see
 [`SITE.md` §9a](./SITE.md#9a-template-anatomy).
 
-**Tests:** 81 vitest cases in `@ovellum/site` (markdown incl. sanitization, nav, template, landing, sitemap, rss, url helpers, page-meta incl. command-injection resistance, icons) plus 8 in `ovellum` (CLI URL-scheme allowlist).
+**Tests:** 88 vitest cases in `@ovellum/site` (markdown incl. sanitization + callouts, nav, template, landing, sitemap, rss, url helpers, page-meta incl. command-injection resistance, icons) plus 8 in `ovellum` (CLI URL-scheme allowlist).
 
 **Security:** sanitization policy, shell-out hardening, and URL-scheme allowlist are documented in [`SECURITY.md`](./SECURITY.md).
 

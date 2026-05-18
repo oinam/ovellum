@@ -254,6 +254,23 @@ the bottom of a landing page, above the footer. Configured under
 items with an `image` render as `<img>`s, items without render as
 text badges.
 
+### Callout
+
+Labelled prose panel for asides, tips, warnings, etc. Written with
+GitHub-flavored alert syntax inside a blockquote — the first line is
+`[!TYPE]`, the rest is the body:
+
+```markdown
+> [!WARNING]
+> Watch out for this footgun.
+```
+
+Five types are supported: `NOTE`, `TIP`, `IMPORTANT`, `WARNING`,
+`CAUTION`. A rehype plugin in `@ovellum/site` rewrites the blockquote
+into `<div class="ov-callout ov-callout--{type}">` with an inline
+uppercase label; styling pulls from `--callout-{type}-{fg,bg}` Tier-2
+tokens. Plain blockquotes (no `[!TYPE]` marker) are left alone.
+
 ### Footer nav (`site.footerNav`)
 
 Right-column links in the page footer. Configured as an array of

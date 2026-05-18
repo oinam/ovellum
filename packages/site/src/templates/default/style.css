@@ -36,6 +36,24 @@
   --color-blue-700: oklch(48.8% 0.243 264.38);
   --color-blue-900: oklch(37.9% 0.146 265.52);
 
+  /* Tier 1 — status accents (callouts) */
+  --color-green-50: oklch(98.2% 0.018 155.83);
+  --color-green-300: oklch(87.1% 0.15 154.45);
+  --color-green-700: oklch(52.7% 0.154 150.07);
+  --color-green-950: oklch(26.6% 0.065 152.93);
+  --color-amber-50: oklch(98.7% 0.022 95.28);
+  --color-amber-300: oklch(87.9% 0.169 91.61);
+  --color-amber-800: oklch(47.3% 0.137 46.2);
+  --color-amber-950: oklch(27.9% 0.077 45.64);
+  --color-red-50: oklch(97.1% 0.013 17.38);
+  --color-red-300: oklch(80.8% 0.114 19.57);
+  --color-red-700: oklch(50.5% 0.213 27.52);
+  --color-red-950: oklch(25.8% 0.092 26.05);
+  --color-violet-50: oklch(96.9% 0.016 293.76);
+  --color-violet-300: oklch(81.1% 0.111 293.57);
+  --color-violet-700: oklch(49.1% 0.27 292.58);
+  --color-violet-950: oklch(28.3% 0.141 291.09);
+
   /* Fonts */
   --font-sans:
     ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
@@ -82,6 +100,18 @@
   --color-link-hover: var(--color-blue-700);
   --color-code-bg: var(--color-zinc-100);
 
+  /* Callout types — GitHub alert vocabulary, editorial-calm palette */
+  --callout-note-fg: var(--color-blue-700);
+  --callout-note-bg: var(--color-blue-50);
+  --callout-tip-fg: var(--color-green-700);
+  --callout-tip-bg: var(--color-green-50);
+  --callout-important-fg: var(--color-violet-700);
+  --callout-important-bg: var(--color-violet-50);
+  --callout-warning-fg: var(--color-amber-800);
+  --callout-warning-bg: var(--color-amber-50);
+  --callout-caution-fg: var(--color-red-700);
+  --callout-caution-bg: var(--color-red-50);
+
   /* Deliberate deviations from STYLES.md:
      - shadows inlined (no shared --shadow-color token in this build)
      - body line-height 1.55 (vs spec 1.5) — closer to Stripe density at our
@@ -123,6 +153,16 @@ body.ov-body-landing {
     --color-link: var(--color-blue-400);
     --color-link-hover: var(--color-blue-300);
     --color-code-bg: var(--color-zinc-900);
+    --callout-note-fg: var(--color-blue-300);
+    --callout-note-bg: var(--color-blue-950);
+    --callout-tip-fg: var(--color-green-300);
+    --callout-tip-bg: var(--color-green-950);
+    --callout-important-fg: var(--color-violet-300);
+    --callout-important-bg: var(--color-violet-950);
+    --callout-warning-fg: var(--color-amber-300);
+    --callout-warning-bg: var(--color-amber-950);
+    --callout-caution-fg: var(--color-red-300);
+    --callout-caution-bg: var(--color-red-950);
   }
 }
 
@@ -141,6 +181,16 @@ body.ov-body-landing {
   --color-link: var(--color-blue-400);
   --color-link-hover: var(--color-blue-300);
   --color-code-bg: var(--color-zinc-900);
+  --callout-note-fg: var(--color-blue-300);
+  --callout-note-bg: var(--color-blue-950);
+  --callout-tip-fg: var(--color-green-300);
+  --callout-tip-bg: var(--color-green-950);
+  --callout-important-fg: var(--color-violet-300);
+  --callout-important-bg: var(--color-violet-950);
+  --callout-warning-fg: var(--color-amber-300);
+  --callout-warning-bg: var(--color-amber-950);
+  --callout-caution-fg: var(--color-red-300);
+  --callout-caution-bg: var(--color-red-950);
 }
 
 /* Reset + base */
@@ -555,6 +605,57 @@ body.ov-menu-open {
   padding-inline-start: var(--space-s);
   border-inline-start: 3px solid var(--color-border-strong);
   color: var(--color-fg-muted);
+}
+
+/* Callouts (GitHub alert syntax: > [!NOTE] / [!TIP] / [!IMPORTANT] /
+   [!WARNING] / [!CAUTION]). Rendered as a labelled panel with a 3px
+   left rule in the type color, a faint type-color background, and an
+   uppercase eyebrow label. Editorial-calm: thin rule, restrained tint,
+   no icon — the label carries the meaning. */
+.ov-prose .ov-callout {
+  --_fg: var(--color-fg);
+  --_bg: var(--color-bg-subtle);
+  margin-block: 0 var(--space-s);
+  padding: var(--space-s) var(--space-m);
+  border-inline-start: 3px solid var(--_fg);
+  background: var(--_bg);
+  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+  color: var(--color-fg);
+}
+.ov-prose .ov-callout--note {
+  --_fg: var(--callout-note-fg);
+  --_bg: var(--callout-note-bg);
+}
+.ov-prose .ov-callout--tip {
+  --_fg: var(--callout-tip-fg);
+  --_bg: var(--callout-tip-bg);
+}
+.ov-prose .ov-callout--important {
+  --_fg: var(--callout-important-fg);
+  --_bg: var(--callout-important-bg);
+}
+.ov-prose .ov-callout--warning {
+  --_fg: var(--callout-warning-fg);
+  --_bg: var(--callout-warning-bg);
+}
+.ov-prose .ov-callout--caution {
+  --_fg: var(--callout-caution-fg);
+  --_bg: var(--callout-caution-bg);
+}
+.ov-prose .ov-callout-label {
+  font-size: 0.74em;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--_fg);
+  margin-block-end: var(--space-2xs);
+}
+.ov-prose .ov-callout > p {
+  margin-block: 0;
+}
+.ov-prose .ov-callout > p + p,
+.ov-prose .ov-callout > * + * {
+  margin-block-start: var(--space-2xs);
 }
 .ov-prose ul,
 .ov-prose ol {
