@@ -812,6 +812,8 @@ body.ov-menu-open {
    landing pages --page-max drops to 1100, the chrome follows. */
 .ov-footer {
   max-inline-size: var(--page-max);
+  inline-size: 100%;
+  box-sizing: border-box;
   margin: var(--space-2xl) auto 0;
   padding: var(--space-m);
   border-block-start: 1px solid var(--color-border);
