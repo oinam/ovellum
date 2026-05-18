@@ -805,27 +805,28 @@ body.ov-menu-open {
 
 /* Footer
    ===
-   Two-column layout: copyright/build-date on the left, configurable
-   nav (social / contact icons + text links) on the right. Outer
-   boundary tracks the topbar + layout via the shared --page-max
-   token so all three rails sit on the same vertical gutters — on
-   landing pages --page-max drops to 1100, the chrome follows. */
+   Layout mirrors `.ov-topbar` exactly: same grid container, same
+   max-inline-size: var(--page-max), same margin-inline: auto + inline-size: 100%
+   pattern, same horizontal padding. The only differences are vertical
+   padding (more breathing room) and the border (top instead of bottom).
+   Result: the topbar, content, and footer rails sit on identical
+   vertical gutters at every viewport. */
 .ov-footer {
-  max-inline-size: var(--page-max);
-  inline-size: 100%;
-  box-sizing: border-box;
-  margin: var(--space-2xl) auto 0;
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: var(--space-m);
   padding: var(--space-m);
+  max-inline-size: var(--page-max);
+  margin-inline: auto;
+  margin-block-start: var(--space-2xl);
+  inline-size: 100%;
   border-block-start: 1px solid var(--color-border);
   color: var(--color-fg-subtle);
   font-size: 0.84em;
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--space-s);
 }
 .ov-footer-left {
+  grid-column: 1;
   display: inline-flex;
   align-items: baseline;
   flex-wrap: wrap;
@@ -833,6 +834,7 @@ body.ov-menu-open {
   min-inline-size: 0;
 }
 .ov-footer-right {
+  grid-column: 3;
   display: inline-flex;
   align-items: center;
   flex-wrap: wrap;
@@ -879,6 +881,14 @@ body.ov-menu-open {
 }
 @media (max-width: 720px) {
   .ov-footer {
+    grid-template-columns: 1fr;
+    gap: var(--space-2xs);
+  }
+  .ov-footer-left {
+    grid-column: 1;
+  }
+  .ov-footer-right {
+    grid-column: 1;
     justify-content: flex-start;
   }
 }
