@@ -1,0 +1,76 @@
+# Lighthouse audit — builds the website on each PR and runs Lighthouse
+# against the static output. Informational only: it does NOT gate merges.
+# Scores fluctuate, and a single regression is rarely meaningful; we
+# upload the full HTML report as an artifact and surface a one-line
+# summary in the action log.
+#
+# Two URLs are audited:
+#   /              — landing
+#   /getting-started/ — representative content page
+#
+# To tighten this into a hard gate later, add an `assert:` block in
+# `.lighthouserc.json` and remove `|| true` from the LHCI step.
+
+name: Lighthouse
+
+on:
+  pull_request:
+    paths:
+      - 'website/**'
+      - 'packages/site/**'
+      - 'packages/cli/**'
+      - 'package.json'
+      - 'pnpm-lock.yaml'
+      - '.github/workflows/lighthouse.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: lighthouse-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  lighthouse:
+    name: Audit built site
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build packages
+        run: pnpm exec turbo run build --filter='ovellum...'
+
+      - name: Build website
+        run: node packages/cli/dist/index.js build --cwd website
+
+      - name: Run Lighthouse CI
+        run: |
+          npx --yes @lhci/cli@0.13.x autorun \
+            --collect.staticDistDir=./website/dist \
+            --collect.url=http://localhost/index.html \
+            --collect.url=http://localhost/getting-started/index.html \
+            --collect.numberOfRuns=3 \
+            --upload.target=temporary-public-storage \
+            || true
+
+      - name: Upload report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: lighthouse-report
+          path: .lighthouseci
+          if-no-files-found: ignore
+          retention-days: 14

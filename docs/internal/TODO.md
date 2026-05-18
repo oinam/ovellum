@@ -321,7 +321,7 @@ deploy design in [`DEPLOY.md`](./DEPLOY.md).
 - [x] `reference/security.md` public page (HTML sanitization, command-injection resistance, URL allowlist)
 - [x] `guides/development.md` (init → dev → check → build workflow)
 - [x] RSS auto-emit
-- [ ] Lighthouse CI workflow
+- [x] Lighthouse CI workflow — informational only; uploads report as PR artifact, doesn't gate merges
 
 > Phase 4.6 v0 (2026-05-16): the site builds locally (`pnpm -w run build:website`)
 > with 15 pages and zero warnings. Deploy workflow committed.

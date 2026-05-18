@@ -256,7 +256,7 @@ GitHub Pages on every push to `main`. Lives in
 | `site.basePath` for subpath hosting         | deferred | Needed only if hosting from `<user>.github.io/<repo>/` instead of a custom domain.                                 |
 | Pagefind search integration                 | deferred | Post-build indexer + ~50 KB client. Separate slice.                                                                |
 | Sitemap.xml / RSS                           | done     | Both auto-emit when `site.baseUrl` is set. RSS items sorted by lastmod desc, capped at 20.                          |
-| Lighthouse CI                               | deferred |                                                                                                                    |
+| Lighthouse CI                               | done     | `.github/workflows/lighthouse.yml` runs `@lhci/cli autorun` against the built site on each PR; report uploaded as artifact. Informational only — no merge gate. |
 
 ---
 

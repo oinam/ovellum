@@ -185,9 +185,12 @@ identical regardless of host.
   working, check that the post-build step actually ran (look for
   `[website-postbuild] wrote dist/404.html` in the run log).
 
-## 9. Open follow-ups
+## 9. Shipped follow-ups
 
-- `site.basePath` config to support project-page hosting.
-- Pagefind search integration (post-build indexer + JS bundle).
-- Sitemap.xml + RSS feed generation.
-- Lighthouse CI run as a separate workflow.
+- `site.basePath` config to support project-page hosting — shipped.
+- Pagefind search integration (post-build indexer + JS bundle) — shipped.
+- Sitemap.xml + RSS feed generation — shipped (auto-emit when `site.baseUrl`
+  is set).
+- Lighthouse CI run as a separate workflow — shipped at
+  `.github/workflows/lighthouse.yml`; informational artifact upload only,
+  no merge gate.
