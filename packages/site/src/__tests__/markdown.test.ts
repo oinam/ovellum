@@ -45,6 +45,22 @@ describe('renderMarkdown', () => {
     expect(html).toContain('ov-callout--tip');
   });
 
+  it('renders GFM tables, strikethrough, and task lists', async () => {
+    const { html: table } = await renderMarkdown(
+      ['| H | V |', '| - | - |', '| a | 1 |', '| b | 2 |', ''].join('\n'),
+    );
+    expect(table).toContain('<table>');
+    expect(table).toContain('<th>H</th>');
+    expect(table).toContain('<td>a</td>');
+
+    const { html: strike } = await renderMarkdown('a ~~b~~ c\n');
+    expect(strike).toContain('<del>b</del>');
+
+    const { html: task } = await renderMarkdown(['- [x] done', '- [ ] open', ''].join('\n'));
+    expect(task).toContain('type="checkbox"');
+    expect(task).toMatch(/checked\b/);
+  });
+
   it('leaves a regular blockquote alone', async () => {
     const { html } = await renderMarkdown('> just a quote\n');
     expect(html).toContain('<blockquote');

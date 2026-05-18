@@ -686,6 +686,22 @@ body.ov-menu-open {
   color: var(--color-fg-subtle);
   font-variant-numeric: tabular-nums;
 }
+
+/* GFM task lists: kill the bullet, keep the checkbox tight to the text. */
+.ov-prose ul.contains-task-list {
+  list-style: none;
+  padding-inline-start: 0;
+}
+.ov-prose li.task-list-item {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5em;
+}
+.ov-prose li.task-list-item input[type='checkbox'] {
+  margin: 0;
+  accent-color: var(--color-accent);
+  transform: translateY(2px);
+}
 .ov-prose code:not(pre code) {
   font-family: var(--font-mono);
   background: var(--color-code-bg);

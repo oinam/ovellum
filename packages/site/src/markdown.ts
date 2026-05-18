@@ -1,5 +1,6 @@
 import { unified } from 'unified';
 import remarkParse from 'remark-parse';
+import remarkGfm from 'remark-gfm';
 import remarkRehype from 'remark-rehype';
 import rehypeRaw from 'rehype-raw';
 import rehypeSanitize, { defaultSchema, type Options as Schema } from 'rehype-sanitize';
@@ -123,6 +124,9 @@ export async function renderMarkdown(
 
   const file = await unified()
     .use(remarkParse)
+    // GFM enables tables, strikethrough, task lists, and literal autolinks
+    // — Markdown features people expect, none of which CommonMark includes.
+    .use(remarkGfm)
     .use(remarkRehype, { allowDangerousHtml: true })
     // rehype-raw parses `raw` HAST nodes (the literal HTML that survived
     // remark-rehype because of allowDangerousHtml) into real element nodes
