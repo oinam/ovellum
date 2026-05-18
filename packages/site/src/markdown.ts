@@ -140,6 +140,10 @@ export async function renderMarkdown(
     // post-sanitize so the className we add is trusted — the HAST we emit
     // here doesn't go back through sanitization.
     .use(rehypeCallouts)
+    // Wrap every `<table>` in `<div class="ov-table-wrap">` so a table
+    // wider than the prose column scrolls horizontally instead of
+    // blowing out the layout.
+    .use(rehypeTableWrap)
     .use(rehypeSlug)
     .use(rehypeAutolinkHeadings, {
       // `append` keeps the heading text flush-left along with the prose;
@@ -158,6 +162,36 @@ export async function renderMarkdown(
     .process(md);
 
   return { html: String(file), headings };
+}
+
+/**
+ * Wrap each top-level `<table>` in `<div class="ov-table-wrap">` so the
+ * CSS can put `overflow-x: auto` on the wrapper and let wide tables
+ * scroll horizontally without forcing the parent column to grow.
+ *
+ * Skips tables that are already inside an `.ov-table-wrap` (defensive
+ * — relevant if authors hand-wrap a table in raw HTML).
+ */
+function rehypeTableWrap() {
+  return (tree: Root): void => {
+    visit(tree, 'element', (node: Element, index, parent) => {
+      if (node.tagName !== 'table') return;
+      if (!parent || typeof index !== 'number') return;
+      if (
+        parent.type === 'element' &&
+        readClassNames(parent as Element).includes('ov-table-wrap')
+      ) {
+        return;
+      }
+      const wrapper: Element = {
+        type: 'element',
+        tagName: 'div',
+        properties: { className: ['ov-table-wrap'] },
+        children: [node],
+      };
+      (parent.children as ElementContent[])[index] = wrapper;
+    });
+  };
 }
 
 const CALLOUT_TYPES = ['note', 'tip', 'important', 'warning', 'caution'] as const;

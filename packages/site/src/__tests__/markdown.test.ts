@@ -49,7 +49,7 @@ describe('renderMarkdown', () => {
     const { html: table } = await renderMarkdown(
       ['| H | V |', '| - | - |', '| a | 1 |', '| b | 2 |', ''].join('\n'),
     );
-    expect(table).toContain('<table>');
+    expect(table).toContain('<div class="ov-table-wrap"><table>');
     expect(table).toContain('<th>H</th>');
     expect(table).toContain('<td>a</td>');
 
