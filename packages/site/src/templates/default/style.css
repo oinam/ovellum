@@ -1269,8 +1269,8 @@ body.ov-body-landing {
   position: relative;
   isolation: isolate;
   text-align: center;
-  padding-block: clamp(var(--space-2xl), 12vw, var(--space-3xl))
-                 clamp(var(--space-xl), 8vw, var(--space-2xl));
+  padding-block: clamp(var(--space-2xl), 11vw, var(--space-3xl))
+                 clamp(var(--space-l), 7vw, var(--space-2xl));
   margin-inline: calc(-1 * var(--space-m));
   overflow: hidden;
 }
@@ -1283,29 +1283,30 @@ body.ov-body-landing {
   z-index: -1;
 }
 .ov-hero::before {
-  /* 24×24 grid of 1px dots in fg-subtle (currentColor would require
-     `color`, but we'd rather not inherit). Mask to fade at the edges. */
-  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'><circle cx='12' cy='12' r='1' fill='%23000' fill-opacity='0.18'/></svg>");
-  background-size: 24px 24px;
+  /* 28×28 grid of 1px dots in fg-subtle (lower density and lower alpha
+     than the original — editorial-calm wants texture you barely notice
+     until you look for it). Mask fades at the edges. */
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='28' height='28' viewBox='0 0 28 28'><circle cx='14' cy='14' r='1' fill='%23000' fill-opacity='0.12'/></svg>");
+  background-size: 28px 28px;
   background-repeat: repeat;
-  -webkit-mask-image: radial-gradient(ellipse 80% 70% at 50% 40%, black 0%, transparent 80%);
-          mask-image: radial-gradient(ellipse 80% 70% at 50% 40%, black 0%, transparent 80%);
-  opacity: 0.9;
+  -webkit-mask-image: radial-gradient(ellipse 75% 65% at 50% 40%, black 0%, transparent 80%);
+          mask-image: radial-gradient(ellipse 75% 65% at 50% 40%, black 0%, transparent 80%);
 }
 :root[data-theme='dark'] .ov-hero::before {
-  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'><circle cx='12' cy='12' r='1' fill='%23fff' fill-opacity='0.18'/></svg>");
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='28' height='28' viewBox='0 0 28 28'><circle cx='14' cy='14' r='1' fill='%23fff' fill-opacity='0.14'/></svg>");
 }
 @media (prefers-color-scheme: dark) {
   :root[data-theme='auto'] .ov-hero::before {
-    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'><circle cx='12' cy='12' r='1' fill='%23fff' fill-opacity='0.18'/></svg>");
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='28' height='28' viewBox='0 0 28 28'><circle cx='14' cy='14' r='1' fill='%23fff' fill-opacity='0.14'/></svg>");
   }
 }
 .ov-hero::after {
-  /* Spotlight: a soft accent-tinted ellipse, low alpha, no hard edges. */
+  /* Spotlight: softer accent ellipse — pulled the saturation down so the
+     hero reads as "tinted air" rather than "branded panel". */
   background: radial-gradient(
-    ellipse 50% 38% at 50% 35%,
-    color-mix(in oklch, var(--color-accent) 22%, transparent) 0%,
-    transparent 70%
+    ellipse 48% 36% at 50% 36%,
+    color-mix(in oklch, var(--color-accent) 14%, transparent) 0%,
+    transparent 72%
   );
 }
 .ov-hero-title {
@@ -1360,51 +1361,50 @@ body.ov-body-landing {
 .ov-cta--secondary {
   background: transparent;
   color: var(--color-fg);
-  border: 1px solid var(--color-border-strong);
+  border: 1px solid var(--color-border);
 }
 .ov-cta--secondary:hover {
-  background: var(--color-bg-subtle);
-  border-color: var(--color-fg-subtle);
+  background: transparent;
+  border-color: var(--color-fg);
   color: var(--color-fg);
 }
 
-/* Feature grid */
+/* Feature grid — editorial-calm: no cards, no fills, no rounded corners.
+   Each block sits under a thin top rule with the title and description
+   stacked beneath. Reads as a structured list of features rather than a
+   Mintlify-style card array. */
 .ov-feature-grid-wrap {
-  margin-block: var(--space-xl) var(--space-l);
+  margin-block: var(--space-2xl) var(--space-xl);
 }
 .ov-feature-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-  gap: var(--space-m);
+  gap: var(--space-l) var(--space-l);
 }
 .ov-feature-card {
-  background: var(--color-bg-subtle);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg);
-  padding: var(--space-m);
   display: flex;
   flex-direction: column;
-  gap: var(--space-2xs);
-  transition: border-color 120ms ease;
-}
-.ov-feature-card:hover {
-  border-color: var(--color-border-strong);
+  gap: var(--space-3xs);
+  padding-block-start: var(--space-s);
+  border-block-start: 1px solid var(--color-border-strong);
 }
 .ov-feature-icon {
   font-size: var(--font-size-2);
   line-height: 1;
+  color: var(--color-fg-subtle);
 }
 .ov-feature-title {
   margin: 0;
   font-size: var(--font-size-1);
-  line-height: 1.2;
+  line-height: 1.25;
   font-weight: 600;
+  letter-spacing: -0.01em;
 }
 .ov-feature-description {
   margin: 0;
   color: var(--color-fg-muted);
   font-size: var(--font-size-0);
-  line-height: 1.5;
+  line-height: 1.6;
 }
 
 /* Pitch section (from _landing.md prose body) */
@@ -1416,7 +1416,7 @@ body.ov-body-landing {
 .ov-pitch-inner {
   max-inline-size: 60ch;
   margin-inline: auto;
-  font-size: var(--font-size-0);
+  font-size: var(--font-size-1);
   line-height: 1.65;
   color: var(--color-fg-muted);
 }
@@ -1448,11 +1448,11 @@ body.ov-body-landing {
   text-align: center;
 }
 .ov-trust-label {
-  font-size: 0.78em;
+  font-size: 0.72em;
   text-transform: uppercase;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.1em;
   color: var(--color-fg-subtle);
-  margin-block: 0 var(--space-s);
+  margin-block: 0 var(--space-m);
   font-weight: 600;
 }
 .ov-trust-items {
@@ -1460,12 +1460,14 @@ body.ov-body-landing {
   flex-wrap: wrap;
   justify-content: center;
   align-items: center;
-  gap: var(--space-l);
+  gap: var(--space-xl);
 }
 .ov-trust-item {
-  color: var(--color-fg-muted);
+  color: var(--color-fg-subtle);
   text-decoration: none;
   font-weight: 500;
+  font-size: 0.95em;
+  transition: color 120ms ease;
 }
 .ov-trust-item:hover {
   color: var(--color-fg);
