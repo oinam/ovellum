@@ -97,6 +97,13 @@
   --sidebar-w: 240px;
   --toc-w: 200px;
   --content-max: 66ch;
+  /* Outer page boundary shared by the topbar, main content, and footer.
+     Pages can override it on `body` (e.g. landing tightens to 1100). */
+  --page-max: 1320px;
+}
+
+body.ov-body-landing {
+  --page-max: 1100px;
 }
 
 /* Dark theme — auto + explicit */
@@ -184,7 +191,7 @@ a:hover {
   align-items: center;
   gap: var(--space-m);
   padding: var(--space-2xs) var(--space-m);
-  max-inline-size: 1320px;
+  max-inline-size: var(--page-max);
   margin-inline: auto;
   inline-size: 100%;
   border-block-end: 1px solid var(--color-border);
@@ -440,7 +447,7 @@ body.ov-menu-open {
   display: grid;
   grid-template-columns: var(--sidebar-w) minmax(0, 1fr) var(--toc-w);
   gap: var(--space-l);
-  max-inline-size: 1320px;
+  max-inline-size: var(--page-max);
   margin-inline: auto;
   padding: var(--space-m);
 }
@@ -800,11 +807,11 @@ body.ov-menu-open {
    ===
    Two-column layout: copyright/build-date on the left, configurable
    nav (social / contact icons + text links) on the right. Outer
-   boundary tracks the topbar + layout (max-inline-size: 1320px,
-   --space-m inline padding) so all three sit on the same vertical
-   gutters. */
+   boundary tracks the topbar + layout via the shared --page-max
+   token so all three rails sit on the same vertical gutters — on
+   landing pages --page-max drops to 1100, the chrome follows. */
 .ov-footer {
-  max-inline-size: 1320px;
+  max-inline-size: var(--page-max);
   margin: var(--space-2xl) auto 0;
   padding: var(--space-m);
   border-block-start: 1px solid var(--color-border);
@@ -994,7 +1001,7 @@ body.ov-body-landing {
 }
 
 .ov-landing {
-  max-inline-size: 1100px;
+  max-inline-size: var(--page-max);
   margin-inline: auto;
   padding: 0 var(--space-m) var(--space-l);
 }
