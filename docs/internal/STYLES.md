@@ -6,6 +6,24 @@ This document is the single source of truth for color, type, spacing, and rhythm
 
 ---
 
+## Auto-sync to `style.css`
+
+The site's default stylesheet (`packages/site/src/templates/default/style.css`)
+declares a curated subset of the tokens defined below. Those declarations sit
+between `/* @tokens:from-styles-md:start */` and
+`/* @tokens:from-styles-md:end */` markers and are kept in lockstep with this
+document by `scripts/extract-style-tokens.mjs`.
+
+- `pnpm extract-tokens` rewrites style.css with the latest values from this file.
+- `pnpm check-tokens` reports drift (exit 1) without writing — wire it into CI
+  if you want a hard gate.
+
+Only literal values (e.g. `oklch(...)`, `clamp(...)`, font stacks) are synced.
+Tier 2 remappings (`var(...)`) and deliberate deviations live outside the markers
+and are hand-edited.
+
+---
+
 ## 1. Principles
 
 1. **Tokens over literals.** Components reference `var(--…)`; never raw hex, px, or rem.

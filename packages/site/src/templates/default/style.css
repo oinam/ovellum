@@ -1,9 +1,20 @@
 /*
- * Ovellum default site theme — Tier 1 + Tier 2 token snapshot from
- * docs/internal/STYLES.md. Hand-ported; resync if the source moves.
+ * Ovellum default site theme.
+ *
+ * The Tier-1 palette, font stacks, type scale, space scale, and a few
+ * radii live between the `@tokens:from-styles-md` markers below and are
+ * auto-synced from `docs/internal/STYLES.md` by
+ * `scripts/extract-style-tokens.mjs`. Edit STYLES.md, then run
+ * `pnpm extract-tokens` to refresh; `pnpm check-tokens` reports drift.
+ *
+ * Tokens *outside* the markers are site-specific or deliberate
+ * deviations from STYLES.md — leave them alone unless you know the
+ * reason for the deviation.
  */
 
 :root {
+  /* @tokens:from-styles-md:start */
+
   /* Tier 1 — neutrals (zinc) */
   --color-zinc-50: oklch(98.5% 0.001 286.38);
   --color-zinc-100: oklch(96.7% 0.001 286.38);
@@ -15,7 +26,7 @@
   --color-zinc-900: oklch(21% 0.006 285.89);
   --color-zinc-950: oklch(14.1% 0.005 285.82);
 
-  /* Tier 1 — accents */
+  /* Tier 1 — accents (blue) */
   --color-blue-50: oklch(97% 0.014 254.6);
   --color-blue-200: oklch(88.2% 0.059 254.16);
   --color-blue-300: oklch(80.9% 0.105 251.81);
@@ -25,22 +36,6 @@
   --color-blue-700: oklch(48.8% 0.243 264.38);
   --color-blue-900: oklch(37.9% 0.146 265.52);
 
-  /* Tier 2 — semantic (default light) */
-  --color-bg: var(--color-zinc-50);
-  --color-bg-subtle: var(--color-zinc-100);
-  --color-bg-muted: var(--color-zinc-200);
-  --color-fg: var(--color-zinc-900);
-  --color-fg-muted: var(--color-zinc-700);
-  --color-fg-subtle: var(--color-zinc-500);
-  --color-border: var(--color-zinc-200);
-  --color-border-strong: var(--color-zinc-300);
-  --color-border-focus: var(--color-blue-500);
-  --color-accent: var(--color-blue-600);
-  --color-accent-hover: var(--color-blue-700);
-  --color-link: var(--color-blue-600);
-  --color-link-hover: var(--color-blue-700);
-  --color-code-bg: var(--color-zinc-100);
-
   /* Fonts */
   --font-sans:
     ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
@@ -49,10 +44,7 @@
     ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New',
     monospace;
 
-  /* Type scale (Major Third → Perfect Fourth)
-     Body deliberately runs 15→16px (tightened from the Utopia default
-     of 16→19px) — closer to Stripe/Mintlify density. Other steps in
-     the scale are unchanged. */
+  /* Type scale (Major Third → Perfect Fourth) — full Utopia values */
   --font-size-0: clamp(0.9375rem, 0.9158rem + 0.1087vw, 1rem);
   --font-size-1: clamp(1.25rem, 1.1341rem + 0.5793vw, 1.5831rem);
   --font-size-2: clamp(1.5625rem, 1.3721rem + 0.9522vw, 2.11rem);
@@ -68,17 +60,40 @@
   --space-l: clamp(2rem, 1.8696rem + 0.6522vw, 2.375rem);
   --space-xl: clamp(3rem, 2.8043rem + 0.9783vw, 3.5625rem);
 
-  /* Misc */
+  /* Radii (subset shipped) */
   --radius-md: 0.375rem;
   --radius-lg: 0.5rem;
+
+  /* @tokens:from-styles-md:end */
+
+  /* Tier 2 — semantic (default light) — site-specific remappings */
+  --color-bg: var(--color-zinc-50);
+  --color-bg-subtle: var(--color-zinc-100);
+  --color-bg-muted: var(--color-zinc-200);
+  --color-fg: var(--color-zinc-900);
+  --color-fg-muted: var(--color-zinc-700);
+  --color-fg-subtle: var(--color-zinc-500);
+  --color-border: var(--color-zinc-200);
+  --color-border-strong: var(--color-zinc-300);
+  --color-border-focus: var(--color-blue-500);
+  --color-accent: var(--color-blue-600);
+  --color-accent-hover: var(--color-blue-700);
+  --color-link: var(--color-blue-600);
+  --color-link-hover: var(--color-blue-700);
+  --color-code-bg: var(--color-zinc-100);
+
+  /* Deliberate deviations from STYLES.md:
+     - shadows inlined (no shared --shadow-color token in this build)
+     - body line-height 1.55 (vs spec 1.5) — closer to Stripe density at our
+       tightened 15→16px body size
+     - tight 1.2 (vs spec 1.15) — large headings need a hair more air */
   --shadow-sm: 0 1px 2px oklch(0% 0 0 / 0.08);
   --shadow-md: 0 4px 6px oklch(0% 0 0 / 0.08), 0 2px 4px oklch(0% 0 0 / 0.08);
-
   --leading-normal: 1.55;
   --leading-tight: 1.2;
   --leading-mono: 1.55;
 
-  /* Layout widths */
+  /* Layout widths (site-specific, not in STYLES.md) */
   --sidebar-w: 240px;
   --toc-w: 200px;
   --content-max: 70ch;

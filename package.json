@@ -28,7 +28,9 @@
     "format:check": "prettier --check \"**/*.{ts,tsx,js,jsx,json,md,yml,yaml}\"",
     "changeset": "changeset",
     "version-packages": "changeset version",
-    "release": "turbo run build && changeset publish"
+    "release": "turbo run build && changeset publish",
+    "extract-tokens": "node scripts/extract-style-tokens.mjs",
+    "check-tokens": "node scripts/extract-style-tokens.mjs --check"
   },
   "devDependencies": {
     "@changesets/cli": "^2.27.0",
