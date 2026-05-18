@@ -19,6 +19,13 @@
       { "label": "Glossary", "href": "/reference/glossary/" },
       { "label": "GitHub", "href": "https://github.com/oinam/ovellum", "external": true }
     ],
+    "footerNav": [
+      { "label": "Contributing", "href": "/contributing/" },
+      { "label": "Security", "href": "/reference/security/" },
+      { "label": "GitHub", "href": "https://github.com/oinam/ovellum", "icon": "github", "external": true },
+      { "label": "npm", "href": "https://www.npmjs.com/package/ovellum", "icon": "package", "external": true },
+      { "label": "RSS feed", "href": "/feed.xml", "icon": "rss" }
+    ],
     "landing": {
       "enabled": true,
       "docsHref": "/getting-started/",

@@ -254,6 +254,15 @@ the bottom of a landing page, above the footer. Configured under
 items with an `image` render as `<img>`s, items without render as
 text badges.
 
+### Footer nav (`site.footerNav`)
+
+Right-column links in the page footer. Configured as an array of
+`{ label, href, icon?, external? }` items. When `icon` matches a name
+in the SVG registry (`github`, `rss`, `mail`, `package`, …) the link
+renders as an icon-only chip with the label announced to screen
+readers; without `icon` the link renders as plain text. The footer's
+left column holds the `site.footer` string and the build date.
+
 ### RSS feed (`feed.xml`)
 
 An RSS 2.0 feed auto-emitted at `<output>/feed.xml` when `site.baseUrl`

@@ -164,6 +164,27 @@ export function validateUserConfig(input: unknown): OvellumUserConfig {
         }
       });
     }
+    if (s.footerNav !== undefined) {
+      if (!Array.isArray(s.footerNav)) {
+        throw new ConfigError('`site.footerNav` must be an array.');
+      }
+      s.footerNav.forEach((item, i) => {
+        const path = `site.footerNav[${i}]`;
+        if (!isPlainObject(item)) throw new ConfigError(`\`${path}\` must be an object.`);
+        if (typeof item.label !== 'string') {
+          throw new ConfigError(`\`${path}.label\` must be a string.`);
+        }
+        if (typeof item.href !== 'string') {
+          throw new ConfigError(`\`${path}.href\` must be a string.`);
+        }
+        if (item.icon !== undefined && typeof item.icon !== 'string') {
+          throw new ConfigError(`\`${path}.icon\` must be a string.`);
+        }
+        if (item.external !== undefined && typeof item.external !== 'boolean') {
+          throw new ConfigError(`\`${path}.external\` must be a boolean.`);
+        }
+      });
+    }
     if (s.pageMeta !== undefined) {
       if (!isPlainObject(s.pageMeta)) {
         throw new ConfigError('`site.pageMeta` must be an object.');

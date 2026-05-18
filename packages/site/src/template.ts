@@ -1,5 +1,5 @@
 import type { OvellumLandingConfig, OvellumSiteConfig } from '@ovellum/core';
-import { renderIcon } from './icons.js';
+import { ICONS, renderIcon, type IconName } from './icons.js';
 import type { Heading } from './markdown.js';
 import type { NavNode } from './nav.js';
 import { assetsPrefix as assetsPrefixFor, normaliseBasePath, siteUrl } from './url.js';
@@ -69,7 +69,7 @@ function renderShell(opts: ShellOptions): string {
 <body${opts.bodyClass ? ` class="${escapeAttr(opts.bodyClass)}"` : ''}>
   ${renderTopbar(opts.site, assets, opts.docsHref ? siteUrl(opts.docsHref, basePath) : undefined, searchEnabled, basePath)}
   ${opts.body}
-  ${renderFooter(opts.site, opts.generatedAt)}
+  ${renderFooter(opts.site, opts.generatedAt, basePath)}
   ${searchScripts}
   <script src="${escapeAttr(assets)}assets/ovellum.js" defer></script>
 </body>
@@ -131,9 +131,38 @@ function renderTopbar(
   </header>`;
 }
 
-function renderFooter(site: OvellumSiteConfig & { title: string }, generatedAt: string): string {
-  if (!site.footer) return '';
-  return `<footer class="ov-footer"><span>${escapeHtml(site.footer)}</span><span class="ov-footer-sep"> · </span><time datetime="${escapeAttr(generatedAt)}">${escapeHtml(generatedAt.slice(0, 10))}</time></footer>`;
+function renderFooter(
+  site: OvellumSiteConfig & { title: string },
+  generatedAt: string,
+  basePath: string,
+): string {
+  const items = site.footerNav ?? [];
+  const hasItems = items.length > 0;
+  if (!site.footer && !hasItems) return '';
+
+  const left = site.footer
+    ? `<div class="ov-footer-left"><span>${escapeHtml(site.footer)}</span><span class="ov-footer-sep">·</span><time datetime="${escapeAttr(generatedAt)}">${escapeHtml(generatedAt.slice(0, 10))}</time></div>`
+    : '<div class="ov-footer-left"></div>';
+
+  const right = hasItems
+    ? `<nav class="ov-footer-right" aria-label="Site links">${items.map((item) => renderFooterNavItem(item, basePath)).join('')}</nav>`
+    : '';
+
+  return `<footer class="ov-footer">${left}${right}</footer>`;
+}
+
+function renderFooterNavItem(
+  item: { label: string; href: string; icon?: string; external?: boolean },
+  basePath: string,
+): string {
+  const external = item.external === true || /^https?:\/\//i.test(item.href);
+  const href = external ? item.href : siteUrl(item.href, basePath);
+  const rel = external ? ' rel="noopener" target="_blank"' : '';
+  const iconName = item.icon as IconName | undefined;
+  if (iconName && iconName in ICONS) {
+    return `<a class="ov-footer-link ov-footer-link--icon" href="${escapeAttr(href)}"${rel} aria-label="${escapeAttr(item.label)}" title="${escapeAttr(item.label)}">${renderIcon(iconName, { class: 'ov-footer-icon', size: 18 })}<span class="ov-sr-only">${escapeHtml(item.label)}</span></a>`;
+  }
+  return `<a class="ov-footer-link" href="${escapeAttr(href)}"${rel}>${escapeHtml(item.label)}</a>`;
 }
 
 // -- doc pages -----------------------------------------------------------

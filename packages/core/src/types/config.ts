@@ -82,6 +82,25 @@ export interface OvellumTopbarNavItem {
   external?: boolean;
 }
 
+export interface OvellumFooterNavItem {
+  /** Visible label. Always rendered (even when `icon` is set) for screen readers. */
+  label: string;
+  /** Site-relative or external href. */
+  href: string;
+  /**
+   * Optional icon name (one of the registry entries: `github`, `rss`, `mail`,
+   * `package`, etc). When set, the label becomes visually hidden (still
+   * accessible) and the icon is rendered alone. When unset, the label is
+   * shown as plain text.
+   */
+  icon?: string;
+  /**
+   * When `true`, link opens in a new tab with `rel="noopener"`. Auto-detected
+   * from `http(s)://` hrefs if omitted.
+   */
+  external?: boolean;
+}
+
 export interface OvellumSitePageMetaConfig {
   /** Show "N min read" above the article. Default `true`. ~200 wpm. */
   readingTime: boolean;
@@ -153,6 +172,13 @@ export interface OvellumSiteConfig {
    * every page (including the landing). Empty by default. Order is preserved.
    */
   topbarNav: OvellumTopbarNavItem[];
+  /**
+   * Right-aligned footer nav items (typically social / contact links).
+   * Rendered to the right of the `footer` text in the page footer. Empty by
+   * default. Order is preserved. Items with `icon` render as icon-only;
+   * items without render as plain text.
+   */
+  footerNav: OvellumFooterNavItem[];
   /** Landing-page settings. Disabled by default. */
   landing: OvellumLandingConfig;
 }
@@ -207,6 +233,7 @@ export const DEFAULT_CONFIG: OvellumConfig = {
     search: { enabled: false },
     pageMeta: { readingTime: true, lastModified: true },
     topbarNav: [],
+    footerNav: [],
     landing: {
       enabled: false,
       hero: { ctas: [] },

@@ -24,9 +24,12 @@
 import Check from 'lucide/dist/esm/icons/check.mjs';
 import ChevronDown from 'lucide/dist/esm/icons/chevron-down.mjs';
 import ExternalLink from 'lucide/dist/esm/icons/external-link.mjs';
+import Mail from 'lucide/dist/esm/icons/mail.mjs';
 import Menu from 'lucide/dist/esm/icons/menu.mjs';
 import Monitor from 'lucide/dist/esm/icons/monitor.mjs';
 import Moon from 'lucide/dist/esm/icons/moon.mjs';
+import Package from 'lucide/dist/esm/icons/package.mjs';
+import Rss from 'lucide/dist/esm/icons/rss.mjs';
 import Search from 'lucide/dist/esm/icons/search.mjs';
 import Sun from 'lucide/dist/esm/icons/sun.mjs';
 import X from 'lucide/dist/esm/icons/x.mjs';
@@ -62,6 +65,9 @@ const REGISTRY = {
   'external-link': ExternalLink,
   search: Search,
   check: Check,
+  rss: Rss,
+  mail: Mail,
+  package: Package,
 } as const;
 
 export type IconName = keyof typeof REGISTRY;
