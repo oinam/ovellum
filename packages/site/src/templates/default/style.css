@@ -124,12 +124,14 @@
   --leading-mono: 1.55;
 
   /* Layout widths (site-specific, not in STYLES.md) */
-  --sidebar-w: 240px;
-  --toc-w: 200px;
-  --content-max: 66ch;
+  --sidebar-w: 260px;
+  --toc-w: 220px;
+  --content-max: 76ch;
   /* Outer page boundary shared by the topbar, main content, and footer.
-     Pages can override it on `body` (e.g. landing tightens to 1100). */
-  --page-max: 1320px;
+     Docs run wide (Mintlify-style) so long code blocks and reference
+     tables have room without scrolling; landing tightens for editorial
+     centerpiece feel. Override on body for special page types. */
+  --page-max: 1600px;
 }
 
 body.ov-body-landing {
@@ -518,7 +520,13 @@ body.ov-menu-open {
   padding: 0;
 }
 .ov-sidebar-nav > ul > li {
-  margin-block-end: var(--space-xs);
+  margin-block-end: var(--space-s);
+  padding-block-end: var(--space-s);
+  border-block-end: 1px solid var(--color-border);
+}
+.ov-sidebar-nav > ul > li:last-child {
+  border-block-end: 0;
+  padding-block-end: 0;
 }
 .ov-sidebar-nav li {
   margin-block-end: var(--space-3xs);
