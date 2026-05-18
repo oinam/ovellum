@@ -1,7 +1,7 @@
 # TODO
 
 Living checklist for code / automation work. Update in place as work progresses.
-Last updated: 2026-05-18 (CI auto-publish parked — chosen path is local `npm publish`; design polish in flight for manual-mode docs UI)
+Last updated: 2026-05-19 (editorial-calm design pass through the doc shell + landing; Agora-inspired landing redesign queued)
 
 > Manual items — prose, decisions, releases, things only a human can do —
 > live in [`TODO-Human.md`](./TODO-Human.md). When in doubt: if the work
@@ -23,16 +23,41 @@ Legend: `[ ]` not started · `[~]` in progress · `[x]` done · `[!]` blocked
 
 ---
 
-## Current state (2026-05-18)
+## Current state (2026-05-19)
 
 **Live and shipped:**
 - `ovellum@0.2.0` on npm — <https://www.npmjs.com/package/ovellum>
 - Docs site live with TLS — <https://ovellum.oss.oinam.com>
 - All six CLI commands working: `init`, `build`, `dev`, `watch`, `serve`, `check`
 - Manual-mode static site builder is feature-complete for a real docs site
-- 169 vitest cases across the workspace
+- Workspace test count: ~190 vitest cases (was 169; +21 in `@ovellum/site` for callouts / GFM tables / language label / wrap / version badge / ToC text / `_meta.json` fallback)
 
-**Active focus:** manual-mode docs UI polish — tighter, cleaner typography / layout / chrome than Mintlify or Retype, so teams can start writing on Ovellum immediately. Tracked further down this file under Phase 4.5.
+**Active focus:** finish the manual-mode site so the maintainer can use it as their day-to-day static site generator for both documentation and a marketing landing. Per the 2026-05-19 design call we are committed to the **editorial-calm direction** ([[feedback-design-direction]] memory) — tight typography, no chrome, no cards, no template feel.
+
+**Design language locked in this session** (commits `1b2bc8e` → `812c29b`):
+- Typography: h1 -0.03em / h2 -0.02em / h3 -0.015em, h2 lost its border (biggest "template-y" tell removed); content max 76ch on doc pages, 60ch on landing prose.
+- Layout: `--page-max` token unifies topbar / content / footer. Default 1600px (Mintlify-wide for doc pages); landing tightens to 1100px via `body.ov-body-landing`.
+- Chrome: two-column footer mirrors topbar grid (`auto 1fr auto`, `--page-max`, `inline-size: 100%`, auto margins) — copyright left, footerNav right (GitHub / npm / RSS icons + text links).
+- Sidebar: subtle left-rule active state (no chip), hairline horizontal dividers between top-level groups, wider 260px.
+- Right-rail ToC: continuous 1px vertical track with a 2px accent strip on the current section. IntersectionObserver-based scroll-spy in `script.js`. Trailing `#` stripped from heading text.
+- Prev / next: Retype-style bordered button pair with inline `←` / `→` arrows that slide on hover.
+- Code blocks: language eyebrow (`data-language` attr + CSS `::before`) top-right; copy button shares the corner and swaps in on hover. Padding bumped on top to clear the eyebrow.
+- Inline code: smaller, mono, white-space: nowrap so a long token never wraps mid-chip.
+- Tables: editorial — no grid, no `<th>` fill; horizontal rules only, header reads via uppercase eyebrow weight; wrapped in `.ov-table-wrap` with `overflow-x: auto` so wide tables scroll without breaking the column.
+- Callouts: GFM alert syntax (`> [!NOTE]` / `[!TIP]` / `[!IMPORTANT]` / `[!WARNING]` / `[!CAUTION]`) via a custom rehype plugin, styled with type-color left rule + uppercase eyebrow + soft tint.
+- Landing: dropped feature cards (border + bg + radius gone), replaced with `border-top: 1px` blocks — reads as a structured grid, not Mintlify cards. Hero noise/spotlight softened (28px / 0.12 alpha; 14% accent mix). Trust strip quieter (fg-subtle, 0.72em label).
+- Version badge: small mono chip next to the brand, driven by `site.version` free-form string.
+- Brand: dropped a size step (font-size-0 + weight 600), tighter tracking.
+
+**Queued for tomorrow — Agora-inspired landing redesign**
+
+User likes <https://www.agora.xyz>: calm, serene scenes; imagery anchoring the page; subtle ambient animation that never distracts. Direction to explore — keep the editorial-calm typography intact, add an imagery-led hero and lightly-animated visual scenes between sections, replace the dotted-noise pattern.
+
+Tracked as a new sub-phase under Phase 4.5 below.
+
+**Parked / deferred:**
+
+1. **CI auto-publish — parked.** `.github/workflows/release.yml` was rewritten on 2026-05-18 to do version-PR opening only; `npm publish` is run locally. History: prior CI attempts 404'd on `PUT https://registry.npmjs.org/ovellum` even with a granular token scoped Read+Write, bypass-2FA, exact-package (confirmed via `npm access list packages`). Suspected cause: `actions/setup-node@v4`'s `registry-url` writes a `~/.npmrc` that conflicts with `changesets/action@v1`'s own auth setup. Not worth chasing right now — local publish works, costs ~30s after each version-PR merge. **If we revisit:** drop `registry-url` from setup-node and / or add `NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}` to the workflow env. Manual recipe: `docs/internal/TODO-Human.md` → Release & launch. **Don't forget to bump `site.version` in `website/ovellum.config.json` after publishing** — it drives the badge next to the brand.
 
 **Parked / deferred:**
 
@@ -296,6 +321,50 @@ Material for MkDocs. Disabled by default.
 - [ ] Multiple bundled landing templates / hero variants
 - [ ] Live GitHub stars / sponsor APIs in trust strip
 - [ ] Image / video hero variants
+
+### Phase 4.5 follow-up: Agora-inspired landing redesign (queued 2026-05-19)
+
+User reference: <https://www.agora.xyz>. Direction notes from the
+2026-05-19 call:
+
+- **Aesthetic:** calm, serene scenes; imagery anchors the page; type
+  stays editorial-calm (no change to what we shipped through `9f30e32`).
+- **Imagery-led hero:** swap the current dotted-noise + radial spotlight
+  for an actual visual scene (illustration, abstract render, layered
+  gradient, etc — pick one direction). Imagery must theme cleanly across
+  auto / light / dark.
+- **Subtle ambient motion:** very gentle parallax / drift / blur — never
+  attention-grabbing. Reduced-motion media query honored. Reference Agora's
+  "barely-moving" feel; do not add scroll-jacking, big section reveals,
+  or interactive 3D.
+- **Section scenes:** between feature blocks / pitch / trust strip,
+  consider quiet visual "scenes" (small illustrations or color washes)
+  that give the page chapters without breaking editorial calm.
+- **Don't touch:** prose typography, code blocks, callouts, ToC, sidebar
+  — they're locked. Only the landing's hero / section visuals are in
+  scope.
+
+Open decisions to make before coding (carry into next session):
+
+- [ ] Source of imagery: hand-illustrated (single visual artist), AI-
+      generated (Midjourney/SD seed set), abstract code-generated (SVG
+      noise/gradients), or photographic (Unsplash CC0 with treatment)?
+- [ ] Hero shape: full-bleed visual top, asymmetric two-column, or
+      headline-over-art with art behind type?
+- [ ] Motion budget: CSS-only (`@keyframes`, `transform`), tiny JS
+      (anime.js sized), or Lottie / `<video>` (much heavier)?
+- [ ] Where the assets ship from: `website/public/`, an inline data-URL
+      SVG (current dotted-noise pattern), or a CDN?
+
+Implementation will replace `.ov-hero::before/::after` and the
+`.ov-feature-grid` / `.ov-pitch` / `.ov-trust` visual layers. Existing
+`renderLanding()` HTML structure should hold — this is a CSS / asset
+pass, not a template rewrite, unless a chosen direction needs new
+sections in `OvellumLandingConfig`.
+
+Touchstones to keep open while designing: agora.xyz, also Linear's
+homepage (calm but with discipline), Stripe's "shape" pages, Vercel's
+homepage (heavier on motion than we want — use as anti-example).
 
 ### Phase 4.6 - Official website + GitHub Pages deploy (2026-05-16)
 
