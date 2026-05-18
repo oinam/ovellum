@@ -661,6 +661,31 @@ body.ov-menu-open {
 .ov-prose ol {
   padding-inline-start: var(--space-m);
 }
+.ov-prose li {
+  margin-block-end: 0.25em;
+}
+.ov-prose li:last-child {
+  margin-block-end: 0;
+}
+.ov-prose li > p {
+  margin-block: 0;
+}
+.ov-prose li > p + p {
+  margin-block-start: var(--space-2xs);
+}
+.ov-prose ul ul,
+.ov-prose ul ol,
+.ov-prose ol ol,
+.ov-prose ol ul {
+  margin-block: 0.25em 0;
+}
+.ov-prose ul li::marker {
+  color: var(--color-fg-subtle);
+}
+.ov-prose ol li::marker {
+  color: var(--color-fg-subtle);
+  font-variant-numeric: tabular-nums;
+}
 .ov-prose code:not(pre code) {
   font-family: var(--font-mono);
   background: var(--color-code-bg);
@@ -678,21 +703,39 @@ body.ov-menu-open {
   height: auto;
   border-radius: var(--radius-md);
 }
+/* Tables — editorial-calm: horizontal rules only, no grid, no header
+   fill. Header reads via weight + a thicker bottom rule.  */
 .ov-prose table {
   border-collapse: collapse;
   inline-size: 100%;
   margin-block: 0 var(--space-s);
-  font-size: 0.95em;
+  font-size: 0.92em;
+  font-variant-numeric: tabular-nums;
 }
 .ov-prose th,
 .ov-prose td {
-  padding: var(--space-2xs) var(--space-s);
-  border: 1px solid var(--color-border);
+  padding: var(--space-2xs) var(--space-s) var(--space-2xs) 0;
   text-align: start;
+  vertical-align: top;
+  border-block-end: 1px solid var(--color-border);
 }
 .ov-prose th {
-  background: var(--color-bg-subtle);
   font-weight: 600;
+  font-size: 0.92em;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--color-fg-muted);
+  border-block-end: 1px solid var(--color-border-strong);
+  padding-block: var(--space-xs);
+}
+.ov-prose tbody tr:last-child td {
+  border-block-end: 0;
+}
+.ov-prose tbody tr:hover td {
+  background: var(--color-bg-subtle);
+}
+.ov-prose table code:not(pre code) {
+  font-size: 0.9em;
 }
 
 /* Heading anchors
@@ -805,18 +848,58 @@ body.ov-menu-open {
   background: var(--color-bg-subtle);
   border-color: var(--color-border);
 }
+/* Breadcrumbs — sits above the page-meta when the page is nested 2+
+   levels deep. Slash separator inserted via ::after on each crumb so
+   it scales with text and doesn't render as an extra DOM element. */
+.ov-breadcrumbs {
+  margin: 0 0 var(--space-2xs);
+}
+.ov-breadcrumbs ol {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0;
+  font-size: 0.82em;
+  color: var(--color-fg-muted);
+}
+.ov-crumb {
+  display: inline-flex;
+  align-items: baseline;
+}
+.ov-crumb a {
+  color: var(--color-fg-muted);
+  text-decoration: none;
+  transition: color 120ms ease;
+}
+.ov-crumb a:hover {
+  color: var(--color-fg);
+}
+.ov-crumb:not(:last-child)::after {
+  content: '/';
+  color: var(--color-fg-subtle);
+  opacity: 0.45;
+  padding-inline: 0.5em;
+}
+.ov-crumb.is-current {
+  color: var(--color-fg);
+}
+
 /* Page meta line (reading time + last-modified) above the article */
 .ov-page-meta {
   margin: 0 0 var(--space-s);
-  font-size: 0.88em;
-  color: var(--color-fg-muted);
+  font-size: 0.82em;
+  color: var(--color-fg-subtle);
   display: flex;
   flex-wrap: wrap;
-  gap: 0.25em;
+  gap: 0;
   align-items: baseline;
+  font-variant-numeric: tabular-nums;
 }
 .ov-page-meta-sep {
-  opacity: 0.6;
+  opacity: 0.4;
+  padding-inline: 0.5em;
 }
 
 /* Edit-this-page link */
