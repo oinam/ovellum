@@ -200,7 +200,7 @@ Legend: `[ ]` not started · `[~]` in progress · `[x]` done · `[!]` blocked
 - [~] Implement protected zone extractor:
   - [x] Find all `<!-- @manual:start -->` / `<!-- @manual:end -->` pairs
   - [x] Extract `id` attribute if present; generate positional fallback if not
-  - [ ] Warn when positional fallback used (silent today)
+  - [x] Warn when positional fallback used
   - [x] Store: `{ id, content: string, startLine, endLine, anchorId? }`
   - [x] Detect and error on unclosed tags
   - [x] Detect and error on nested tags
@@ -220,7 +220,7 @@ Legend: `[ ]` not started · `[~]` in progress · `[x]` done · `[!]` blocked
 
 > Phase 4 v0 slice (2026-05-14): reader handles enough of the spec to feed
 > the merger. Validation mode (link checking, required frontmatter fields)
-> and the warning on positional-fallback IDs are deferred.
+> remains deferred. Positional-fallback warning landed 2026-05-18.
 
 ---
 

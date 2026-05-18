@@ -118,7 +118,7 @@ Anchor IDs: done `{relativeFilePath}::{symbolPath}` per [`DESIGN.md` §8.3](./DE
 | Protected zone extraction (`<!-- @manual:start id="…" -->` / `:end`) | done     | Regex-based; positional fallback IDs when `id` omitted.                                   |
 | Anchor association (block → nearest preceding `ovellum:anchor`)      | done     |                                                                                           |
 | Error: unclosed / nested / stray `@manual:end`                       | done     | `OvellumError` with codes `UNCLOSED_MANUAL_TAG`, `NESTED_MANUAL_TAG`, `STRAY_MANUAL_END`. |
-| Positional-fallback warning                                          | deferred | Silent today.                                                                             |
+| Positional-fallback warning                                          | done     | Reader emits one warning per zone that falls back to `manual-block-N`; surfaced through the CLI build summary. |
 | Validation mode (link checker, required frontmatter)                 | deferred | Needs `remark` stack.                                                                     |
 
 **Tests:** 9 vitest cases.

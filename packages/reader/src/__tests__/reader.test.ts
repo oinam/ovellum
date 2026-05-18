@@ -18,6 +18,30 @@ describe('parseManualDoc', () => {
     expect(doc.frontmatter).toEqual({});
     expect(doc.content).toBe('just body');
   });
+
+  it('returns no warnings when every protected zone has an explicit id', () => {
+    const raw = ['<!-- @manual:start id="intro" -->', 'kept', '<!-- @manual:end -->'].join('\n');
+    const doc = parseManualDoc(raw, 'a.md');
+    expect(doc.warnings).toEqual([]);
+  });
+
+  it('warns when a protected zone falls back to a positional id', () => {
+    const raw = [
+      '# heading',
+      '',
+      '<!-- @manual:start -->',
+      'unkeyed block',
+      '<!-- @manual:end -->',
+      '<!-- @manual:start id="ok" -->',
+      'keyed block',
+      '<!-- @manual:end -->',
+    ].join('\n');
+    const doc = parseManualDoc(raw, 'a.md');
+    expect(doc.warnings).toHaveLength(1);
+    expect(doc.warnings[0]).toMatch(/positional fallback/);
+    expect(doc.warnings[0]).toContain('a.md:3');
+    expect(doc.warnings[0]).toContain('manual-block-1');
+  });
 });
 
 describe('extractProtectedZones', () => {

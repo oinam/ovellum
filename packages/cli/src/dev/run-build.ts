@@ -71,6 +71,7 @@ export async function runBuild(input: RunBuildInput): Promise<BuildSummary> {
 
     if (config.mode === 'hybrid' && existsSync(abs)) {
       const manualDoc = await readManualDoc(abs);
+      warnings.push(...manualDoc.warnings);
       if (manualDoc.protectedBlocks.length > 0) {
         const result = merge(generatedBody, manualDoc, { sourceFile: relOut });
         finalBody = result.content;

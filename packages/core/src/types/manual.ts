@@ -21,4 +21,6 @@ export interface ManualDoc {
   content: string;
   /** All protected zones in document order. */
   protectedBlocks: ProtectedBlock[];
+  /** Non-fatal advisories — e.g. protected zones relying on a positional ID fallback. */
+  warnings: string[];
 }

@@ -24,5 +24,14 @@ export function parseManualDoc(raw: string, filePath: string): ManualDoc {
   const frontmatter = (parsed.data ?? {}) as Record<string, unknown>;
   const content = parsed.content;
   const protectedBlocks = extractProtectedZones(content);
-  return { filePath, frontmatter, content, protectedBlocks };
+  const warnings: string[] = [];
+  for (const block of protectedBlocks) {
+    if (!block.hasExplicitId) {
+      warnings.push(
+        `${filePath}:${block.startLine}: protected zone "${block.id}" uses a positional fallback id. ` +
+          `Add id="..." on the <!-- @manual:start --> tag so the block survives reordering.`,
+      );
+    }
+  }
+  return { filePath, frontmatter, content, protectedBlocks, warnings };
 }

@@ -11,6 +11,7 @@ function makeManual(blocks: ManualDoc['protectedBlocks']): ManualDoc {
     frontmatter: {},
     content: '',
     protectedBlocks: blocks,
+    warnings: [],
   };
 }
 
