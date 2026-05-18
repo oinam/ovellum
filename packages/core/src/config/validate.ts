@@ -164,6 +164,9 @@ export function validateUserConfig(input: unknown): OvellumUserConfig {
         }
       });
     }
+    if (s.version !== undefined && typeof s.version !== 'string') {
+      throw new ConfigError('`site.version` must be a string when set.');
+    }
     if (s.footerNav !== undefined) {
       if (!Array.isArray(s.footerNav)) {
         throw new ConfigError('`site.footerNav` must be an array.');

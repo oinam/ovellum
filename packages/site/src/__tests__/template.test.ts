@@ -120,6 +120,31 @@ describe('renderPage', () => {
     expect(html).toContain('Next');
   });
 
+  it('renders the version badge next to the brand when site.version is set, omits otherwise', () => {
+    const withVersion = renderPage({
+      site: { title: 'X', defaultTheme: 'auto', footer: '', version: 'v0.2.0' },
+      nav: NAV,
+      url: '/',
+      title: 'X',
+      bodyHtml: '',
+      headings: [],
+      generatedAt: '2026-05-15T00:00:00.000Z',
+    });
+    expect(withVersion).toContain('class="ov-brand-version"');
+    expect(withVersion).toContain('>v0.2.0<');
+
+    const withoutVersion = renderPage({
+      site: { title: 'X', defaultTheme: 'auto', footer: '' },
+      nav: NAV,
+      url: '/',
+      title: 'X',
+      bodyHtml: '',
+      headings: [],
+      generatedAt: '2026-05-15T00:00:00.000Z',
+    });
+    expect(withoutVersion).not.toContain('ov-brand-version');
+  });
+
   it('renders the ToC when headings are present, and omits it when empty', () => {
     const withToc = renderPage({
       site: { title: 'X', defaultTheme: 'auto', footer: '' },

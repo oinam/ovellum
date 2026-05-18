@@ -129,6 +129,13 @@ export interface OvellumLandingConfig {
 export interface OvellumSiteConfig {
   /** Site title. Defaults to `OvellumConfig.name` or `'Ovellum site'`. */
   title?: string;
+  /**
+   * Optional version badge rendered next to the brand in the top bar
+   * (e.g. `"v0.2.0"`). The site has no idea what version of the
+   * underlying tool the docs describe — write whatever you want here.
+   * Unset = no badge.
+   */
+  version?: string;
   /** Short description (used in `<meta>` and the footer). */
   description?: string;
   /** Base URL for absolute links / OG cards, e.g. `https://docs.example.com`. */

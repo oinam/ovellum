@@ -108,6 +108,11 @@ a hand-driven sequence after a changeset is merged.
    npm publish
    ```
 
+   After `npm publish` succeeds, **bump the version badge** in
+   `website/ovellum.config.json` → `site.version` to match the new
+   release (e.g. `"v0.2.1"`). Commit + push so the deployed site shows
+   the right version next to the logo.
+
    `npm publish` uses the maintainer's logged-in `oinam` session.
    No `NPM_TOKEN` involved.
 

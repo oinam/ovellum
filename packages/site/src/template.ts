@@ -117,8 +117,14 @@ function renderTopbar(
       <span class="ov-theme-icon ov-theme-icon-light">${renderIcon('sun')}</span>
       <span class="ov-theme-icon ov-theme-icon-dark">${renderIcon('moon')}</span>
     </button>`;
+  const versionBadge = site.version
+    ? `<span class="ov-brand-version" aria-label="Stable version ${escapeAttr(site.version)}">${escapeHtml(site.version)}</span>`
+    : '';
   return `<header class="ov-topbar">
-    <a class="ov-brand" href="${escapeAttr(assets)}">${escapeHtml(site.title)}</a>
+    <div class="ov-brand-row">
+      <a class="ov-brand" href="${escapeAttr(assets)}">${escapeHtml(site.title)}</a>
+      ${versionBadge}
+    </div>
     <nav class="ov-topbar-nav" aria-label="Primary">${navLinks}</nav>
     <div class="ov-topbar-right">
       ${search}
