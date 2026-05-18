@@ -82,12 +82,57 @@ inside CI without significant setup; cheaper to do by hand before each release.
 
 ## Release & launch
 
-Account/credential operations and one-shot launch tasks. Each is a single
-event with a clear "done" state.
+Account/credential operations and one-shot launch tasks.
 
-- [ ] Write GitHub release notes for `v0.1.0` (changelog + highlights).
-- [ ] Publish to npm as `0.1.0` under the `next` pre-release tag.
-- [ ] Move the `next` tag to `latest` once the release is stable.
+### Manual release recipe (the routine flow)
+
+CI auto-publish is parked (see Current state in `TODO.md`). Each release is
+a hand-driven sequence after a changeset is merged.
+
+1. **Author** a changeset alongside the feature PR:
+   `pnpm changeset` → describe the change → commit the generated
+   `.changeset/*.md` with the PR. This is what triggers the version PR.
+
+2. **Merge the PR.** The `Version PR` workflow opens / refreshes a
+   `chore: version packages` PR with the version bump and changelog.
+
+3. **Review and merge the version PR.** This commits the bumped
+   `package.json` files and updated `CHANGELOG.md` to `main`.
+
+4. **Pull and publish locally** from a clean working tree on `main`:
+
+   ```sh
+   git checkout main && git pull
+   pnpm -w build
+   cd packages/cli
+   npm publish
+   ```
+
+   `npm publish` uses the maintainer's logged-in `oinam` session.
+   No `NPM_TOKEN` involved.
+
+5. **Tag and push** the release (changeset publish would normally do this
+   in CI; doing it by hand here):
+
+   ```sh
+   git tag "ovellum@$(node -p "require('./package.json').version")"
+   git push --tags
+   ```
+
+6. **GitHub release notes.** Copy the relevant section from
+   `packages/cli/CHANGELOG.md` into a new release at
+   <https://github.com/oinam/ovellum/releases/new>, attach the tag.
+
+If `npm publish` fails: usually an OTP prompt; re-run with `--otp=…`.
+If the version on npm already matches `package.json`, the publish is a no-op
+— means a prior attempt succeeded; just continue with steps 5–6.
+
+### v0.1.0 / launch backlog
+
+- [x] Publish to npm — `ovellum@0.2.0` is live (we skipped the `next`
+      pre-release tag and went straight to `latest`).
+- [ ] Write GitHub release notes for the version that ships the manual-mode
+      design overhaul (in flight).
 - [ ] Announce in relevant communities. Open-source launch strategy TBD —
       candidate venues: TypeScript subreddit, HN Show, Bluesky/Mastodon dev
       circles, the unjs community Discord.

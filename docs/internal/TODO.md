@@ -1,7 +1,7 @@
 # TODO
 
 Living checklist for code / automation work. Update in place as work progresses.
-Last updated: 2026-05-17 (v0.2.0 published to npm; manual-mode site builder is feature-complete; CLI smoke tests landed; CI publish auth still needs a fix)
+Last updated: 2026-05-18 (CI auto-publish parked — chosen path is local `npm publish`; design polish in flight for manual-mode docs UI)
 
 > Manual items — prose, decisions, releases, things only a human can do —
 > live in [`TODO-Human.md`](./TODO-Human.md). When in doubt: if the work
@@ -23,7 +23,7 @@ Legend: `[ ]` not started · `[~]` in progress · `[x]` done · `[!]` blocked
 
 ---
 
-## Current state (2026-05-17)
+## Current state (2026-05-18)
 
 **Live and shipped:**
 - `ovellum@0.2.0` on npm — <https://www.npmjs.com/package/ovellum>
@@ -32,15 +32,17 @@ Legend: `[ ]` not started · `[~]` in progress · `[x]` done · `[!]` blocked
 - Manual-mode static site builder is feature-complete for a real docs site
 - 169 vitest cases across the workspace
 
-**Three known loose ends:**
+**Active focus:** manual-mode docs UI polish — tighter, cleaner typography / layout / chrome than Mintlify or Retype, so teams can start writing on Ovellum immediately. Tracked further down this file under Phase 4.5.
 
-1. **CI publishing 404s** — the Release workflow's `npm publish` step gets `404 Not Found - PUT https://registry.npmjs.org/ovellum` even with a granular token that has Read+Write, bypass-2FA, and exact-package scope (confirmed via `npm access list packages`). Hypothesis: `actions/setup-node@v4`'s `registry-url` option writes a `~/.npmrc` that conflicts with `changesets/action@v1`'s own auth setup. **Workaround in use:** run `npm publish` locally from `packages/cli/` after each `Version Packages` PR is merged (user's existing `oinam` npm session works fine). **Fix to try next session:** add `NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}` to the workflow's env block alongside `NPM_TOKEN`, and/or drop `registry-url` from setup-node so changesets/action manages auth alone.
+**Parked / deferred:**
+
+1. **CI auto-publish — parked.** `.github/workflows/release.yml` was rewritten on 2026-05-18 to do version-PR opening only; `npm publish` is run locally. History: prior CI attempts 404'd on `PUT https://registry.npmjs.org/ovellum` even with a granular token scoped Read+Write, bypass-2FA, exact-package (confirmed via `npm access list packages`). Suspected cause: `actions/setup-node@v4`'s `registry-url` writes a `~/.npmrc` that conflicts with `changesets/action@v1`'s own auth setup. Not worth chasing right now — local publish works, costs ~30s after each version-PR merge. **If we revisit:** drop `registry-url` from setup-node and / or add `NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}` to the workflow env. Manual recipe: `docs/internal/TODO-Human.md` → Release & launch.
 
 2. **`@ovellum/*` workspace deps are bundled into `ovellum` at build time** (tsup `noExternal: [/^@ovellum\//]`). Internal packages stay private. Templates copied from `packages/site/src/templates` to `packages/cli/dist/templates` by `scripts/cli-copy-templates.mjs` because `@ovellum/site` resolves templates via `import.meta.url`. If anyone asks for direct `@ovellum/*` imports, the bundling decision needs to flip.
 
 3. **Plugin API for templates is deferred** — multi-day scope; deserves its own design pass. Page-level Nord/Solarized themes (palettes are in `STYLES.md`) are also deferred; `site.codeTheme` ships the code-block theme picker today.
 
-**npm token expires** ~mid-August 2026 (90 days). User has 2FA on; the token has Bypass-2FA checked.
+**npm token** is still valid (~mid-Aug 2026), but unused by CI now. Local publish uses the maintainer's `oinam` npm session.
 
 **Where to find things:**
 - Public docs source: `website/content/`

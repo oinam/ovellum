@@ -1,10 +1,29 @@
-name: Release
+# Version Packages PR — opens / refreshes the "chore: version packages"
+# PR whenever a `.changeset/*.md` lands on `main`. Merging that PR bumps
+# versions and updates changelogs.
+#
+# NOTE: npm publish is intentionally NOT done here.
+#
+# Auto-publish from CI is parked: the previous setup 404'd on
+# `PUT https://registry.npmjs.org/ovellum` despite a granular token
+# with the right scopes. The chosen path is to publish locally —
+# faster to iterate on, less moving infrastructure, and the maintainer's
+# logged-in npm session already works.
+#
+# Manual release recipe lives in `docs/internal/TODO-Human.md` under
+# "Release & launch". Short version: after merging the version-packages
+# PR, run `pnpm -w build && cd packages/cli && npm publish` locally.
+#
+# If/when we revisit CI publishing, the suspected fix is to drop
+# `registry-url` from setup-node and / or set `NODE_AUTH_TOKEN` alongside
+# `NPM_TOKEN` so changesets/action's auth wins cleanly. The history of
+# the parked attempt is in this file's git log.
+
+name: Version PR
 
 on:
   push:
     branches: [main]
-  # Manual trigger so we can retry a failed publish (e.g. after rotating
-  # NPM_TOKEN) without having to push an unrelated commit.
   workflow_dispatch:
 
 concurrency:
@@ -12,13 +31,12 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  release:
-    name: Version or publish
+  version:
+    name: Open or refresh version PR
     runs-on: ubuntu-latest
     permissions:
       contents: write
       pull-requests: write
-      id-token: write
 
     steps:
       - uses: actions/checkout@v4
@@ -33,21 +51,15 @@ jobs:
         with:
           node-version: 20
           cache: pnpm
-          registry-url: https://registry.npmjs.org
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Build
-        run: pnpm build
-
-      - name: Create release PR or publish
+      - name: Open or refresh version PR
         uses: changesets/action@v1
         with:
-          publish: pnpm release
           version: pnpm version-packages
           commit: 'chore: version packages'
           title: 'chore: version packages'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
