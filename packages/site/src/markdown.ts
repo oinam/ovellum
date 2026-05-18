@@ -240,9 +240,26 @@ function collectHeadings(tree: Root, into: Heading[]): void {
     const depth = Number(node.tagName.slice(1));
     const id = typeof node.properties?.id === 'string' ? node.properties.id : '';
     if (!id) return;
-    const text = textOf(node).replace(/^#/, '').trim(); // strip the autolink prefix
+    // rehype-autolink-headings appends a `<a class="heading-anchor">#</a>` to
+    // every heading. Skip that child when collecting the text so the ToC
+    // doesn't read "Install#" / "1. Build#" etc.
+    const text = textOfHeading(node).trim();
     into.push({ depth, text, id });
   });
+}
+
+function textOfHeading(node: Element): string {
+  let out = '';
+  for (const child of node.children as ElementContent[]) {
+    if (child.type === 'text') {
+      out += child.value;
+    } else if (child.type === 'element') {
+      const classNames = readClassNames(child);
+      if (classNames.includes('heading-anchor')) continue;
+      out += textOf(child);
+    }
+  }
+  return out;
 }
 
 function highlightCodeBlocks(

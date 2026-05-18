@@ -67,6 +67,14 @@ describe('renderMarkdown', () => {
     expect(html).not.toContain('ov-callout');
   });
 
+  it('strips the appended autolink # from collected heading text', async () => {
+    const { headings } = await renderMarkdown(
+      ['## Install', 'body', '', '### 1. Build', 'more', ''].join('\n'),
+    );
+    expect(headings.map((h) => h.text)).toEqual(['Install', '1. Build']);
+    expect(headings.every((h) => !h.text.includes('#'))).toBe(true);
+  });
+
   it('appends a clickable anchor link to each heading (heading text stays flush-left)', async () => {
     const { html } = await renderMarkdown('## Hello\nbody');
     expect(html).toMatch(

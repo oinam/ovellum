@@ -142,4 +142,92 @@
     });
     pre.appendChild(btn);
   });
+
+  // ToC scroll-spy
+  //
+  // Highlights the right-rail "On this page" link for whichever h2/h3 is
+  // currently the most recently-passed-the-top-of-the-viewport. Uses one
+  // IntersectionObserver with a tall negative rootMargin so the "active"
+  // line activates a moment AFTER the heading scrolls past the topbar,
+  // giving you visual feedback that you're inside that section's content
+  // — not the moment the heading first appears at the very bottom of
+  // the window.
+  (function tocSpy() {
+    var toc = document.querySelector('.ov-toc');
+    if (!toc) return;
+    var prose = document.querySelector('.ov-prose');
+    if (!prose) return;
+    var tocLinks = {};
+    toc.querySelectorAll('a[href^="#"]').forEach(function (a) {
+      tocLinks[decodeURIComponent(a.getAttribute('href').slice(1))] = a;
+    });
+    var ids = Object.keys(tocLinks);
+    if (ids.length === 0) return;
+
+    var headings = ids
+      .map(function (id) {
+        return document.getElementById(id);
+      })
+      .filter(Boolean);
+    if (headings.length === 0) return;
+
+    var visible = new Set();
+
+    function setActive(id) {
+      ids.forEach(function (i) {
+        var a = tocLinks[i];
+        if (i === id) a.classList.add('is-current');
+        else a.classList.remove('is-current');
+      });
+    }
+
+    function recompute() {
+      // Pick the LAST heading whose top is above the topbar offset — that's
+      // "the section you're reading". Falls back to the first heading when
+      // the viewport is still above all of them.
+      var top = 96; // ≈ topbar + a touch of breathing room
+      var current = headings[0];
+      for (var i = 0; i < headings.length; i++) {
+        var h = headings[i];
+        var rect = h.getBoundingClientRect();
+        if (rect.top - top <= 0) current = h;
+        else break;
+      }
+      setActive(current.id);
+    }
+
+    if ('IntersectionObserver' in window) {
+      var io = new IntersectionObserver(
+        function (entries) {
+          entries.forEach(function (e) {
+            if (e.isIntersecting) visible.add(e.target.id);
+            else visible.delete(e.target.id);
+          });
+          recompute();
+        },
+        { rootMargin: '-96px 0px -60% 0px', threshold: 0 },
+      );
+      headings.forEach(function (h) {
+        io.observe(h);
+      });
+    }
+
+    // Even with IO, recompute on scroll so a fast user-scroll doesn't
+    // leave the indicator stranded between intersect callbacks.
+    var ticking = false;
+    window.addEventListener(
+      'scroll',
+      function () {
+        if (ticking) return;
+        ticking = true;
+        window.requestAnimationFrame(function () {
+          recompute();
+          ticking = false;
+        });
+      },
+      { passive: true },
+    );
+
+    recompute();
+  })();
 })();

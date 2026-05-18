@@ -1017,29 +1017,42 @@ body.ov-menu-open {
   list-style: none;
   margin: 0;
   padding: 0;
+  position: relative;
+  border-inline-start: 1px solid var(--color-border);
 }
 .ov-toc li {
-  margin-block-end: var(--space-3xs);
+  margin: 0;
 }
 .ov-toc li a {
+  position: relative;
   display: block;
-  padding: 2px 0;
+  padding: 0.3em 0;
+  padding-inline-start: var(--space-s);
   color: var(--color-fg-muted);
   text-decoration: none;
-  border-inline-start: 1px solid transparent;
-  padding-inline-start: var(--space-2xs);
-  margin-inline-start: calc(-1 * var(--space-2xs));
-  transition: color 120ms ease, border-color 120ms ease;
+  transition: color 120ms ease;
+  line-height: 1.4;
 }
 .ov-toc li a:hover {
   color: var(--color-fg);
 }
 .ov-toc li a.is-current {
   color: var(--color-accent);
-  border-inline-start-color: var(--color-accent);
+  font-weight: 500;
 }
-.ov-toc-h3 {
-  padding-inline-start: var(--space-s);
+/* The active indicator: 2px accent strip overlaying the 1px ul border.
+   Pulled 1px outside so it covers the track cleanly. */
+.ov-toc li a.is-current::before {
+  content: '';
+  position: absolute;
+  inset-block: 0;
+  inset-inline-start: -1px;
+  inline-size: 2px;
+  background: var(--color-accent);
+}
+.ov-toc-h3 a {
+  padding-inline-start: calc(var(--space-s) + var(--space-s));
+  font-size: 0.95em;
 }
 
 /* Footer
