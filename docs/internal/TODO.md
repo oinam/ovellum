@@ -244,7 +244,7 @@ New phase introduced 2026-05-15. Design lives in [`SITE.md`](./SITE.md).
 - [x] Smoke tests: 11 tests across markdown.ts, nav.ts, template.ts
 - [ ] Token-extraction script: pull current `STYLES.md` values into `style.css` automatically (avoid manual resync)
 - [ ] Nord + Solarized themes wired into the theme switcher (palettes already in STYLES.md)
-- [ ] `_meta.json` title fallback for directories without their own `index.md`
+- [x] `_meta.json` title fallback for directories without their own `index.md` — already implemented in `buildNav`'s title resolution chain (`meta.title > indexNode.title > kebab segment > 'Untitled'`); the live website (no index.md in any of `concepts/`, `guides/`, `reference/`) relies on it. Behavior pinned by two explicit tests in `packages/site/src/__tests__/nav.test.ts`.
 - [x] Search (Pagefind integration as a separate package or `--search` flag)
 - [x] Sitemap.xml + RSS
 - [x] Search via Pagefind (`site.search.enabled`; client + indexer)
@@ -265,7 +265,7 @@ New phase introduced 2026-05-15. Design lives in [`SITE.md`](./SITE.md).
 - [x] Body type tightened to 15→16 px (Option A)
 - [ ] Page-level Nord + Solarized themes (palettes in STYLES.md; `codeTheme` ships but a full Tier-2 page theme switcher is still TODO)
 - [ ] Token-extraction script: pull current `STYLES.md` values into `style.css` automatically
-- [ ] `_meta.json` title fallback for directories without their own `index.md`
+- [x] `_meta.json` title fallback for directories without their own `index.md` — already implemented in `buildNav`'s title resolution chain (`meta.title > indexNode.title > kebab segment > 'Untitled'`); the live website (no index.md in any of `concepts/`, `guides/`, `reference/`) relies on it. Behavior pinned by two explicit tests in `packages/site/src/__tests__/nav.test.ts`.
 - [x] RSS feed auto-emit
 - [ ] MDX rendering via `remark-mdx`
 - [ ] Plugin API for custom templates (deferred — needs its own design pass)

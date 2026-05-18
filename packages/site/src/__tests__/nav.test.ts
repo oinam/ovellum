@@ -102,6 +102,35 @@ describe('buildNav', () => {
     expect(findAdjacent(NAV, '/nowhere/')).toEqual({});
   });
 
+  it('uses _meta.json title for directories with no index.md', async () => {
+    // The live website relies on this: content/guides/ etc. have no
+    // index.md, only sibling .md files plus a _meta.json. The sidebar
+    // group label comes from _meta.json.title.
+    const content = path.join(tmp, 'content');
+    const sub = path.join(content, 'guides');
+    mkdirSync(sub, { recursive: true });
+    writeFileSync(path.join(content, 'index.md'), '# Root\n');
+    writeFileSync(path.join(sub, 'install.md'), '# Install\n');
+    writeFileSync(path.join(sub, '_meta.json'), JSON.stringify({ title: 'User Guides' }));
+
+    const nav = await buildNav('./content', tmp);
+    const guides = nav.children.find((c) => c.url === '/guides/');
+    expect(guides!.title).toBe('User Guides');
+    expect(guides!.sourcePath).toBeUndefined();
+  });
+
+  it('falls back to a kebab-segment title for index-less, meta-less directories', async () => {
+    const content = path.join(tmp, 'content');
+    const sub = path.join(content, 'getting-started');
+    mkdirSync(sub, { recursive: true });
+    writeFileSync(path.join(content, 'index.md'), '# Root\n');
+    writeFileSync(path.join(sub, 'install.md'), '# Install\n');
+
+    const nav = await buildNav('./content', tmp);
+    const dir = nav.children.find((c) => c.url === '/getting-started/');
+    expect(dir!.title).toBe('Getting Started');
+  });
+
   it('skips files prefixed with `_`', async () => {
     const content = path.join(tmp, 'content');
     mkdirSync(content);
