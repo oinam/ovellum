@@ -14,10 +14,15 @@
 # "Release & launch". Short version: after merging the version-packages
 # PR, run `pnpm -w build && cd packages/cli && npm publish` locally.
 #
-# If/when we revisit CI publishing, the suspected fix is to drop
-# `registry-url` from setup-node and / or set `NODE_AUTH_TOKEN` alongside
-# `NPM_TOKEN` so changesets/action's auth wins cleanly. The history of
-# the parked attempt is in this file's git log.
+# If/when we revisit CI publishing, do it via npm Trusted Publishers
+# (OIDC), not by reviving the NPM_TOKEN path. That removes the long-lived
+# secret entirely and sidesteps the `registry-url` / `NODE_AUTH_TOKEN`
+# collision that caused the original 404. Sketch: add a publish job with
+# `permissions: id-token: write`, Node >=22.14 / npm >=11.5.1, and
+# `npm publish --provenance --access public` after the version PR merges;
+# register the trusted publisher in the package settings on npmjs.com.
+# Docs: https://docs.npmjs.com/trusted-publishers
+# History of the parked NPM_TOKEN attempt is in this file's git log.
 
 name: Version PR
 
