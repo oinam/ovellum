@@ -34,6 +34,22 @@ export interface OvellumLandingCta {
   style?: OvellumCtaStyle;
 }
 
+export interface OvellumLandingHeroMedia {
+  /**
+   * Asset shown by default (and under light theme). Site-relative path or
+   * absolute URL. SVG is recommended; the file is referenced via `<img>`
+   * so any embedded `<style>`/animations stay self-contained.
+   */
+  light: string;
+  /**
+   * Optional dark-theme asset. When set, swapped in via CSS under
+   * `[data-theme='dark']`. When unset, `light` is used for both themes.
+   */
+  dark?: string;
+  /** Alt text for assistive tech. Default `''` (decorative). */
+  alt?: string;
+}
+
 export interface OvellumLandingHero {
   /** Defaults to `site.title`. */
   title?: string;
@@ -41,6 +57,12 @@ export interface OvellumLandingHero {
   subtitle?: string;
   /** Hero call-to-action buttons. Render in order. */
   ctas: OvellumLandingCta[];
+  /**
+   * Full-bleed visual rendered behind the title/subtitle/CTA stack. When
+   * set, the default dotted-noise + radial-spotlight pseudo-layers are
+   * suppressed in favour of the supplied asset(s).
+   */
+  media?: OvellumLandingHeroMedia;
 }
 
 export interface OvellumLandingFeature {

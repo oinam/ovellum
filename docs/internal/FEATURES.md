@@ -8,7 +8,7 @@ deferred items see [`TODO.md`](./TODO.md). For human-only tasks (writing prose,
 product decisions, release) see [`TODO-Human.md`](./TODO-Human.md). For
 terminology see [`GLOSSARY.md`](./GLOSSARY.md).
 
-Last updated: 2026-05-16 (template anatomy documented in SITE.md §9a)
+Last updated: 2026-05-19 (imagery hero variant via `site.landing.hero.media`)
 
 Status legend:
 
@@ -183,7 +183,8 @@ Powers `mode: 'manual'`. Design lives in [`SITE.md`](./SITE.md).
 | Right-aligned topbar nav with mobile sheet                                         | done     | Driven by `site.topbarNav`. External links get a small SVG arrow. Below 720px the nav collapses into a hamburger that opens a full-width sheet.                                                |
 | Two-column footer (copyright + footerNav)                                          | done     | `site.footerNav` populates the right column; items with `icon` render as icon-only Lucide glyphs (`github` / `rss` / `mail` / `package`), items without as text. Footer outer boundary tracks the topbar's max-inline-size and gutters so all three rails align. |
 | Inline SVG icon registry (Lucide)                                                  | done     | `renderIcon(name)` returns a 24×24 currentColor SVG with Lucide's canonical attributes (stroke-width 2, round caps). Path data imported per-icon from `lucide` (tree-shaken: ~100B per icon). Public set: menu, close, sun, moon, monitor, chevron-down, github (hand-rolled — Lucide v1 dropped brand marks), external-link, search, check. |
-| Hero with dotted-noise + spotlight bg                                              | done     | Landing hero gets two stacked pseudo-elements: a 24px dotted SVG pattern (theme-aware, masked to fade at the edges) and a radial accent spotlight. No images shipped; both are data-URL/CSS-only. |
+| Hero with dotted-noise + spotlight bg                                              | done     | Default landing hero: two stacked pseudo-elements (a 24px dotted SVG pattern + a radial accent spotlight). No images shipped; both data-URL/CSS-only. Suppressed when `site.landing.hero.media` is set.                                                |
+| Imagery hero (`site.landing.hero.media`)                                           | done     | Opt-in full-bleed visual layer behind the title/subtitle/CTAs. Stacks two `<img>` tags (light + dark) and toggles them via `[data-theme]` so the page-level theme switch flips assets without JS. Bottom edge softly fades into the page via CSS mask. Animation, theme-respecting fills, and `prefers-reduced-motion` handling live **inside** the SVG asset itself — swap the file to change motion or palette. |
 | Copy buttons on code blocks                                                        | done     | Injected client-side; ~50 lines of vanilla JS. Sits at the top-right corner; fades in on hover, swaps in over the language eyebrow.                                                            |
 | Language eyebrow on highlighted code blocks                                        | done     | `<pre data-language="ts">` rendered by the markdown pipeline; CSS `::before attr(data-language)` shows a small uppercase label in the top-right. Maps the eleven supported shiki langs to short display tokens (`ts`, `bash`, `md`, etc.). Fades on hover so the copy button can take the same corner. |
 | Default light + dark themes                                                        | done     | From `STYLES.md` Tier 2 tokens (hand-ported into `style.css`).                                                                                                                                 |
@@ -209,7 +210,7 @@ Powers `mode: 'manual'`. Design lives in [`SITE.md`](./SITE.md).
 piece is in, and how to change the design — see
 [`SITE.md` §9a](./SITE.md#9a-template-anatomy).
 
-**Tests:** 89 vitest cases in `@ovellum/site` (markdown incl. sanitization + callouts + language-label tagging, nav, template, landing, sitemap, rss, url helpers, page-meta incl. command-injection resistance, icons) plus 8 in `ovellum` (CLI URL-scheme allowlist).
+**Tests:** 95 vitest cases in `@ovellum/site` (markdown incl. sanitization + callouts + language-label tagging, nav, template, landing incl. the imagery-hero variant, sitemap, rss, url helpers, page-meta incl. command-injection resistance, icons) plus 8 in `ovellum` (CLI URL-scheme allowlist).
 
 **Security:** sanitization policy, shell-out hardening, and URL-scheme allowlist are documented in [`SECURITY.md`](./SECURITY.md).
 

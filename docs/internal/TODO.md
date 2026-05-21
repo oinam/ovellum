@@ -1,7 +1,7 @@
 # TODO
 
 Living checklist for code / automation work. Update in place as work progresses.
-Last updated: 2026-05-19 (editorial-calm design pass through the doc shell + landing; Agora-inspired landing redesign queued)
+Last updated: 2026-05-19 (Agora-inspired imagery hero shipped — topographic contour bands; section-scenes spun out as a smaller follow-up)
 
 > Manual items — prose, decisions, releases, things only a human can do —
 > live in [`TODO-Human.md`](./TODO-Human.md). When in doubt: if the work
@@ -30,9 +30,9 @@ Legend: `[ ]` not started · `[~]` in progress · `[x]` done · `[!]` blocked
 - Docs site live with TLS — <https://ovellum.oss.oinam.com>
 - All six CLI commands working: `init`, `build`, `dev`, `watch`, `serve`, `check`
 - Manual-mode static site builder is feature-complete for a real docs site
-- Workspace test count: ~190 vitest cases (was 169; +21 in `@ovellum/site` for callouts / GFM tables / language label / wrap / version badge / ToC text / `_meta.json` fallback)
+- Workspace test count: ~199 vitest cases (was 169; +21 in `@ovellum/site` for callouts / GFM tables / language label / wrap / version badge / ToC text / `_meta.json` fallback, +3 for the imagery hero variant, +5 in `@ovellum/core` for `hero.media` validation)
 
-**Active focus:** finish the manual-mode site so the maintainer can use it as their day-to-day static site generator for both documentation and a marketing landing. Per the 2026-05-19 design call we are committed to the **editorial-calm direction** ([[feedback-design-direction]] memory) — tight typography, no chrome, no cards, no template feel.
+**Active focus:** finish the manual-mode site so the maintainer can use it as their day-to-day static site generator for both documentation and a marketing landing. Per the 2026-05-19 design call we are committed to the **editorial-calm direction** ([[feedback-design-direction]] memory) — tight typography, no chrome, no cards, no template feel. The Agora-inspired imagery hero shipped same day; the remaining "section scenes" sub-pass is queued (smaller scope — see Phase 4.5).
 
 **Design language locked in this session** (commits `1b2bc8e` → `812c29b`):
 - Typography: h1 -0.03em / h2 -0.02em / h3 -0.015em, h2 lost its border (biggest "template-y" tell removed); content max 76ch on doc pages, 60ch on landing prose.
@@ -320,51 +320,54 @@ Material for MkDocs. Disabled by default.
 - [x] Docs updated: CONFIG.md (§4 `site.landing`), FEATURES.md, GLOSSARY.md (Landing page / Hero / CTA / Feature card / Trust strip / `_landing.md`), SITE.md (§2a)
 - [ ] Multiple bundled landing templates / hero variants
 - [ ] Live GitHub stars / sponsor APIs in trust strip
-- [ ] Image / video hero variants
+- [x] Image hero variant — shipped 2026-05-19 via `site.landing.hero.media`
+- [ ] Video hero variant
 
-### Phase 4.5 follow-up: Agora-inspired landing redesign (queued 2026-05-19)
+### Phase 4.5 follow-up: Agora-inspired landing redesign (started 2026-05-19)
 
-User reference: <https://www.agora.xyz>. Direction notes from the
-2026-05-19 call:
+User reference: <https://www.agora.xyz>. Direction: calm, serene
+scenes; imagery anchors the page; type stays editorial-calm
+(typography, code blocks, callouts, ToC, sidebar all locked — only the
+landing's visuals are in scope).
 
-- **Aesthetic:** calm, serene scenes; imagery anchors the page; type
-  stays editorial-calm (no change to what we shipped through `9f30e32`).
-- **Imagery-led hero:** swap the current dotted-noise + radial spotlight
-  for an actual visual scene (illustration, abstract render, layered
-  gradient, etc — pick one direction). Imagery must theme cleanly across
-  auto / light / dark.
-- **Subtle ambient motion:** very gentle parallax / drift / blur — never
-  attention-grabbing. Reduced-motion media query honored. Reference Agora's
-  "barely-moving" feel; do not add scroll-jacking, big section reveals,
-  or interactive 3D.
-- **Section scenes:** between feature blocks / pitch / trust strip,
-  consider quiet visual "scenes" (small illustrations or color washes)
-  that give the page chapters without breaking editorial calm.
-- **Don't touch:** prose typography, code blocks, callouts, ToC, sidebar
-  — they're locked. Only the landing's hero / section visuals are in
-  scope.
+**Decisions taken (2026-05-19):**
 
-Open decisions to make before coding (carry into next session):
+- Imagery source: abstract code-generated SVG (hand-authored, no AI/CDN).
+- Hero shape: full-bleed visual, title/subtitle/CTA stack centred over it.
+- Motion budget: looped animation lives inside the SVG (CSS `@keyframes` +
+  `prefers-reduced-motion` no-op fallback). Zero JS, ~2.4KB per asset.
+- Asset delivery: `website/content/hero-{light,dark}.svg` via Ovellum's
+  manual-mode passthrough convention — swappable by replacing the file.
 
-- [ ] Source of imagery: hand-illustrated (single visual artist), AI-
-      generated (Midjourney/SD seed set), abstract code-generated (SVG
-      noise/gradients), or photographic (Unsplash CC0 with treatment)?
-- [ ] Hero shape: full-bleed visual top, asymmetric two-column, or
-      headline-over-art with art behind type?
-- [ ] Motion budget: CSS-only (`@keyframes`, `transform`), tiny JS
-      (anime.js sized), or Lottie / `<video>` (much heavier)?
-- [ ] Where the assets ship from: `website/public/`, an inline data-URL
-      SVG (current dotted-noise pattern), or a CDN?
+**Shipped (2026-05-19):**
 
-Implementation will replace `.ov-hero::before/::after` and the
-`.ov-feature-grid` / `.ov-pitch` / `.ov-trust` visual layers. Existing
-`renderLanding()` HTML structure should hold — this is a CSS / asset
-pass, not a template rewrite, unless a chosen direction needs new
-sections in `OvellumLandingConfig`.
+- [x] `site.landing.hero.media = { light, dark?, alt? }` config in
+      `@ovellum/core` (types + validator + tests)
+- [x] `renderLanding()` emits `<section class="ov-hero" data-media>`
+      with stacked light/dark `<img>` art layer + `.ov-hero-inner`
+      wrapper for the text stack
+- [x] CSS variant in `packages/site/src/templates/default/style.css`:
+      suppresses dotted-noise pseudo-elements, gives the section min-
+      block-size + flex centring, bottom mask-image fade so the visual
+      recedes into the feature grid below
+- [x] Two SVG assets — topographic contour bands, 12 stacked sinusoidal
+      waves drifting at varied rates (24-42s loops). Theme-respecting
+      stroke color per file.
+- [x] `website/ovellum.config.json` wired up; build clean, `ovellum
+      check` reports 0 broken links / 0 unsafe schemes; 17 pages
 
-Touchstones to keep open while designing: agora.xyz, also Linear's
-homepage (calm but with discipline), Stripe's "shape" pages, Vercel's
-homepage (heavier on motion than we want — use as anti-example).
+**Queued sub-pass: section scenes**
+
+- [ ] Quiet ambient visuals between feature grid / pitch / trust strip
+      (Agora-style chapter transitions). Same constraints: SVG-only,
+      tiny overhead, reduced-motion friendly, swappable as files. Pick
+      after the hero has lived for a few days and we see whether the
+      page reads cohesively without them or feels orphaned in the lower
+      sections.
+
+Touchstones (still open while designing): agora.xyz, Linear (calm but
+disciplined), Stripe shape pages. Anti-example: Vercel homepage motion
+budget.
 
 ### Phase 4.6 - Official website + GitHub Pages deploy (2026-05-16)
 

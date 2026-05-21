@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 600" preserveAspectRatio="xMidYMid slice" role="img" aria-hidden="true">
+  <title>Ovellum — topographic contour bands</title>
+  <desc>Stacked sinusoidal contour lines drifting laterally at varied rates. Animation pauses under prefers-reduced-motion.</desc>
+  <style>
+    .bands use {
+      fill: none;
+      stroke: rgba(22, 24, 30, 0.13);
+      stroke-width: 1;
+      vector-effect: non-scaling-stroke;
+    }
+    @media (prefers-reduced-motion: no-preference) {
+      .bands use { animation: ov-drift 30s linear infinite; }
+      .bands use.r { animation-direction: reverse; }
+    }
+    @keyframes ov-drift {
+      from { transform: translateX(0); }
+      to   { transform: translateX(-400px); }
+    }
+  </style>
+  <defs>
+    <path id="w" d="M -200 0 Q -100 -16 0 0 T 200 0 T 400 0 T 600 0 T 800 0 T 1000 0 T 1200 0 T 1400 0 T 1600 0 T 1800 0 T 2000 0 T 2200 0"/>
+  </defs>
+  <g class="bands">
+    <g transform="translate(0 180)"><use href="#w"            style="animation-duration:36s;animation-delay:-3s"/></g>
+    <g transform="translate(0 210)"><use href="#w" class="r"  style="animation-duration:28s;animation-delay:-7s"/></g>
+    <g transform="translate(0 240)"><use href="#w"            style="animation-duration:32s;animation-delay:-1s"/></g>
+    <g transform="translate(0 270)"><use href="#w" class="r"  style="animation-duration:40s;animation-delay:-5s"/></g>
+    <g transform="translate(0 300)"><use href="#w"            style="animation-duration:30s;animation-delay:-9s"/></g>
+    <g transform="translate(0 330)"><use href="#w" class="r"  style="animation-duration:34s;animation-delay:-2s"/></g>
+    <g transform="translate(0 360)"><use href="#w"            style="animation-duration:38s;animation-delay:-6s"/></g>
+    <g transform="translate(0 390)"><use href="#w" class="r"  style="animation-duration:26s;animation-delay:-4s"/></g>
+    <g transform="translate(0 420)"><use href="#w"            style="animation-duration:32s;animation-delay:-8s"/></g>
+    <g transform="translate(0 450)"><use href="#w" class="r"  style="animation-duration:36s;animation-delay:-1s"/></g>
+    <g transform="translate(0 480)"><use href="#w"            style="animation-duration:30s;animation-delay:-5s"/></g>
+    <g transform="translate(0 510)"><use href="#w" class="r"  style="animation-duration:42s;animation-delay:-3s"/></g>
+  </g>
+</svg>

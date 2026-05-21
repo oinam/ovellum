@@ -12,6 +12,7 @@ export type {
   OvellumSiteSearchConfig,
   OvellumLandingConfig,
   OvellumLandingHero,
+  OvellumLandingHeroMedia,
   OvellumLandingCta,
   OvellumLandingFeature,
   OvellumLandingTrustStrip,

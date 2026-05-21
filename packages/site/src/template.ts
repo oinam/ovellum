@@ -285,6 +285,7 @@ export function renderLanding(input: RenderLandingInput): string {
     heroTitle,
     input.landing.hero.subtitle,
     input.landing.hero.ctas,
+    input.landing.hero.media,
     basePath,
   );
   const features = renderFeatures(input.landing.features);
@@ -317,6 +318,7 @@ function renderHero(
   title: string,
   subtitle: string | undefined,
   ctas: OvellumLandingConfig['hero']['ctas'],
+  media: OvellumLandingConfig['hero']['media'],
   basePath: string,
 ): string {
   const ctaButtons = ctas
@@ -326,11 +328,31 @@ function renderHero(
     })
     .join('\n      ');
   const ctaRow = ctas.length > 0 ? `<div class="ov-cta-row">\n      ${ctaButtons}\n    </div>` : '';
-  return `<section class="ov-hero">
-    <h1 class="ov-hero-title">${escapeHtml(title)}</h1>
-    ${subtitle ? `<p class="ov-hero-subtitle">${escapeHtml(subtitle)}</p>` : ''}
-    ${ctaRow}
+  const art = media ? renderHeroArt(media, basePath) : '';
+  const sectionAttrs = media ? ' data-media' : '';
+  return `<section class="ov-hero"${sectionAttrs}>
+    ${art}
+    <div class="ov-hero-inner">
+      <h1 class="ov-hero-title">${escapeHtml(title)}</h1>
+      ${subtitle ? `<p class="ov-hero-subtitle">${escapeHtml(subtitle)}</p>` : ''}
+      ${ctaRow}
+    </div>
   </section>`;
+}
+
+function renderHeroArt(
+  media: NonNullable<OvellumLandingConfig['hero']['media']>,
+  basePath: string,
+): string {
+  const alt = media.alt ?? '';
+  const lightSrc = escapeAttr(siteUrl(media.light, basePath));
+  const darkSrc = media.dark ? escapeAttr(siteUrl(media.dark, basePath)) : lightSrc;
+  // Two images stacked; CSS toggles visibility by `[data-theme]`. Both share the
+  // same alt so screen readers only announce one decorative scene.
+  return `<div class="ov-hero-art" aria-hidden="${alt ? 'false' : 'true'}">
+      <img class="ov-hero-art-img ov-hero-art-img--light" src="${lightSrc}" alt="${escapeAttr(alt)}" loading="eager" decoding="async">
+      <img class="ov-hero-art-img ov-hero-art-img--dark" src="${darkSrc}" alt="" loading="eager" decoding="async">
+    </div>`;
 }
 
 function renderFeatures(features: OvellumLandingConfig['features']): string {

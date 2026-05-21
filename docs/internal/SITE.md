@@ -37,7 +37,9 @@ Disabled by default — existing manual-mode sites keep using
 
 1. **Hero** — full-width title + subtitle + CTA row. Title falls back to
    `site.title`. First CTA gets `primary` style by default, the rest
-   `secondary`.
+   `secondary`. The default backdrop is a dotted-noise + radial-spotlight
+   pair drawn entirely in CSS. Setting `hero.media = { light, dark?, alt? }`
+   switches to the **imagery hero variant** (§2b).
 2. **Feature grid** — responsive grid of cards (icon + title + description).
    `auto-fit, minmax(260px, 1fr)` — collapses to 1 column on narrow
    viewports.
@@ -68,8 +70,56 @@ the structured bits (hero, features, trust) stay in config.
 
 - Multiple bundled landing templates / hero variants
 - Live GitHub stars / sponsor APIs
-- Image hero / video hero
+- Video hero
 - Per-section show-if-viewport / animation directives
+- "Section scenes" between feature/pitch/trust blocks (Agora-inspired
+  ambient visuals between sections, separate from the hero)
+
+## 2b. Imagery hero variant (added 2026-05-19)
+
+Opt-in alternative to the default dotted-noise hero. Configured via:
+
+```ts
+site.landing.hero.media = {
+  light: '/hero-light.svg',  // required
+  dark?:  '/hero-dark.svg',   // optional; falls back to light
+  alt?:   '',                  // decorative by default
+}
+```
+
+**Rendered markup.** `<section class="ov-hero" data-media>` gains an
+`<div class="ov-hero-art">` that stacks two `<img>` tags (`--light`,
+`--dark`) absolutely. The two `<img>` tags are always emitted; CSS
+toggles opacity by the page-level `[data-theme]` attribute (and by
+`prefers-color-scheme` under `data-theme='auto'`). Title/subtitle/CTAs
+move inside `<div class="ov-hero-inner">` and sit above the art via
+`position: relative; z-index: 1`.
+
+**Asset shipping.** Assets follow Ovellum's manual-mode passthrough
+convention: drop the SVG alongside Markdown content (e.g.
+`content/hero-light.svg`), and the build copies it verbatim to `dist/`.
+No new directory convention or registration step.
+
+**Why two files (light + dark) rather than one self-theming SVG.** An
+SVG referenced via `<img>` runs in its own document context, so it
+cannot read the page's `[data-theme]` attribute or `data-theme='auto'`
+JS-toggled state. It can only respect OS-level `prefers-color-scheme`.
+Two files swapped via CSS lets the SVG follow the page's manual theme
+toggle without inline-injecting markup or running JS.
+
+**Why the animation lives inside the SVG.** Each asset embeds its own
+`<style>` block with `@keyframes` and a
+`@media (prefers-reduced-motion: reduce)` no-op fallback. The editor
+focuses on one file to change motion or palette; no parent CSS, no JS.
+Trade-off: animation doesn't synchronise with anything on the page
+(which is fine — by design it's ambient).
+
+**Where the CSS lives.** `.ov-hero[data-media]` overrides in
+`packages/site/src/templates/default/style.css` (search for "Imagery
+hero variant"). The variant suppresses the `::before` / `::after`
+pseudo-layers, gives the section a min-block-size + flex column so the
+content centres, applies a bottom mask-image fade so the visual recedes
+into the feature grid below.
 
 ## 3. Architecture
 

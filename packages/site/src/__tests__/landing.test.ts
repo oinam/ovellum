@@ -137,4 +137,52 @@ describe('renderLanding', () => {
     });
     expect(html).toContain('<body class="ov-body-landing">');
   });
+
+  it('renders the imagery hero variant when hero.media is configured', () => {
+    const html = renderLanding({
+      site: SITE,
+      landing: landingConfig({
+        hero: {
+          title: 'Welcome',
+          ctas: [],
+          media: { light: '/hero-light.svg', dark: '/hero-dark.svg', alt: 'Backdrop' },
+        },
+      }),
+      generatedAt: '2026-05-16T00:00:00.000Z',
+    });
+    // Section opts into the imagery variant via `data-media`.
+    expect(html).toMatch(/<section class="ov-hero" data-media>/);
+    // Both stacked images are emitted so CSS can flip between them per theme.
+    expect(html).toContain('class="ov-hero-art-img ov-hero-art-img--light"');
+    expect(html).toContain('class="ov-hero-art-img ov-hero-art-img--dark"');
+    expect(html).toContain('src="/hero-light.svg"');
+    expect(html).toContain('src="/hero-dark.svg"');
+    // Alt text reaches the user-facing (light) image; dark image is purely decorative.
+    expect(html).toContain('alt="Backdrop"');
+    // Title/subtitle/CTAs now live inside the inner wrapper.
+    expect(html).toContain('class="ov-hero-inner"');
+  });
+
+  it('falls back to the light asset for both <img>s when hero.media.dark is omitted', () => {
+    const html = renderLanding({
+      site: SITE,
+      landing: landingConfig({
+        hero: { ctas: [], media: { light: '/hero.svg' } },
+      }),
+      generatedAt: '2026-05-16T00:00:00.000Z',
+    });
+    // Two img tags, both pointing at the light asset.
+    const matches = html.match(/src="\/hero\.svg"/g);
+    expect(matches?.length).toBe(2);
+  });
+
+  it('omits the imagery markup entirely when hero.media is unset', () => {
+    const html = renderLanding({
+      site: SITE,
+      landing: landingConfig({ hero: { ctas: [] } }),
+      generatedAt: '2026-05-16T00:00:00.000Z',
+    });
+    expect(html).not.toContain('data-media');
+    expect(html).not.toContain('ov-hero-art');
+  });
 });

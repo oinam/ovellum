@@ -233,6 +233,7 @@ function validateLanding(value: unknown): void {
       }
       h.ctas.forEach((cta, i) => validateCta(cta, `site.landing.hero.ctas[${i}]`));
     }
+    if (h.media !== undefined) validateHeroMedia(h.media);
   }
   if (l.features !== undefined) {
     if (!Array.isArray(l.features)) {
@@ -254,6 +255,22 @@ function validateLanding(value: unknown): void {
       }
       ts.items.forEach((it, i) => validateTrustItem(it, `site.landing.trustStrip.items[${i}]`));
     }
+  }
+}
+
+function validateHeroMedia(value: unknown): void {
+  if (!isPlainObject(value)) {
+    throw new ConfigError('`site.landing.hero.media` must be an object.');
+  }
+  const m = value;
+  if (typeof m.light !== 'string' || m.light.length === 0) {
+    throw new ConfigError('`site.landing.hero.media.light` must be a non-empty string path.');
+  }
+  if (m.dark !== undefined && typeof m.dark !== 'string') {
+    throw new ConfigError('`site.landing.hero.media.dark` must be a string path.');
+  }
+  if (m.alt !== undefined && typeof m.alt !== 'string') {
+    throw new ConfigError('`site.landing.hero.media.alt` must be a string.');
   }
 }
 

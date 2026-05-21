@@ -8,7 +8,7 @@ For the original design intent see [`DESIGN.md` §7](./DESIGN.md#7-config-schema
 For terms ("anchor", "protected zone", "orphan") see [`GLOSSARY.md`](./GLOSSARY.md).
 For what each field actually enables see [`FEATURES.md`](./FEATURES.md).
 
-Last updated: 2026-05-16 (added `site.landing`)
+Last updated: 2026-05-19 (added `site.landing.hero.media`)
 
 ---
 
@@ -141,6 +141,7 @@ interface OvellumLandingConfig {
     title?: string;
     subtitle?: string;
     ctas: Array<{ label: string; href: string; style?: 'primary' | 'secondary' }>;
+    media?: { light: string; dark?: string; alt?: string };
   };
   features: Array<{ icon?: string; title: string; description: string }>;
   trustStrip?: {
@@ -160,11 +161,27 @@ interface OvellumLandingConfig {
 
 ### `hero`
 
-| Field      | Type                  | Notes                                                                                      |
-| ---------- | --------------------- | ------------------------------------------------------------------------------------------ |
-| `title`    | `string?`             | Falls back to `site.title`.                                                                |
-| `subtitle` | `string?`             | Short tagline rendered under the title.                                                    |
-| `ctas`     | `OvellumLandingCta[]` | First CTA defaults to `primary` style, the rest to `secondary` unless `style` is explicit. |
+| Field      | Type                       | Notes                                                                                                            |
+| ---------- | -------------------------- | ---------------------------------------------------------------------------------------------------------------- |
+| `title`    | `string?`                  | Falls back to `site.title`.                                                                                      |
+| `subtitle` | `string?`                  | Short tagline rendered under the title.                                                                          |
+| `ctas`     | `OvellumLandingCta[]`      | First CTA defaults to `primary` style, the rest to `secondary` unless `style` is explicit.                       |
+| `media`    | `OvellumLandingHeroMedia?` | When set, swaps the default dotted-noise + radial-spotlight pseudo-layers for a full-bleed image. See below.     |
+
+### `OvellumLandingHeroMedia`
+
+| Field   | Type      | Notes                                                                                                                                                  |
+| ------- | --------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `light` | `string`  | Required. Site-relative path or absolute URL of the asset shown by default (and under light theme). SVG is recommended — embedded `<style>` and `@keyframes` work, so animation stays self-contained in the file. |
+| `dark`  | `string?` | Optional dark-theme asset. When set, swapped in via CSS under `[data-theme='dark']`. When omitted, `light` is used for both themes.                    |
+| `alt`   | `string?` | Alt text reached by assistive tech. Default `''` (decorative — the second `<img>` is always rendered with empty alt regardless).                       |
+
+> Static assets follow the manual-mode passthrough rule — drop the SVG
+> alongside your `.md` files in `input/` (e.g. `content/hero-light.svg`)
+> and the build copies it verbatim to `output/` so the URL resolves at
+> the same path. Animation, theme-respecting media queries, and
+> reduced-motion handling all live **inside** the SVG, so swapping the
+> file is the only edit needed to change motion or palette.
 
 ### `OvellumLandingCta`
 

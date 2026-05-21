@@ -69,4 +69,43 @@ describe('validateUserConfig', () => {
   it('rejects non-object protect', () => {
     expect(() => validateUserConfig({ protect: 'on' })).toThrow(/protect/);
   });
+
+  it('accepts site.landing.hero.media with light + dark + alt', () => {
+    const input = {
+      site: {
+        landing: {
+          hero: {
+            ctas: [],
+            media: { light: '/hero.svg', dark: '/hero-dark.svg', alt: 'Scene' },
+          },
+        },
+      },
+    };
+    expect(validateUserConfig(input)).toEqual(input);
+  });
+
+  it('accepts site.landing.hero.media with only the required light field', () => {
+    const input = { site: { landing: { hero: { ctas: [], media: { light: '/hero.svg' } } } } };
+    expect(validateUserConfig(input)).toEqual(input);
+  });
+
+  it('rejects site.landing.hero.media without a light path', () => {
+    expect(() =>
+      validateUserConfig({ site: { landing: { hero: { ctas: [], media: { dark: '/x.svg' } } } } }),
+    ).toThrow(/site\.landing\.hero\.media\.light/);
+  });
+
+  it('rejects empty-string light path on hero.media', () => {
+    expect(() =>
+      validateUserConfig({ site: { landing: { hero: { ctas: [], media: { light: '' } } } } }),
+    ).toThrow(/site\.landing\.hero\.media\.light/);
+  });
+
+  it('rejects non-string alt on hero.media', () => {
+    expect(() =>
+      validateUserConfig({
+        site: { landing: { hero: { ctas: [], media: { light: '/a.svg', alt: 12 } } } },
+      }),
+    ).toThrow(/site\.landing\.hero\.media\.alt/);
+  });
 });

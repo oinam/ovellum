@@ -1397,6 +1397,55 @@ body.ov-body-landing {
     transparent 72%
   );
 }
+
+/* Imagery hero variant — when `site.landing.hero.media` is configured the
+   template adds `data-media` to the section; the dotted-noise and spotlight
+   pseudo-layers stand down so the supplied SVG can fill the bleed. */
+.ov-hero[data-media]::before,
+.ov-hero[data-media]::after {
+  display: none;
+}
+.ov-hero[data-media] {
+  padding-block: clamp(var(--space-3xl), 14vw, calc(var(--space-3xl) * 1.4))
+                 clamp(var(--space-xl), 9vw, var(--space-3xl));
+  min-block-size: clamp(420px, 56vw, 640px);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+.ov-hero-art {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: -1;
+  overflow: hidden;
+  /* Soft fade-out so the art recedes into the page before the feature grid
+     begins — keeps the seam editorial-calm rather than hard-edged. */
+  -webkit-mask-image: linear-gradient(to bottom,
+    black 0%, black 78%, transparent 100%);
+          mask-image: linear-gradient(to bottom,
+    black 0%, black 78%, transparent 100%);
+}
+.ov-hero-art-img {
+  position: absolute;
+  inset: 0;
+  inline-size: 100%;
+  block-size: 100%;
+  object-fit: cover;
+  object-position: center;
+}
+/* Default: light shown, dark hidden. Theme + auto-with-OS-preference flip. */
+.ov-hero-art-img--dark { opacity: 0; }
+:root[data-theme='dark'] .ov-hero-art-img--light { opacity: 0; }
+:root[data-theme='dark'] .ov-hero-art-img--dark { opacity: 1; }
+@media (prefers-color-scheme: dark) {
+  :root[data-theme='auto'] .ov-hero-art-img--light { opacity: 0; }
+  :root[data-theme='auto'] .ov-hero-art-img--dark { opacity: 1; }
+}
+.ov-hero-inner {
+  position: relative;
+  z-index: 1;
+}
 .ov-hero-title {
   position: relative;
   font-size: clamp(var(--font-size-4), 7vw, var(--font-size-5, 3.5rem));
@@ -1578,6 +1627,10 @@ body.ov-body-landing {
   .ov-hero {
     margin-inline: calc(-1 * var(--space-s));
     padding-block: var(--space-xl) var(--space-l);
+  }
+  .ov-hero[data-media] {
+    padding-block: var(--space-2xl) var(--space-xl);
+    min-block-size: clamp(320px, 70vw, 460px);
   }
   .ov-hero-title {
     letter-spacing: -0.03em;
