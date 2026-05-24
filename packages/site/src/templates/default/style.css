@@ -85,7 +85,13 @@
   /* @tokens:from-styles-md:end */
 
   /* Tier 2 — semantic (default light) — site-specific remappings */
-  --color-bg: var(--color-zinc-50);
+  /* Body sits at a faint warm-neutral gray (not pure white). Chrome
+     (currently only the footer) sits ~4% L below body — perceptibly
+     separate without fighting the body for attention. Topbar uses
+     --color-bg (continuation of body, separated only by a hairline
+     border) — see SITE.md §8a for the rationale. */
+  --color-bg: oklch(97% 0.002 286.38);
+  --color-bg-chrome: oklch(93% 0.004 286.38);
   --color-bg-subtle: var(--color-zinc-100);
   --color-bg-muted: var(--color-zinc-200);
   --color-fg: var(--color-zinc-900);
@@ -127,10 +133,14 @@
   --sidebar-w: 260px;
   --toc-w: 220px;
   --content-max: 76ch;
-  /* Outer page boundary shared by the topbar, main content, and footer.
-     Docs run wide (Mintlify-style) so long code blocks and reference
-     tables have room without scrolling; landing tightens for editorial
-     centerpiece feel. Override on body for special page types. */
+  /* Width tokens.
+     --chrome-max stays constant across every page — topbar and footer
+     read this so the chrome never shifts width between landing and docs
+     (avoiding the jarring "small header → wide header" jump on click).
+     --page-max governs the main content boundary: docs run wide
+     (Mintlify-style) so long code blocks and reference tables have room;
+     landing tightens via the body class for editorial centrepiece feel. */
+  --chrome-max: 1600px;
   --page-max: 1600px;
 }
 
@@ -142,6 +152,12 @@ body.ov-body-landing {
 @media (prefers-color-scheme: dark) {
   :root[data-theme='auto'] {
     --color-bg: var(--color-zinc-950);
+    /* Chrome lifts ~6% L above body in dark mode (elevation inversion:
+       you can't go darker than near-black without reading as a void).
+       The gap is bigger than light mode's 4% because the human eye
+       discriminates lightness deltas worse in dark regions. Footer
+       only — topbar uses --color-bg. */
+    --color-bg-chrome: oklch(20% 0.007 285.82);
     --color-bg-subtle: var(--color-zinc-900);
     --color-bg-muted: var(--color-zinc-800);
     --color-fg: var(--color-zinc-100);
@@ -170,6 +186,7 @@ body.ov-body-landing {
 
 :root[data-theme='dark'] {
   --color-bg: var(--color-zinc-950);
+  --color-bg-chrome: oklch(20% 0.007 285.82);
   --color-bg-subtle: var(--color-zinc-900);
   --color-bg-muted: var(--color-zinc-800);
   --color-fg: var(--color-zinc-100);
@@ -208,6 +225,15 @@ body {
   padding: 0;
 }
 
+/* html bg matches the body (not the chrome) so Safari's rubber-band
+   overscroll at the top continues the topbar's body color cleanly.
+   The footer keeps its chrome tint, so bottom overscroll will reveal
+   body instead of footer — accepted tradeoff: top overscroll is the
+   one users actually notice. */
+html {
+  background: var(--color-bg);
+}
+
 body {
   font-family: var(--font-sans);
   font-size: var(--font-size-0);
@@ -233,22 +259,30 @@ a:hover {
   border-radius: 2px;
 }
 
-/* Top bar */
+/* Top bar
+   ===
+   Outer element is full-bleed so the bottom border spans the viewport
+   — keeps the header visually identical between landing (narrow body)
+   and docs (wide body). Inner element holds the grid and constrains
+   content to --chrome-max. Topbar reads as a continuation of the body,
+   separated only by a thin hairline border-block-end. */
 .ov-topbar {
   position: sticky;
   top: 0;
   z-index: 10;
+  inline-size: 100%;
+  background: var(--color-bg);
+  border-block-end: 1px solid var(--color-border);
+}
+.ov-topbar-inner {
   display: grid;
   grid-template-columns: auto 1fr auto;
   align-items: center;
   gap: var(--space-m);
   padding: var(--space-2xs) var(--space-m);
-  max-inline-size: var(--page-max);
+  max-inline-size: var(--chrome-max);
   margin-inline: auto;
   inline-size: 100%;
-  border-block-end: 1px solid var(--color-border);
-  background: color-mix(in oklch, var(--color-bg) 92%, transparent);
-  backdrop-filter: blur(10px);
 }
 .ov-brand-row {
   display: inline-flex;
@@ -1132,25 +1166,29 @@ body.ov-menu-open {
 
 /* Footer
    ===
-   Layout mirrors `.ov-topbar` exactly: same grid container, same
-   max-inline-size: var(--page-max), same margin-inline: auto + inline-size: 100%
-   pattern, same horizontal padding. The only differences are vertical
-   padding (more breathing room) and the border (top instead of bottom).
-   Result: the topbar, content, and footer rails sit on identical
-   vertical gutters at every viewport. */
+   Outer is full-bleed so the chrome tint and top border span the
+   viewport; inner holds the grid and constrains to --chrome-max.
+   Reads as a closing baseline below the content — the chrome tint
+   (slightly darker than body in light, slightly lighter in dark)
+   does the ambient-separation work that a tinted topbar would
+   otherwise fight with Safari URL-bar sampling. */
 .ov-footer {
+  inline-size: 100%;
+  margin-block-start: var(--space-2xl);
+  background: var(--color-bg-chrome);
+  border-block-start: 1px solid var(--color-border);
+  color: var(--color-fg-subtle);
+  font-size: 0.84em;
+}
+.ov-footer-inner {
   display: grid;
   grid-template-columns: auto 1fr auto;
   align-items: center;
   gap: var(--space-m);
   padding: var(--space-m);
-  max-inline-size: var(--page-max);
+  max-inline-size: var(--chrome-max);
   margin-inline: auto;
-  margin-block-start: var(--space-2xl);
   inline-size: 100%;
-  border-block-start: 1px solid var(--color-border);
-  color: var(--color-fg-subtle);
-  font-size: 0.84em;
 }
 .ov-footer-left {
   grid-column: 1;

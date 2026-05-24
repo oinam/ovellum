@@ -49,6 +49,14 @@ function renderShell(opts: ShellOptions): string {
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <!-- Drives Safari's URL bar tint and the top-of-page rubber-band area.
+       data-light / data-dark are hex approximations of --color-bg
+       (body) in light + dark — the topbar now reads as a continuation
+       of the body, so the URL bar should match body, not chrome.
+       Update these if --color-bg moves. The inline boot script below
+       picks the right one before paint, and script.js keeps it in
+       sync with the theme toggle + OS changes. -->
+  <meta name="theme-color" id="ov-theme-color" data-light="#f4f4f6" data-dark="#101013" content="#f4f4f6">
   <title>${escapeHtml(opts.fullTitle)}</title>
   ${desc ? `<meta name="description" content="${escapeAttr(desc)}">` : ''}
   ${opts.site.baseUrl ? `<link rel="canonical" href="${escapeAttr(join(opts.site.baseUrl, basePath + opts.url))}">` : ''}
@@ -61,6 +69,16 @@ function renderShell(opts: ShellOptions): string {
         var t = localStorage.getItem('ovellum-theme');
         if (t === 'light' || t === 'dark' || t === 'auto') {
           document.documentElement.setAttribute('data-theme', t);
+        } else {
+          t = document.documentElement.getAttribute('data-theme') || 'auto';
+        }
+        var effective = t;
+        if (t === 'auto') {
+          effective = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+        }
+        var meta = document.getElementById('ov-theme-color');
+        if (meta) {
+          meta.setAttribute('content', meta.getAttribute(effective === 'dark' ? 'data-dark' : 'data-light'));
         }
       } catch (_) {}
     })();
@@ -113,7 +131,7 @@ function renderTopbar(
     </button>`;
   const themeButton = `<button class="ov-theme-toggle" type="button"
       aria-label="Toggle theme" title="Toggle theme" data-ov-theme-toggle>
-      <span class="ov-theme-icon ov-theme-icon-auto">${renderIcon('monitor')}</span>
+      <span class="ov-theme-icon ov-theme-icon-auto">${renderIcon('eclipse')}</span>
       <span class="ov-theme-icon ov-theme-icon-light">${renderIcon('sun')}</span>
       <span class="ov-theme-icon ov-theme-icon-dark">${renderIcon('moon')}</span>
     </button>`;
@@ -121,19 +139,21 @@ function renderTopbar(
     ? `<span class="ov-brand-version" aria-label="Stable version ${escapeAttr(site.version)}">${escapeHtml(site.version)}</span>`
     : '';
   return `<header class="ov-topbar">
-    <div class="ov-brand-row">
-      <a class="ov-brand" href="${escapeAttr(assets)}">${escapeHtml(site.title)}</a>
-      ${versionBadge}
+    <div class="ov-topbar-inner">
+      <div class="ov-brand-row">
+        <a class="ov-brand" href="${escapeAttr(assets)}">${escapeHtml(site.title)}</a>
+        ${versionBadge}
+      </div>
+      <nav class="ov-topbar-nav" aria-label="Primary">${navLinks}</nav>
+      <div class="ov-topbar-right">
+        ${search}
+        ${themeButton}
+        ${menuButton}
+      </div>
+      <nav id="ov-mobile-nav" class="ov-mobile-nav" aria-label="Mobile">
+        ${navLinks}
+      </nav>
     </div>
-    <nav class="ov-topbar-nav" aria-label="Primary">${navLinks}</nav>
-    <div class="ov-topbar-right">
-      ${search}
-      ${themeButton}
-      ${menuButton}
-    </div>
-    <nav id="ov-mobile-nav" class="ov-mobile-nav" aria-label="Mobile">
-      ${navLinks}
-    </nav>
   </header>`;
 }
 
@@ -154,7 +174,7 @@ function renderFooter(
     ? `<nav class="ov-footer-right" aria-label="Site links">${items.map((item) => renderFooterNavItem(item, basePath)).join('')}</nav>`
     : '';
 
-  return `<footer class="ov-footer">${left}${right}</footer>`;
+  return `<footer class="ov-footer"><div class="ov-footer-inner">${left}${right}</div></footer>`;
 }
 
 function renderFooterNavItem(

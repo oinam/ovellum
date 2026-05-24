@@ -606,7 +606,15 @@ Built on `zinc` + `blue` accent. Calm, doc-friendly. The reference theme other t
 ```css
 :root,
 [data-theme='default-light'] {
-  --color-bg: var(--color-zinc-50);
+  /* Body sits at a faint warm-neutral gray (not pure white). Chrome
+     (currently only the footer) sits ~4% L below body — perceptibly
+     separate without fighting the body for attention. Topbar now uses
+     --color-bg (continuation of body, separated only by a hairline
+     border) — see SITE.md §8a for the design rationale. Hex
+     approximation #f4f4f6 (body) lives in the <meta name="theme-color">
+     data-light attribute and must be kept in sync if --color-bg moves. */
+  --color-bg: oklch(97% 0.002 286.38);
+  --color-bg-chrome: oklch(93% 0.004 286.38);
   --color-bg-subtle: var(--color-zinc-100);
   --color-bg-muted: var(--color-zinc-200);
   --color-bg-inverse: var(--color-zinc-900);
@@ -658,7 +666,16 @@ Built on `zinc` + `blue` accent. Calm, doc-friendly. The reference theme other t
 ```css
 @media (prefers-color-scheme: dark) {
   :root {
+    /* Elevation inversion in dark mode: body stays at zinc-950 (already
+       not pure black) and chrome lifts ~6% L *above* it — bigger gap
+       than light mode's 4% because the human eye discriminates lightness
+       deltas worse in dark regions. You can't go darker than near-black
+       without reading as a void, so chrome elevates instead. Topbar
+       uses --color-bg (continuation of body); only the footer uses
+       --color-bg-chrome. Hex approximation #101013 (body) lives in the
+       <meta name="theme-color"> data-dark attribute. */
     --color-bg: var(--color-zinc-950);
+    --color-bg-chrome: oklch(20% 0.007 285.82);
     --color-bg-subtle: var(--color-zinc-900);
     --color-bg-muted: var(--color-zinc-800);
     --color-bg-inverse: var(--color-zinc-100);

@@ -271,6 +271,46 @@ gap: var(--space-l);
 At narrow viewports the right ToC drops first, then the sidebar collapses to
 a hamburger button.
 
+### 8a. Chrome width + background (added 2026-05-23)
+
+The topbar (`.ov-topbar`) and footer (`.ov-footer`) are **full-bleed**:
+the outer element spans the viewport and paints the chrome background
++ border; an inner wrapper (`.ov-topbar-inner` / `.ov-footer-inner`)
+holds the grid and constrains contents to a max width.
+
+Two width tokens, kept deliberately separate:
+
+| Token          | Purpose                                  | Default | Overridden on landing? |
+| -------------- | ---------------------------------------- | ------- | ---------------------- |
+| `--chrome-max` | Topbar + footer inner contents           | 1600px  | **No** — stays constant so the header never jumps width between landing and docs |
+| `--page-max`   | Main content area (`.ov-layout`, `.ov-landing`) | 1600px  | **Yes** — `body.ov-body-landing` tightens it to 1100px for the editorial centerpiece feel |
+
+Backgrounds use two semantic tokens (see STYLES.md §7.2 / §7.3 for the
+exact oklch values):
+
+- `--color-bg` — body, topbar, **and `html`**. Off-white warm-neutral
+  gray in light; near-black zinc-950 in dark. Pure white / pure black
+  are explicitly avoided. The topbar reads as a continuation of the
+  body, separated only by a 1px `border-block-end`.
+- `--color-bg-chrome` — footer only. ~4% L below body in light, ~6% L
+  above body in dark (elevation inversion — going darker than
+  near-black reads as a void). Reads as a closing baseline below the
+  content.
+
+**Why topbar = body, footer = chrome (asymmetric):** an earlier pass
+made *both* topbar and footer chrome-colored, but a tinted topbar
+fought every other surface on the page — and Safari sampled the
+sticky-translucent topbar's blended color into its URL-bar tint,
+which never matched. A body-colored topbar with a hairline border is
+quieter, matches Safari's URL-bar sampling cleanly (since both read
+as the same body color), and lets the footer's chrome tint do the
+ambient-separation work on its own.
+
+`html { background: var(--color-bg) }` so Safari's top-of-page
+rubber-band overscroll continues the topbar's body color cleanly.
+Bottom overscroll will reveal body instead of the footer's chrome
+tint — accepted tradeoff (top overscroll is the one users notice).
+
 ## 9. Theme integration
 
 The stylesheet sources its tokens from `docs/internal/STYLES.md` (Tier 1 +
@@ -395,8 +435,22 @@ For each page:
 - `<link rel="canonical">` if `site.baseUrl` is set
 - OG / Twitter cards if `baseUrl` set — minimal: title + description + URL
 - `<link rel="stylesheet" href="/assets/ovellum.css">`
-- Theme-bootstrap inline `<script>` (runs before paint, applies stored theme)
-- Deferred `<script src="/assets/ovellum.js">` for the rest
+- `<meta name="theme-color" id="ov-theme-color" data-light="…" data-dark="…" content="…">`
+  drives Safari's URL bar tint and the iOS safe-area band. The hex
+  approximations of `--color-bg` (**body**, not chrome — the topbar
+  reads as a continuation of the body, see §8a) live in the
+  `data-light` / `data-dark` attributes — single source of truth for
+  both the inline boot script and `script.js`. If `--color-bg` moves,
+  update these hex values in `packages/site/src/template.ts`.
+- Theme-bootstrap inline `<script>` runs before paint: applies the
+  stored `data-theme`, resolves the effective theme (using
+  `prefers-color-scheme` when stored value is `auto`), and writes the
+  matching hex into the meta's `content`. Avoids a light-flash on
+  dark-OS first load.
+- Deferred `<script src="/assets/ovellum.js">` keeps theme-color in
+  sync on toggle (calls `syncThemeColor()` inside `apply()`) and on OS
+  appearance changes when the stored theme is `auto`
+  (`matchMedia('(prefers-color-scheme: dark)').addEventListener('change', …)`).
 
 ## 11. Open questions (later)
 

@@ -16,8 +16,20 @@
     }
   }
 
+  function syncThemeColor(theme) {
+    var meta = document.getElementById('ov-theme-color');
+    if (!meta) return;
+    var effective = theme;
+    if (theme === 'auto') {
+      effective = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+    }
+    var next = meta.getAttribute(effective === 'dark' ? 'data-dark' : 'data-light');
+    if (next) meta.setAttribute('content', next);
+  }
+
   function apply(theme) {
     document.documentElement.setAttribute('data-theme', theme);
+    syncThemeColor(theme);
     try {
       localStorage.setItem(STORAGE_KEY, theme);
     } catch (_) {}
@@ -32,6 +44,17 @@
       apply(next);
     });
   }
+
+  // When the user is on 'auto' and flips their OS theme, retune the
+  // meta theme-color so Safari's URL bar follows the OS change.
+  try {
+    var mq = window.matchMedia('(prefers-color-scheme: dark)');
+    var onMqChange = function () {
+      if (readStored() === 'auto') syncThemeColor('auto');
+    };
+    if (mq.addEventListener) mq.addEventListener('change', onMqChange);
+    else if (mq.addListener) mq.addListener(onMqChange);
+  } catch (_) {}
 
   // Mobile menu
   var menuBtn = document.querySelector('[data-ov-menu-toggle]');
