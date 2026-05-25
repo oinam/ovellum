@@ -606,15 +606,16 @@ Built on `zinc` + `blue` accent. Calm, doc-friendly. The reference theme other t
 ```css
 :root,
 [data-theme='default-light'] {
-  /* Body sits at a faint warm-neutral gray (not pure white). Chrome
-     (currently only the footer) sits ~4% L below body — perceptibly
-     separate without fighting the body for attention. Topbar now uses
-     --color-bg (continuation of body, separated only by a hairline
+  /* Body + footer-chrome are pure-neutral grays (chroma 0 — no hue) for
+     now; a blended background image is planned to replace this surface.
+     Chrome (currently only the footer) sits ~4% L below body —
+     perceptibly separate without fighting the body for attention. Topbar
+     uses --color-bg (continuation of body, separated only by a hairline
      border) — see SITE.md §8a for the design rationale. Hex
-     approximation #f4f4f6 (body) lives in the <meta name="theme-color">
+     approximation #f4f4f4 (body) lives in the <meta name="theme-color">
      data-light attribute and must be kept in sync if --color-bg moves. */
-  --color-bg: oklch(97% 0.002 286.38);
-  --color-bg-chrome: oklch(93% 0.004 286.38);
+  --color-bg: oklch(97% 0 0);
+  --color-bg-chrome: oklch(93% 0 0);
   --color-bg-subtle: var(--color-zinc-100);
   --color-bg-muted: var(--color-zinc-200);
   --color-bg-inverse: var(--color-zinc-900);
@@ -672,10 +673,12 @@ Built on `zinc` + `blue` accent. Calm, doc-friendly. The reference theme other t
        deltas worse in dark regions. You can't go darker than near-black
        without reading as a void, so chrome elevates instead. Topbar
        uses --color-bg (continuation of body); only the footer uses
-       --color-bg-chrome. Hex approximation #101013 (body) lives in the
+       --color-bg-chrome. Both are pure-neutral grays (chroma 0 — no hue);
+       the earlier zinc tint was dropped pending a blended background
+       image. Hex approximation #101010 (body) lives in the
        <meta name="theme-color"> data-dark attribute. */
-    --color-bg: var(--color-zinc-950);
-    --color-bg-chrome: oklch(20% 0.007 285.82);
+    --color-bg: oklch(14.1% 0 0);
+    --color-bg-chrome: oklch(20% 0 0);
     --color-bg-subtle: var(--color-zinc-900);
     --color-bg-muted: var(--color-zinc-800);
     --color-bg-inverse: var(--color-zinc-100);

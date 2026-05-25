@@ -77,6 +77,8 @@
   --space-m: clamp(1.5rem, 1.4022rem + 0.4892vw, 1.7813rem);
   --space-l: clamp(2rem, 1.8696rem + 0.6522vw, 2.375rem);
   --space-xl: clamp(3rem, 2.8043rem + 0.9783vw, 3.5625rem);
+  --space-2xl: clamp(4rem, 3.7391rem + 1.3043vw, 4.75rem);
+  --space-3xl: clamp(6rem, 5.6087rem + 1.9565vw, 7.125rem);
 
   /* Radii (subset shipped) */
   --radius-md: 0.375rem;
@@ -85,13 +87,13 @@
   /* @tokens:from-styles-md:end */
 
   /* Tier 2 — semantic (default light) — site-specific remappings */
-  /* Body sits at a faint warm-neutral gray (not pure white). Chrome
-     (topbar + footer) sits perceptibly darker — ~4% L below body, which
-     is the smallest gap that reads as a real tonal separation rather
-     than rendering noise. Both stay inside the zinc family so callouts
-     and code blocks remain coherent. */
-  --color-bg: oklch(97% 0.002 286.38);
-  --color-bg-chrome: oklch(93% 0.004 286.38);
+  /* Body + footer-chrome are pure-neutral grays (chroma 0 — no hue) for
+     now; a blended background image is planned to replace this surface
+     later. Chrome (footer) sits ~4% L below body in light mode — the
+     smallest gap that reads as real tonal separation rather than
+     rendering noise. */
+  --color-bg: oklch(97% 0 0);
+  --color-bg-chrome: oklch(93% 0 0);
   --color-bg-subtle: var(--color-zinc-100);
   --color-bg-muted: var(--color-zinc-200);
   --color-fg: var(--color-zinc-900);
@@ -151,12 +153,12 @@ body.ov-body-landing {
 /* Dark theme — auto + explicit */
 @media (prefers-color-scheme: dark) {
   :root[data-theme='auto'] {
-    --color-bg: var(--color-zinc-950);
+    --color-bg: oklch(14.1% 0 0);
     /* Chrome lifts ~6% L above body in dark mode (elevation inversion:
        you can't go darker than near-black without reading as a void).
        The gap is bigger than light mode's 4% because the human eye
        discriminates lightness deltas worse in dark regions. */
-    --color-bg-chrome: oklch(20% 0.007 285.82);
+    --color-bg-chrome: oklch(20% 0 0);
     --color-bg-subtle: var(--color-zinc-900);
     --color-bg-muted: var(--color-zinc-800);
     --color-fg: var(--color-zinc-100);
@@ -184,8 +186,8 @@ body.ov-body-landing {
 }
 
 :root[data-theme='dark'] {
-  --color-bg: var(--color-zinc-950);
-  --color-bg-chrome: oklch(20% 0.007 285.82);
+  --color-bg: oklch(14.1% 0 0);
+  --color-bg-chrome: oklch(20% 0 0);
   --color-bg-subtle: var(--color-zinc-900);
   --color-bg-muted: var(--color-zinc-800);
   --color-fg: var(--color-zinc-100);
@@ -1386,64 +1388,27 @@ body.ov-body-landing {
 
 /* Hero
    ===
-   Two stacked background layers behind the centred prose:
-     ::before  dotted noise pattern (faint, neutral, theme-aware)
-     ::after   radial spotlight gradient (accent-tinted, low alpha)
-   Both use `pointer-events: none` and live above body bg but below content.
-   The dotted pattern is a data-URL SVG so there's no extra HTTP request and
-   no images to ship. */
+   Centred prose (title / subtitle / CTAs) on a flat background. The earlier
+   dotted-noise + accent-spotlight pseudo-layers were removed — a blended
+   background image is planned to take this surface later. The vertical
+   padding alone gives the hero its presence and the breathing room between
+   the topbar above and the body content below. The `[data-media]` variant
+   (site.landing.hero.media) still renders its own full-bleed <img> layer
+   (see .ov-hero-art below). */
 .ov-hero {
+  /* position + isolation are dormant here (flat background) but kept so the
+     [data-media] variant's absolutely-positioned .ov-hero-art layer still
+     anchors to the hero and stays in its own stacking context. */
   position: relative;
   isolation: isolate;
   text-align: center;
   padding-block: clamp(var(--space-2xl), 11vw, var(--space-3xl))
                  clamp(var(--space-l), 7vw, var(--space-2xl));
-  margin-inline: calc(-1 * var(--space-m));
-  overflow: hidden;
-}
-.ov-hero::before,
-.ov-hero::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  z-index: -1;
-}
-.ov-hero::before {
-  /* 28×28 grid of 1px dots in fg-subtle (lower density and lower alpha
-     than the original — editorial-calm wants texture you barely notice
-     until you look for it). Mask fades at the edges. */
-  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='28' height='28' viewBox='0 0 28 28'><circle cx='14' cy='14' r='1' fill='%23000' fill-opacity='0.12'/></svg>");
-  background-size: 28px 28px;
-  background-repeat: repeat;
-  -webkit-mask-image: radial-gradient(ellipse 75% 65% at 50% 40%, black 0%, transparent 80%);
-          mask-image: radial-gradient(ellipse 75% 65% at 50% 40%, black 0%, transparent 80%);
-}
-:root[data-theme='dark'] .ov-hero::before {
-  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='28' height='28' viewBox='0 0 28 28'><circle cx='14' cy='14' r='1' fill='%23fff' fill-opacity='0.14'/></svg>");
-}
-@media (prefers-color-scheme: dark) {
-  :root[data-theme='auto'] .ov-hero::before {
-    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='28' height='28' viewBox='0 0 28 28'><circle cx='14' cy='14' r='1' fill='%23fff' fill-opacity='0.14'/></svg>");
-  }
-}
-.ov-hero::after {
-  /* Spotlight: softer accent ellipse — pulled the saturation down so the
-     hero reads as "tinted air" rather than "branded panel". */
-  background: radial-gradient(
-    ellipse 48% 36% at 50% 36%,
-    color-mix(in oklch, var(--color-accent) 14%, transparent) 0%,
-    transparent 72%
-  );
 }
 
 /* Imagery hero variant — when `site.landing.hero.media` is configured the
-   template adds `data-media` to the section; the dotted-noise and spotlight
-   pseudo-layers stand down so the supplied SVG can fill the bleed. */
-.ov-hero[data-media]::before,
-.ov-hero[data-media]::after {
-  display: none;
-}
+   template adds `data-media`, switching the hero to a taller full-bleed
+   layout sized to hold the supplied <img> (.ov-hero-art). */
 .ov-hero[data-media] {
   padding-block: clamp(var(--space-3xl), 14vw, calc(var(--space-3xl) * 1.4))
                  clamp(var(--space-xl), 9vw, var(--space-3xl));

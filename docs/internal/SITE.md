@@ -37,9 +37,11 @@ Disabled by default — existing manual-mode sites keep using
 
 1. **Hero** — full-width title + subtitle + CTA row. Title falls back to
    `site.title`. First CTA gets `primary` style by default, the rest
-   `secondary`. The default backdrop is a dotted-noise + radial-spotlight
-   pair drawn entirely in CSS. Setting `hero.media = { light, dark?, alt? }`
-   switches to the **imagery hero variant** (§2b).
+   `secondary`. The hero sits on a flat background — the earlier
+   dotted-noise + radial-spotlight pair was removed (a blended background
+   image is planned to take that surface later). Setting
+   `hero.media = { light, dark?, alt? }` switches to the **imagery hero
+   variant** (§2b).
 2. **Feature grid** — responsive grid of cards (icon + title + description).
    `auto-fit, minmax(260px, 1fr)` — collapses to 1 column on narrow
    viewports.
@@ -75,7 +77,7 @@ the structured bits (hero, features, trust) stay in config.
 
 ## 2b. Imagery hero variant (added 2026-05-19)
 
-Opt-in alternative to the default dotted-noise hero. Configured via:
+Opt-in alternative to the flat default hero. Configured via:
 
 ```ts
 site.landing.hero.media = {
@@ -347,9 +349,10 @@ Two width tokens, kept deliberately separate:
 Backgrounds use two semantic tokens (see STYLES.md §7.2 / §7.3 for the
 exact oklch values):
 
-- `--color-bg` — body, topbar, **and `html`**. Off-white warm-neutral
-  gray in light; near-black zinc-950 in dark. Pure white / pure black
-  are explicitly avoided. The topbar reads as a continuation of the
+- `--color-bg` — body, topbar, **and `html`**. Pure-neutral gray (no
+  hue): off-white in light, near-black in dark; pure white / pure black
+  are still avoided. The earlier faint bluish tint was dropped, pending
+  a blended background image. The topbar reads as a continuation of the
   body, separated only by a 1px `border-block-end`.
 - `--color-bg-chrome` — footer only. ~4% L below body in light, ~6% L
   above body in dark (elevation inversion — going darker than
