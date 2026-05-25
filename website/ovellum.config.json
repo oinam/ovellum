@@ -40,12 +40,7 @@
             "href": "https://github.com/oinam/ovellum",
             "style": "secondary"
           }
-        ],
-        "media": {
-          "light": "/public/hero-light.svg",
-          "dark": "/public/hero-dark.svg",
-          "alt": ""
-        }
+        ]
       },
       "features": [
         {

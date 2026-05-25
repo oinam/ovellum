@@ -131,7 +131,7 @@ function renderTopbar(
     </button>`;
   const themeButton = `<button class="ov-theme-toggle" type="button"
       aria-label="Toggle theme" title="Toggle theme" data-ov-theme-toggle>
-      <span class="ov-theme-icon ov-theme-icon-auto">${renderIcon('eclipse')}</span>
+      <span class="ov-theme-icon ov-theme-icon-auto">${renderIcon('monitor')}</span>
       <span class="ov-theme-icon ov-theme-icon-light">${renderIcon('sun')}</span>
       <span class="ov-theme-icon ov-theme-icon-dark">${renderIcon('moon')}</span>
     </button>`;
