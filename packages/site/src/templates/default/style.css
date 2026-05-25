@@ -86,10 +86,10 @@
 
   /* Tier 2 — semantic (default light) — site-specific remappings */
   /* Body sits at a faint warm-neutral gray (not pure white). Chrome
-     (currently only the footer) sits ~4% L below body — perceptibly
-     separate without fighting the body for attention. Topbar uses
-     --color-bg (continuation of body, separated only by a hairline
-     border) — see SITE.md §8a for the rationale. */
+     (topbar + footer) sits perceptibly darker — ~4% L below body, which
+     is the smallest gap that reads as a real tonal separation rather
+     than rendering noise. Both stay inside the zinc family so callouts
+     and code blocks remain coherent. */
   --color-bg: oklch(97% 0.002 286.38);
   --color-bg-chrome: oklch(93% 0.004 286.38);
   --color-bg-subtle: var(--color-zinc-100);
@@ -155,8 +155,7 @@ body.ov-body-landing {
     /* Chrome lifts ~6% L above body in dark mode (elevation inversion:
        you can't go darker than near-black without reading as a void).
        The gap is bigger than light mode's 4% because the human eye
-       discriminates lightness deltas worse in dark regions. Footer
-       only — topbar uses --color-bg. */
+       discriminates lightness deltas worse in dark regions. */
     --color-bg-chrome: oklch(20% 0.007 285.82);
     --color-bg-subtle: var(--color-zinc-900);
     --color-bg-muted: var(--color-zinc-800);
@@ -261,16 +260,19 @@ a:hover {
 
 /* Top bar
    ===
-   Outer element is full-bleed so the bottom border spans the viewport
-   — keeps the header visually identical between landing (narrow body)
-   and docs (wide body). Inner element holds the grid and constrains
-   content to --chrome-max. Topbar reads as a continuation of the body,
-   separated only by a thin hairline border-block-end. */
+   Outer element is full-bleed so the chrome tint and bottom border span
+   the viewport — keeps the header visually identical between landing
+   (narrow body) and docs (wide body). Inner element holds the grid and
+   constrains content to --chrome-max. */
 .ov-topbar {
   position: sticky;
   top: 0;
   z-index: 10;
   inline-size: 100%;
+  /* Topbar reads as a continuation of the body, separated only by a
+     thin hairline border-block-end. Footer keeps the chrome tint —
+     the asymmetry is intentional: a tinted footer reads as a closing
+     baseline, a tinted topbar fought every other surface on the page. */
   background: var(--color-bg);
   border-block-end: 1px solid var(--color-border);
 }
@@ -1166,17 +1168,16 @@ body.ov-menu-open {
 
 /* Footer
    ===
-   Outer is full-bleed so the chrome tint and top border span the
-   viewport; inner holds the grid and constrains to --chrome-max.
-   Reads as a closing baseline below the content — the chrome tint
-   (slightly darker than body in light, slightly lighter in dark)
-   does the ambient-separation work that a tinted topbar would
-   otherwise fight with Safari URL-bar sampling. */
+   Outer is full-bleed (matches .ov-topbar) so the chrome tint and top
+   border span the viewport; inner holds the grid and constrains to
+   --chrome-max. Result: the topbar, content area, and footer rails
+   share identical vertical gutters at every viewport, and the chrome
+   width never jumps between landing and docs. */
 .ov-footer {
   inline-size: 100%;
   margin-block-start: var(--space-2xl);
-  background: var(--color-bg-chrome);
   border-block-start: 1px solid var(--color-border);
+  background: var(--color-bg-chrome);
   color: var(--color-fg-subtle);
   font-size: 0.84em;
 }
@@ -1657,6 +1658,60 @@ body.ov-body-landing {
   opacity: 1;
 }
 
+/* Ambient "scenes" — centered visual figures between landing sections.
+ * Editorial-calm: no chrome, top/bottom mask fades so the visual recedes
+ * into the surrounding content. SVG-driven animation lives inside each
+ * asset; this wrapper is intentionally still. */
+.ov-scene {
+  margin-block: var(--space-xl);
+  inline-size: 100%;
+  /* No full-bleed: scenes sit centered inside the landing column. The
+   * landing's --page-max (1100px on body.ov-body-landing) is the
+   * authoritative width; .ov-landing already centers itself. */
+  margin-inline: auto;
+}
+.ov-scene-art {
+  margin: 0;
+  position: relative;
+  aspect-ratio: 16 / 9;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  -webkit-mask-image: linear-gradient(
+    to bottom,
+    transparent 0%,
+    black 14%,
+    black 86%,
+    transparent 100%
+  );
+  mask-image: linear-gradient(
+    to bottom,
+    transparent 0%,
+    black 14%,
+    black 86%,
+    transparent 100%
+  );
+}
+.ov-scene-img {
+  position: absolute;
+  inset: 0;
+  inline-size: 100%;
+  block-size: 100%;
+  /* `contain` keeps the SVG's intrinsic aspect ratio visible; the figure
+   * sits centered (justify/align on the parent) inside the 16:9 frame. */
+  object-fit: contain;
+  object-position: center;
+  opacity: 0.95;
+  transition: opacity 200ms ease;
+}
+.ov-scene-img--dark { opacity: 0; }
+:root[data-theme='dark'] .ov-scene-img--light { opacity: 0; }
+:root[data-theme='dark'] .ov-scene-img--dark { opacity: 0.95; }
+@media (prefers-color-scheme: dark) {
+  :root[data-theme='auto'] .ov-scene-img--light { opacity: 0; }
+  :root[data-theme='auto'] .ov-scene-img--dark { opacity: 0.95; }
+}
+
 /* Landing-page responsive */
 @media (max-width: 720px) {
   .ov-landing {
@@ -1678,5 +1733,11 @@ body.ov-body-landing {
   }
   .ov-trust-items {
     gap: var(--space-m);
+  }
+  .ov-scene {
+    margin-block: var(--space-l);
+  }
+  .ov-scene-art {
+    aspect-ratio: 16 / 10;
   }
 }

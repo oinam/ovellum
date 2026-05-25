@@ -8,7 +8,7 @@ For the original design intent see [`DESIGN.md` §7](./DESIGN.md#7-config-schema
 For terms ("anchor", "protected zone", "orphan") see [`GLOSSARY.md`](./GLOSSARY.md).
 For what each field actually enables see [`FEATURES.md`](./FEATURES.md).
 
-Last updated: 2026-05-19 (added `site.landing.hero.media`)
+Last updated: 2026-05-22 (added `site.landing.scenes`)
 
 ---
 
@@ -144,6 +144,7 @@ interface OvellumLandingConfig {
     media?: { light: string; dark?: string; alt?: string };
   };
   features: Array<{ icon?: string; title: string; description: string }>;
+  scenes: Array<{ light: string; dark?: string; alt?: string }>;
   trustStrip?: {
     label?: string;
     items: Array<{ name: string; href?: string; image?: string }>;
@@ -157,6 +158,7 @@ interface OvellumLandingConfig {
 | `docsHref`   | `string?`                   | first sidebar page | Where the top-bar **Docs** link points and where the primary CTA defaults if it isn't given an explicit href. |
 | `hero`       | `OvellumLandingHero`        | empty              | See below.                                                                                                    |
 | `features`   | `OvellumLandingFeature[]`   | `[]`               | Feature cards in document order; replaced wholesale on merge.                                                 |
+| `scenes`     | `OvellumLandingScene[]`     | `[]`               | Ambient visuals interleaved between the rendered landing sections, in order. See below.                       |
 | `trustStrip` | `OvellumLandingTrustStrip?` | omitted            | Rendered last when present and `items` is non-empty.                                                          |
 
 ### `hero`
@@ -182,6 +184,28 @@ interface OvellumLandingConfig {
 > the same path. Animation, theme-respecting media queries, and
 > reduced-motion handling all live **inside** the SVG, so swapping the
 > file is the only edit needed to change motion or palette.
+
+### `OvellumLandingScene`
+
+| Field   | Type      | Notes                                                                                                                                                                       |
+| ------- | --------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `light` | `string`  | Required. Site-relative path or absolute URL of the asset shown by default (and under light theme).                                                                          |
+| `dark`  | `string?` | Optional dark-theme variant. When set, swapped in via CSS under `[data-theme='dark']`. When omitted, `light` is used for both themes.                                        |
+| `alt`   | `string?` | Alt text. Default `''` (decorative — the scene is announced as `aria-hidden` when alt is empty). Set when the imagery carries semantic content worth announcing to AT users. |
+
+> Scenes are laid out in order between the rendered landing sections.
+> With three sections after the hero (features / pitch / trust), three
+> scenes fill all three gaps; extras fall through after the last section.
+> Drop the asset under `{input}/public/` (the manual-mode passthrough
+> convention) and reference it as `/public/<file>` from the config.
+> The scene wrapper is deliberately still — any motion lives inside
+> the asset itself, the same pattern the imagery hero uses. SVG is
+> recommended when you want animation: named groups inside the SVG
+> can be driven by its own `<style>` block (with a
+> `prefers-reduced-motion` no-op fallback). Raster (PNG/JPG) is
+> accepted by the schema but gives you no per-element animation
+> handle. Mask-image fades top and bottom so the scene recedes into
+> the surrounding content — editorial-calm, no chrome.
 
 ### `OvellumLandingCta`
 

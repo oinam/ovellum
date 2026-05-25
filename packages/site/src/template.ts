@@ -314,11 +314,24 @@ export function renderLanding(input: RenderLandingInput): string {
     : '';
   const trust = renderTrustStrip(input.landing.trustStrip);
 
+  // Interleave scenes between the rendered sections, in order. With three
+  // sections after the hero, three scenes fill all three gaps; extras fall
+  // through after the last section.
+  const sections = [hero, features, pitch, trust].filter((s) => s !== '');
+  const scenes = input.landing.scenes ?? [];
+  const interleaved: string[] = [];
+  sections.forEach((section, i) => {
+    interleaved.push(section);
+    if (i < sections.length - 1 && scenes[i]) {
+      interleaved.push(renderScene(scenes[i], i, basePath));
+    }
+  });
+  scenes.slice(Math.max(0, sections.length - 1)).forEach((sc, j) => {
+    interleaved.push(renderScene(sc, sections.length - 1 + j, basePath));
+  });
+
   const body = `<main class="ov-landing">
-    ${hero}
-    ${features}
-    ${pitch}
-    ${trust}
+    ${interleaved.join('\n    ')}
   </main>`;
 
   return renderShell({
@@ -373,6 +386,22 @@ function renderHeroArt(
       <img class="ov-hero-art-img ov-hero-art-img--light" src="${lightSrc}" alt="${escapeAttr(alt)}" loading="eager" decoding="async">
       <img class="ov-hero-art-img ov-hero-art-img--dark" src="${darkSrc}" alt="" loading="eager" decoding="async">
     </div>`;
+}
+
+function renderScene(
+  scene: OvellumLandingConfig['scenes'][number],
+  index: number,
+  basePath: string,
+): string {
+  const alt = scene.alt ?? '';
+  const lightSrc = escapeAttr(siteUrl(scene.light, basePath));
+  const darkSrc = scene.dark ? escapeAttr(siteUrl(scene.dark, basePath)) : lightSrc;
+  return `<section class="ov-scene" aria-hidden="${alt ? 'false' : 'true'}" style="--ov-scene-i: ${index};">
+      <figure class="ov-scene-art">
+        <img class="ov-scene-img ov-scene-img--light" src="${lightSrc}" alt="${escapeAttr(alt)}" loading="lazy" decoding="async">
+        <img class="ov-scene-img ov-scene-img--dark" src="${darkSrc}" alt="" loading="lazy" decoding="async">
+      </figure>
+    </section>`;
 }
 
 function renderFeatures(features: OvellumLandingConfig['features']): string {

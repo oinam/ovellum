@@ -108,4 +108,44 @@ describe('validateUserConfig', () => {
       }),
     ).toThrow(/site\.landing\.hero\.media\.alt/);
   });
+
+  it('accepts site.landing.scenes as an array of light/dark/alt entries', () => {
+    const input = {
+      site: {
+        landing: {
+          scenes: [
+            { light: '/public/a.png', dark: '/public/a-dark.png', alt: 'A' },
+            { light: '/public/b.png' },
+          ],
+        },
+      },
+    };
+    expect(validateUserConfig(input)).toEqual(input);
+  });
+
+  it('rejects site.landing.scenes that is not an array', () => {
+    expect(() =>
+      validateUserConfig({ site: { landing: { scenes: { light: '/a.png' } } } }),
+    ).toThrow(/site\.landing\.scenes/);
+  });
+
+  it('rejects a scene without a light path', () => {
+    expect(() =>
+      validateUserConfig({ site: { landing: { scenes: [{ dark: '/x.png' }] } } }),
+    ).toThrow(/site\.landing\.scenes\[0\]\.light/);
+  });
+
+  it('rejects an empty-string light path on a scene', () => {
+    expect(() =>
+      validateUserConfig({ site: { landing: { scenes: [{ light: '' }] } } }),
+    ).toThrow(/site\.landing\.scenes\[0\]\.light/);
+  });
+
+  it('rejects non-string alt on a scene', () => {
+    expect(() =>
+      validateUserConfig({
+        site: { landing: { scenes: [{ light: '/a.png', alt: 42 }] } },
+      }),
+    ).toThrow(/site\.landing\.scenes\[0\]\.alt/);
+  });
 });

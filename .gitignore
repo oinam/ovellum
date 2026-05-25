@@ -152,3 +152,7 @@ vite.config.ts.timestamp-*
 .ovellum/
 !.ovellum/orphans/
 !.ovellum/orphans/**
+
+# Maintainer scratchpad: drop-zone for incoming imagery, notes, throwaways.
+# Anything you want to keep belongs under website/content/public/ instead.
+tmp/

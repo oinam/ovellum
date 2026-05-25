@@ -72,6 +72,20 @@ export interface OvellumLandingFeature {
   description: string;
 }
 
+export interface OvellumLandingScene {
+  /**
+   * Default (and light-theme) asset. Site-relative path or absolute URL.
+   * Rendered as a full-bleed ambient visual between landing sections.
+   */
+  light: string;
+  /**
+   * Optional dark-theme variant. When unset, `light` is used for both themes.
+   */
+  dark?: string;
+  /** Alt text. Default `''` (decorative). */
+  alt?: string;
+}
+
 export interface OvellumLandingTrustItem {
   name: string;
   /** Optional external link. */
@@ -144,6 +158,13 @@ export interface OvellumLandingConfig {
   docsHref?: string;
   hero: OvellumLandingHero;
   features: OvellumLandingFeature[];
+  /**
+   * Ambient "scene" visuals interleaved between the rendered landing
+   * sections (hero / features / pitch / trust), in order. With three sections
+   * after the hero, three scenes fill all three gaps. Extras fall through
+   * after the trust strip.
+   */
+  scenes: OvellumLandingScene[];
   /** Trust strip rendered after the prose body, if any. */
   trustStrip?: OvellumLandingTrustStrip;
 }
@@ -267,6 +288,7 @@ export const DEFAULT_CONFIG: OvellumConfig = {
       enabled: false,
       hero: { ctas: [] },
       features: [],
+      scenes: [],
     },
   },
 };

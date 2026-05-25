@@ -241,6 +241,12 @@ function validateLanding(value: unknown): void {
     }
     l.features.forEach((f, i) => validateFeature(f, `site.landing.features[${i}]`));
   }
+  if (l.scenes !== undefined) {
+    if (!Array.isArray(l.scenes)) {
+      throw new ConfigError('`site.landing.scenes` must be an array.');
+    }
+    l.scenes.forEach((s, i) => validateScene(s, `site.landing.scenes[${i}]`));
+  }
   if (l.trustStrip !== undefined) {
     if (!isPlainObject(l.trustStrip)) {
       throw new ConfigError('`site.landing.trustStrip` must be an object.');
@@ -293,6 +299,20 @@ function validateFeature(value: unknown, path: string): void {
   }
   if (f.icon !== undefined && typeof f.icon !== 'string') {
     throw new ConfigError(`\`${path}.icon\` must be a string.`);
+  }
+}
+
+function validateScene(value: unknown, path: string): void {
+  if (!isPlainObject(value)) throw new ConfigError(`\`${path}\` must be an object.`);
+  const s = value;
+  if (typeof s.light !== 'string' || s.light.length === 0) {
+    throw new ConfigError(`\`${path}.light\` must be a non-empty string path.`);
+  }
+  if (s.dark !== undefined && typeof s.dark !== 'string') {
+    throw new ConfigError(`\`${path}.dark\` must be a string path.`);
+  }
+  if (s.alt !== undefined && typeof s.alt !== 'string') {
+    throw new ConfigError(`\`${path}.alt\` must be a string.`);
   }
 }
 

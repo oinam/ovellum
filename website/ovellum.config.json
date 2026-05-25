@@ -42,8 +42,8 @@
           }
         ],
         "media": {
-          "light": "/hero-light.svg",
-          "dark": "/hero-dark.svg",
+          "light": "/public/hero-light.svg",
+          "dark": "/public/hero-dark.svg",
           "alt": ""
         }
       },
@@ -73,6 +73,7 @@
           "description": "Code blocks render through shiki with dual `github-light` / `github-dark` themes baked into the HTML. Zero runtime JavaScript for syntax colour."
         }
       ],
+      "scenes": [],
       "trustStrip": {
         "label": "Powered by",
         "items": [

@@ -72,8 +72,6 @@ the structured bits (hero, features, trust) stay in config.
 - Live GitHub stars / sponsor APIs
 - Video hero
 - Per-section show-if-viewport / animation directives
-- "Section scenes" between feature/pitch/trust blocks (Agora-inspired
-  ambient visuals between sections, separate from the hero)
 
 ## 2b. Imagery hero variant (added 2026-05-19)
 
@@ -120,6 +118,67 @@ hero variant"). The variant suppresses the `::before` / `::after`
 pseudo-layers, gives the section a min-block-size + flex column so the
 content centres, applies a bottom mask-image fade so the visual recedes
 into the feature grid below.
+
+## 2c. Section scenes (added 2026-05-22)
+
+Optional ambient visuals woven between the rendered landing sections.
+Driven by `site.landing.scenes: OvellumLandingScene[]` — a small array
+where each entry is `{ light, dark?, alt? }`. With three sections
+after the hero (features / pitch / trust), three scenes fill all
+three gaps; extras fall through after the last section.
+
+**Rendered markup.** Each scene becomes a centered
+`<section class="ov-scene" aria-hidden style="--ov-scene-i: i;">`
+holding two stacked `<img>` tags (`--light` / `--dark`), same
+`[data-theme]` flip the hero uses. The inline `--ov-scene-i` integer
+is published as a CSS hook for wrapper-level effects (none ship by
+default; the scene wrapper is intentionally still — see below).
+
+**Asset shipping.** User-supplied imagery lives in
+`{input}/public/` (e.g. `website/content/public/tree-house.svg`) and
+passes through to `dist/public/<file>` verbatim. The hero SVGs live
+in the same folder so the imagery tree is cohesive and stays out of
+the article tree. References from config use `/public/<file>`.
+
+**Why a separate `public/` folder.** Editorial imagery is asset
+content, not page content. Keeping it out of `content/*.md` means
+the writer's view of the site (the file tree) stays readable, and
+drop-replace updates ("here's a new picture") don't risk colliding
+with a same-named `.md` file. The convention follows Next.js /
+Jekyll prior art.
+
+**SVG over raster.** The bundled website scenes are hand-authored
+SVGs (~10KB each) with named groups (`.layer-mountains-near`,
+`.feature-windmill`, `.feature-drones`, `.anim-windmill`, etc.) so
+the maintainer can target individual elements from inside the SVG's
+own `<style>` block — windmill blades rotate, drones bob, propellers
+spin, ripples shimmer, leaves fall, etc. Raster formats (PNG/JPG)
+are not blocked by the schema, but a raster scene has no per-element
+handle — any motion must come from the wrapping `<img>`, which is
+deliberately still here. Practical rule: use SVG when you want
+animation, raster only if you're sure the scene should be static.
+
+**Why per-asset animation, not wrapper CSS.** Mirrors the hero
+pattern (§2b). Each SVG embeds its own `<style>` block with
+`@keyframes` and a `@media (prefers-reduced-motion: reduce)` no-op
+fallback. The editor focuses on one file to change motion or
+palette; no parent CSS, no JS. Trade-off: animation doesn't
+synchronise across scenes (which is fine — by design they're
+ambient and each has its own personality).
+
+**Why `aria-hidden` by default.** Scenes are atmospheric, not
+informational; announcing them would clutter the AT stream. Pages
+that want a scene announced set `alt: "..."` and the section's
+`aria-hidden` flips to `false`.
+
+**Where the CSS lives.** `.ov-scene*` rules in
+`packages/site/src/templates/default/style.css` (search for
+"Ambient \"scenes\""). Scenes inherit the landing's `--page-max`
+(1100px on `body.ov-body-landing`) for width and centre themselves
+via `.ov-landing`'s existing `margin-inline: auto`. The figure uses
+`object-fit: contain` + `aspect-ratio: 16 / 9` so the SVG keeps its
+intrinsic proportions. Top/bottom mask-image fades soften the
+section's transition into surrounding content.
 
 ## 3. Architecture
 

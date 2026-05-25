@@ -15,6 +15,7 @@ function landingConfig(over: Partial<OvellumLandingConfig> = {}): OvellumLanding
     enabled: true,
     hero: { ctas: [] },
     features: [],
+    scenes: [],
     ...over,
   };
 }
@@ -184,5 +185,47 @@ describe('renderLanding', () => {
     });
     expect(html).not.toContain('data-media');
     expect(html).not.toContain('ov-hero-art');
+  });
+
+  it('interleaves scenes between rendered landing sections in order', () => {
+    const html = renderLanding({
+      site: SITE,
+      landing: landingConfig({
+        hero: { ctas: [{ label: 'Go', href: '/g/' }] },
+        features: [{ title: 'F', description: 'D' }],
+        trustStrip: { items: [{ name: 'A' }] },
+        scenes: [
+          { light: '/public/a.png', alt: 'A' },
+          { light: '/public/b.png', dark: '/public/b-dark.png' },
+          { light: '/public/c.png' },
+        ],
+      }),
+      pitchHtml: '<p>Pitch.</p>',
+      generatedAt: '2026-05-16T00:00:00.000Z',
+    });
+    expect(html.match(/class="ov-scene"/g)?.length).toBe(3);
+    // Order check: hero must appear before first scene; trust after the last.
+    const heroIdx = html.indexOf('class="ov-hero"');
+    const firstSceneIdx = html.indexOf('class="ov-scene"');
+    const trustIdx = html.indexOf('class="ov-trust"');
+    expect(heroIdx).toBeGreaterThan(-1);
+    expect(firstSceneIdx).toBeGreaterThan(heroIdx);
+    expect(trustIdx).toBeGreaterThan(firstSceneIdx);
+    // Each scene gets an animation-delay anchor index inlined as a CSS var.
+    expect(html).toContain('--ov-scene-i: 0');
+    expect(html).toContain('--ov-scene-i: 2');
+    // Dark fallback to light when scene.dark is omitted.
+    expect(html.match(/src="\/public\/a\.png"/g)?.length).toBe(2);
+    // Alt reaches the light image; dark stays decorative.
+    expect(html).toContain('alt="A"');
+  });
+
+  it('omits scene markup when scenes is empty', () => {
+    const html = renderLanding({
+      site: SITE,
+      landing: landingConfig({ scenes: [] }),
+      generatedAt: '2026-05-16T00:00:00.000Z',
+    });
+    expect(html).not.toContain('class="ov-scene"');
   });
 });

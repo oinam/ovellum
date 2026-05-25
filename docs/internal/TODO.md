@@ -1,7 +1,7 @@
 # TODO
 
 Living checklist for code / automation work. Update in place as work progresses.
-Last updated: 2026-05-24 (Chrome split — width unified via `--chrome-max` (topbar + footer never jump width between landing and docs), but **only the footer is chrome-tinted**; topbar is body color with a 1px border-bottom after two passes proving a tinted topbar fights Safari URL-bar sampling. Meta `theme-color` tracks `--color-bg`. Auto-theme toggle icon swap monitor → eclipse.)
+Last updated: 2026-05-24 (Chrome split — width unified via `--chrome-max` (topbar + footer never jump width between landing and docs), but **only the footer is chrome-tinted**; topbar reverted to body color with a 1px border-bottom after two passes proving a tinted topbar fights Safari URL-bar sampling and reads noisy against the body. Meta `theme-color` now tracks `--color-bg`, not `--color-bg-chrome`. Also: auto-theme toggle icon swap monitor → eclipse.)
 
 > Manual items — prose, decisions, releases, things only a human can do —
 > live in [`TODO-Human.md`](./TODO-Human.md). When in doubt: if the work
@@ -23,16 +23,16 @@ Legend: `[ ]` not started · `[~]` in progress · `[x]` done · `[!]` blocked
 
 ---
 
-## Current state (2026-05-19)
+## Current state (2026-05-22)
 
 **Live and shipped:**
 - `ovellum@0.2.0` on npm — <https://www.npmjs.com/package/ovellum>
 - Docs site live with TLS — <https://ovellum.oss.oinam.com>
 - All six CLI commands working: `init`, `build`, `dev`, `watch`, `serve`, `check`
 - Manual-mode static site builder is feature-complete for a real docs site
-- Workspace test count: ~199 vitest cases (was 169; +21 in `@ovellum/site` for callouts / GFM tables / language label / wrap / version badge / ToC text / `_meta.json` fallback, +3 for the imagery hero variant, +5 in `@ovellum/core` for `hero.media` validation)
+- Workspace test count: ~204 vitest cases (was 199; +2 in `@ovellum/site` for scene interleaving + empty-scenes, +5 in `@ovellum/core` for `landing.scenes` validation, also +1 typecheck-only update in the landing test factory's default `scenes: []`). All passing as of the SVG re-author.
 
-**Active focus:** finish the manual-mode site so the maintainer can use it as their day-to-day static site generator for both documentation and a marketing landing. Per the 2026-05-19 design call we are committed to the **editorial-calm direction** ([[feedback-design-direction]] memory) — tight typography, no chrome, no cards, no template feel. The Agora-inspired imagery hero shipped same day; the remaining "section scenes" sub-pass is queued (smaller scope — see Phase 4.5).
+**Active focus:** the Agora-inspired landing pass is complete. Imagery hero (2026-05-19) plus interleaved section scenes (2026-05-22) cover the calm-scene direction; both are config-driven so adding/swapping art is a file-drop in `content/public/`. Next focus moves back to the deferred items lower in this file (orphans CLI, MDX, Nord/Solarized page themes) — pick when the maintainer wants something to ship.
 
 **Design language locked in this session** (commits `1b2bc8e` → `812c29b`):
 - Typography: h1 -0.03em / h2 -0.02em / h3 -0.015em, h2 lost its border (biggest "template-y" tell removed); content max 76ch on doc pages, 60ch on landing prose.
@@ -52,11 +52,7 @@ Legend: `[ ]` not started · `[~]` in progress · `[x]` done · `[!]` blocked
 - Version badge: small mono chip next to the brand, driven by `site.version` free-form string.
 - Brand: dropped a size step (font-size-0 + weight 600), tighter tracking.
 
-**Queued for tomorrow — Agora-inspired landing redesign**
-
-User likes <https://www.agora.xyz>: calm, serene scenes; imagery anchoring the page; subtle ambient animation that never distracts. Direction to explore — keep the editorial-calm typography intact, add an imagery-led hero and lightly-animated visual scenes between sections, replace the dotted-noise pattern.
-
-Tracked as a new sub-phase under Phase 4.5 below.
+**Agora-inspired landing pass — complete (2026-05-22).** Hero variant shipped 2026-05-19; interleaved section scenes shipped 2026-05-22. Imagery now lives in `website/content/public/` (passthrough → `dist/public/`) so the maintainer can drop in new art without touching code. `tmp/` at the repo root is the scratchpad drop-zone (gitignored).
 
 **Parked / deferred:**
 
@@ -359,18 +355,44 @@ landing's visuals are in scope).
 - [x] `website/ovellum.config.json` wired up; build clean, `ovellum
       check` reports 0 broken links / 0 unsafe schemes; 17 pages
 
-**Queued sub-pass: section scenes**
+**Section scenes — shipped (2026-05-22):**
 
-- [ ] Quiet ambient visuals between feature grid / pitch / trust strip
-      (Agora-style chapter transitions). Same constraints: SVG-only,
-      tiny overhead, reduced-motion friendly, swappable as files. Pick
-      after the hero has lived for a few days and we see whether the
-      page reads cohesively without them or feels orphaned in the lower
-      sections.
+- [x] `site.landing.scenes: OvellumLandingScene[]` config in
+      `@ovellum/core` (types + validator + tests). Each scene is
+      `{ light, dark?, alt? }` — same shape as `hero.media`. SVG/PNG
+      both supported; constraint relaxed from "SVG only" once user
+      dropped photographic PNGs to seed the look.
+- [x] `renderLanding()` interleaves scenes between rendered sections in
+      order; extras fall through after the last section. Each
+      `<section class="ov-scene">` carries an inline
+      `--ov-scene-i` index so the drift animation staggers.
+- [x] CSS in `style.css` (search "Ambient \"scenes\"") — centered
+      inside landing column (inherits `--page-max: 1100px`),
+      `aspect-ratio: 16 / 9`, `object-fit: contain` so the SVG keeps
+      its intrinsic proportions, top+bottom mask-image fade. Wrapper
+      is intentionally still; per-element animation lives inside each
+      SVG asset (mirrors the hero pattern).
+- [x] Imagery folder convention: user drops files in
+      `{input}/public/` → build copies verbatim to `dist/public/<file>`.
+      Hero SVGs migrated to the same folder; `tmp/` at the repo root
+      is the maintainer's scratchpad (gitignored).
+- [x] Website scenes re-authored as hand-rolled SVGs after a first pass
+      with Gemini PNG drops — same three subjects (tree-house,
+      farm-drone, woman-reading), now ~10KB each (was ~7MB PNG each).
+      Each asset has named `.layer-*` / `.feature-*` / `.anim-*`
+      groups with embedded `<style>` + `@keyframes` + a
+      `prefers-reduced-motion` no-op fallback. Animated elements per
+      scene: clouds, birds, canopy sway, stream shimmer (tree-house);
+      windmill, drones, propellers, water shimmer (farm-drone); lake
+      ripples, tower glow, falling leaves, robot tilt (woman-reading).
+- [x] Hero references updated to `/public/hero-{light,dark}.svg`.
+      Build clean: 17 pages, 0 warnings, 0 broken links, 0 unsafe
+      schemes. Combined imagery footprint for the landing dropped
+      from ~21MB raster to ~34KB SVG.
 
-Touchstones (still open while designing): agora.xyz, Linear (calm but
-disciplined), Stripe shape pages. Anti-example: Vercel homepage motion
-budget.
+Touchstones used during the design: agora.xyz (calm chapter scenes),
+Linear (motion budget reference), Stripe shape pages. Anti-example
+held: Vercel homepage motion budget.
 
 ### Phase 4.6 - Official website + GitHub Pages deploy (2026-05-16)
 
