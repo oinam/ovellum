@@ -68,17 +68,7 @@
           "description": "Code blocks render through shiki with dual `github-light` / `github-dark` themes baked into the HTML. Zero runtime JavaScript for syntax colour."
         }
       ],
-      "scenes": [],
-      "trustStrip": {
-        "label": "Powered by",
-        "items": [
-          { "name": "TypeScript", "href": "https://www.typescriptlang.org/" },
-          { "name": "ts-morph", "href": "https://ts-morph.com/" },
-          { "name": "unified", "href": "https://unifiedjs.com/" },
-          { "name": "shiki", "href": "https://shiki.style/" },
-          { "name": "pnpm", "href": "https://pnpm.io/" }
-        ]
-      }
+      "scenes": []
     }
   }
 }
