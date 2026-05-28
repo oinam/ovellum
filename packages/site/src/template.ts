@@ -95,10 +95,13 @@ function renderShell(opts: ShellOptions): string {
 `;
 }
 
-// Placeholder wordmark glyph — a stroked ring with a filled crescent (an
-// eclipse motif). Monochrome via `currentColor`; meant to be swapped for a
-// real logo later. Decorative: the adjacent text "Ovellum" carries the name.
-const BRAND_MARK = `<svg class="ov-brand-mark" width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.75"/><path d="M12 3a9 9 0 0 0 0 18 4.5 9 0 0 1 0-18Z" fill="currentColor"/></svg>`;
+// Ovellum wordmark glyph. Source of truth lives at
+// `website/brand/ovellum-logo.afdesign`; the canonical export sits at
+// `website/content/public/ovellum-logo.svg`. Inlined here (stripped of the
+// XML prolog and editor-specific namespaces, `fill="currentColor"` set) so
+// the mark follows light/dark theme alongside the wordmark beside it.
+// Decorative: the adjacent text "Ovellum" carries the accessible name.
+const BRAND_MARK = `<svg class="ov-brand-mark" width="24" height="24" viewBox="0 0 3334 3334" fill="currentColor" aria-hidden="true" xmlns="http://www.w3.org/2000/svg"><path d="M1610.79,192.942l-603.283,-0.069c-72.722,290.674 -294.48,871.657 -294.48,871.657c-53.158,128.398 -37.404,275.067 41.795,389.217l743.687,1149.95l0,233.06c-42.509,41.505 -68.98,99.335 -68.98,163.352c-0.069,126.096 102.07,228.236 228.167,228.167c126.096,0.069 228.308,-102.144 228.235,-228.236c-0,-64.017 -26.471,-121.847 -68.985,-163.21l0,-233.06l743.765,-1150.03c79.122,-114.228 94.806,-260.819 41.722,-389.143c0,-0 -221.472,-580.983 -294.052,-871.652l-603.352,0l-94.239,-0.005Zm323.188,921.357c0,140.409 -104.731,256.078 -240.177,273.7l0,1386.96c-11.868,-1.795 -23.809,-3.093 -36.036,-3.093c-12.375,-0 -24.243,1.224 -36.037,3.093l-0,-1386.97c-135.593,-17.623 -240.251,-133.218 -240.251,-273.627c0,-152.635 123.652,-276.287 276.288,-276.287c152.635,0 276.282,123.656 276.213,276.223Z"/></svg>`;
 
 interface ResolvedTopbarItem {
   label: string;
