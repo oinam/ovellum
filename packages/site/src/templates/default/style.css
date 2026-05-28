@@ -280,6 +280,7 @@ a:hover {
 }
 .ov-topbar-inner {
   display: grid;
+  /* brand | search (fills the middle) | icon cluster */
   grid-template-columns: auto 1fr auto;
   align-items: center;
   gap: var(--space-m);
@@ -290,16 +291,30 @@ a:hover {
 }
 .ov-brand-row {
   display: inline-flex;
-  align-items: baseline;
+  align-items: center;
   gap: var(--space-2xs);
   min-inline-size: 0;
 }
 .ov-brand {
-  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2xs);
+  font-weight: 700;
   text-decoration: none;
   color: var(--color-fg);
-  font-size: var(--font-size-0);
-  letter-spacing: -0.005em;
+  font-size: 1.125rem;
+  letter-spacing: -0.01em;
+}
+.ov-brand-mark {
+  flex: none;
+  inline-size: 1.5rem;
+  block-size: 1.5rem;
+  line-height: 0;
+}
+/* Center zone — the search box stretches to fill it. */
+.ov-topbar-search {
+  display: flex;
+  min-inline-size: 0;
 }
 .ov-brand-version {
   display: inline-flex;
@@ -339,13 +354,39 @@ a:hover {
   color: var(--color-fg);
   background: var(--color-bg-subtle);
 }
+/* Icon-only links (e.g. GitHub, npm) and the theme toggle share one look:
+   rounded-corner square buttons with a hairline border, spaced apart. */
+.ov-topbar-link--icon,
+.ov-theme-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  inline-size: 2.25rem;
+  block-size: 2.25rem;
+  padding: 0;
+  border: 1px solid var(--color-border);
+  background: var(--color-bg-subtle);
+  color: var(--color-fg-muted);
+  border-radius: var(--radius-md);
+  transition: color 120ms ease, background-color 120ms ease, border-color 120ms ease;
+}
+.ov-topbar-link--icon:hover,
+.ov-theme-toggle:hover {
+  color: var(--color-fg);
+  background: var(--color-bg-muted);
+  border-color: var(--color-border-strong);
+}
+.ov-topbar-glyph {
+  line-height: 0;
+}
 .ov-topbar-icon {
   opacity: 0.7;
 }
 .ov-topbar-right {
   display: flex;
   align-items: center;
-  gap: var(--space-2xs);
+  gap: var(--space-xs);
+  min-inline-size: 0;
 }
 
 /* Search box (Pagefind UI as a floating dropdown)
@@ -361,8 +402,11 @@ a:hover {
 .ov-search {
   position: relative;
   inline-size: 100%;
-  min-inline-size: 220px;
-  max-inline-size: 320px;
+  min-inline-size: 0;
+  /* Fills the center grid column; capped so it stays comfortable on very
+     wide viewports without hugging the icon cluster. */
+  max-inline-size: 720px;
+  margin-inline: auto;
 }
 .ov-search .pagefind-ui {
   --pagefind-ui-scale: 0.6;
@@ -374,6 +418,13 @@ a:hover {
   --pagefind-ui-border-width: 1px;
   --pagefind-ui-border-radius: var(--radius-md);
   --pagefind-ui-font: var(--font-sans);
+}
+/* Let the search collapse with its grid column — an <input>'s intrinsic
+   min-width would otherwise refuse to shrink and overflow the topbar
+   (pushing the hamburger off-screen) on narrow viewports. */
+.ov-search .pagefind-ui__form,
+.ov-search .pagefind-ui__search-input {
+  min-inline-size: 0;
 }
 .ov-search .pagefind-ui__search-input {
   font-weight: 500;
@@ -450,30 +501,10 @@ a:hover {
   display: none;
 }
 
-@media (max-width: 720px) {
-  .ov-search {
-    display: none;
-  }
-}
-
+/* Shared icon-button appearance (square, bordered) lives with
+   `.ov-topbar-link--icon` above; here we only add the toggle's cursor. */
 .ov-theme-toggle {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  inline-size: 2.25rem;
-  block-size: 2.25rem;
-  padding: 0;
-  border: 1px solid transparent;
-  background: transparent;
-  color: var(--color-fg-muted);
-  border-radius: var(--radius-md);
   cursor: pointer;
-  transition: color 120ms ease, background-color 120ms ease, border-color 120ms ease;
-}
-.ov-theme-toggle:hover {
-  color: var(--color-fg);
-  background: var(--color-bg-subtle);
-  border-color: var(--color-border);
 }
 .ov-theme-icon {
   display: none;
@@ -539,13 +570,37 @@ a:hover {
 .ov-mobile-nav .ov-topbar-link {
   padding: var(--space-xs) var(--space-s);
   font-size: 1.05em;
+  gap: 0.6em;
+}
+/* Theme toggle lives in the sheet on mobile (kept out of the top row). */
+.ov-mobile-theme {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-2xs) var(--space-s);
+  margin-block-start: var(--space-2xs);
+  border-block-start: 1px solid var(--color-border);
+}
+.ov-mobile-theme-label {
+  font-size: 1.05em;
+  font-weight: 500;
+  color: var(--color-fg-muted);
 }
 body.ov-menu-open {
   overflow: hidden;
 }
 
 @media (max-width: 720px) {
+  /* Tighter inner gap so the centered search keeps room next to the
+     larger brand and the hamburger. */
+  .ov-topbar-inner {
+    gap: var(--space-xs);
+  }
   .ov-topbar-nav {
+    display: none;
+  }
+  /* The desktop theme toggle hides on mobile; the sheet carries its own. */
+  .ov-topbar-right > .ov-theme-toggle {
     display: none;
   }
   .ov-topbar-menu {

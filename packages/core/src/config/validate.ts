@@ -159,6 +159,9 @@ export function validateUserConfig(input: unknown): OvellumUserConfig {
         if (typeof item.href !== 'string') {
           throw new ConfigError(`\`${path}.href\` must be a string.`);
         }
+        if (item.icon !== undefined && typeof item.icon !== 'string') {
+          throw new ConfigError(`\`${path}.icon\` must be a string.`);
+        }
         if (item.external !== undefined && typeof item.external !== 'boolean') {
           throw new ConfigError(`\`${path}.external\` must be a boolean.`);
         }

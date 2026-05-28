@@ -15,10 +15,9 @@
     "editUrlPattern": "https://github.com/oinam/ovellum/edit/main/website/{path}",
     "search": { "enabled": true },
     "topbarNav": [
-      { "label": "Guides", "href": "/guides/manual-mode/" },
-      { "label": "Reference", "href": "/reference/config/" },
-      { "label": "Glossary", "href": "/reference/glossary/" },
-      { "label": "GitHub", "href": "https://github.com/oinam/ovellum", "external": true }
+      { "label": "Docs", "href": "/getting-started/" },
+      { "label": "GitHub", "href": "https://github.com/oinam/ovellum", "icon": "github", "external": true },
+      { "label": "npm", "href": "https://www.npmjs.com/package/ovellum", "icon": "package", "external": true }
     ],
     "footerNav": [
       { "label": "Contributing", "href": "/contributing/" },

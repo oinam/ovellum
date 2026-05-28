@@ -106,10 +106,17 @@ export interface OvellumSiteSearchConfig {
 }
 
 export interface OvellumTopbarNavItem {
-  /** Visible label. */
+  /** Visible label. Always rendered (even when `icon` is set) for screen readers. */
   label: string;
   /** Site-relative or external href. */
   href: string;
+  /**
+   * Optional icon name (one of the registry entries: `github`, `package`,
+   * `rss`, `mail`, etc). When set, the desktop topbar renders the icon alone
+   * (label kept visually hidden for a11y); the mobile sheet still shows the
+   * label beside the icon. When unset, the label is shown as plain text.
+   */
+  icon?: string;
   /**
    * When `true`, link opens in a new tab with `rel="noopener"` and a small
    * external-link icon is appended. Defaults to `false` (or auto-detected

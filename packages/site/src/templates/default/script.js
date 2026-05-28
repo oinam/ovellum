@@ -35,15 +35,15 @@
     } catch (_) {}
   }
 
-  // Theme toggle
-  var btn = document.querySelector('[data-ov-theme-toggle]');
-  if (btn) {
+  // Theme toggle — there may be more than one instance (desktop cluster +
+  // mobile sheet). Wire every button; they share state via <html data-theme>.
+  document.querySelectorAll('[data-ov-theme-toggle]').forEach(function (btn) {
     btn.addEventListener('click', function () {
       var current = readStored();
       var next = ORDER[(ORDER.indexOf(current) + 1) % ORDER.length];
       apply(next);
     });
-  }
+  });
 
   // When the user is on 'auto' and flips their OS theme, retune the
   // meta theme-color so Safari's URL bar follows the OS change.

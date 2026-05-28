@@ -95,6 +95,65 @@ function renderShell(opts: ShellOptions): string {
 `;
 }
 
+// Placeholder wordmark glyph — a stroked ring with a filled crescent (an
+// eclipse motif). Monochrome via `currentColor`; meant to be swapped for a
+// real logo later. Decorative: the adjacent text "Ovellum" carries the name.
+const BRAND_MARK = `<svg class="ov-brand-mark" width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.75"/><path d="M12 3a9 9 0 0 0 0 18 4.5 9 0 0 1 0-18Z" fill="currentColor"/></svg>`;
+
+interface ResolvedTopbarItem {
+  label: string;
+  href: string;
+  external: boolean;
+  icon?: IconName;
+}
+
+/** Resolve each configured item's href once so the auto-Docs link can dedupe. */
+function resolveTopbarItems(
+  site: OvellumSiteConfig & { title: string },
+  basePath: string,
+): ResolvedTopbarItem[] {
+  return (site.topbarNav ?? []).map((item) => {
+    const external = item.external === true || /^https?:\/\//i.test(item.href);
+    const icon = item.icon && item.icon in ICONS ? (item.icon as IconName) : undefined;
+    return {
+      label: item.label,
+      href: external ? item.href : siteUrl(item.href, basePath),
+      external,
+      icon,
+    };
+  });
+}
+
+/**
+ * Render the topbar nav links. `compact` collapses icon items to icon-only
+ * (desktop); otherwise the icon sits beside its visible label (mobile sheet).
+ * The implicit "Docs" link is appended only when nothing already points there.
+ */
+function renderTopbarLinks(
+  items: ResolvedTopbarItem[],
+  docsHref: string | undefined,
+  compact: boolean,
+): string {
+  const links = items.map(({ label, href, external, icon }) => {
+    const rel = external ? ' rel="noopener" target="_blank"' : '';
+    if (icon && compact) {
+      return `<a class="ov-topbar-link ov-topbar-link--icon" href="${escapeAttr(href)}"${rel} aria-label="${escapeAttr(label)}" title="${escapeAttr(label)}">${renderIcon(icon, { class: 'ov-topbar-glyph', size: 18 })}<span class="ov-sr-only">${escapeHtml(label)}</span></a>`;
+    }
+    const glyph = icon ? `${renderIcon(icon, { class: 'ov-topbar-glyph', size: 18 })}` : '';
+    const ext =
+      external && !icon
+        ? ` ${renderIcon('external-link', { class: 'ov-topbar-icon', size: 14 })}`
+        : '';
+    return `<a class="ov-topbar-link" href="${escapeAttr(href)}"${rel}>${glyph}${escapeHtml(label)}${ext}</a>`;
+  });
+  if (docsHref && !items.some((it) => it.href === docsHref)) {
+    links.push(
+      `<a class="ov-topbar-link ov-topbar-link--docs" href="${escapeAttr(docsHref)}">Docs</a>`,
+    );
+  }
+  return links.join('\n        ');
+}
+
 function renderTopbar(
   site: OvellumSiteConfig & { title: string },
   assets: string,
@@ -102,25 +161,9 @@ function renderTopbar(
   searchEnabled: boolean,
   basePath: string,
 ): string {
-  // Compose the right-side nav: configured items first, then the implicit
-  // Docs link (only on the landing page — where docsHref is non-undefined).
-  const navItems = site.topbarNav ?? [];
-  const items: string[] = navItems.map((item) => {
-    const external =
-      item.external === true || /^https?:\/\//i.test(item.href);
-    const href = external ? item.href : siteUrl(item.href, basePath);
-    const rel = external ? ' rel="noopener" target="_blank"' : '';
-    const icon = external
-      ? ` ${renderIcon('external-link', { class: 'ov-topbar-icon', size: 14 })}`
-      : '';
-    return `<a class="ov-topbar-link" href="${escapeAttr(href)}"${rel}>${escapeHtml(item.label)}${icon}</a>`;
-  });
-  if (docsHref) {
-    items.push(
-      `<a class="ov-topbar-link ov-topbar-link--docs" href="${escapeAttr(docsHref)}">Docs</a>`,
-    );
-  }
-  const navLinks = items.join('\n      ');
+  const items = resolveTopbarItems(site, basePath);
+  const desktopLinks = renderTopbarLinks(items, docsHref, true);
+  const mobileLinks = renderTopbarLinks(items, docsHref, false);
   const search = searchEnabled ? `<div id="ov-search" class="ov-search"></div>` : '';
   // The hamburger only appears below the responsive breakpoint via CSS.
   const menuButton = `<button class="ov-topbar-menu" type="button"
@@ -129,6 +172,9 @@ function renderTopbar(
       <span class="ov-topbar-menu-open">${renderIcon('menu', { size: 22 })}</span>
       <span class="ov-topbar-menu-close">${renderIcon('close', { size: 22 })}</span>
     </button>`;
+  // Two instances: one in the desktop cluster, one in the mobile sheet. Both
+  // carry `data-ov-theme-toggle` and stay in sync via the `:root[data-theme]`
+  // CSS — script.js wires every instance, not just the first.
   const themeButton = `<button class="ov-theme-toggle" type="button"
       aria-label="Toggle theme" title="Toggle theme" data-ov-theme-toggle>
       <span class="ov-theme-icon ov-theme-icon-auto">${renderIcon('monitor')}</span>
@@ -141,17 +187,21 @@ function renderTopbar(
   return `<header class="ov-topbar">
     <div class="ov-topbar-inner">
       <div class="ov-brand-row">
-        <a class="ov-brand" href="${escapeAttr(assets)}">${escapeHtml(site.title)}</a>
+        <a class="ov-brand" href="${escapeAttr(assets)}">${BRAND_MARK}<span class="ov-brand-name">${escapeHtml(site.title)}</span></a>
         ${versionBadge}
       </div>
-      <nav class="ov-topbar-nav" aria-label="Primary">${navLinks}</nav>
+      <div class="ov-topbar-search">${search}</div>
       <div class="ov-topbar-right">
-        ${search}
+        <nav class="ov-topbar-nav" aria-label="Primary">${desktopLinks}</nav>
         ${themeButton}
         ${menuButton}
       </div>
       <nav id="ov-mobile-nav" class="ov-mobile-nav" aria-label="Mobile">
-        ${navLinks}
+        ${mobileLinks}
+        <div class="ov-mobile-theme">
+          <span class="ov-mobile-theme-label">Theme</span>
+          ${themeButton}
+        </div>
       </nav>
     </div>
   </header>`;

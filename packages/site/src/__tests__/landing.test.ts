@@ -130,6 +130,49 @@ describe('renderLanding', () => {
     );
   });
 
+  it('omits the implicit Docs link when a topbarNav item already points there', () => {
+    const html = renderLanding({
+      site: { ...SITE, topbarNav: [{ label: 'Docs', href: '/start/' }] },
+      landing: landingConfig(),
+      generatedAt: '2026-05-16T00:00:00.000Z',
+      docsHref: '/start/',
+    });
+    // The configured item is present, the auto `--docs` link is not duplicated.
+    expect(html).toContain('<a class="ov-topbar-link" href="/start/">Docs</a>');
+    expect(html).not.toContain('ov-topbar-link--docs');
+  });
+
+  it('renders icon topbar items icon-only on desktop and labelled in the mobile sheet', () => {
+    const html = renderLanding({
+      site: {
+        ...SITE,
+        topbarNav: [
+          { label: 'GitHub', href: 'https://gh.example', icon: 'github', external: true },
+        ],
+      },
+      landing: landingConfig(),
+      generatedAt: '2026-05-16T00:00:00.000Z',
+    });
+    // Desktop cluster: icon-only with the label kept for screen readers.
+    expect(html).toContain('class="ov-topbar-link ov-topbar-link--icon"');
+    expect(html).toContain('aria-label="GitHub"');
+    expect(html).toContain('<span class="ov-sr-only">GitHub</span>');
+    // Mobile sheet: a plain text link carrying the same label + glyph.
+    expect(html).toContain('<a class="ov-topbar-link" href="https://gh.example"');
+    // External icon items open in a new tab.
+    expect(html).toContain('rel="noopener" target="_blank"');
+  });
+
+  it('renders a placeholder brand mark beside the wordmark', () => {
+    const html = renderLanding({
+      site: SITE,
+      landing: landingConfig(),
+      generatedAt: '2026-05-16T00:00:00.000Z',
+    });
+    expect(html).toContain('class="ov-brand-mark"');
+    expect(html).toContain('<span class="ov-brand-name">Demo</span>');
+  });
+
   it('uses the landing body class on <body>', () => {
     const html = renderLanding({
       site: SITE,
