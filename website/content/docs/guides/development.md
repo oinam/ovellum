@@ -9,9 +9,9 @@ A practical guide to working on an Ovellum site: scaffolding, writing,
 rebuilding on change, checking links, and serving the output locally
 before you ship.
 
-For deployment targets, jump to the [Deploy guide](/guides/deploy/).
+For deployment targets, jump to the [Deploy guide](/docs/guides/deploy/).
 For Ovellum's own repo (the monorepo, packages, tests), see
-[Contributing](/contributing/).
+[Contributing](/docs/contributing/).
 
 ## Prerequisites
 
@@ -48,7 +48,7 @@ Files written:
 - `content/index.md` — a starter page (manual + hybrid modes only).
 - `.gitignore` — gets `dist/` and `.orphans/` appended if absent.
 
-See the [CLI reference for `init`](/reference/cli/#ovellum-init) for the
+See the [CLI reference for `init`](/docs/reference/cli/#ovellum-init) for the
 full flag list and exit codes.
 
 ## Write
@@ -88,7 +88,7 @@ description: Install Ovellum and build your first docs.
 }
 ```
 
-See [`_meta.json`](/reference/config/#_metajson-per-directory-manual-mode)
+See [`_meta.json`](/docs/reference/config/#_metajson-per-directory-manual-mode)
 in the config reference for the full spec.
 
 ## Iterate with `ovellum dev`
@@ -128,7 +128,7 @@ npx ovellum dev --host 0.0.0.0       # expose on the local network
 npx ovellum dev --cwd ./website      # multi-site monorepo
 ```
 
-See the [CLI reference for `dev`](/reference/cli/#ovellum-dev) for the
+See the [CLI reference for `dev`](/docs/reference/cli/#ovellum-dev) for the
 full flag list.
 
 ## Manual two-process loop (optional)
@@ -163,7 +163,7 @@ looks wrong. It currently catches:
    resolve to a page in the sidebar.
 2. **Unsafe URL schemes** — `javascript:`, `vbscript:`, `data:`,
    `file:`. These get stripped at render time anyway (see
-   [Security](/reference/security/)), but `check` surfaces them as
+   [Security](/docs/reference/security/)), but `check` surfaces them as
    `[SECURITY]` issues so authors notice and remove them.
 
 ```bash
@@ -173,7 +173,7 @@ npx ovellum check
 Output is a small per-file table with line numbers. Wire it into your
 CI alongside `build` and you'll catch link rot before it ships.
 
-See the [CLI reference for `check`](/reference/cli/#ovellum-check) for
+See the [CLI reference for `check`](/docs/reference/cli/#ovellum-check) for
 the exact output shape and exit codes.
 
 ## Build for production
@@ -233,9 +233,9 @@ repo.
 
 ## What's next
 
-- [Deploy guide](/guides/deploy/) — GitHub Pages, Netlify, Vercel,
+- [Deploy guide](/docs/guides/deploy/) — GitHub Pages, Netlify, Vercel,
   Cloudflare, Nginx, S3, anywhere.
-- [Themes](/guides/themes/) — what's bundled, what to customise, and
+- [Themes](/docs/guides/themes/) — what's bundled, what to customise, and
   how the icon registry works.
-- [Configuration reference](/reference/config/) — every field, every
+- [Configuration reference](/docs/reference/config/) — every field, every
   default.

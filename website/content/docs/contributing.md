@@ -22,7 +22,7 @@ pnpm exec turbo run test --filter='@ovellum/*' --filter='ovellum'
 ```
 
 > If you're a user (not a contributor) and just want the iteration
-> loop for your own site, the [Development guide](/guides/development/)
+> loop for your own site, the [Development guide](/docs/guides/development/)
 > covers `ovellum init` / `watch` / `check` / `build`. This page is the
 > contributor-side: working inside the Ovellum monorepo itself.
 

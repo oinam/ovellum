@@ -97,7 +97,7 @@ Detection normalises HTML-numeric entities (`&#x09;` → tab) and
 zero-width / BiDi / whitespace characters before matching, so attempts
 like `javas&#x09;cript:` or `\tjavascript:` are caught.
 
-See [CLI → `ovellum check`](/reference/cli/#ovellum-check) for the
+See [CLI → `ovellum check`](/docs/reference/cli/#ovellum-check) for the
 output format and exit codes.
 
 ## What's out of scope today

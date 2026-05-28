@@ -107,7 +107,7 @@ Same as `auto`, then for each generated file:
 #### `manual`
 
 1. Walk `input/` for `.md` files.
-2. Render each to HTML (Markdown is sanitised — see [Security](/reference/security/)).
+2. Render each to HTML (Markdown is sanitised — see [Security](/docs/reference/security/)).
 3. Build a sidebar nav and breadcrumb trail.
 4. Wrap each page in the default template (topbar, sidebar, ToC, prev/next, page meta).
 5. Write pretty URLs to `output/`.

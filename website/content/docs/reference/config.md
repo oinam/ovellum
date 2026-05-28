@@ -44,7 +44,7 @@ All fields are optional; sensible defaults apply.
 | ----------------- | -------------------------------- | --------------------------------------------------------------------- | ---------------------------------------------------------- |
 | `name`            | `string`                         | `package.json#name`                                                   |                                                            |
 | `version`         | `string \| 'auto'`               | `'auto'`                                                              | `'auto'` reads `package.json#version`.                     |
-| `mode`            | `'hybrid' \| 'manual' \| 'auto'` | `'hybrid'`                                                            | See [Concepts → Modes](/concepts/modes/).                  |
+| `mode`            | `'hybrid' \| 'manual' \| 'auto'` | `'hybrid'`                                                            | See [Concepts → Modes](/docs/concepts/modes/).                  |
 | `input`           | `string`                         | `'./src'`                                                             | TS source dir in auto/hybrid; `.md` content dir in manual. |
 | `output`          | `string`                         | `'./docs'`                                                            | Markdown dir in auto/hybrid; HTML dir in manual.           |
 | `include`         | `string[]`                       | `['**/*.ts', '**/*.tsx', '**/*.js', '**/*.jsx']`                      | Globs relative to `input`.                                 |
@@ -93,7 +93,7 @@ interface OvellumSiteConfig {
   editUrlPattern?: string;
   search: { enabled: boolean };
   pageMeta: { readingTime: boolean; lastModified: boolean };
-  topbarNav: Array<{ label: string; href: string; external?: boolean }>;
+  topbarNav: Array<{ label: string; href: string; icon?: string; external?: boolean }>;
   landing: OvellumLandingConfig;
 }
 ```
@@ -110,16 +110,17 @@ interface OvellumSiteConfig {
 | `editUrlPattern` | `string?`                           | `undefined`                   | URL pattern with a `{path}` placeholder. `{path}` is the page's source path **relative to the build cwd** (`--cwd`). Include any repo prefix yourself, e.g. `'https://github.com/owner/repo/edit/main/website/{path}'`. When unset, the "Edit this page" link is not rendered. |
 | `search`         | `{ enabled: boolean }`              | `{ enabled: false }`          | When `true`, `ovellum build` runs Pagefind against the output dir and the topbar gains a search box. Adds `dist/pagefind/` to the build.                                                                                       |
 | `pageMeta`       | `{ readingTime, lastModified }`     | both `true`                   | Per-page meta line above the article: `N min read · Updated YYYY-MM-DD`. `readingTime` estimates at ~200 wpm after stripping code/HTML. `lastModified` prefers `git log -1 --format=%cI` then falls back to filesystem mtime; the line is omitted if neither resolves. Set either to `false` to hide that half. |
-| `topbarNav`      | `Array<{label, href, external?}>`   | `[]`                          | Items render right-aligned, in order, on every page. External links (`external: true` or `href` starting with `http(s)://`) open in a new tab with `rel="noopener"` and a small external-link icon. Below 720px the nav collapses into a hamburger sheet. |
+| `topbarNav`      | `Array<{label, href, icon?, external?}>` | `[]`                     | Items render in order to the right of the search box. Items with an `icon` render icon-only on desktop (label kept for screen readers) and icon + label inside the mobile sheet. External links (`external: true` or `href` starting with `http(s)://`) open in a new tab with `rel="noopener"`; text items also get a small external-link icon. Below 720px the top row is just logo + version + search + hamburger — the nav and theme toggle move into the sheet. |
 | `landing`        | `OvellumLandingConfig`              | `{ enabled: false, … }`       | See below.                                                                                                                                                                                                                     |
 
 ### `topbarNav[]`
 
 | Field      | Type      | Notes                                                                                                                            |
 | ---------- | --------- | -------------------------------------------------------------------------------------------------------------------------------- |
-| `label`    | `string`  | Visible link text.                                                                                                               |
+| `label`    | `string`  | Visible link text. Kept for screen readers even when `icon` is set.                                                              |
 | `href`     | `string`  | Internal path (`/guides/themes/`) or absolute URL.                                                                               |
-| `external` | `boolean?`| Force the external treatment (new tab + icon + `rel="noopener"`). Auto-true when `href` starts with `http://` or `https://`.    |
+| `icon`     | `string?` | Registry icon name (`github`, `package`, `rss`, `mail`, …). Renders icon-only on desktop; icon + label in the mobile sheet.      |
+| `external` | `boolean?`| Force the external treatment (new tab + `rel="noopener"`). Auto-true when `href` starts with `http://` or `https://`.           |
 
 ### `search`
 

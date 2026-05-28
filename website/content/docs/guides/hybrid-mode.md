@@ -56,7 +56,7 @@ Pads a number with leading zeros up to `width`.
 **Returns** `string` - The padded string.
 ```
 
-Drop a [protected zone](/concepts/anchors-and-zones/) anywhere in the
+Drop a [protected zone](/docs/concepts/anchors-and-zones/) anywhere in the
 section:
 
 ```markdown
@@ -102,7 +102,7 @@ keyed off the new anchor ID (`src/utils/format.ts::padWithZeros`). Your
 `padZero-rationale` block was associated with the old anchor and now has
 nowhere to go.
 
-Ovellum [quarantines](/concepts/orphans/) it to
+Ovellum [quarantines](/docs/concepts/orphans/) it to
 `.ovellum/orphans/2026-05-15_src-format.ts-padZero.md` and tells you in the
 summary:
 
@@ -168,7 +168,7 @@ my-project/
 ## What hybrid mode doesn't do
 
 - **It doesn't produce HTML directly.** Hybrid output is Markdown; pair
-  it with [`manual` mode in a separate config](/guides/deploy/#self-hosted),
+  it with [`manual` mode in a separate config](/docs/guides/deploy/#self-hosted),
   or hand the output to any static-site builder that reads Markdown.
 - **It doesn't merge across files.** Each output file is merged
   independently. If you move a function to a different source file and

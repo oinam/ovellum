@@ -83,7 +83,7 @@ up the block, and splices it back in at the same position.
 If you rename or delete `formatDate` in source, its anchor ID
 (`src/utils/format.ts::formatDate`) no longer appears in the freshly
 generated content. The merger can't find a home for the protected block.
-That block becomes an [orphan](/concepts/orphans/) and is quarantined to
+That block becomes an [orphan](/docs/concepts/orphans/) and is quarantined to
 `.ovellum/orphans/` for your review — never silently dropped.
 
 ## The inline cousin: `@preserve`

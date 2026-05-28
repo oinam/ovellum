@@ -16,7 +16,7 @@ symbol. Represented as an HTML comment:
 ```
 
 Every auto-generated section gets one. See
-[Concepts → Anchors and zones](/concepts/anchors-and-zones/).
+[Concepts → Anchors and zones](/docs/concepts/anchors-and-zones/).
 
 ### Anchor ID
 
@@ -137,7 +137,7 @@ existing protected zones. Quarantines orphans.
 
 A protected zone whose source anchor no longer exists in the current
 IR. Quarantined to `.ovellum/orphans/` with metadata; never silently
-dropped. See [Concepts → Orphans](/concepts/orphans/).
+dropped. See [Concepts → Orphans](/docs/concepts/orphans/).
 
 ### Page meta
 
@@ -163,7 +163,7 @@ without rewrites.
 
 A `<!-- @manual:start id="…" -->` … `<!-- @manual:end -->` region in a
 Markdown file whose contents are preserved verbatim across regeneration.
-See [Concepts → Anchors and zones](/concepts/anchors-and-zones/).
+See [Concepts → Anchors and zones](/docs/concepts/anchors-and-zones/).
 
 ### Print stylesheet
 
@@ -195,7 +195,7 @@ shiki highlights code blocks. Removed: `<script>`, `<iframe>`,
 isn't on the allowlist (`javascript:`, `vbscript:`, and `data:` are all
 dropped — including `data:` on `<img>` because
 `data:image/svg+xml` can carry executable JS). See
-[Security](/reference/security/) for the full policy.
+[Security](/docs/reference/security/) for the full policy.
 
 ### `@preserve`
 

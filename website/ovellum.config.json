@@ -15,25 +15,25 @@
     "editUrlPattern": "https://github.com/oinam/ovellum/edit/main/website/{path}",
     "search": { "enabled": true },
     "topbarNav": [
-      { "label": "Docs", "href": "/getting-started/" },
+      { "label": "Docs", "href": "/docs/" },
       { "label": "GitHub", "href": "https://github.com/oinam/ovellum", "icon": "github", "external": true },
       { "label": "npm", "href": "https://www.npmjs.com/package/ovellum", "icon": "package", "external": true }
     ],
     "footerNav": [
-      { "label": "Contributing", "href": "/contributing/" },
-      { "label": "Security", "href": "/reference/security/" },
+      { "label": "Contributing", "href": "/docs/contributing/" },
+      { "label": "Security", "href": "/docs/reference/security/" },
       { "label": "GitHub", "href": "https://github.com/oinam/ovellum", "icon": "github", "external": true },
       { "label": "npm", "href": "https://www.npmjs.com/package/ovellum", "icon": "package", "external": true },
       { "label": "RSS feed", "href": "/feed.xml", "icon": "rss" }
     ],
     "landing": {
       "enabled": true,
-      "docsHref": "/getting-started/",
+      "docsHref": "/docs/",
       "hero": {
         "title": "Documentation that doesn't drift.",
         "subtitle": "Ovellum is an open-source documentation tool for TypeScript and JavaScript. Auto-generate from source, hand-write narrative pages, or mix both in the same file. Your prose never gets silently overwritten.",
         "ctas": [
-          { "label": "Get started", "href": "/getting-started/", "style": "primary" },
+          { "label": "Get started", "href": "/docs/", "style": "primary" },
           {
             "label": "View on GitHub",
             "href": "https://github.com/oinam/ovellum",

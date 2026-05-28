@@ -126,7 +126,9 @@ export async function buildSite(options: BuildSiteOptions): Promise<BuildSiteRes
         absInput: file,
         url,
         site,
-        nav,
+        // Sidebar renders the section subtree; prev/next + breadcrumbs above
+        // still use the full nav so reading order spans the whole site.
+        nav: sidebarRootFor(nav),
         cwd,
         generatedAt: now.toISOString(),
         docsHref,
@@ -291,6 +293,40 @@ async function readLandingBody(
 function firstNavUrl(nav: NavNode): string | undefined {
   const first = nav.children.find((c) => c.sourcePath !== undefined);
   return first?.url;
+}
+
+/**
+ * Choose the nav subtree to render in the sidebar.
+ *
+ * When a site funnels all of its pages through a single top-level section
+ * (e.g. everything under `/docs`), we root the sidebar at that section so its
+ * pages sit at the top level instead of under a redundant wrapper — and stray
+ * root entries (a 404 page, a `public/` asset folder) stay out of the nav.
+ * The section's own index page is surfaced as the leading sidebar item.
+ *
+ * This only kicks in for the single-section shape: a site with loose root
+ * pages alongside groups (the usual multi-section layout) keeps the full nav.
+ */
+function sidebarRootFor(nav: NavNode): NavNode {
+  const groups = nav.children.filter((c) => c.children.length > 0);
+  // Root-level content pages (a page node is childless with a source file).
+  // The synthetic 404 page doesn't count — it's not part of the reading flow.
+  const looseRootPages = nav.children.filter(
+    (c) => c.sourcePath !== undefined && c.children.length === 0 && c.url !== '/404/',
+  );
+  if (groups.length !== 1 || looseRootPages.length > 0) return nav;
+  const section = groups[0]!;
+  const lead: NavNode[] = section.sourcePath
+    ? [
+        {
+          title: section.title,
+          url: section.url,
+          sourcePath: section.sourcePath,
+          children: [],
+        },
+      ]
+    : [];
+  return { ...section, children: [...lead, ...section.children] };
 }
 
 function resolveSiteConfig(config: OvellumConfig): OvellumSiteConfig & { title: string } {

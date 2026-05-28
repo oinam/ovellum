@@ -24,7 +24,7 @@ If you'd rather not add a dependency, you can skip install and run via
 `npx ovellum <command>` instead. The first invocation downloads the binary;
 subsequent runs are cached by your package manager.
 
-See the full [Install guide](/install/) for details on each package manager.
+See the full [Install guide](/docs/install/) for details on each package manager.
 
 ## 2. Configure
 
@@ -45,12 +45,12 @@ Create an `ovellum.config.json` at your project root:
 That config tells Ovellum to walk `./content/` for `.md` files and write a
 static site to `./dist/`. Replace `mode` with `auto` if you want to generate
 docs from TypeScript source instead, or `hybrid` if you want to mix both in
-the same files. See [Concepts → Modes](/concepts/modes/) for the differences.
+the same files. See [Concepts → Modes](/docs/concepts/modes/) for the differences.
 
 By default `/` renders `content/index.md` straight into the doc layout —
 readers land directly in the docs. If you want a marketing-style homepage
 at `/` instead, set `site.landing.enabled: true`; see
-[Landing page](/guides/manual-mode/#landing) for the full config.
+[Landing page](/docs/guides/manual-mode/#landing) for the full config.
 
 A TypeScript config (`ovellum.config.ts`) works too and gives you
 autocomplete via the exported `defineConfig` helper:
@@ -110,9 +110,9 @@ npx serve dist
 ## What's next
 
 - Want a landing/marketing page above your docs?
-  [Enable the landing](/guides/manual-mode/#landing).
+  [Enable the landing](/docs/guides/manual-mode/#landing).
 - Mixing auto-generated API docs with hand-written narrative?
-  See [Hybrid mode](/guides/hybrid-mode/).
-- Ready to publish? The [Deploy guide](/guides/deploy/) walks through
+  See [Hybrid mode](/docs/guides/hybrid-mode/).
+- Ready to publish? The [Deploy guide](/docs/guides/deploy/) walks through
   GitHub Pages, Netlify, Vercel, and "just upload `dist/` to anything".
-- Reference: [config fields](/reference/config/) and [CLI commands](/reference/cli/).
+- Reference: [config fields](/docs/reference/config/) and [CLI commands](/docs/reference/cli/).

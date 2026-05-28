@@ -56,7 +56,7 @@ Use this when:
 - You're writing docs by hand and want a clean output without source-of-truth
   generation.
 - You're building a marketing site or landing page alongside your docs
-  (enable [`site.landing`](/reference/config/#sitelanding) for a Material
+  (enable [`site.landing`](/docs/reference/config/#sitelanding) for a Material
   for MkDocs-style homepage).
 - You're hosting purely-prose content that has nothing to do with your code.
 
@@ -88,8 +88,8 @@ Use this when:
 - You want renamed or deleted symbols to surface their orphaned prose for
   review rather than silently lose them.
 
-The tagging contract is covered in [Anchors and zones](/concepts/anchors-and-zones/);
-orphan handling is in [Orphans](/concepts/orphans/).
+The tagging contract is covered in [Anchors and zones](/docs/concepts/anchors-and-zones/);
+orphan handling is in [Orphans](/docs/concepts/orphans/).
 
 ## Per-directory and per-file overrides
 
@@ -108,4 +108,4 @@ The `mode` field can also live in:
   The page is treated as manual content even if the project default is
   `auto` or `hybrid`.
 
-The full override resolution lives in [Reference → Config](/reference/config/#per-file-overrides).
+The full override resolution lives in [Reference → Config](/docs/reference/config/#per-file-overrides).

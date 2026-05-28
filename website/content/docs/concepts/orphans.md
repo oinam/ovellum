@@ -15,7 +15,7 @@ shape of the code? Most tools either silently overwrite them or require you
 to find and migrate every block yourself before the next build will pass.
 
 Ovellum treats your prose as **valuable**. If it can't find a home for a
-[protected zone](/concepts/anchors-and-zones/) on the next build, the
+[protected zone](/docs/concepts/anchors-and-zones/) on the next build, the
 block doesn't get dropped. It gets **quarantined**.
 
 ## What quarantine looks like
@@ -90,14 +90,14 @@ reviewable in PRs. Committing them means:
 - Recovery is just `git mv` away.
 
 If you'd rather treat orphans as ephemeral, set
-[`protect.orphanStrategy`](/reference/config/#protect) to `'warn'` —
+[`protect.orphanStrategy`](/docs/reference/config/#protect) to `'warn'` —
 the build will surface the warning but won't write a file.
 
 ## When orphans pile up
 
 Each orphan file carries an `orphaned:` timestamp. A future
 `ovellum orphans --stale` subcommand will flag entries older than
-[`protect.orphanRetention`](/reference/config/#protect) days (default
+[`protect.orphanRetention`](/docs/reference/config/#protect) days (default
 `90`), making it easy to do a quarterly review and prune what's no longer
 relevant.
 

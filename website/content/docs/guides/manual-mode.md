@@ -208,7 +208,7 @@ When enabled, the config looks like this:
 If you have a `content/_landing.md` file, its prose body renders between
 the feature grid and the trust strip. Treat it as the "Why" section.
 
-Full landing reference: [config → site.landing](/reference/config/#sitelanding).
+Full landing reference: [config → site.landing](/docs/reference/config/#sitelanding).
 
 ## Theme switching
 
@@ -219,7 +219,7 @@ flash on subsequent loads.
 
 If you want to ship a different default for first-time visitors, set
 `site.defaultTheme` to `light` or `dark`. See
-[Theming](/guides/themes/) for restyling beyond the defaults.
+[Theming](/docs/guides/themes/) for restyling beyond the defaults.
 
 ## Static-site essentials
 
@@ -236,4 +236,4 @@ matter:
   `<aside>` with `aria-label`s), and proper heading levels.
 
 Everything is generated; nothing here is configurable for now. The
-[theming guide](/guides/themes/) covers what's customisable today.
+[theming guide](/docs/guides/themes/) covers what's customisable today.
