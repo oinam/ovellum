@@ -194,8 +194,7 @@ function rehypeTableWrap() {
   };
 }
 
-const CALLOUT_TYPES = ['note', 'tip', 'important', 'warning', 'caution'] as const;
-type CalloutType = (typeof CALLOUT_TYPES)[number];
+type CalloutType = 'note' | 'tip' | 'important' | 'warning' | 'caution';
 const CALLOUT_RE = /^\s*\[!(NOTE|TIP|IMPORTANT|WARNING|CAUTION)\][^\S\n]*\n?/i;
 const CALLOUT_LABEL: Record<CalloutType, string> = {
   note: 'Note',
