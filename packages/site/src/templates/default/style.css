@@ -96,6 +96,9 @@
   --color-bg-chrome: oklch(93% 0 0);
   --color-bg-subtle: var(--color-zinc-100);
   --color-bg-muted: var(--color-zinc-200);
+  /* Card surface — a hair lighter than body so a card lifts off the page
+     on a hairline border alone, no heavy shadow. */
+  --color-surface: oklch(100% 0 0);
   --color-fg: var(--color-zinc-900);
   --color-fg-muted: var(--color-zinc-700);
   --color-fg-subtle: var(--color-zinc-500);
@@ -161,6 +164,8 @@ body.ov-body-landing {
     --color-bg-chrome: oklch(20% 0 0);
     --color-bg-subtle: var(--color-zinc-900);
     --color-bg-muted: var(--color-zinc-800);
+    /* Card sits between body (14.1%) and chrome (20%) — a gentle lift. */
+    --color-surface: oklch(17.5% 0 0);
     --color-fg: var(--color-zinc-100);
     --color-fg-muted: var(--color-zinc-300);
     --color-fg-subtle: var(--color-zinc-500);
@@ -190,6 +195,7 @@ body.ov-body-landing {
   --color-bg-chrome: oklch(20% 0 0);
   --color-bg-subtle: var(--color-zinc-900);
   --color-bg-muted: var(--color-zinc-800);
+  --color-surface: oklch(17.5% 0 0);
   --color-fg: var(--color-zinc-100);
   --color-fg-muted: var(--color-zinc-300);
   --color-fg-subtle: var(--color-zinc-500);
@@ -1565,24 +1571,30 @@ body.ov-body-landing {
   color: var(--color-fg);
 }
 
-/* Feature grid — editorial-calm: no cards, no fills, no rounded corners.
-   Each block sits under a thin top rule with the title and description
-   stacked beneath. Reads as a structured list of features rather than a
-   Mintlify-style card array. */
+/* Card — a clean, subtle surface primitive. A surface a hair lighter than
+   the page, a hairline border, a modest radius, and a whisper of shadow.
+   Reused across the site; the landing feature grid is the first adopter. */
+.ov-card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-m);
+  box-shadow: 0 1px 2px oklch(0% 0 0 / 0.04);
+}
+
+/* Feature grid — three subtle cards beneath the hero. */
 .ov-feature-grid-wrap {
   margin-block: var(--space-2xl) var(--space-xl);
 }
 .ov-feature-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-  gap: var(--space-l) var(--space-l);
+  gap: var(--space-m);
 }
 .ov-feature-card {
   display: flex;
   flex-direction: column;
-  gap: var(--space-3xs);
-  padding-block-start: var(--space-s);
-  border-block-start: 1px solid var(--color-border-strong);
+  gap: var(--space-2xs);
 }
 .ov-feature-icon {
   font-size: var(--font-size-2);

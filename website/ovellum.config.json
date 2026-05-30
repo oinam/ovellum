@@ -44,28 +44,16 @@
       },
       "features": [
         {
-          "title": "Merge engine, not overwrite engine",
+          "title": "A Merge Engine",
           "description": "Tag sections of your Markdown as human-owned with a single comment pair. Ovellum updates the auto-generated parts around them; your prose survives every rebuild."
         },
         {
-          "title": "Three modes, one tool",
+          "title": "Three Modes",
           "description": "`auto` regenerates from source. `manual` builds a static site from Markdown. `hybrid` (default) merges the two. Switch per-project or per-file."
         },
         {
-          "title": "Orphans are quarantined, never lost",
+          "title": "Orphans Quarantined",
           "description": "When you rename or delete a documented symbol, any hand-written prose tied to it gets archived to `.ovellum/orphans/`. Reviewable in PRs, recoverable any time."
-        },
-        {
-          "title": "Markdown-first, no lock-in",
-          "description": "Plain `.md` files everywhere. No proprietary format, no required MDX, no special syntax beyond a tagging comment. Your content stays portable."
-        },
-        {
-          "title": "Fluid type and OKLCH themes",
-          "description": "Utopia-derived type and space scales. OKLCH palette with auto/light/dark themes. The pre-paint script keeps theme switches flash-free."
-        },
-        {
-          "title": "Build-time syntax highlighting",
-          "description": "Code blocks render through shiki with dual `github-light` / `github-dark` themes baked into the HTML. Zero runtime JavaScript for syntax colour."
         }
       ],
       "scenes": []

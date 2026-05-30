@@ -74,7 +74,7 @@ describe('renderLanding', () => {
       }),
       generatedAt: '2026-05-16T00:00:00.000Z',
     });
-    expect(html.match(/class="ov-feature-card"/g)?.length).toBe(2);
+    expect(html.match(/class="ov-card ov-feature-card"/g)?.length).toBe(2);
     expect(html).toContain('<svg viewBox="0 0 24 24"');
     expect(html).toContain('Builds in seconds.');
     expect(html).toContain('No icon variant.');

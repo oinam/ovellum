@@ -462,7 +462,7 @@ function renderFeatures(features: OvellumLandingConfig['features']): string {
   const cards = features
     .map((f) => {
       const icon = f.icon ? `<div class="ov-feature-icon" aria-hidden="true">${f.icon}</div>` : '';
-      return `<article class="ov-feature-card">
+      return `<article class="ov-card ov-feature-card">
         ${icon}
         <h3 class="ov-feature-title">${escapeHtml(f.title)}</h3>
         <p class="ov-feature-description">${escapeHtml(f.description)}</p>
