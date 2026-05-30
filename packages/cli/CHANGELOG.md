@@ -1,5 +1,12 @@
 # ovellum
 
+## 0.2.1
+
+### Patch Changes
+
+- 82cdb1f: Add `publishConfig.access: public` and `sideEffects: false` to the package
+  manifest — release-hygiene only, no behavioural change.
+
 ## 0.2.0
 
 ### Minor Changes
