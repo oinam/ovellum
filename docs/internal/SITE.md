@@ -44,7 +44,11 @@ Disabled by default — existing manual-mode sites keep using
    variant** (§2b).
 2. **Feature grid** — responsive grid of cards (icon + title + description).
    `auto-fit, minmax(260px, 1fr)` — collapses to 1 column on narrow
-   viewports.
+   viewports. Cards use the reusable `.ov-card` primitive: `--color-surface`
+   (a hair lighter than the page) + a hairline border + `--radius-lg` + a
+   whisper of shadow. This reverses the earlier editorial-calm "no cards"
+   experiment (top-rule blocks); the subtle-card treatment is the current
+   direction and `.ov-card` is meant to be reused for other surfaces.
 3. **Pitch (optional)** — free-form Markdown from `{input}/_landing.md` if
    present. Renders between feature grid and trust strip. The underscore
    prefix keeps the file out of the regular sidebar walk.

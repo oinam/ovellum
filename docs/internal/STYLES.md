@@ -486,7 +486,12 @@ These are what components consume. Every theme redefines this set.
 :root {
   /* Surfaces */
   --color-bg: <neutral-50>; /* Page background */
-  --color-bg-subtle: <neutral-100>; /* Card, sidebar */
+  --color-surface: <white | dark-lift>; /* Cards — a hair lighter than bg so a
+                                            card lifts off the page on a hairline
+                                            border alone. Pure white in light;
+                                            oklch(17.5%) (between body + chrome)
+                                            in dark. Used by the .ov-card primitive. */
+  --color-bg-subtle: <neutral-100>; /* Sidebar, inset code */
   --color-bg-muted: <neutral-200>; /* Inputs, code blocks */
   --color-bg-inverse: <neutral-900>; /* Tooltips, inverted callouts */
 

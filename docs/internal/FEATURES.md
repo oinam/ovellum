@@ -8,7 +8,7 @@ deferred items see [`TODO.md`](./TODO.md). For human-only tasks (writing prose,
 product decisions, release) see [`TODO-Human.md`](./TODO-Human.md). For
 terminology see [`GLOSSARY.md`](./GLOSSARY.md).
 
-Last updated: 2026-05-22 (section scenes via `site.landing.scenes`)
+Last updated: 2026-05-30 (subtle feature-card style + `0.2.1` release + workspace coverage tooling)
 
 Status legend:
 
@@ -86,7 +86,7 @@ Shared types, config schema, error class. Consumed by every other package.
 
 Anchor IDs: done `{relativeFilePath}::{symbolPath}` per [`DESIGN.md` §8.3](./DESIGN.md#83-anchor-ids-and-stability).
 
-**Tests:** 6 vitest smoke tests across symbol types and filtering.
+**Tests:** 12 vitest cases — symbol types and filtering, plus complex-type extraction (generics, optional/default/rest params, union/intersection types, interface heritage, generic union type aliases, the `includePrivate` gate).
 
 ### 3.2 Generator (`@ovellum/generator`)
 
@@ -107,7 +107,7 @@ Anchor IDs: done `{relativeFilePath}::{symbolPath}` per [`DESIGN.md` §8.3](./DE
 | Sidebar / `_index.md` generator                                            | deferred |                                                    |
 | MDX mode (JSX-in-`@example` detection)                                     | deferred |                                                    |
 
-**Tests:** 4 vitest cases (function rendering, mdx path mapping, multi-file).
+**Tests:** 7 vitest cases (function rendering, mdx path mapping, multi-file, plus node-kind rendering: deprecated/since banners, class Properties/Methods grouping, enum members).
 
 ### 3.3 Reader (`@ovellum/reader`)
 
@@ -177,9 +177,9 @@ Powers `mode: 'manual'`. Design lives in [`SITE.md`](./SITE.md).
 | Right-side "On this page" ToC                                                      | done     | h2/h3 only.                                                                                                                                                                                    |
 | Pretty URLs (`name/index.html`)                                                    | done     |                                                                                                                                                                                                |
 | Static asset passthrough                                                           | done     | Non-`.md` files (images, etc.) copied as-is.                                                                                                                                                   |
-| **Landing page** (`site.landing.enabled`)                                          | done     | Disabled by default. When enabled: full-width hero + feature grid + optional `_landing.md` prose + optional trust strip rendered at `/`. Doc pages keep their URLs. Top-bar gains a Docs link. |
+| **Landing page** (`site.landing.enabled`)                                          | done     | Disabled by default. When enabled: full-width hero + feature grid + optional `_landing.md` prose + optional trust strip rendered at `/`. Doc pages keep their URLs. Top-bar gains a Docs link. Feature grid renders as subtle cards via the reusable `.ov-card` primitive (`--color-surface` + hairline border + `--radius-lg`). |
 | Top bar with theme toggle                                                          | done     | Auto → light → dark cycle; localStorage-backed; applied pre-paint. Icons (monitor/sun/moon) swap by `data-theme`.                                                                              |
-| Version badge next to the brand                                                    | done     | Driven by `site.version` (free-form string, e.g. `"v0.2.0"`). Rendered as a small mono chip baseline-aligned with the brand title. Omitted when `site.version` is unset.                       |
+| Version badge next to the brand                                                    | done     | Driven by `site.version` (free-form string, e.g. `"v0.2.1"`). Rendered as a small mono chip baseline-aligned with the brand title. Omitted when `site.version` is unset.                       |
 | Right-aligned topbar nav with mobile sheet                                         | done     | Driven by `site.topbarNav`. Brand (logo mark + wordmark + version) on the left; the search box fills a centered zone; on the right, text links → icon-only links (via `icon`) → theme toggle, each a rounded-square button. External text links get a small SVG arrow. Below 720px the top row keeps logo + version + centered search + hamburger; the nav and theme toggle move into the full-width sheet (icon links regain their label there). |
 | Two-column footer (copyright + footerNav)                                          | done     | `site.footerNav` populates the right column; items with `icon` render as icon-only Lucide glyphs (`github` / `rss` / `mail` / `package`), items without as text. Footer outer boundary tracks the topbar's max-inline-size and gutters so all three rails align. |
 | Inline SVG icon registry (Lucide)                                                  | done     | `renderIcon(name)` returns a 24×24 currentColor SVG with Lucide's canonical attributes (stroke-width 2, round caps). Path data imported per-icon from `lucide` (tree-shaken: ~100B per icon). Public set: menu, close, sun, moon, monitor, chevron-down, github (hand-rolled — Lucide v1 dropped brand marks), external-link, search, check. |
@@ -211,7 +211,9 @@ Powers `mode: 'manual'`. Design lives in [`SITE.md`](./SITE.md).
 piece is in, and how to change the design — see
 [`SITE.md` §9a](./SITE.md#9a-template-anatomy).
 
-**Tests:** 97 vitest cases in `@ovellum/site` (markdown incl. sanitization + callouts + language-label tagging, nav, template, landing incl. imagery-hero variant + scene interleaving, sitemap, rss, url helpers, page-meta incl. command-injection resistance, icons) plus 8 in `ovellum` (CLI URL-scheme allowlist).
+**Tests:** ~100 vitest cases in `@ovellum/site` (markdown incl. sanitization + callouts + language-label tagging, nav, template, landing incl. imagery-hero variant + scene interleaving, sitemap, rss, url helpers, page-meta incl. command-injection resistance, icons) plus the `ovellum` CLI suite (URL-scheme allowlist, dev-server path-traversal defense, spawn-based smoke tests, and an in-process **merge-survival golden test** driving parser → generator → reader → merger → orphan-writer end-to-end).
+
+**Coverage:** `pnpm test:coverage` (root-only `vitest.coverage.ts`, `@vitest/coverage-v8`) aggregates the whole workspace into one report — baseline ~65% lines / 76% branches. The CLI command layer and `site/build.ts` read low only because the spawn-based smoke tests run them in a subprocess v8 can't instrument; they are exercised, not uncovered.
 
 **Security:** sanitization policy, shell-out hardening, and URL-scheme allowlist are documented in [`SECURITY.md`](./SECURITY.md).
 
