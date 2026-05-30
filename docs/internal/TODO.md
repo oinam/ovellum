@@ -561,6 +561,7 @@ announcements are in [`TODO-Human.md`](./TODO-Human.md).
 - [ ] VS Code extension (protected zone highlighting, source navigation)
 - [ ] GitHub App: auto-PR when docs drift from source
 - [ ] `ovellum diff` command: show what would change without writing
+- [ ] **Ovellum for the AI age — MCP server and/or Claude Skill.** Open question whether the surface is an MCP server (tools like `ovellum_build`, `ovellum_check`, `ovellum_orphans`, `ovellum_query_symbol`, exposing the IR for agents to read/write), a Claude Skill (packaged guidance + scripts the model invokes locally), or both. Likely value: agents authoring docs against the same protected-zone / anchor model humans use — so AI-written prose lands inside `@manual:start` blocks and survives regeneration like any other manual content. Needs a design pass before scoping — pick when the v1 surface stops moving.
 
 ---
 
