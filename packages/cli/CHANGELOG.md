@@ -7,6 +7,26 @@
 - 82cdb1f: Add `publishConfig.access: public` and `sideEffects: false` to the package
   manifest — release-hygiene only, no behavioural change.
 
+### Also in this release
+
+The manifest patch above is the only changeset-tracked change. The following
+user-facing improvements to the manual-mode site builder landed on `main`
+without changesets between 0.2.0 (2026-05-17) and this release, and ship in
+the bundled site builder:
+
+- **GFM alert callouts** — `> [!NOTE]` / `[!TIP]` / `[!IMPORTANT]` /
+  `[!WARNING]` / `[!CAUTION]` render as styled callouts.
+- **RSS feed** — `feed.xml` (RSS 2.0) is emitted when `site.baseUrl` is set.
+- **Configurable two-column footer** via `site.footerNav`.
+- **Version badge** next to the brand, driven by `site.version`.
+- **Landing** — optional imagery hero (`site.landing.hero.media`), interleaved
+  section scenes (`site.landing.scenes`), and a subtle feature-card style.
+- **Topbar** — centered search, icon buttons, the real Ovellum logo.
+- GFM enabled so Markdown **tables render**; wide tables scroll in a container.
+- Right-rail ToC strips a trailing `#` and uses a Retype-style active indicator.
+- The reader **warns when a protected zone falls back to a positional id**, so
+  drift surfaces in the build summary.
+
 ## 0.2.0
 
 ### Minor Changes
