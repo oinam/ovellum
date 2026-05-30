@@ -12,6 +12,7 @@
   "scripts": {
     "build": "turbo run build",
     "test": "turbo run test",
+    "test:coverage": "vitest run --config vitest.coverage.ts --coverage",
     "lint": "turbo run lint",
     "typecheck": "turbo run typecheck",
     "demo": "turbo run build --filter=ovellum... && node packages/cli/dist/index.js build --cwd examples/simple-ts",
@@ -36,6 +37,7 @@
     "@changesets/cli": "^2.27.0",
     "@eslint/js": "^9.0.0",
     "@types/node": "^20.11.0",
+    "@vitest/coverage-v8": "^1.6.0",
     "eslint": "^9.0.0",
     "eslint-config-prettier": "^9.1.0",
     "prettier": "^3.2.0",

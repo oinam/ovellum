@@ -27,6 +27,10 @@
     "url": "https://github.com/oinam/ovellum/issues"
   },
   "type": "module",
+  "sideEffects": false,
+  "publishConfig": {
+    "access": "public"
+  },
   "main": "./dist/index.cjs",
   "module": "./dist/index.js",
   "types": "./dist/index.d.ts",
