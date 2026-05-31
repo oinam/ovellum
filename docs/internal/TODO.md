@@ -23,11 +23,12 @@ Legend: `[ ]` not started · `[~]` in progress · `[x]` done · `[!]` blocked
 
 ---
 
-## Current state (2026-05-30)
+## Current state (2026-05-31)
 
 **Live and shipped:**
 - `ovellum@0.2.1` on npm — <https://www.npmjs.com/package/ovellum> (published 2026-05-30; install-verified — bin runs, templates ship). `0.2.0` was the first public release on 2026-05-17. Git tags `ovellum@0.2.0` (retro, at `a85aae4`) and `ovellum@0.2.1` exist; GitHub release notes drafted in `tmp/ovellum-0.2.1-release-notes.md` (gitignored).
-- Docs site live with TLS — <https://ovellum.oss.oinam.com> (version badge now `v0.2.1`)
+- **0.2.2 staged** (not yet published): `site.headExtra` raw `<head>` injection landed; `packages/cli/package.json` bumped 0.2.1→0.2.2, CHANGELOG `## 0.2.2` entry written, version badge bumped to `v0.2.2`. Awaiting local `npm publish` from `packages/cli/`.
+- Docs site live with TLS — <https://ovellum.oss.oinam.com> (version badge now `v0.2.2`)
 - All six CLI commands working: `init`, `build`, `dev`, `watch`, `serve`, `check`
 - Manual-mode static site builder is feature-complete for a real docs site
 - Landing feature grid is now a **subtle card** style (`.ov-card` primitive + `--color-surface` token) — reverses the earlier editorial-calm "no cards" experiment. See SITE.md §1.2 + STYLES.md surfaces.

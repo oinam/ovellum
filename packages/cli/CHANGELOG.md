@@ -1,5 +1,15 @@
 # ovellum
 
+## 0.2.2
+
+### Patch Changes
+
+- Add `site.headExtra` — raw HTML injected verbatim into `<head>` on every page
+  (after the search assets, before the inline theme-boot script). Unset by
+  default, so generated docs are unaffected unless a project opts in. Intended
+  for analytics snippets and similar third-party `<script>`/`<link>`/`<meta>`
+  tags; the string is not escaped, so only set markup you control.
+
 ## 0.2.1
 
 ### Patch Changes

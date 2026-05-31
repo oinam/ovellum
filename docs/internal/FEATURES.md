@@ -8,7 +8,7 @@ deferred items see [`TODO.md`](./TODO.md). For human-only tasks (writing prose,
 product decisions, release) see [`TODO-Human.md`](./TODO-Human.md). For
 terminology see [`GLOSSARY.md`](./GLOSSARY.md).
 
-Last updated: 2026-05-30 (subtle feature-card style + `0.2.1` release + workspace coverage tooling)
+Last updated: 2026-05-31 (`site.headExtra` raw `<head>` injection + `0.2.2` staged)
 
 Status legend:
 
