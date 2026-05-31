@@ -1,4 +1,4 @@
-# Working on Ovellum
+# CLAUDE
 
 Ovellum is an open-source documentation tool for TypeScript and JavaScript: a
 merge engine that lets auto-generated API docs and hand-written prose live in
