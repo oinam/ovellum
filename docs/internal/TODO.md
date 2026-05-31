@@ -299,7 +299,7 @@ New phase introduced 2026-05-15. Design lives in [`SITE.md`](./SITE.md).
 - [x] Token-extraction script: pull current `STYLES.md` values into `style.css` automatically — shipped 2026-05-18
 - [x] `_meta.json` title fallback for directories without their own `index.md` — already implemented in `buildNav`'s title resolution chain (`meta.title > indexNode.title > kebab segment > 'Untitled'`); the live website (no index.md in any of `concepts/`, `guides/`, `reference/`) relies on it. Behavior pinned by two explicit tests in `packages/site/src/__tests__/nav.test.ts`.
 - [x] RSS feed auto-emit
-- [ ] MDX rendering via `remark-mdx`
+- [ ] **MDX in manual mode.** Today page discovery skips `.mdx` — `isMarkdown` in `nav.ts` (and the twin in `build.ts`) matches only `.md`/`.markdown`, so `.mdx` files never become site pages. Two tiers: (1) **treat `.mdx` as Markdown** — widen those two regexes + the reader's extension list; near-trivial, no JSX evaluation, ships `.mdx` authoring immediately. (2) **full MDX** — compile JSX/components via `remark-mdx`; a real piece of work. Do tier 1 first.
 - [ ] Plugin API for custom templates (deferred — needs its own design pass)
 - [ ] Multi-version / multi-language docs
 

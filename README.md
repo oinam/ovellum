@@ -19,31 +19,33 @@ The deeper problem is the merge. When a tool regenerates docs, it overwrites man
 
 ## What Ovellum Does
 
-Ovellum introduces a tagging contract between the tool and the author. Writers mark sections of a document as manually owned. The tool respects those boundaries on every subsequent build - updating the auto-generated parts around them, leaving the human-written parts untouched.
+Ovellum maintains a tagging contract between the tool and the human. Writers mark sections of a document as manually owned. The tool respects those boundaries on every subsequent build - updating the auto-generated parts around them, leaving the human-written parts untouched.
 
-Three modes, one tool:
+### Three modes, one tool:
 
-- **Hybrid** (default) - Auto-generation and manual writing coexist in the same files. Protected zones are tagged and preserved across every rebuild.
-- **Manual** - Ovellum acts as a Markdown-first static documentation builder. No source parsing. Writers own everything.
-- **Auto** - Full auto-generation from TypeScript/JavaScript source. No manual layer. Fast, complete, zero friction.
+1. Hybrid (default). Auto-generation and manual writing coexist in the same files. Protected zones are tagged and preserved across every rebuild.
+2. Manual. Ovellum acts as a Markdown-first static documentation builder. No source parsing. Writers own everything.
+3. Auto. Full auto-generation from source. No manual layer.
 
 Markdown is the first-class format throughout. `.mdx` is also supported. No proprietary formats, no lock-in.
 
 ## What Happens When Code Changes
 
-When a function or class that had manually-written documentation attached to it is renamed or deleted, Ovellum does not silently drop that writing. It quarantines the orphaned section into a versioned archive (`.docsmith/orphans/`), warns the author, and surfaces it via `ovellum orphans` for review. Manual writing is never lost without the author knowing.
+When a function or class that had manually-written documentation attached to it is renamed or deleted, Ovellum quarantines the orphaned section into a versioned archive (`.ovellum/orphans/`) and warns the author. Manual writing is never lost without a human knowing.
 
 ## How It Is Being Built
 
 Ovellum is built in TypeScript, and designed to be installed and run via `npx ovellum` with zero global dependencies required.
 
-The core components are:
+### Components;
 
-- **Parser** - reads TypeScript and JavaScript source files and extracts documented symbols (functions, classes, interfaces, types, enums) into a structured intermediate representation.
-- **Generator** - converts that representation into clean Markdown.
-- **Merger** - the core innovation. Combines auto-generated content with existing manual files, respects tagged protected zones, and handles orphaned content gracefully.
-- **Reader** - parses existing Markdown and MDX files, extracts protected zones, and validates document structure.
-- **CLI** - the user-facing surface: `build`, `watch`, `check`, `orphans`, `init`, `clean`.
+- Core. Shared types, the configuration schema, and the intermediate representation the other packages build on.
+- Parser. Reads TypeScript and JavaScript source files and extracts documented symbols (functions, classes, interfaces, types, enums) into a structured intermediate representation.
+- Generator. Converts that representation into clean Markdown.
+- Merger. Combines auto-generated content with existing manual files, respects tagged protected zones, and handles orphaned content gracefully.
+- Reader. Parses existing Markdown and MDX files, extracts protected zones, and validates document structure.
+- Site. The manual-mode static-site builder: renders Markdown into a themed, searchable HTML site.
+- CLI. User-facing surface: `init`, `build`, `dev`, `watch`, `serve`, `check`.
 
 The detailed technical architecture, package structure, config schema, tagging specification, and merge algorithm are documented in [`docs/internal/DESIGN.md`](docs/internal/DESIGN.md). The full implementation checklist is in [`docs/internal/TODO.md`](docs/internal/TODO.md). Both are intended as the hand-off documents for implementation.
 
@@ -67,14 +69,9 @@ npx ovellum build      # one-shot production build
 
 Full walkthrough — prerequisites, the iteration loop, the recommended
 two-terminal setup, working with multiple sites in one repo — lives in
-the [Development guide](https://ovellum.oss.oinam.com/guides/development/).
+the [Development guide](https://ovellum.oss.oinam.com/docs/guides/development/).
 
 Working on Ovellum itself (the monorepo, packages, tests, this
-website)? See [Contributing](https://ovellum.oss.oinam.com/contributing/).
+website)? See [Contributing](https://ovellum.oss.oinam.com/docs/contributing/).
 
-## Deployment
-
-`ovellum build` produces a self-contained `dist/` directory. Any
-static-file host serves it as-is. Concrete recipes for GitHub Pages,
-Netlify, Vercel, Cloudflare Pages, and plain Nginx / S3 are in the
-[Deploy guide](https://ovellum.oss.oinam.com/guides/deploy/).
+→ [Read the Documentation for details.](https://ovellum.oss.oinam.com/docs/)
