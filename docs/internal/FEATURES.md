@@ -6,7 +6,7 @@ change that adds or modifies a user-visible feature.
 For the original design vision see [`DESIGN.md`](./DESIGN.md). For roadmap and
 deferred items see [`TODO.md`](./TODO.md). For human-only tasks (writing prose,
 product decisions, release) see [`TODO-Human.md`](./TODO-Human.md). For
-terminology see [`GLOSSARY.md`](./GLOSSARY.md).
+terminology see the [glossary](https://ovellum.oss.oinam.com/docs/reference/glossary/).
 
 Last updated: 2026-05-31 (`site.headExtra` raw `<head>` injection + `0.2.2` staged)
 
@@ -37,7 +37,7 @@ Shared types, config schema, error class. Consumed by every other package.
 | Feature                                                                | Status | Notes                                                                                          |
 | ---------------------------------------------------------------------- | ------ | ---------------------------------------------------------------------------------------------- |
 | IR types (`DocNode`, `DocFile`, `DocProject`, `DocParam`, `DocReturn`) | done   | Per [`DESIGN.md` §6](./DESIGN.md#6-intermediate-representation-ir)                             |
-| `OvellumConfig` schema                                                 | done   | Full reference in [`CONFIG.md`](./CONFIG.md). Includes `site`, `protect`, format, mode, paths. |
+| `OvellumConfig` schema                                                 | done   | Full reference in the [config reference](https://ovellum.oss.oinam.com/docs/reference/config/). Includes `site`, `protect`, format, mode, paths. |
 | `defineConfig()` helper                                                | done   | Identity function for type-safe `ovellum.config.ts`.                                           |
 | `loadOvellumConfig({ cwd, configFile })`                               | done   | Loads via `c12`; applies defaults; validates. Returns `{ config, configFile, cwd }`.           |
 | `loadDirectoryOverride(rootCwd, targetDir, root)`                      | done   | Walks from root → target, merges every nested `ovellum.config.*` (deepest wins).               |
@@ -138,7 +138,7 @@ Anchor IDs: done `{relativeFilePath}::{symbolPath}` per [`DESIGN.md` §8.3](./DE
 
 ### 3.5 CLI (`ovellum`)
 
-See [`CLI.md`](./CLI.md) for full reference.
+See the [CLI reference](https://ovellum.oss.oinam.com/docs/reference/cli/) for full reference.
 
 | Subcommand        | Status   |
 | ----------------- | -------- |
@@ -216,7 +216,7 @@ piece is in, and how to change the design — see
 
 **Coverage:** `pnpm test:coverage` (root-only `vitest.coverage.ts`, `@vitest/coverage-v8`) aggregates the whole workspace into one report — baseline ~65% lines / 76% branches. The CLI command layer and `site/build.ts` read low only because the spawn-based smoke tests run them in a subprocess v8 can't instrument; they are exercised, not uncovered.
 
-**Security:** sanitization policy, shell-out hardening, and URL-scheme allowlist are documented in [`SECURITY.md`](./SECURITY.md).
+**Security:** sanitization policy, shell-out hardening, and URL-scheme allowlist are documented in the [security reference](https://ovellum.oss.oinam.com/docs/reference/security/) (defenses-in-code map in [`DESIGN.md`](./DESIGN.md#where-the-security-defenses-live)).
 
 ---
 

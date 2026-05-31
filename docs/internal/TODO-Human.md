@@ -161,11 +161,11 @@ The website code, content, and workflows are wired up (see Phase 4.6 in
       to **GitHub Actions** (the modern flow; the workflow expects this).
 - [ ] Push to `main` (or trigger the `Deploy website` workflow via
       `workflow_dispatch`) to verify the first deploy end-to-end.
-- [ ] Set up DNS for `ovellum.oss.oinam.com`: - Add a `CNAME` record at `ovellum.oss.oinam.com`
-      pointing to `oinam.github.io`. - Wait for propagation (usually ≤ 1 hour). - In Pages settings, the custom domain should auto-verify from the
-      committed `website/CNAME`. Enable **Enforce HTTPS** once the
-      certificate is provisioned.
-- [ ] Smoke-test the live URL: landing renders, CTAs link, theme toggle
+- [x] Set up DNS for `ovellum.oss.oinam.com` (completed 2026-05): - Added a `CNAME` record at `ovellum.oss.oinam.com`
+      pointing to `oinam.github.io`. - Waited for propagation. - In Pages settings, the custom domain auto-verified from the
+      committed `website/CNAME`. **Enforce HTTPS** enabled once the
+      Let's Encrypt certificate was provisioned. Site is live with TLS at <https://ovellum.oss.oinam.com>.
+- [x] Smoke-test the live URL (completed 2026-05): landing renders, CTAs link, theme toggle
       works, `/wat/` returns the 404 page.
 - [ ] Open a PR (any small change to `website/`) to confirm the
       `Website preview` workflow uploads its `website-dist` artifact.

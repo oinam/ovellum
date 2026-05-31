@@ -37,10 +37,10 @@ Mode can be set globally in config or overridden per-directory or per-file via f
 ## 3. Architecture Overview
 
 ```
-┌─────────────────────────────────────────────────────────┐
-│                        CLI Layer                         │
-│              ovellum build / watch / check              │
-└────────────────────────┬────────────────────────────────┘
+┌──────────────────────────────────────────────────────────────┐
+│                          CLI Layer                           │
+│       ovellum init / build / dev / watch / serve / check       │
+└───────────────────────────┬──────────────────────────────────┘
                          │
               ┌──────────▼──────────┐
               │    Config Loader    │
@@ -83,6 +83,7 @@ ovellum/
 │   ├── generator/          # IR → Markdown strings
 │   ├── merger/             # Merge engine: protected zones + orphan logic
 │   ├── reader/             # Markdown/MDX file reader + frontmatter parser
+│   ├── site/               # Manual-mode static-site builder (Markdown → HTML)
 │   └── cli/                # CLI entry point (bin/ovellum)
 │
 ├── tests/
@@ -525,11 +526,18 @@ In `manual` mode, the reader also validates:
 Installed globally or run via `npx ovellum`.
 
 ```
-ovellum build          Build docs (uses mode from config)
-ovellum watch          Build + watch for file changes
-ovellum check          Validate config, find orphans, check links
-ovellum orphans        List, inspect, and manage orphaned manual sections
 ovellum init           Interactive setup: creates ovellum.config.ts, docs/
+ovellum build          Build docs (uses mode from config)
+ovellum dev            Manual mode: build + watch + serve + live-reload (SSE)
+ovellum watch          Build + watch for file changes
+ovellum serve          Serve the built dist/ as a static site
+ovellum check          Validate config, find orphans, check links
+```
+
+Deferred / planned (not shipped):
+
+```
+ovellum orphans        List, inspect, and manage orphaned manual sections
 ovellum clean          Remove generated output files (preserves manual files)
 ```
 
@@ -621,6 +629,14 @@ Fixtures cover:
 - Integration: all fixtures pass
 - No snapshot tests - prefer explicit `expected/` files reviewable in PRs
 
+### Where the security defenses live
+
+The user-facing security contract is at <https://ovellum.oss.oinam.com/docs/reference/security/>. The defenses themselves live here:
+
+- `packages/site/src/page-meta.ts` — shells out to `git` via `execFile` (array args, no shell); guarded by `packages/site/src/__tests__/page-meta.test.ts` (proves shell metacharacters in filenames don't execute).
+- `packages/site/src/__tests__/markdown.test.ts` — pins the `rehype-sanitize` HTML-sanitization policy (strips `<script>`, `on*` handlers, non-allowlisted URL schemes; no `data:` URLs).
+- `packages/cli/src/commands/check-utils.ts` — the `ovellum check` URL-scheme deny-list (`javascript:`/`vbscript:`/`data:`/`file:`) with entity/whitespace normalization; tested in `packages/cli/src/__tests__/check-utils.test.ts`.
+
 ---
 
 ## 16. Open Source Setup
@@ -670,7 +686,7 @@ On merge to `main`:
 - Package name: `ovellum` (check availability before finalizing name)
 - Single public package: the CLI (`packages/cli`)
 - Internal packages are not published
-- Supports Node.js 18+ (LTS)
+- Supports Node.js 20+ (LTS)
 - Ships both CJS and ESM via tsup dual output
 - `bin.ovellum` entry in `package.json`
 
@@ -702,7 +718,7 @@ Decisions that were consciously made and should not be revisited without documen
 | `ts-morph` over raw TS compiler API  | 80% less boilerplate. Full fidelity. Worth the dependency.                                            |
 | `c12` for config                     | Native `.ts` config support without compilation step. Handles env overrides cleanly.                  |
 | Single public npm package            | Simpler for users. Internal architecture is an implementation detail.                                 |
-| Node 18+ minimum                     | Fetch API, `--experimental-vm-modules` for vitest, modern ESM. No reason to support older.            |
+| Node 20+ minimum                     | Fetch API, `--experimental-vm-modules` for vitest, modern ESM. No reason to support older.            |
 
 ---
 

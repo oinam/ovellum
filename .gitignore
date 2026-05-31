@@ -1,6 +1,9 @@
 # Claude Code local agent state
 .claude/
 
+# Private Claude/maintainer notes — local only, never committed
+CLAUDE.local.md
+
 # Logs
 logs
 *.log

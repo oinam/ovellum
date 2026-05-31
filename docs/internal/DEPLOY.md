@@ -78,8 +78,8 @@ Done already; recorded here so future maintainers know what to expect:
    automatically once DNS resolves. Force-HTTPS toggle in Pages
    settings: enabled.
 
-The DNS step is on the human-only TODO; once DNS is set up the deploys
-will start to be served from the custom domain.
+DNS and TLS are live: the site is served from the custom domain at
+<https://ovellum.oss.oinam.com> with HTTPS enforced.
 
 ## 4. How `dist/` reaches the live site
 
