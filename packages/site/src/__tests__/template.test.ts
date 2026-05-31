@@ -145,6 +145,32 @@ describe('renderPage', () => {
     expect(withoutVersion).not.toContain('ov-brand-version');
   });
 
+  it('injects site.headExtra into <head> verbatim, omits when unset', () => {
+    const snippet =
+      '<script defer src="https://analytics.example.com/script.js" data-website-id="abc"></script>';
+    const withHead = renderPage({
+      site: { title: 'X', defaultTheme: 'auto', footer: '', headExtra: snippet },
+      nav: NAV,
+      url: '/',
+      title: 'X',
+      bodyHtml: '',
+      headings: [],
+      generatedAt: '2026-05-15T00:00:00.000Z',
+    });
+    expect(withHead).toContain(snippet);
+
+    const withoutHead = renderPage({
+      site: { title: 'X', defaultTheme: 'auto', footer: '' },
+      nav: NAV,
+      url: '/',
+      title: 'X',
+      bodyHtml: '',
+      headings: [],
+      generatedAt: '2026-05-15T00:00:00.000Z',
+    });
+    expect(withoutHead).not.toContain(snippet);
+  });
+
   it('renders the ToC when headings are present, and omits it when empty', () => {
     const withToc = renderPage({
       site: { title: 'X', defaultTheme: 'auto', footer: '' },

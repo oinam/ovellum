@@ -63,6 +63,7 @@ function renderShell(opts: ShellOptions): string {
   ${opts.site.baseUrl ? `<link rel="alternate" type="application/rss+xml" title="${escapeAttr(opts.site.title)}" href="${escapeAttr(join(opts.site.baseUrl, basePath + '/feed.xml'))}">` : ''}
   <link rel="stylesheet" href="${escapeAttr(assets)}assets/ovellum.css">
   ${searchHead}
+  ${opts.site.headExtra ?? ''}
   <script>
     (function () {
       try {

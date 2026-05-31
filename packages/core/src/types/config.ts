@@ -238,6 +238,14 @@ export interface OvellumSiteConfig {
   footerNav: OvellumFooterNavItem[];
   /** Landing-page settings. Disabled by default. */
   landing: OvellumLandingConfig;
+  /**
+   * Raw HTML injected verbatim into `<head>` on every page, right before the
+   * inline theme-boot script. Intended for analytics snippets and similar
+   * third-party `<script>`/`<link>`/`<meta>` tags. The string is **not**
+   * escaped or sanitised — only set it to markup you control. Unset = nothing
+   * injected (the default for end-user docs).
+   */
+  headExtra?: string;
 }
 
 export interface OvellumConfig {

@@ -94,6 +94,7 @@ interface OvellumSiteConfig {
   baseUrl?: string;
   defaultTheme: 'auto' | 'light' | 'dark';
   footer: string;
+  headExtra?: string;
 }
 ```
 
@@ -107,6 +108,7 @@ interface OvellumSiteConfig {
 | `defaultTheme` | `'auto' \| 'light' \| 'dark'` | `'auto'`                  | template (initial `data-theme`)               | Overridden once the user toggles and we read `localStorage`.      |
 | `footer`       | `string`                      | `'Built with Ovellum'`    | template (footer)                             | Empty string disables the footer entirely.                        |
 | `editUrlPattern` | `string?`                   | `undefined`               | template (per-page edit link)                 | URL pattern with `{path}` placeholder. `{path}` is the page's source path relative to the **build cwd** (`--cwd`). Include any repo prefix yourself, e.g. `'https://github.com/owner/repo/edit/main/website/{path}'`. When unset the link is not rendered. |
+| `headExtra`    | `string?`                     | `undefined`               | template (`<head>`)                           | Raw HTML injected verbatim into `<head>` on every page, right after the search/pagefind head bits and before the inline theme-boot script. **Not escaped/sanitised** — only set markup you control. Unset by default (end-user generated docs get nothing). Primary use: analytics snippets. |
 | `search`       | `{ enabled: boolean }`        | `{ enabled: false }`      | build-time indexer + template                 | When `true`, `ovellum build` runs Pagefind against the output dir and the topbar gains a search box. Adds `dist/pagefind/` to the build output. |
 | `pageMeta`     | `{ readingTime, lastModified }` | both `true`             | template (meta line above each article)       | `readingTime`: estimate at ~200 wpm (code blocks/HTML stripped). `lastModified`: prefers `git log -1 --format=%cI`; falls back to filesystem mtime; omits the line if neither resolves. Set either to `false` to hide that half. |
 | `topbarNav`    | `Array<{label, href, icon?, external?}>` | `[]`           | template (right-side nav on every page)       | Items appear in order to the right of the search box. Items with an `icon` field render icon-only on desktop (label kept for screen readers) and as icon + label inside the mobile sheet; items without render as text. Icon names: `github`, `package`, `rss`, `mail`, etc. `external: true` (or `href` starting with `http(s)://`) opens in a new tab with `rel="noopener"`; text items also get an external-link glyph. On mobile the row is just logo + version + search + hamburger; the nav (and theme toggle) move into the sheet. |

@@ -91,6 +91,7 @@ interface OvellumSiteConfig {
   codeTheme: 'github' | 'nord' | 'solarized';
   footer: string;
   editUrlPattern?: string;
+  headExtra?: string;
   search: { enabled: boolean };
   pageMeta: { readingTime: boolean; lastModified: boolean };
   topbarNav: Array<{ label: string; href: string; icon?: string; external?: boolean }>;
@@ -108,6 +109,7 @@ interface OvellumSiteConfig {
 | `codeTheme`      | `'github' \| 'nord' \| 'solarized'` | `'github'`                    | Shiki theme pair for fenced code blocks. Both halves of the pair are emitted via CSS variables so a single build serves both light and dark. `github` → github-light + github-dark; `nord` → min-light + nord (nord ships dark-only); `solarized` → solarized-light + solarized-dark. |
 | `footer`         | `string`                            | `'Built with Ovellum'`        | Empty string disables the footer entirely.                                                                                                                                                                                     |
 | `editUrlPattern` | `string?`                           | `undefined`                   | URL pattern with a `{path}` placeholder. `{path}` is the page's source path **relative to the build cwd** (`--cwd`). Include any repo prefix yourself, e.g. `'https://github.com/owner/repo/edit/main/website/{path}'`. When unset, the "Edit this page" link is not rendered. |
+| `headExtra`      | `string?`                           | `undefined`                   | Raw HTML injected verbatim into `<head>` on every page, just after the search bits and before the inline theme-boot script. **Not escaped or sanitised** — only set markup you control. Unset by default. Primary use: analytics snippets, e.g. `'<script defer src="https://analytics.example.com/script.js" data-website-id="…"></script>'`. |
 | `search`         | `{ enabled: boolean }`              | `{ enabled: false }`          | When `true`, `ovellum build` runs Pagefind against the output dir and the topbar gains a search box. Adds `dist/pagefind/` to the build.                                                                                       |
 | `pageMeta`       | `{ readingTime, lastModified }`     | both `true`                   | Per-page meta line above the article: `N min read · Updated YYYY-MM-DD`. `readingTime` estimates at ~200 wpm after stripping code/HTML. `lastModified` prefers `git log -1 --format=%cI` then falls back to filesystem mtime; the line is omitted if neither resolves. Set either to `false` to hide that half. |
 | `topbarNav`      | `Array<{label, href, icon?, external?}>` | `[]`                     | Items render in order to the right of the search box. Items with an `icon` render icon-only on desktop (label kept for screen readers) and icon + label inside the mobile sheet. External links (`external: true` or `href` starting with `http(s)://`) open in a new tab with `rel="noopener"`; text items also get a small external-link icon. Below 720px the top row is just logo + version + search + hamburger — the nav and theme toggle move into the sheet. |
