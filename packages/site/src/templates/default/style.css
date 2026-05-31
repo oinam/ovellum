@@ -109,6 +109,17 @@
   --color-accent-hover: var(--color-blue-700);
   --color-link: var(--color-blue-600);
   --color-link-hover: var(--color-blue-700);
+
+  /* CTA buttons — intentional black-monochrome, independent of the blue
+     accent that still drives links/focus/callouts. Theme-independent
+     values (same in light + dark). */
+  --color-cta-primary-bg: oklch(20.8% 0.042 265.755);        /* gray-900 */
+  --color-cta-primary-bg-hover: oklch(27.4% 0.006 286.03);   /* a touch lighter (zinc-800) */
+  --color-cta-primary-fg: oklch(96.7% 0.003 264.542);        /* gray-100 text */
+  --color-cta-secondary-bg: oklch(96.7% 0.003 264.542);      /* gray-100 */
+  --color-cta-secondary-bg-hover: oklch(92% 0.004 286.32);   /* gray-200-ish (zinc-200) */
+  --color-cta-secondary-fg: oklch(20.8% 0.042 265.755);      /* charcoal text */
+  --color-cta-secondary-border: var(--color-zinc-300);       /* hairline so gray-100 reads against the near-same body */
   --color-code-bg: var(--color-zinc-100);
 
   /* Callout types — GitHub alert vocabulary, editorial-calm palette */
@@ -918,10 +929,9 @@ body.ov-menu-open {
 
 /* Code blocks (shiki dual-theme)
    ===
-   Padding bumped on top to clear the language eyebrow injected via
-   `pre[data-language]::before`. On hover the eyebrow fades and the
-   copy button (added by script.js) fades in at the same corner —
-   they trade places rather than compete for space. */
+   Padding bumped on top to clear the copy button (added by script.js)
+   parked in the top-right corner, and to leave room for the language
+   eyebrow (`data-language`) above the code. */
 .ov-prose pre {
   position: relative;
   padding: var(--space-m) var(--space-s) var(--space-s);
@@ -974,9 +984,14 @@ body.ov-menu-open {
 .ov-prose pre:hover[data-language]::before {
   opacity: 0;
 }
+/* …but install snippets show no label — the icon copy button stands alone. */
+.ov-install .ov-prose pre[data-language]::before {
+  content: none;
+}
 
-/* Copy button (injected by script.js) — shares the top-right corner
-   with the language eyebrow, swaps in on hover. */
+/* Copy button (injected by script.js). Docs: text label, top-right,
+   revealed on hover. Install snippets override this to an icon button
+   (see `.ov-install .ov-copy-btn` below). */
 .ov-copy-btn {
   position: absolute;
   top: var(--space-3xs);
@@ -1002,6 +1017,41 @@ body.ov-menu-open {
   color: var(--color-fg);
   background: var(--color-bg-subtle);
   border-color: var(--color-border);
+}
+.ov-copy-btn:focus-visible {
+  outline: 2px solid var(--color-border-focus);
+  outline-offset: 2px;
+}
+.ov-copy-btn.is-copied {
+  color: var(--color-green-700);
+  background: transparent;
+  border-color: transparent;
+}
+
+/* Install snippets: icon copy button, vertically centered on the right edge. */
+.ov-install .ov-copy-btn {
+  top: 50%;
+  bottom: auto;
+  right: var(--space-xs);
+  transform: translateY(-50%);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  inline-size: 1.875rem;
+  block-size: 1.875rem;
+  padding: 0;
+  border-radius: var(--radius-md);
+  opacity: 0.55;
+}
+.ov-install .ov-prose pre:hover .ov-copy-btn,
+.ov-install .ov-copy-btn:hover,
+.ov-install .ov-copy-btn:focus-visible {
+  opacity: 1;
+}
+.ov-install .ov-copy-btn svg {
+  inline-size: 16px;
+  block-size: 16px;
+  display: block;
 }
 /* Breadcrumbs — sits above the page-meta when the page is nested 2+
    levels deep. Slash separator inserted via ::after on each crumb so
@@ -1163,11 +1213,6 @@ body.ov-menu-open {
     text-align: start;
     align-items: flex-start;
   }
-}
-
-.ov-copy-btn.is-copied {
-  color: var(--callout-tip-fg);
-  opacity: 1;
 }
 
 /* Right ToC */
@@ -1551,24 +1596,39 @@ body.ov-body-landing {
     border-color 120ms ease;
 }
 .ov-cta--primary {
-  background: var(--color-accent);
-  color: var(--color-bg);
-  border: 1px solid var(--color-accent);
+  background: var(--color-cta-primary-bg);
+  color: var(--color-cta-primary-fg);
+  border: 1px solid var(--color-cta-primary-bg);
 }
 .ov-cta--primary:hover {
-  background: var(--color-accent-hover);
-  border-color: var(--color-accent-hover);
-  color: var(--color-bg);
+  background: var(--color-cta-primary-bg-hover);
+  border-color: var(--color-cta-primary-bg-hover);
+  color: var(--color-cta-primary-fg);
 }
 .ov-cta--secondary {
-  background: transparent;
-  color: var(--color-fg);
-  border: 1px solid var(--color-border);
+  background: var(--color-cta-secondary-bg);
+  color: var(--color-cta-secondary-fg);
+  border: 1px solid var(--color-cta-secondary-border);
 }
 .ov-cta--secondary:hover {
-  background: transparent;
-  border-color: var(--color-fg);
-  color: var(--color-fg);
+  background: var(--color-cta-secondary-bg-hover);
+  border-color: var(--color-cta-secondary-border);
+  color: var(--color-cta-secondary-fg);
+}
+
+/* Install snippets — command blocks spliced between the hero CTAs and the
+   feature grid. Each snippet's title is folded into the code as a leading
+   comment, so the section is just a stack of consecutive `<pre>` blocks. The
+   inner wrapper carries `.ov-prose` so the existing copy-button JS +
+   copy/eyebrow CSS attach with zero changes; the `.ov-prose pre` margin
+   provides the vertical rhythm between snippets. We only set the column
+   width and section spacing here. */
+.ov-install {
+  margin-block: var(--space-xl) var(--space-2xl);
+}
+.ov-install-inner {
+  max-inline-size: 60ch;
+  margin-inline: auto;
 }
 
 /* Card — a clean, subtle surface primitive. A surface a hair lighter than

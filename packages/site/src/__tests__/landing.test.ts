@@ -100,6 +100,42 @@ describe('renderLanding', () => {
     expect(noPitch).not.toContain('class="ov-pitch"');
   });
 
+  it('renders install snippets after the hero, omits the section when absent', () => {
+    // The title is folded upstream (build.ts) into the code as a leading
+    // comment; renderLanding receives the already-highlighted snippet html.
+    const snippet =
+      '<pre class="shiki" data-language="bash" data-copy="true"><code># Install Ovellum globally\nnpm install -g ovellum</code></pre>';
+    const html = renderLanding({
+      site: SITE,
+      landing: landingConfig({
+        hero: { ctas: [{ label: 'Get started', href: '/start/' }] },
+        features: [{ title: 'F', description: 'D' }],
+      }),
+      install: [{ html: snippet }],
+      generatedAt: '2026-05-16T00:00:00.000Z',
+    });
+    // Section wrapper, prose wrapper, and the pre-rendered snippet (with the
+    // title as a comment inside the code — no separate heading).
+    expect(html).toContain('class="ov-install"');
+    expect(html).toContain('ov-install-inner ov-prose');
+    expect(html).toContain(snippet);
+    // Order: install sits after the hero CTAs and before the feature grid.
+    const ctaIdx = html.indexOf('ov-cta-row');
+    const installIdx = html.indexOf('class="ov-install"');
+    const featuresIdx = html.indexOf('ov-feature-grid');
+    expect(ctaIdx).toBeGreaterThan(-1);
+    expect(installIdx).toBeGreaterThan(ctaIdx);
+    expect(featuresIdx).toBeGreaterThan(installIdx);
+
+    // When install is omitted, the section does not appear.
+    const noInstall = renderLanding({
+      site: SITE,
+      landing: landingConfig(),
+      generatedAt: '2026-05-16T00:00:00.000Z',
+    });
+    expect(noInstall).not.toContain('ov-install');
+  });
+
   it('renders the trust strip when items are provided', () => {
     const html = renderLanding({
       site: SITE,

@@ -142,23 +142,54 @@
     });
   }
 
-  // Copy buttons
+  // Copy buttons — docs code blocks get a text "Copy" button (top-right,
+  // hover-revealed); install snippets (inside .ov-install) get an icon button
+  // (copy glyph → check) centered on the right edge.
+  // Mirror of the copy/check icons in icons.ts (canonical source). Browser code
+  // can't import the TS registry, so we inline identical SVG markup (Lucide
+  // geometry, 16px, currentColor, decorative).
+  var COPY_ICON =
+    '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>';
+  var CHECK_ICON =
+    '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M20 6 9 17l-5-5"/></svg>';
+
   var blocks = document.querySelectorAll('.ov-prose pre');
   blocks.forEach(function (pre) {
     if (pre.querySelector('.ov-copy-btn')) return;
+    // Install snippets (inside .ov-install) get an icon button; docs code
+    // blocks keep the original text "Copy" button. Captured per-pre so each
+    // button keeps its own mode inside the closures below.
+    var isInstall = !!(pre.closest && pre.closest('.ov-install'));
     var btn = document.createElement('button');
     btn.type = 'button';
     btn.className = 'ov-copy-btn';
-    btn.textContent = 'Copy';
+    if (isInstall) {
+      btn.innerHTML = COPY_ICON;
+      btn.setAttribute('aria-label', 'Copy code');
+      btn.title = 'Copy';
+    } else {
+      btn.textContent = 'Copy';
+    }
     btn.addEventListener('click', function () {
+      var override = pre.getAttribute('data-copy-text');
       var code = pre.querySelector('code');
-      var text = code ? code.innerText : pre.innerText;
+      var text = override !== null ? override : (code ? code.innerText : pre.innerText);
       if (!navigator.clipboard) return;
       navigator.clipboard.writeText(text).then(function () {
-        btn.textContent = 'Copied';
+        if (isInstall) {
+          btn.innerHTML = CHECK_ICON;
+          btn.setAttribute('aria-label', 'Copied');
+        } else {
+          btn.textContent = 'Copied';
+        }
         btn.classList.add('is-copied');
         setTimeout(function () {
-          btn.textContent = 'Copy';
+          if (isInstall) {
+            btn.innerHTML = COPY_ICON;
+            btn.setAttribute('aria-label', 'Copy code');
+          } else {
+            btn.textContent = 'Copy';
+          }
           btn.classList.remove('is-copied');
         }, 1500);
       });

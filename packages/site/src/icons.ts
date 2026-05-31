@@ -23,6 +23,7 @@
 
 import Check from 'lucide/dist/esm/icons/check.mjs';
 import ChevronDown from 'lucide/dist/esm/icons/chevron-down.mjs';
+import Copy from 'lucide/dist/esm/icons/copy.mjs';
 import ExternalLink from 'lucide/dist/esm/icons/external-link.mjs';
 import Mail from 'lucide/dist/esm/icons/mail.mjs';
 import Menu from 'lucide/dist/esm/icons/menu.mjs';
@@ -65,6 +66,7 @@ const REGISTRY = {
   'external-link': ExternalLink,
   search: Search,
   check: Check,
+  copy: Copy,
   rss: Rss,
   mail: Mail,
   package: Package,

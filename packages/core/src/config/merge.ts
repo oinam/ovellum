@@ -55,7 +55,8 @@ function mergeLanding(
   if (override.hero !== undefined) {
     out.hero = { ...base.hero, ...override.hero };
   }
-  // `features` and `trustStrip` follow the array-wholesale-replacement rule;
-  // nothing extra to do here.
+  // `features`, `install`, `scenes`, and `trustStrip` follow the
+  // array-wholesale-replacement rule (carried by the `{...base, ...override}`
+  // spread above); nothing extra to do here.
   return out;
 }

@@ -527,6 +527,19 @@ These are what components consume. Every theme redefines this set.
   --color-link-hover: var(--color-accent-hover);
   --color-link-visited: <violet-700>;
 
+  /* CTA buttons — intentional black-monochrome, deliberately decoupled from
+     the blue accent above. Theme-independent: the same values ship in light
+     and dark (do NOT re-bind these per theme). Primary = charcoal (gray-900)
+     surface with gray-100 text; secondary = gray-100 surface with charcoal
+     text + a zinc-300 hairline. Links/focus/callouts still follow accent. */
+  --color-cta-primary-bg: <gray-900>;
+  --color-cta-primary-bg-hover: <zinc-800>;
+  --color-cta-primary-fg: <gray-100>;
+  --color-cta-secondary-bg: <gray-100>;
+  --color-cta-secondary-bg-hover: <zinc-200>;
+  --color-cta-secondary-fg: <gray-900>;
+  --color-cta-secondary-border: var(--color-zinc-300);
+
   /* Code (syntax) */
   --color-code-bg: var(--color-bg-muted);
   --color-code-fg: var(--color-fg);

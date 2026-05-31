@@ -339,6 +339,14 @@ export interface RenderLandingInput {
   landing: OvellumLandingConfig;
   /** Optional pitch HTML rendered between the feature grid and the trust strip. */
   pitchHtml?: string;
+  /**
+   * Install snippets rendered after the hero CTAs and before the feature grid.
+   * Each `html` is already-rendered highlighted code-block HTML (built upstream
+   * through the same markdown/shiki pipeline as doc code blocks, so it carries
+   * `data-language` + `data-copy`). The snippet title is folded upstream into
+   * the code as a leading comment line, so there is no separate heading here.
+   */
+  install?: Array<{ html: string }>;
   generatedAt: string;
   assetsPrefix?: string;
   /** Resolved docs entry URL (landing.docsHref or first-nav fallback). */
@@ -362,6 +370,7 @@ export function renderLanding(input: RenderLandingInput): string {
     input.landing.hero.media,
     basePath,
   );
+  const install = renderInstall(input.install ?? []);
   const features = renderFeatures(input.landing.features);
   const pitch = input.pitchHtml
     ? `<section class="ov-pitch"><div class="ov-pitch-inner">${input.pitchHtml}</div></section>`
@@ -371,7 +380,7 @@ export function renderLanding(input: RenderLandingInput): string {
   // Interleave scenes between the rendered sections, in order. With three
   // sections after the hero, three scenes fill all three gaps; extras fall
   // through after the last section.
-  const sections = [hero, features, pitch, trust].filter((s) => s !== '');
+  const sections = [hero, install, features, pitch, trust].filter((s) => s !== '');
   const scenes = input.landing.scenes ?? [];
   const interleaved: string[] = [];
   sections.forEach((section, i) => {
@@ -456,6 +465,20 @@ function renderScene(
         <img class="ov-scene-img ov-scene-img--dark" src="${darkSrc}" alt="" loading="lazy" decoding="async">
       </figure>
     </section>`;
+}
+
+function renderInstall(install: Array<{ html: string }>): string {
+  if (install.length === 0) return '';
+  // Each snippet is a code block whose title is folded into the code as a
+  // leading comment (see build.ts), so there is no separate heading here.
+  const blocks = install.map((it) => it.html).join('\n        ');
+  // Wrapped in `.ov-prose` so the existing copy-button JS (selector
+  // `.ov-prose pre`) and copy/eyebrow CSS apply with zero changes.
+  return `<section class="ov-install">
+    <div class="ov-install-inner ov-prose">
+        ${blocks}
+    </div>
+  </section>`;
 }
 
 function renderFeatures(features: OvellumLandingConfig['features']): string {

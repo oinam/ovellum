@@ -43,6 +43,41 @@ const TEMPLATE_DIR_NAME = 'templates/default';
 const LANDING_BODY_FILE = '_landing.md';
 
 /**
+ * Escape a string for safe interpolation into a double-quoted HTML attribute.
+ * Newlines may stay literal — they are valid inside a quoted attribute value.
+ */
+function escapeCopyAttr(s: string): string {
+  return s
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
+/**
+ * Line-comment prefix for a highlight language, used to fold an install
+ * snippet's title into the code block as a leading comment. Defaults to `#`
+ * for shells/config langs; `//` for the C-family/JS-family. Falls back to `#`.
+ */
+function commentPrefix(lang: string): string {
+  const l = lang.toLowerCase();
+  const slash = new Set([
+    'js',
+    'ts',
+    'javascript',
+    'typescript',
+    'json5',
+    'jsonc',
+    'c',
+    'cpp',
+    'go',
+    'rust',
+    'java',
+  ]);
+  return slash.has(l) ? '//' : '#';
+}
+
+/**
  * Build a static site from a folder of `.md` files. Wired by the CLI when
  * `config.mode === 'manual'`.
  *
@@ -89,10 +124,36 @@ export async function buildSite(options: BuildSiteOptions): Promise<BuildSiteRes
   // can be detected as a conflict during the walk.
   if (landingEnabled) {
     const landingBody = await readLandingBody(inputAbs, site);
+    // Render each install snippet through the same markdown/shiki pipeline as
+    // doc code blocks (and the pitch body) so it gets syntax highlighting plus
+    // the `data-language` eyebrow + `data-copy` the copy-button JS looks for.
+    const install: Array<{ html: string }> = [];
+    for (const entry of site.landing.install ?? []) {
+      // Fold the title into the code as a leading comment line (rather than a
+      // separate heading), so it copies along with the command and reads like
+      // a hand-typed `# describe this command` annotation.
+      const prefix = commentPrefix(entry.lang || 'bash');
+      const withComment = entry.title
+        ? prefix + ' ' + entry.title + '\n' + entry.code
+        : entry.code;
+      const fenced = '```' + (entry.lang || 'bash') + '\n' + withComment + '\n```';
+      const { html: snippetHtml } = await renderMarkdown(fenced, { codeTheme: site.codeTheme });
+      // The visible block keeps the folded-in title comment, but the copy
+      // button should yield only the command. Stamp the comment-free command
+      // onto the <pre> as data-copy-text so the copy JS can prefer it.
+      if (snippetHtml.includes('<pre ')) {
+        const escaped = escapeCopyAttr(entry.code);
+        const withAttr = snippetHtml.replace('<pre ', `<pre data-copy-text="${escaped}" `);
+        install.push({ html: withAttr });
+      } else {
+        install.push({ html: snippetHtml });
+      }
+    }
     const html = renderLanding({
       site,
       landing: site.landing,
       pitchHtml: landingBody?.html,
+      install,
       generatedAt: now.toISOString(),
       docsHref,
     });

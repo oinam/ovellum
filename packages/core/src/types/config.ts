@@ -72,6 +72,15 @@ export interface OvellumLandingFeature {
   description: string;
 }
 
+export interface OvellumLandingInstall {
+  /** Heading above the snippet, e.g. "Install Ovellum globally". */
+  title: string;
+  /** The command(s) to show in the code block. */
+  code: string;
+  /** Highlight language (shiki). Defaults to 'bash'. */
+  lang?: string;
+}
+
 export interface OvellumLandingScene {
   /**
    * Default (and light-theme) asset. Site-relative path or absolute URL.
@@ -165,6 +174,8 @@ export interface OvellumLandingConfig {
   docsHref?: string;
   hero: OvellumLandingHero;
   features: OvellumLandingFeature[];
+  /** Titled install snippets rendered after the hero CTAs. Each gets a copy button. */
+  install?: OvellumLandingInstall[];
   /**
    * Ambient "scene" visuals interleaved between the rendered landing
    * sections (hero / features / pitch / trust), in order. With three sections

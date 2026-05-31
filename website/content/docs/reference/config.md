@@ -167,6 +167,7 @@ interface OvellumLandingConfig {
     ctas: Array<{ label: string; href: string; style?: 'primary' | 'secondary' }>;
   };
   features: Array<{ icon?: string; title: string; description: string }>;
+  install?: Array<{ title: string; code: string; lang?: string }>;
   trustStrip?: {
     label?: string;
     items: Array<{ name: string; href?: string; image?: string }>;
@@ -180,6 +181,7 @@ interface OvellumLandingConfig {
 | `docsHref`   | `string?`                   | first sidebar page | Where the top-bar **Docs** link points.                                                           |
 | `hero`       | `OvellumLandingHero`        | `{ ctas: [] }`     | Title falls back to `site.title`. First CTA defaults to `primary` style, the rest to `secondary`. |
 | `features`   | `OvellumLandingFeature[]`   | `[]`               | Feature cards in document order; replaced wholesale on merge.                                     |
+| `install`    | `OvellumLandingInstall[]?`  | omitted            | Install snippets rendered after the hero CTAs and before the feature grid; the title becomes a leading comment inside each code block. Install snippets render without a language label and get an icon copy button vertically centered on the right edge; doc code blocks elsewhere are unaffected (they keep their language eyebrow + text copy button). |
 | `trustStrip` | `OvellumLandingTrustStrip?` | omitted            | Rendered last when present and `items` is non-empty.                                              |
 
 ### `hero.ctas[]`
@@ -189,6 +191,27 @@ interface OvellumLandingConfig {
 | `label` | `string`                    | Button text.                                         |
 | `href`  | `string`                    | Internal path (`/getting-started/`) or absolute URL. |
 | `style` | `'primary' \| 'secondary'?` | Visual treatment.                                    |
+
+### `install[]`
+
+Command snippets rendered immediately after the hero CTAs and before the
+feature grid. Each snippet's `code` runs through the same Markdown/shiki
+pipeline as doc code blocks, so it gets syntax highlighting and a top-right
+icon copy button, vertically centered on the right edge. Install snippets
+render without a language label; doc code blocks elsewhere keep their language
+eyebrow and text copy button.
+
+The `title` is folded into the code block as a leading comment line (e.g.
+`# Install Ovellum globally` for shell langs, `// …` for JS/TS-family
+langs) rather than rendered as a heading above the block. The comment prefix
+is chosen from `lang`. The copy button copies only the command (`code`),
+never the folded-in title comment.
+
+| Field   | Type      | Notes                                                                                  |
+| ------- | --------- | -------------------------------------------------------------------------------------- |
+| `title` | `string`  | Shown as a leading comment inside the code block, e.g. `"Install Ovellum globally"`.   |
+| `code`  | `string`  | The command(s) shown in the code block.                                                |
+| `lang`  | `string?` | Highlight language passed to shiki; also picks the comment prefix. Defaults to `bash`. |
 
 ### `features[]`
 
@@ -304,7 +327,7 @@ Validated:
 - Arrays-of-strings for `include` / `exclude`.
 - `protect.orphanRetention >= 0` and finite.
 - Required fields on landing-page sub-objects (`hero.ctas[].label`,
-  `features[].title`, etc.).
+  `features[].title`, `install[].title`, `install[].code`, etc.).
 
 The validator does **not** check filesystem existence of paths; that
 surfaces later in the build if it matters.

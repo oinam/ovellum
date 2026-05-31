@@ -48,6 +48,11 @@ export default {
           { label: 'View on GitHub', href: 'https://github.com/oinam/ovellum', style: 'secondary' },
         ],
       },
+      install: [
+        { title: 'Install Ovellum globally', code: 'npm install -g ovellum', lang: 'bash' },
+        { title: 'Run without installing', code: 'npx ovellum init', lang: 'bash' },
+        { title: 'Add to a project', code: 'npm install -D ovellum', lang: 'bash' },
+      ],
       features: [
         {
           title: 'A Merge Engine',

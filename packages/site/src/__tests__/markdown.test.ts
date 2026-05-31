@@ -82,7 +82,7 @@ describe('renderMarkdown', () => {
     );
   });
 
-  it('tags highlighted code blocks with data-language so the template can show the eyebrow label', async () => {
+  it('tags highlighted code blocks with data-language (drives syntax highlighting + the comment prefix)', async () => {
     const { html: ts } = await renderMarkdown(['```typescript', 'let n = 1;', '```'].join('\n'));
     expect(ts).toContain('data-language="ts"');
     expect(ts).toContain('data-copy="true"');

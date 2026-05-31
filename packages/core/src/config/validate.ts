@@ -247,6 +247,12 @@ function validateLanding(value: unknown): void {
     }
     l.features.forEach((f, i) => validateFeature(f, `site.landing.features[${i}]`));
   }
+  if (l.install !== undefined) {
+    if (!Array.isArray(l.install)) {
+      throw new ConfigError('`site.landing.install` must be an array.');
+    }
+    l.install.forEach((it, i) => validateInstall(it, `site.landing.install[${i}]`));
+  }
   if (l.scenes !== undefined) {
     if (!Array.isArray(l.scenes)) {
       throw new ConfigError('`site.landing.scenes` must be an array.');
@@ -305,6 +311,16 @@ function validateFeature(value: unknown, path: string): void {
   }
   if (f.icon !== undefined && typeof f.icon !== 'string') {
     throw new ConfigError(`\`${path}.icon\` must be a string.`);
+  }
+}
+
+function validateInstall(value: unknown, path: string): void {
+  if (!isPlainObject(value)) throw new ConfigError(`\`${path}\` must be an object.`);
+  const it = value;
+  if (typeof it.title !== 'string') throw new ConfigError(`\`${path}.title\` must be a string.`);
+  if (typeof it.code !== 'string') throw new ConfigError(`\`${path}.code\` must be a string.`);
+  if (it.lang !== undefined && typeof it.lang !== 'string') {
+    throw new ConfigError(`\`${path}.lang\` must be a string.`);
   }
 }
 
