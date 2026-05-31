@@ -33,8 +33,16 @@ Legend: `[ ]` not started · `[~]` in progress · `[x]` done · `[!]` blocked
 ## Current state (2026-05-31)
 
 **Live and shipped:**
-- `ovellum@0.2.1` on npm — <https://www.npmjs.com/package/ovellum> (published 2026-05-30; install-verified — bin runs, templates ship). `0.2.0` was the first public release on 2026-05-17. Git tags `ovellum@0.2.0` (retro, at `a85aae4`) and `ovellum@0.2.1` exist; GitHub release notes drafted in `tmp/ovellum-0.2.1-release-notes.md` (gitignored).
-- **0.2.2 staged** (not yet published): `site.headExtra` raw `<head>` injection landed; `packages/cli/package.json` bumped 0.2.1→0.2.2, CHANGELOG `## 0.2.2` entry written, version badge bumped to `v0.2.2`. Awaiting local `npm publish` from `packages/cli/`.
+- `ovellum@0.2.2` on npm — <https://www.npmjs.com/package/ovellum> (published 2026-05-31; tag `ovellum@0.2.2` + GitHub release done). `0.2.1` published 2026-05-30; `0.2.0` first public release 2026-05-17. Tags `ovellum@0.2.0` (retro at `a85aae4`), `0.2.1`, `0.2.2`. `0.2.2` shipped `site.headExtra` (raw `<head>` injection — used for Oinam Analytics on the website only; end-user docs unaffected unless they opt in).
+- **Landing install snippets** (`site.landing.install`) render after the hero CTAs: each title folds into the block as a leading comment (language-aware `#`/`//`), but the copy button yields the bare command via `data-copy-text`. Install blocks use a right-centered **icon** copy button and drop the language label; docs code blocks keep the language eyebrow + **text** copy button.
+- **Black-monochrome CTAs**: charcoal primary / gray-100 secondary via dedicated `--color-cta-*` tokens. The blue `--color-accent` (links, focus rings, callouts, ToC) is deliberately untouched.
+- Website config is now `website/ovellum.config.ts` (was `.json`) — TypeScript so analytics/HTML snippets paste in unescaped via backticks.
+- Internal docs pruned: CLI/CONFIG/GLOSSARY/SECURITY removed — the website docs (`/docs/reference/`) are canonical. `docs/internal/` keeps DESIGN/SITE/STYLES/DEPLOY/FEATURES/TODO/TODO-Human. `CLAUDE.md` added (project + role guide); `CLAUDE.local.md` is gitignored private notes.
+
+**Pick up here (open threads):**
+- **Light-mode secondary CTA contrast.** "View on GitHub" is gray-100 (`oklch 96.7%`) on a near-identical body (`oklch 97%`) — separated only by the `--color-zinc-300` hairline border. Reads via the border but the fill is near-invisible in light mode. If it looks weak on the live site, bump `--color-cta-secondary-bg` a step (zinc-200) or strengthen the border. Tokens in `style.css` `:root`.
+- **MDX in manual mode** is queued (Phase 4.5): tier 1 = widen the `.mdx` discovery regexes in `nav.ts`/`build.ts` (near-trivial); tier 2 = full `remark-mdx`.
+- **Process gotcha:** the tool-output channel glitched repeatedly this session (empty/delayed Bash + Read; one bad parallel call cancelled a whole batch). Subagents were the reliable path — their final message returns intact. See `CLAUDE.local.md`.
 - Docs site live with TLS — <https://ovellum.oss.oinam.com> (version badge now `v0.2.2`)
 - All six CLI commands working: `init`, `build`, `dev`, `watch`, `serve`, `check`
 - Manual-mode static site builder is feature-complete for a real docs site
