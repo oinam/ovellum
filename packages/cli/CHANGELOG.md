@@ -1,5 +1,13 @@
 # ovellum
 
+## 0.2.3
+
+### Patch Changes
+
+- Fix `ovellum --version` (and `-v`) reporting `No version specified` — the
+  package version is now wired into the CLI's command metadata, inlined at
+  build time.
+
 ## 0.2.2
 
 ### Patch Changes
@@ -9,9 +17,6 @@
   default, so generated docs are unaffected unless a project opts in. Intended
   for analytics snippets and similar third-party `<script>`/`<link>`/`<meta>`
   tags; the string is not escaped, so only set markup you control.
-- Fix `ovellum --version` (and `-v`) reporting `No version specified` — the
-  package version is now wired into the CLI's command metadata, inlined at
-  build time.
 
 ## 0.2.1
 
