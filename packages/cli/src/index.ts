@@ -6,9 +6,13 @@ import { initCommand } from './commands/init.js';
 import { serveCommand } from './commands/serve.js';
 import { watchCommand } from './commands/watch.js';
 
+// Replaced at build time by tsup `define` with the version from package.json.
+declare const __OVELLUM_VERSION__: string;
+
 const main = defineCommand({
   meta: {
     name: 'ovellum',
+    version: __OVELLUM_VERSION__,
     description: 'Ovellum - documentation tool for TypeScript and JavaScript projects.',
   },
   subCommands: {
