@@ -742,10 +742,11 @@ body.ov-menu-open {
   position: relative;
   display: block;
   padding-block: var(--space-3xs);
-  /* Flush-left: a minimal inline inset so text clears the rail and leaves room
-     for the active bar — no indent hierarchy (the active highlight, not
-     indentation, marks the current page). */
-  padding-inline: var(--space-2xs);
+  /* Inline inset that gives the label breathing room from the left rail while
+     the active bar still sits on the rail (the link box stays flush; only the
+     text is padded). No indent hierarchy — the active highlight, not
+     indentation, marks the current page. */
+  padding-inline: var(--space-s);
   border-radius: var(--radius-sm);
   text-decoration: none;
   color: var(--color-fg-muted);
@@ -773,7 +774,7 @@ body.ov-menu-open {
   padding-block: var(--space-2xs);
   /* Same flush-left inset as the links, so headings and their links share one
      left edge. */
-  padding-inline: var(--space-2xs);
+  padding-inline: var(--space-s);
   /* Bold + full-strength foreground so the heading itself separates the
      sections, now that the divider rules are gone. */
   color: var(--color-fg);
