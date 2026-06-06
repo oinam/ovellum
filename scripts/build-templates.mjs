@@ -1,0 +1,60 @@
+#!/usr/bin/env node
+/**
+ * Copy a template directory while MINIFYING its CSS and JS.
+ *
+ * The default template's `style.css` / `script.js` are authored for humans
+ * (comments, generous whitespace). What ships to a built site should be
+ * uglified. We do that here, at package-build time, so:
+ *
+ *  - the published package carries pre-minified template assets,
+ *  - `ovellum build` stays a plain copy into the user's `dist/assets/`,
+ *  - and NO minifier is shipped to users (esbuild is a dev/build-time dep only).
+ *
+ * The source files stay readable; only the copied `dist/templates/**` are
+ * minified. Non-CSS/JS files (if any) are copied verbatim.
+ *
+ * Usage: node scripts/build-templates.mjs <srcDir> <dstDir>
+ */
+import { cpSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
+import path from 'node:path';
+import { pathToFileURL } from 'node:url';
+import { transform } from 'esbuild';
+
+/** Minify-copy every file under `srcDir` into `dstDir`. */
+export async function buildTemplates(srcDir, dstDir) {
+  mkdirSync(dstDir, { recursive: true });
+  for (const entry of readdirSync(srcDir, { withFileTypes: true })) {
+    const src = path.join(srcDir, entry.name);
+    const dst = path.join(dstDir, entry.name);
+    if (entry.isDirectory()) {
+      await buildTemplates(src, dst);
+      continue;
+    }
+    const ext = path.extname(entry.name).toLowerCase();
+    if (ext === '.css' || ext === '.js') {
+      const code = readFileSync(src, 'utf8');
+      const result = await transform(code, {
+        loader: ext === '.css' ? 'css' : 'js',
+        minify: true,
+        legalComments: 'none',
+      });
+      writeFileSync(dst, result.code);
+    } else {
+      cpSync(src, dst);
+    }
+  }
+}
+
+// Run as a CLI when invoked directly (not when imported).
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
+  const [, , srcArg, dstArg] = process.argv;
+  if (!srcArg || !dstArg) {
+    console.error('usage: build-templates.mjs <srcDir> <dstDir>');
+    process.exit(1);
+  }
+  const src = path.resolve(srcArg);
+  const dst = path.resolve(dstArg);
+  await buildTemplates(src, dst);
+  const rel = (p) => path.relative(process.cwd(), p);
+  console.log(`build-templates: minified ${rel(src)} → ${rel(dst)}`);
+}

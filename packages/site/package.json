@@ -17,7 +17,7 @@
     "dist"
   ],
   "scripts": {
-    "build": "tsup && tsc -b --force && node -e \"require('fs').cpSync('src/templates', 'dist/templates', { recursive: true })\"",
+    "build": "tsup && tsc -b --force && node ../../scripts/build-templates.mjs src/templates dist/templates",
     "test": "vitest run --passWithNoTests",
     "lint": "eslint src --ignore-pattern \"src/templates/**\"",
     "typecheck": "tsc --noEmit"

@@ -2,7 +2,14 @@
 
 Design tokens and rendering conventions for any UI surface Ovellum produces or ships - the CLI output's color blocks, the eventual self-hosted docs site, and any future renderer. Every value lives in CSS custom properties so themes swap without rebuilds.
 
-This document is the single source of truth for color, type, spacing, and rhythm. If a value isn't here, it shouldn't be in the codebase as a literal.
+This document is the source of truth for the token **architecture** (naming,
+layering, conventions) and the **theme-agnostic scales** — type, spacing,
+rhythm, radii. It is **not** where per-theme colour values live: as of
+2026-06-06 each theme owns its colour ramp + role values in its own stylesheet
+(the default theme is `packages/site/src/templates/default/style.css`), and the
+list of available themes is documented for users in the
+[Theming guide](https://ovellum.oss.oinam.com/docs/guides/themes/). We don't
+enumerate every future theme's greys here.
 
 ---
 
@@ -18,9 +25,12 @@ document by `scripts/extract-style-tokens.mjs`.
 - `pnpm check-tokens` reports drift (exit 1) without writing — wire it into CI
   if you want a hard gate.
 
-Only literal values (e.g. `oklch(...)`, `clamp(...)`, font stacks) are synced.
-Tier 2 remappings (`var(...)`) and deliberate deviations live outside the markers
-and are hand-edited.
+Scope (since 2026-06-06): only the **theme-agnostic scales** are synced — font
+stacks, the type scale, the space scale, and radii. **Colours are no longer
+synced**: the grey ramp, role colours, and semantic mappings live and are
+hand-edited in the theme's stylesheet (outside the markers), so a theme can own
+its palette without round-tripping through this file. Tier 2 remappings
+(`var(...)`) and deliberate deviations have always lived outside the markers.
 
 ---
 
@@ -37,35 +47,43 @@ and are hand-edited.
 
 ## 2. Variable Architecture
 
-Three tiers, in order of specificity:
+Colour flows through three layers, each built on the one above:
 
 ```
 ┌──────────────────────────────────────────────────────────┐
-│  Tier 1 - Palette                                         │
-│  --color-{name}-{50…950}                                  │
-│  Raw OKLCH values. Theme-agnostic. Never used directly    │
-│  in components.                                           │
+│  Primitives — ONE neutral ramp                            │
+│  --color-gray-{50…950}, --color-white, --color-black      │
+│  The only place raw OKLCH colour values live. Edit the    │
+│  ramp to re-tone the whole UI. (A coloured theme may add  │
+│  a hue ramp, e.g. --color-red-*.)                         │
 └──────────────────────────────────────────────────────────┘
                           │
                           ▼
 ┌──────────────────────────────────────────────────────────┐
-│  Tier 2 - Semantic                                        │
-│  --color-fg, --color-bg, --color-accent, --color-border…  │
-│  Maps palette entries to roles. Swapped per theme.        │
-│  Components reference these.                              │
+│  Roles — the "brand"                                       │
+│  --color-primary / -secondary / -accent, each ×(value,    │
+│  -fg, -hover). Map to ramp steps. Re-point a role to       │
+│  re-skin every button / link / focus ring.                │
 └──────────────────────────────────────────────────────────┘
                           │
                           ▼
 ┌──────────────────────────────────────────────────────────┐
-│  Tier 3 - Component                                       │
-│  --callout-info-bg, --code-comment-fg…                    │
-│  Local overrides scoped to a component. Default to        │
-│  semantic tokens. Theme can override one component        │
-│  without touching the rest.                               │
+│  Semantic — surfaces + text                                │
+│  --color-bg, --color-surface, --color-fg, --color-border, │
+│  callouts… mapped onto the ramp. Components reference      │
+│  roles + semantics, never the ramp directly.              │
 └──────────────────────────────────────────────────────────┘
 ```
 
-A component should reference Tier 2 unless it has truly bespoke needs. A theme should redefine Tier 2 and _only_ touch Tier 3 for special-cased components.
+**Dark mode = the same ramp, remapped to reversed steps.** No separate dark
+colour *values* — a single `[data-theme='dark']` (and OS-auto) block re-points
+roles + surfaces to the opposite end of the ramp (`--color-bg` → a dark grey,
+`--color-fg` → a light grey; elevation inverts, so "lifted" surfaces get
+lighter). Editing the ramp updates both themes at once.
+
+A component references roles + semantics. A new **theme** ships: (1) its ramp
+values, (2) its role mappings, (3) the reversed-ramp dark block — all in the
+theme's own stylesheet, not here.
 
 ---
 
@@ -302,9 +320,17 @@ In practice: trust `--leading-*` to keep headings looking right; use `--space-*`
 
 Modern Safari, Chrome, Firefox all support OKLCH. No fallback is provided - if the browser doesn't know `oklch()`, the user has bigger problems than our color palette.
 
-### 6.2 Tier 1 - Palette
+### 6.2 Primitives — the neutral ramp
 
-Four neutrals and eight accents. Each is a 50-950 ramp. Values are inspired by Tailwind v4's OKLCH palette but locally maintained - tweak freely.
+> **Note (2026-06-06):** Per-theme colour *values* now live in the theme's
+> stylesheet, not here. The default theme ships a single pure-neutral grey ramp
+> (`--color-gray-50…950` + `--color-white`/`--color-black`, Tailwind-"neutral"
+> values) in `packages/site/src/templates/default/style.css`. The ramps listed
+> below are a **historical/illustrative reference**, not the source of truth and
+> not synced — don't add new themes' palettes here; add them in their stylesheet
+> and list them in the [Theming guide](https://ovellum.oss.oinam.com/docs/guides/themes/).
+
+Each ramp is a 50-950 scale. Values are inspired by Tailwind v4's OKLCH palette but locally maintained - tweak freely.
 
 #### Neutrals
 

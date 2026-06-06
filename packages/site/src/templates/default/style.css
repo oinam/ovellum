@@ -13,46 +13,26 @@
  */
 
 :root {
+  /* ── Tier 0: primitives ────────────────────────────────────────────────
+     The only place raw colour values live. Re-skin every neutral surface and
+     text role by editing these grays in one place; nothing else hard-codes a
+     colour. Default theme = Tailwind "neutral" (pure grey, chroma 0). A future
+     theme (nord, dracula, …) ships its own ramp + role values right here. */
+  --color-white: oklch(100% 0 0);
+  --color-black: oklch(0% 0 0);
+  --color-gray-50: oklch(98.5% 0 0);
+  --color-gray-100: oklch(97% 0 0);
+  --color-gray-200: oklch(92.2% 0 0);
+  --color-gray-300: oklch(87% 0 0);
+  --color-gray-400: oklch(70.8% 0 0);
+  --color-gray-500: oklch(55.6% 0 0);
+  --color-gray-600: oklch(43.9% 0 0);
+  --color-gray-700: oklch(37.1% 0 0);
+  --color-gray-800: oklch(26.9% 0 0);
+  --color-gray-900: oklch(20.5% 0 0);
+  --color-gray-950: oklch(14.5% 0 0);
+
   /* @tokens:from-styles-md:start */
-
-  /* Tier 1 — neutrals (zinc) */
-  --color-zinc-50: oklch(98.5% 0.001 286.38);
-  --color-zinc-100: oklch(96.7% 0.001 286.38);
-  --color-zinc-200: oklch(92% 0.004 286.32);
-  --color-zinc-300: oklch(87.1% 0.006 286.29);
-  --color-zinc-500: oklch(55.2% 0.016 285.94);
-  --color-zinc-700: oklch(37% 0.013 285.81);
-  --color-zinc-800: oklch(27.4% 0.006 286.03);
-  --color-zinc-900: oklch(21% 0.006 285.89);
-  --color-zinc-950: oklch(14.1% 0.005 285.82);
-
-  /* Tier 1 — accents (blue) */
-  --color-blue-50: oklch(97% 0.014 254.6);
-  --color-blue-200: oklch(88.2% 0.059 254.16);
-  --color-blue-300: oklch(80.9% 0.105 251.81);
-  --color-blue-400: oklch(70.7% 0.165 254.62);
-  --color-blue-500: oklch(62.3% 0.214 259.81);
-  --color-blue-600: oklch(54.6% 0.245 262.88);
-  --color-blue-700: oklch(48.8% 0.243 264.38);
-  --color-blue-900: oklch(37.9% 0.146 265.52);
-
-  /* Tier 1 — status accents (callouts) */
-  --color-green-50: oklch(98.2% 0.018 155.83);
-  --color-green-300: oklch(87.1% 0.15 154.45);
-  --color-green-700: oklch(52.7% 0.154 150.07);
-  --color-green-950: oklch(26.6% 0.065 152.93);
-  --color-amber-50: oklch(98.7% 0.022 95.28);
-  --color-amber-300: oklch(87.9% 0.169 91.61);
-  --color-amber-800: oklch(47.3% 0.137 46.2);
-  --color-amber-950: oklch(27.9% 0.077 45.64);
-  --color-red-50: oklch(97.1% 0.013 17.38);
-  --color-red-300: oklch(80.8% 0.114 19.57);
-  --color-red-700: oklch(50.5% 0.213 27.52);
-  --color-red-950: oklch(25.8% 0.092 26.05);
-  --color-violet-50: oklch(96.9% 0.016 293.76);
-  --color-violet-300: oklch(81.1% 0.111 293.57);
-  --color-violet-700: oklch(49.1% 0.27 292.58);
-  --color-violet-950: oklch(28.3% 0.141 291.09);
 
   /* Fonts */
   --font-sans:
@@ -88,58 +68,47 @@
 
   /* @tokens:from-styles-md:end */
 
-  /* Tier 2 — semantic (default light) — site-specific remappings */
-  /* Body + footer-chrome are pure-neutral grays (chroma 0 — no hue) for
-     now; a blended background image is planned to replace this surface
-     later. Chrome (footer) sits ~4% L below body in light mode — the
-     smallest gap that reads as real tonal separation rather than
-     rendering noise. */
-  --color-bg: oklch(97% 0 0);
-  --color-bg-chrome: oklch(93% 0 0);
-  --color-bg-subtle: var(--color-zinc-100);
-  --color-bg-muted: var(--color-zinc-200);
-  /* Card surface — a hair lighter than body so a card lifts off the page
-     on a hairline border alone, no heavy shadow. */
-  --color-surface: oklch(100% 0 0);
-  --color-fg: var(--color-zinc-900);
-  --color-fg-muted: var(--color-zinc-700);
-  --color-fg-subtle: var(--color-zinc-500);
-  /* Borders are translucent tints of the foreground, so they read as faint
-     hairlines on either theme and auto-adapt when --color-fg flips — defined
-     once here rather than per-theme. This is the editorial "framed page"
-     palette: structure carried by whisper-thin rules, not boxes. */
+  /* ── Tier 1: role colours (the "brand") ────────────────────────────────
+     Components reference these, never the ramp directly. The default theme
+     maps them to greys; point a role at a colour ramp (e.g. a red) and every
+     button / link / focus ring follows. Dark mode remaps them to reversed ramp
+     steps below — no separate colour values, just different steps. */
+  --color-primary: var(--color-gray-900);
+  --color-primary-fg: var(--color-gray-50);
+  --color-primary-hover: var(--color-gray-800);
+  --color-secondary: var(--color-gray-100);
+  --color-secondary-fg: var(--color-gray-900);
+  --color-secondary-hover: var(--color-gray-200);
+  --color-accent: var(--color-gray-900);
+  --color-accent-fg: var(--color-gray-50);
+  --color-accent-hover: var(--color-gray-700);
+
+  /* ── Tier 2: semantic surfaces + text (mapped to the ramp) ──────────────
+     Body + chrome are pure-neutral greys; a future blended background image
+     may replace the body surface. */
+  --color-bg: var(--color-gray-100);
+  --color-surface: var(--color-white); /* cards lift off the body */
+  --color-bg-subtle: var(--color-gray-100);
+  --color-bg-muted: var(--color-gray-200);
+  --color-bg-chrome: var(--color-gray-200); /* footer, a step below body */
+  --color-fg: var(--color-gray-900);
+  --color-fg-muted: var(--color-gray-700);
+  --color-fg-subtle: var(--color-gray-500);
+  /* Borders are translucent tints of the foreground — faint hairlines that
+     auto-adapt when --color-fg flips per theme; structure carried by
+     whisper-thin rules, not boxes. */
   --color-border: color-mix(in oklch, var(--color-fg) 10%, transparent);
   --color-border-strong: color-mix(in oklch, var(--color-fg) 18%, transparent);
-  --color-border-focus: var(--color-zinc-500);
-  /* Monochrome chrome: accent + links resolve to the foreground neutral.
-     The blue palette stays defined (Tier 1) but is reserved for semantic
-     callouts — chrome itself carries no hue. */
-  --color-accent: var(--color-fg);
-  --color-accent-hover: var(--color-fg-muted);
-  --color-link: var(--color-fg);
-  --color-link-hover: var(--color-fg-muted);
-  /* Faintest hairline of all — the page-edge framing rules. */
   --color-frame-line: color-mix(in oklch, var(--color-fg) 7%, transparent);
+  --color-border-focus: var(--color-gray-500);
+  /* Links follow the accent role. */
+  --color-link: var(--color-accent);
+  --color-link-hover: var(--color-accent-hover);
+  --color-code-bg: var(--color-gray-100);
 
-  /* CTA buttons — neutral monochrome (no hue; the old values carried a faint
-     blue cast). Theme-AWARE: light mode below is a dark primary / light
-     secondary; the dark blocks invert the primary to full white and dim the
-     secondary to a muted white. */
-  --color-cta-primary-bg: var(--color-zinc-900);             /* near-black, neutral */
-  --color-cta-primary-bg-hover: var(--color-zinc-800);
-  --color-cta-primary-fg: var(--color-zinc-50);              /* near-white text */
-  --color-cta-secondary-bg: var(--color-zinc-100);
-  --color-cta-secondary-bg-hover: var(--color-zinc-200);
-  --color-cta-secondary-fg: var(--color-zinc-900);           /* dark text */
-  --color-cta-secondary-border: var(--color-zinc-300);       /* hairline so the light fill reads against the near-same body */
-  --color-code-bg: var(--color-zinc-100);
-
-  /* Callout types — GitHub alert vocabulary, editorial-calm palette */
-  /* Callouts are monochrome too — only code syntax stays colourful. Every
-     type keeps its uppercase label for meaning; the rule + tint are neutral
-     and fg-derived, so a single :root definition auto-adapts across themes
-     (the dark blocks no longer redeclare them). High-contrast: fg rule/label
-     on a subtle tint. */
+  /* Callouts are monochrome (only code syntax stays colourful) — a foreground
+     rule + label on a subtle tint; each type keeps its uppercase label for
+     meaning. fg-derived, so they auto-adapt across themes. */
   --callout-note-fg: var(--color-fg);
   --callout-note-bg: var(--color-bg-subtle);
   --callout-tip-fg: var(--color-fg);
@@ -151,9 +120,8 @@
   --callout-caution-fg: var(--color-fg);
   --callout-caution-bg: var(--color-bg-subtle);
 
-  /* Body font role. Defaults to the sans stack; the serif stack takes over
-     when the page opts in via [data-font='serif'] (driven by `site.font`).
-     Headings + prose inherit this; code keeps --font-mono. */
+  /* Body font role — serif stack swaps in under [data-font='serif']
+     (driven by `site.font`). Headings + prose inherit; code keeps --font-mono. */
   --font-body: var(--font-sans);
 
   /* Deliberate deviations from STYLES.md:
@@ -201,63 +169,54 @@ body.ov-body-landing {
 }
 
 /* Dark theme — auto + explicit */
+/* Dark = the SAME ramp, remapped to reversed steps. No new colour values —
+   only different gray indices — so editing the ramp re-skins both themes.
+   (Elevation inverts: "lifted" surfaces are LIGHTER in dark.) border / link /
+   focus-ring / callouts are fg-derived or fixed mid-grays and auto-adapt, so
+   they aren't redeclared. The two blocks are identical: `auto` under an OS-dark
+   media query, plus the explicit `dark` override. */
 @media (prefers-color-scheme: dark) {
   :root[data-theme='auto'] {
-    /* Dark surfaces lifted one step off pure-black (2026-06-06) — still
-       clearly dark, but no longer reads as a void. */
-    --color-bg: oklch(17.5% 0 0);
-    /* Chrome lifts ~6% L above body in dark mode (elevation inversion:
-       you can't go darker than near-black without reading as a void).
-       The gap is bigger than light mode's 4% because the human eye
-       discriminates lightness deltas worse in dark regions. */
-    --color-bg-chrome: oklch(23.5% 0 0);
-    --color-bg-subtle: var(--color-zinc-900);
-    --color-bg-muted: var(--color-zinc-800);
-    /* Card sits a gentle step above body. */
-    --color-surface: oklch(21% 0 0);
-    --color-fg: var(--color-zinc-100);
-    --color-fg-muted: var(--color-zinc-300);
-    --color-fg-subtle: var(--color-zinc-500);
-    /* border / accent / link are fg-derived in :root and auto-adapt to the
-       dark foreground — no per-theme redeclaration needed. */
-    --color-code-bg: var(--color-zinc-900);
-    /* callouts are fg-derived in :root and auto-adapt — no redeclaration. */
-    /* CTAs for dark: primary = full-contrast white fill (dark text); secondary
-       = dark recessed fill (zinc-800) with light text — dimmer than the
-       primary, every value from the zinc scale (no off-scale literals). */
-    --color-cta-primary-bg: var(--color-zinc-50);
-    --color-cta-primary-bg-hover: var(--color-zinc-200);
-    --color-cta-primary-fg: var(--color-zinc-900);
-    --color-cta-secondary-bg: var(--color-zinc-800);
-    --color-cta-secondary-bg-hover: var(--color-zinc-700);
-    --color-cta-secondary-fg: var(--color-zinc-100);
-    --color-cta-secondary-border: var(--color-zinc-700);
+    --color-bg: var(--color-gray-900);
+    --color-surface: var(--color-gray-800);
+    --color-bg-subtle: var(--color-gray-900);
+    --color-bg-muted: var(--color-gray-800);
+    --color-bg-chrome: var(--color-gray-800);
+    --color-fg: var(--color-gray-100);
+    --color-fg-muted: var(--color-gray-300);
+    --color-fg-subtle: var(--color-gray-500);
+    --color-code-bg: var(--color-gray-900);
+    --color-primary: var(--color-gray-50);
+    --color-primary-fg: var(--color-gray-900);
+    --color-primary-hover: var(--color-gray-200);
+    --color-secondary: var(--color-gray-800);
+    --color-secondary-fg: var(--color-gray-100);
+    --color-secondary-hover: var(--color-gray-700);
+    --color-accent: var(--color-gray-100);
+    --color-accent-fg: var(--color-gray-900);
+    --color-accent-hover: var(--color-gray-300);
   }
 }
 
 :root[data-theme='dark'] {
-  /* Dark surfaces lifted one step off pure-black (2026-06-06). */
-  --color-bg: oklch(17.5% 0 0);
-  --color-bg-chrome: oklch(23.5% 0 0);
-  --color-bg-subtle: var(--color-zinc-900);
-  --color-bg-muted: var(--color-zinc-800);
-  --color-surface: oklch(21% 0 0);
-  --color-fg: var(--color-zinc-100);
-  --color-fg-muted: var(--color-zinc-300);
-  --color-fg-subtle: var(--color-zinc-500);
-  /* border / accent / link are fg-derived in :root and auto-adapt to the
-     dark foreground — no per-theme redeclaration needed. */
-  --color-code-bg: var(--color-zinc-900);
-  /* callouts are fg-derived in :root and auto-adapt — no redeclaration. */
-  /* CTAs for dark: primary = full-contrast white fill (dark text); secondary =
-     dark recessed fill (zinc-800) with light text — dimmer, all from the scale. */
-  --color-cta-primary-bg: var(--color-zinc-50);
-  --color-cta-primary-bg-hover: var(--color-zinc-200);
-  --color-cta-primary-fg: var(--color-zinc-900);
-  --color-cta-secondary-bg: var(--color-zinc-800);
-  --color-cta-secondary-bg-hover: var(--color-zinc-700);
-  --color-cta-secondary-fg: var(--color-zinc-100);
-  --color-cta-secondary-border: var(--color-zinc-700);
+  --color-bg: var(--color-gray-900);
+  --color-surface: var(--color-gray-800);
+  --color-bg-subtle: var(--color-gray-900);
+  --color-bg-muted: var(--color-gray-800);
+  --color-bg-chrome: var(--color-gray-800);
+  --color-fg: var(--color-gray-100);
+  --color-fg-muted: var(--color-gray-300);
+  --color-fg-subtle: var(--color-gray-500);
+  --color-code-bg: var(--color-gray-900);
+  --color-primary: var(--color-gray-50);
+  --color-primary-fg: var(--color-gray-900);
+  --color-primary-hover: var(--color-gray-200);
+  --color-secondary: var(--color-gray-800);
+  --color-secondary-fg: var(--color-gray-100);
+  --color-secondary-hover: var(--color-gray-700);
+  --color-accent: var(--color-gray-100);
+  --color-accent-fg: var(--color-gray-900);
+  --color-accent-hover: var(--color-gray-300);
 }
 
 /* Reset + base */
@@ -1176,7 +1135,7 @@ body.ov-menu-open {
   outline-offset: 2px;
 }
 .ov-copy-btn.is-copied {
-  color: var(--color-green-700);
+  color: var(--color-fg);
   background: transparent;
   border-color: transparent;
 }
@@ -1812,24 +1771,26 @@ body.ov-body-landing {
     border-color 120ms ease;
 }
 .ov-cta--primary {
-  background: var(--color-cta-primary-bg);
-  color: var(--color-cta-primary-fg);
-  border: 1px solid var(--color-cta-primary-bg);
+  background: var(--color-primary);
+  color: var(--color-primary-fg);
+  border: 1px solid var(--color-primary);
 }
 .ov-cta--primary:hover {
-  background: var(--color-cta-primary-bg-hover);
-  border-color: var(--color-cta-primary-bg-hover);
-  color: var(--color-cta-primary-fg);
+  background: var(--color-primary-hover);
+  border-color: var(--color-primary-hover);
+  color: var(--color-primary-fg);
 }
 .ov-cta--secondary {
-  background: var(--color-cta-secondary-bg);
-  color: var(--color-cta-secondary-fg);
-  border: 1px solid var(--color-cta-secondary-border);
+  background: var(--color-secondary);
+  color: var(--color-secondary-fg);
+  /* Hairline so the fill reads against a near-same body (light) and stays a
+     quiet edge (dark). */
+  border: 1px solid var(--color-border-strong);
 }
 .ov-cta--secondary:hover {
-  background: var(--color-cta-secondary-bg-hover);
-  border-color: var(--color-cta-secondary-border);
-  color: var(--color-cta-secondary-fg);
+  background: var(--color-secondary-hover);
+  border-color: var(--color-border-strong);
+  color: var(--color-secondary-fg);
 }
 
 /* Install snippets — command blocks spliced between the hero CTAs and the

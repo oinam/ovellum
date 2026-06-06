@@ -16,18 +16,46 @@ parts you'll most often want to.
 
 ## The token model
 
-Every visual decision is a CSS custom property at one of three tiers:
+Every colour is a CSS custom property at one of three layers, each built on the
+one above:
 
-- **Tier 1 — palette.** Raw OKLCH values: `--color-zinc-50` through
-  `--color-zinc-950`, plus accent ramps (blue, red, etc.). Theme-agnostic.
-- **Tier 2 — semantic.** Maps palette entries to roles:
-  `--color-fg`, `--color-bg`, `--color-accent`, `--color-border`.
-  Components reference these, so swapping themes only touches Tier 2.
-- **Tier 3 — component.** Optional per-component overrides
-  (`--feature-card-bg`, etc.) that default to Tier 2 values.
+- **Primitives — one neutral ramp.** `--color-gray-50` through
+  `--color-gray-950`, plus `--color-white` / `--color-black`. This is the *only*
+  place raw colour values live. The default theme uses a pure-neutral grey ramp;
+  change these eleven values and every surface and text colour follows — no
+  other file to touch.
+- **Roles — the "brand".** `--color-primary`, `--color-secondary`,
+  `--color-accent`, each with a `-fg` (text on it) and `-hover` variant. The
+  default maps them to greys; point a role at a colour ramp (say a red) and
+  every button, link, and focus ring re-skins. Non-grey roles can differ
+  between light and dark.
+- **Semantic — surfaces + text.** `--color-bg`, `--color-surface`,
+  `--color-fg`, `--color-border`, the callout tokens, etc., mapped onto the
+  ramp. Components reference roles and semantics — never the ramp directly.
 
-The full token list lives in the project's
-[`docs/internal/STYLES.md`](https://github.com/oinam/ovellum/blob/main/docs/internal/STYLES.md).
+Dark mode is the **same ramp remapped to reversed steps**: no separate dark
+colour *values*, just a small block pointing the roles and surfaces at the
+opposite end of the grey ramp (`--color-bg` → a dark grey, `--color-fg` → a
+light grey; elevation inverts, so "lifted" surfaces get *lighter*). Change the
+ramp once and both themes update together.
+
+The token *architecture* (names, layering, scales) lives in the project's
+[`docs/internal/STYLES.md`](https://github.com/oinam/ovellum/blob/main/docs/internal/STYLES.md);
+the per-theme colour *values* live in the theme's stylesheet
+([`templates/default/style.css`](https://github.com/oinam/ovellum/blob/main/packages/site/src/templates/default/style.css)).
+
+## Available themes
+
+| Theme       | Status   | Notes                                                                                  |
+| ----------- | -------- | -------------------------------------------------------------------------------------- |
+| **Default** | shipping | Monochrome, pure-neutral grey ramp; light + dark (+ auto). The theme this site uses.   |
+| Nord        | planned  | Cool blue-grey palette, behind a future `site.theme` switch.                            |
+| Dracula     | planned  | Dark-first high-contrast palette. Roadmap.                                              |
+
+Today the default is the only bundled **page** theme; the architecture above is
+what additional themes plug into (each ships its own ramp + role values and a
+reversed-ramp dark block). Code-block syntax themes are independent and already
+selectable via [`site.codeTheme`](#code-block-themes).
 
 ## Switching themes
 
@@ -117,19 +145,32 @@ in `content/` (it passes through as a static asset), then reference it
 from your pages or — better — extend the template later via a plugin
 system (planned, not built yet).
 
-A minimal override that re-skins the accent colour:
+Re-skin a **role** — links and accents follow it everywhere (light + dark
+differ because this is a non-grey colour):
 
 ```css
 :root {
-  --color-accent: oklch(60% 0.18 320); /* magenta */
-  --color-accent-hover: oklch(54% 0.22 320);
-  --color-link: var(--color-accent);
-  --color-link-hover: var(--color-accent-hover);
+  --color-accent: oklch(55% 0.20 320); /* magenta */
+  --color-accent-fg: var(--color-white);
+  --color-accent-hover: oklch(48% 0.22 320);
 }
 
 :root[data-theme='dark'] {
-  --color-accent: oklch(70% 0.18 320);
-  --color-accent-hover: oklch(78% 0.16 320);
+  --color-accent: oklch(72% 0.18 320);
+  --color-accent-fg: var(--color-gray-950);
+  --color-accent-hover: oklch(80% 0.16 320);
+}
+```
+
+Or re-tone the whole UI by overriding the **grey ramp** — every surface, text,
+and (grey) role shifts at once, no per-component edits:
+
+```css
+:root {
+  /* e.g. a warmer 'stone'-style neutral */
+  --color-gray-100: oklch(97% 0.004 60);
+  --color-gray-900: oklch(20.5% 0.006 60);
+  /* …override whichever steps you use */
 }
 ```
 
@@ -189,10 +230,10 @@ Pick one via `site.codeTheme`:
 
 **Roadmap:**
 
-- A `site.theme` config to switch the **page** theme tokens (palette /
-  type / chrome) by name — Nord and Solarized are defined in
-  `STYLES.md` but not yet wired into the toggle. Today only
-  `site.codeTheme` is selectable.
+- A `site.theme` config to switch the **page** theme by name (Nord, Dracula,
+  …). Each theme ships its own grey ramp + role values plus a reversed-ramp
+  dark block, per the [token model](#the-token-model). Today only the default
+  page theme ships; `site.codeTheme` already switches the syntax palette.
 - A plugin API for fully custom templates.
 - Per-page `extraStyles` for one-off page-specific CSS.
 

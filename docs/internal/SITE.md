@@ -389,11 +389,13 @@ Three moving parts:
   dark; the dark blocks no longer redeclare them. Each callout still carries its
   uppercase label for meaning. The active sidebar item and other "current/
   selected" states use `--color-fg` (high-contrast monochrome), never a hue.
-- **Monochrome chrome.** `--color-accent` and `--color-link` resolve to the
-  foreground neutral (`--color-fg`), and `--color-border-focus` to a neutral
-  gray — chrome carries no hue. The blue ramp stays defined but is reserved
-  for semantic callouts (the only hue-bearing surfaces left). Links are set
-  apart from body text by their underline, not a color. See STYLES.md §6.3.
+- **Monochrome chrome.** The `--color-accent` role resolves to a dark grey
+  (`--color-gray-900`, the foreground neutral) and `--color-link` follows it;
+  `--color-border-focus` is a mid grey. Chrome carries no hue — the default
+  theme ships only the grey ramp (no colour ramps at all); callouts are
+  monochrome too. Links are set apart from body text by their underline, not a
+  colour. See the token architecture in STYLES.md §2 (primitives → roles →
+  semantic).
 - **Translucent hairlines.** `--color-border` / `--color-border-strong` are
   now `color-mix` tints of `--color-fg` (~10% / ~18%), defined **once** in
   `:root` — they auto-adapt when `--color-fg` flips per theme, so the dark
@@ -450,10 +452,12 @@ top, and the frame's corner-node baseline.
 
 ## 9. Theme integration
 
-The stylesheet sources its tokens from `docs/internal/STYLES.md` (Tier 1 +
-Tier 2 default-light / default-dark blocks). Authoritative copy lives in
-`packages/site/src/templates/default/style.css`; if `STYLES.md` changes, we
-hand-port the relevant token values. (Future: a small token-extraction script
+Colour tokens (the grey ramp, role colours, semantic mappings, and the
+reversed-ramp dark block) live and are hand-edited directly in
+`packages/site/src/templates/default/style.css` — `STYLES.md` documents the
+architecture, not per-theme colour values. The theme-agnostic scales (fonts,
+type, space, radii) are still sourced from `STYLES.md` via `pnpm extract-tokens`.
+(Historical note: a small token-extraction script
 could automate this, but a hand-port is fine for v1 — the palette doesn't move
 weekly.)
 
@@ -493,7 +497,7 @@ packages/site/
 | Concern | File | Format | Why |
 |---|---|---|---|
 | HTML structure | `src/template.ts` | TypeScript template literals | No template engine, no extra dep. Escape helpers (`escapeHtml`, `escapeAttr`) are real TS functions the type-checker watches; IDE autocomplete and import navigation work. |
-| Visual design | `src/templates/default/style.css` | Vanilla CSS with custom properties | One file, no preprocessor, no PostCSS, no bundler. Tier 1 + Tier 2 OKLCH tokens hand-ported from `STYLES.md`. Themes swap at runtime via `[data-theme]`. |
+| Visual design | `src/templates/default/style.css` | Vanilla CSS with custom properties | One file, no preprocessor, no PostCSS, no bundler. Colour lives here: a grey ramp → role colours → semantic tokens, with dark as a reversed-ramp remap. The theme-agnostic scales (fonts/type/space/radii) sync from `STYLES.md`. Themes swap at runtime via `[data-theme]`. **Shipped minified** — `scripts/build-templates.mjs` (esbuild, dev-only) uglifies CSS/JS when copying `src/templates → dist/templates`; source stays readable, `ovellum build` just copies the minified asset. |
 | Client behaviour | `src/templates/default/script.js` | Vanilla browser JS | Zero framework cost. Two responsibilities: theme cycle + icon copy buttons on code blocks (copy glyph → check; the old language eyebrow is gone). Ships under 2 KB. |
 
 `template.ts` exports three render functions:
@@ -533,7 +537,7 @@ In increasing order of friction:
 
 | You want to… | Do this |
 |---|---|
-| Tweak colours / spacing / type | Override Tier 2 CSS variables (`--color-accent`, `--color-bg`, `--space-m`, etc.) in a follow-up stylesheet. The override path for end users is documented in `website/content/guides/themes.md`. |
+| Tweak colours / spacing / type | Override the grey ramp (`--color-gray-*`) to re-tone everything, a role (`--color-primary/-accent`, etc.) to re-skin buttons/links, or semantic/scale tokens (`--color-bg`, `--space-m`) in a follow-up stylesheet. The override path for end users is documented in `website/content/docs/guides/themes.md`. |
 | Tweak the markup / layout | Edit `packages/site/src/template.ts`. Add a `data-…` attribute, rearrange the topbar, change the heading rendering, etc. Run `pnpm --filter @ovellum/site test` to keep the template tests green, then `pnpm --filter @ovellum/site build` and `pnpm -w run build:website` to verify. |
 | Add a new section (e.g., right-side action buttons, breadcrumbs) | Edit `template.ts` to render the new markup, then add the corresponding selectors to `templates/default/style.css`. Tests in `__tests__/template.test.ts` cover that the active link still works, ToC renders, etc.; add a test for any new section. |
 | Replace the template wholesale | Fork `packages/site/src/templates/default/` (plus the `template.ts` render functions if you need different markup), maintain your own version, point your build at the fork. The plugin / template-override API for cleanly swapping templates is on the roadmap and tracked in TODO.md Phase 4.5 follow-ups. |

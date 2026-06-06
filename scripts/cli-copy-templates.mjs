@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /**
  * Copy the bundled @ovellum/site default template into the CLI's dist
- * directory.
+ * directory, MINIFYING its CSS/JS on the way (see build-templates.mjs).
  *
  * Why this exists:
  *
@@ -14,11 +14,13 @@
  *
  * Solution: copy `packages/site/src/templates/` to
  * `packages/cli/dist/templates/` so the runtime resolver finds them at the
- * same relative path it expects.
+ * same relative path it expects — minified, so `ovellum build` emits compact
+ * `dist/assets/ovellum.{css,js}` with no runtime tooling.
  */
-import { cpSync, existsSync } from 'node:fs';
+import { existsSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { buildTemplates } from './build-templates.mjs';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const repoRoot = path.resolve(here, '..');
@@ -30,5 +32,7 @@ if (!existsSync(src)) {
   process.exit(1);
 }
 
-cpSync(src, dst, { recursive: true });
-console.log(`cli-copy-templates: ${path.relative(repoRoot, src)} → ${path.relative(repoRoot, dst)}`);
+await buildTemplates(src, dst);
+console.log(
+  `cli-copy-templates: minified ${path.relative(repoRoot, src)} → ${path.relative(repoRoot, dst)}`,
+);
