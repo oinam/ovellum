@@ -4,7 +4,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import matter from 'gray-matter';
 import type { OvellumConfig, OvellumSiteConfig } from '@ovellum/core';
-import { renderMarkdown, type Heading } from './markdown.js';
+import { renderMarkdown } from './markdown.js';
 import { buildNav, findAdjacent, findBreadcrumbs, type NavNode } from './nav.js';
 import { countWords, lastModifiedISO, readingMinutes } from './page-meta.js';
 import { indexSite } from './search.js';
@@ -300,7 +300,10 @@ async function renderOne(input: RenderOneInput): Promise<RenderOneResult> {
   const { html: bodyHtml, headings } = await renderMarkdown(parsed.content, {
     codeTheme: input.site.codeTheme,
   });
-  const title = frontmatter.title ?? firstHeading(headings) ?? input.site.title;
+  // Title resolution mirrors the nav (nav.ts pageNode): frontmatter `title`,
+  // else the first `# H1` in the body, else the site title. (The ToC only
+  // collects h2–h3, so we read the H1 from the raw content, not `headings`.)
+  const title = frontmatter.title ?? firstH1(parsed.content) ?? input.site.title;
 
   const editUrl = input.site.editUrlPattern
     ? input.site.editUrlPattern.replace('{path}', input.sourceRelFromCwd)
@@ -443,9 +446,14 @@ function urlToOutputPath(url: string): string {
   return url.replace(/^\/+/, '').replace(/\/+$/, '') + '/index.html';
 }
 
-function firstHeading(headings: Heading[]): string | undefined {
-  const h2 = headings.find((h) => h.depth === 2);
-  return h2?.text;
+/**
+ * First `# H1` in the raw markdown body — the page title when frontmatter
+ * omits one. Mirrors `firstH1` in nav.ts so the `<title>` and the sidebar /
+ * breadcrumb always agree.
+ */
+function firstH1(content: string): string | undefined {
+  const m = content.match(/^\s*#\s+(.+)$/m);
+  return m ? m[1]!.trim() : undefined;
 }
 
 async function writeStaticAssets(assetsAbs: string): Promise<void> {

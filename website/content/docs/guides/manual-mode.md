@@ -53,16 +53,36 @@ Pretty URLs are the default. Every page becomes `<slug>/index.html` so the
 URL is `/<slug>/`. No server-side rewrites needed; works on any static
 host.
 
+Note that neither file above has frontmatter, and there's no `_meta.json`
+anywhere — both are optional. The slug comes from the filename and the title
+from the first `# H1`. See [Adding navigation](#adding-navigation).
+
 ## Adding navigation
 
-The sidebar nav is built automatically from your file tree. Page titles
-come from:
+The sidebar is built automatically from your file tree — **no config
+required.** Two rules cover the whole structure:
+
+- **Slug = filename without `.md`.** `orphans.md` → `/orphans/`. Subfolders
+  nest: `guides/install.md` → `/guides/install/`. An `index.md` represents its
+  folder rather than getting its own slug.
+- **Each subfolder is a section**, titled after the folder name, title-cased:
+  `getting-started/` → "Getting started".
+
+Page titles resolve, in order:
 
 1. The frontmatter `title:` field, if set.
 2. The first `# H1` in the body, otherwise.
-3. The filename, as a last resort (`getting-started.md` → `Getting started`).
+3. The filename, as a last resort (`getting-started.md` → "Getting started").
 
-For ordering and group titles, drop a `_meta.json` into any directory:
+So **frontmatter is optional** — a page can be just a `# Heading` followed by
+its content. That heading becomes the on-page title, the sidebar label, *and*
+the `<title>` tag. Add frontmatter only when you want to override the title or
+set a `description`.
+
+### Taking control with `_meta.json` (optional)
+
+`_meta.json` is **never required.** Drop one into a directory only when you want
+to override the automatic order or the folder-name section title:
 
 ```
 content/
@@ -80,8 +100,12 @@ content/
 }
 ```
 
-`order` is a list of slugs (file or subdirectory names without `.md`).
-Anything not listed sorts alphabetically after the explicit set.
+- `title` overrides the (title-cased) folder name.
+- `order` is a list of slugs (filenames / subfolder names without `.md`);
+  anything not listed sorts alphabetically after the explicit set.
+
+Without a `_meta.json`, the folder's pages simply sort alphabetically — often
+exactly what you want.
 
 ## Callouts
 
