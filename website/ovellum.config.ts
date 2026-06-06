@@ -32,6 +32,7 @@ export default {
     footerNav: [
       { label: 'Contributing', href: '/docs/contributing/' },
       { label: 'Security', href: '/docs/reference/security/' },
+      { label: 'Issues', href: 'https://github.com/oinam/ovellum/issues', external: true },
       { label: 'GitHub', href: 'https://github.com/oinam/ovellum', icon: 'github', external: true },
       { label: 'npm', href: 'https://www.npmjs.com/package/ovellum', icon: 'package', external: true },
       { label: 'RSS feed', href: '/feed.xml', icon: 'rss' },
