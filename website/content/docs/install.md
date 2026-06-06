@@ -55,12 +55,37 @@ the cache. This is convenient for one-off generation but slows down CI
 because the package manager has to re-resolve each run; for repeated builds,
 prefer the `--save-dev` install.
 
+## Global install
+
+Prefer a project-local dependency (above) — it pins the version per project and
+keeps CI builds reproducible. But if you want the `ovellum` command available
+everywhere (handy for scaffolding or one-off builds), install it globally:
+
+```bash
+npm install -g ovellum
+# or:
+pnpm add -g ovellum
+yarn global add ovellum
+bun add -g ovellum
+```
+
+Then run it directly — no `npx` needed:
+
+```bash
+ovellum --version
+ovellum build
+```
+
+A global install puts a single version on your `PATH` for every project; when
+two projects need different versions, use the project-local install instead so
+each pins its own. (Node 20+ either way.)
+
 ## Verifying the install
 
 After installing, run:
 
 ```bash
-npx ovellum build --help
+npx ovellum build --help   # project-local; for a global install, drop `npx`
 ```
 
 You should see the synopsis for the `build` subcommand. If you see "command
