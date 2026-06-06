@@ -137,6 +137,10 @@
   --color-link: var(--color-accent);
   --color-link-hover: var(--color-accent-hover);
   --color-code-bg: var(--color-gray-200); /* one step off --color-surface so code reads distinct from the content card */
+  /* Inline `<code>` chip — a much fainter fg tint than the block bg, so it just
+     whispers "code" inline without becoming a heavy blob. fg-derived → adapts
+     to both themes. */
+  --color-inline-code-bg: color-mix(in oklch, var(--color-fg) 8%, transparent);
 
   /* Callouts are monochrome (only code syntax stays colourful) — a foreground
      rule + label on a subtle tint; each type keeps its uppercase label for
@@ -986,16 +990,20 @@ body.ov-menu-open {
   accent-color: var(--color-accent);
   transform: translateY(2px);
 }
-.ov-prose code:not(pre code) {
+/* Inline code in any prose surface — doc articles AND the landing pitch
+   (`.ov-pitch-inner`), which isn't `.ov-prose`. */
+.ov-prose code:not(pre code),
+.ov-pitch-inner code:not(pre code) {
   font-family: var(--font-mono);
-  background: var(--color-code-bg);
-  padding: 0.1em 0.38em;
+  background: var(--color-inline-code-bg);
+  padding: 0.1em 0.25em; /* smallest inset that still reads as a chip */
   border-radius: var(--radius-sm);
   font-size: 0.88em;
   color: var(--color-fg);
   white-space: nowrap;
 }
-.ov-prose a > code:not(pre code) {
+.ov-prose a > code:not(pre code),
+.ov-pitch-inner a > code:not(pre code) {
   color: var(--color-link);
 }
 .ov-prose img {
