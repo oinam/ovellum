@@ -104,7 +104,7 @@
   /* Links follow the accent role. */
   --color-link: var(--color-accent);
   --color-link-hover: var(--color-accent-hover);
-  --color-code-bg: var(--color-gray-100);
+  --color-code-bg: var(--color-gray-200); /* one step off --color-surface so code reads distinct from the content card */
 
   /* Callouts are monochrome (only code syntax stays colourful) — a foreground
      rule + label on a subtle tint; each type keeps its uppercase label for
@@ -185,7 +185,7 @@ body.ov-body-landing {
     --color-fg: var(--color-gray-100);
     --color-fg-muted: var(--color-gray-300);
     --color-fg-subtle: var(--color-gray-500);
-    --color-code-bg: var(--color-gray-900);
+    --color-code-bg: var(--color-gray-950);
     --color-primary: var(--color-gray-50);
     --color-primary-fg: var(--color-gray-900);
     --color-primary-hover: var(--color-gray-200);
@@ -207,7 +207,7 @@ body.ov-body-landing {
   --color-fg: var(--color-gray-100);
   --color-fg-muted: var(--color-gray-300);
   --color-fg-subtle: var(--color-gray-500);
-  --color-code-bg: var(--color-gray-900);
+  --color-code-bg: var(--color-gray-950);
   --color-primary: var(--color-gray-50);
   --color-primary-fg: var(--color-gray-900);
   --color-primary-hover: var(--color-gray-200);
@@ -1055,7 +1055,11 @@ body.ov-menu-open {
   line-height: var(--leading-mono);
 }
 .ov-prose pre.shiki {
-  background: var(--shiki-light-bg);
+  /* Background comes from our token (one step off the content card), NOT the
+     shiki theme's bg — only the syntax token colours come from shiki. Since
+     --color-code-bg already flips per theme, the dark blocks below override
+     token colours only, not the background. */
+  background: var(--color-code-bg);
   color: var(--shiki-light);
 }
 .ov-prose pre.shiki span {
@@ -1063,7 +1067,6 @@ body.ov-menu-open {
 }
 @media (prefers-color-scheme: dark) {
   :root[data-theme='auto'] .ov-prose pre.shiki {
-    background: var(--shiki-dark-bg);
     color: var(--shiki-dark);
   }
   :root[data-theme='auto'] .ov-prose pre.shiki span {
@@ -1071,7 +1074,6 @@ body.ov-menu-open {
   }
 }
 :root[data-theme='dark'] .ov-prose pre.shiki {
-  background: var(--shiki-dark-bg);
   color: var(--shiki-dark);
 }
 :root[data-theme='dark'] .ov-prose pre.shiki span {
