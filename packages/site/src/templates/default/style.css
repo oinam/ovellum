@@ -43,12 +43,7 @@
     monospace;
   --font-serif: ui-serif, Georgia, Cambria, 'Times New Roman', Times, serif;
 
-  /* Type scale (Major Third → Perfect Fourth) — full Utopia values */
-  --font-size-0: clamp(0.9375rem, 0.9158rem + 0.1087vw, 1rem);
-  --font-size-1: clamp(1.25rem, 1.1341rem + 0.5793vw, 1.5831rem);
-  --font-size-2: clamp(1.5625rem, 1.3721rem + 0.9522vw, 2.11rem);
-  --font-size-3: clamp(1.9531rem, 1.6542rem + 1.4946vw, 2.8125rem);
-  --font-size-4: clamp(2.4413rem, 1.9861rem + 2.276vw, 3.75rem);
+  /* (Type scale lives below the markers — it's ratio-driven, not synced.) */
 
   /* Space scale */
   --space-3xs: clamp(0.25rem, 0.2337rem + 0.0815vw, 0.2969rem);
@@ -67,6 +62,43 @@
   --radius-xl: 0.75rem;
 
   /* @tokens:from-styles-md:end */
+
+  /* ── Modular type scale ────────────────────────────────────────────────
+     One ratio drives the whole scale: each step is the previous × --ratio.
+     Swap --ratio to retune every heading at once — pick from the named ratios
+     below (a modular scale with a single ratio, rather than baked-in per-step
+     clamps). The base (step 0) stays a fluid clamp, so the scale still grows
+     gently with the viewport. Default theme: --major-third (1.25), calm and
+     docs-friendly. (A coloured/marketing theme could pick a punchier ratio.) */
+  --double-octave: 4;
+  --pi: 3.14159265359;
+  --major-twelfth: 3;
+  --major-eleventh: 2.666666667;
+  --major-tenth: 2.5;
+  --octave: 2;
+  --major-seventh: 1.875;
+  --minor-seventh: 1.777777778;
+  --major-sixth: 1.666666667;
+  --phi: 1.618034;
+  --golden: 1.618034;
+  --minor-sixth: 1.6;
+  --fifth: 1.5;
+  --augmented-fourth: 1.41421;
+  --fourth: 1.333333333;
+  --major-third: 1.25;
+  --minor-third: 1.2;
+  --major-second: 1.125;
+  --minor-second: 1.066666667;
+
+  --ratio: var(--major-third);
+
+  /* Base (step 0) — fluid body size; every other step derives from it. */
+  --font-size-0: clamp(0.9375rem, 0.9158rem + 0.1087vw, 1rem);
+  --font-size-1: calc(var(--font-size-0) * var(--ratio));
+  --font-size-2: calc(var(--font-size-1) * var(--ratio));
+  --font-size-3: calc(var(--font-size-2) * var(--ratio));
+  --font-size-4: calc(var(--font-size-3) * var(--ratio));
+  --font-size-5: calc(var(--font-size-4) * var(--ratio));
 
   /* ── Tier 1: role colours (the "brand") ────────────────────────────────
      Components reference these, never the ramp directly. The default theme

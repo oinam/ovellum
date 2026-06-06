@@ -25,11 +25,12 @@ document by `scripts/extract-style-tokens.mjs`.
 - `pnpm check-tokens` reports drift (exit 1) without writing — wire it into CI
   if you want a hard gate.
 
-Scope (since 2026-06-06): only the **theme-agnostic scales** are synced — font
-stacks, the type scale, the space scale, and radii. **Colours are no longer
-synced**: the grey ramp, role colours, and semantic mappings live and are
-hand-edited in the theme's stylesheet (outside the markers), so a theme can own
-its palette without round-tripping through this file. Tier 2 remappings
+Scope (since 2026-06-06): only **font stacks, the space scale, and radii** are
+synced. **Colours are no longer synced** — the grey ramp, role colours, and
+semantic mappings live and are hand-edited in the theme's stylesheet (outside
+the markers), so a theme can own its palette without round-tripping through this
+file. **The type scale is no longer synced either** — it's a single-ratio
+modular scale (`--ratio`) defined in the stylesheet (see §3.2). Tier 2 remappings
 (`var(...)`) and deliberate deviations have always lived outside the markers.
 
 ---
@@ -111,36 +112,50 @@ Body and headings: `--font-sans`. Code blocks, inline code, anchor IDs in the me
 
 ### 3.2 Type scale
 
-Source: [utopia.fyi/type/calculator](https://utopia.fyi/type/calculator/).
+A **modular scale driven by one CSS variable, `--ratio`.** Each step is the
+previous × `--ratio`; the base (step 0) is a fluid `clamp()` so the scale still
+grows gently with the viewport. Swap `--ratio` to retune every heading at once.
+The scale lives in the theme stylesheet (`templates/default/style.css`) and is
+**not synced** from this file — edit it there.
 
-| Config         | Min (320px)        | Max (1240px)           |
-| -------------- | ------------------ | ---------------------- |
-| Base font size | 16px               | 19px                   |
-| Modular scale  | 1.25 (major third) | 1.333 (perfect fourth) |
+> Earlier this was a fluid two-ratio Utopia scale (Major-Third → Perfect-Fourth,
+> base 16→19px). The Perfect-Fourth top end compounded to a ~60px `<h1>` that
+> read display-sized; a flat **Major-Third (1.25)** keeps headings closer to the
+> body. Single-ratio means no per-step `clamp()` recompute when you change it.
 
-Eight steps from `-2` (fine print) to `5` (display).
+Named ratios are predefined; set `--ratio` to one of them:
 
-| Step | 320px | 1240px | Typical use                     |
-| ---- | ----- | ------ | ------------------------------- |
-| `-2` | 10.24 | 10.69  | Footnotes, legal small print    |
-| `-1` | 12.80 | 14.25  | Captions, table cells, metadata |
-| `0`  | 15.00 | 16.00  | Body (tightened from Utopia 16→19) |
-| `1`  | 20.00 | 25.33  | Lead paragraphs, `<h4>`         |
-| `2`  | 25.00 | 33.76  | `<h3>`                          |
-| `3`  | 31.25 | 45.00  | `<h2>`                          |
-| `4`  | 39.06 | 60.00  | `<h1>`                          |
-| `5`  | 48.83 | 79.95  | Display (hero, 404 page)        |
+| Ratio (`var(--…)`)   | Value | Ratio (`var(--…)`)   | Value |
+| -------------------- | ----- | -------------------- | ----- |
+| `--minor-second`     | 1.067 | `--minor-sixth`      | 1.6   |
+| `--major-second`     | 1.125 | `--golden` / `--phi` | 1.618 |
+| `--minor-third`      | 1.2   | `--major-sixth`      | 1.667 |
+| **`--major-third`**  | **1.25 (default)** | `--minor-seventh` | 1.778 |
+| `--fourth`           | 1.333 | `--major-seventh`    | 1.875 |
+| `--augmented-fourth` | 1.414 | `--octave`           | 2     |
+| `--fifth`            | 1.5   | `--major-tenth` … `--double-octave` | 2.5 … 4 |
+
+Resulting sizes with the default `--major-third` (base = body, 15→16px fluid):
+
+| Step | ~px (max) | Use                     |
+| ---- | --------- | ----------------------- |
+| `0`  | 16        | Body                    |
+| `1`  | 20        | Lead paragraph, `<h4>`  |
+| `2`  | 25        | `<h3>`                  |
+| `3`  | 31        | `<h2>`                  |
+| `4`  | 39        | `<h1>`                  |
+| `5`  | 49        | Display (hero, 404)     |
 
 ```css
 :root {
-  --font-size--2: clamp(0.64rem, 0.6302rem + 0.0489vw, 0.6681rem);
-  --font-size--1: clamp(0.8rem, 0.7685rem + 0.1576vw, 0.8906rem);
-  --font-size-0: clamp(0.9375rem, 0.9158rem + 0.1087vw, 1rem);
-  --font-size-1: clamp(1.25rem, 1.1341rem + 0.5793vw, 1.5831rem);
-  --font-size-2: clamp(1.5625rem, 1.3721rem + 0.9522vw, 2.11rem);
-  --font-size-3: clamp(1.9531rem, 1.6542rem + 1.4946vw, 2.8125rem);
-  --font-size-4: clamp(2.4413rem, 1.9861rem + 2.276vw, 3.75rem);
-  --font-size-5: clamp(3.0519rem, 2.3754rem + 3.3826vw, 4.9969rem);
+  /* … the full named-ratio list … */
+  --ratio: var(--major-third); /* 1.25 */
+  --font-size-0: clamp(0.9375rem, 0.9158rem + 0.1087vw, 1rem); /* fluid base */
+  --font-size-1: calc(var(--font-size-0) * var(--ratio));
+  --font-size-2: calc(var(--font-size-1) * var(--ratio));
+  --font-size-3: calc(var(--font-size-2) * var(--ratio));
+  --font-size-4: calc(var(--font-size-3) * var(--ratio));
+  --font-size-5: calc(var(--font-size-4) * var(--ratio));
 }
 ```
 
