@@ -56,7 +56,7 @@ function renderShell(opts: ShellOptions): string {
        Update these if --color-bg moves. The inline boot script below
        picks the right one before paint, and script.js keeps it in
        sync with the theme toggle + OS changes. -->
-  <meta name="theme-color" id="ov-theme-color" data-light="#f4f4f4" data-dark="#101010" content="#f4f4f4">
+  <meta name="theme-color" id="ov-theme-color" data-light="#f4f4f4" data-dark="#1a1a1a" content="#f4f4f4">
   <title>${escapeHtml(opts.fullTitle)}</title>
   ${desc ? `<meta name="description" content="${escapeAttr(desc)}">` : ''}
   ${opts.site.baseUrl ? `<link rel="canonical" href="${escapeAttr(join(opts.site.baseUrl, basePath + opts.url))}">` : ''}

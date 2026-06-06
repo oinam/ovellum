@@ -121,16 +121,17 @@
   /* Faintest hairline of all — the page-edge framing rules. */
   --color-frame-line: color-mix(in oklch, var(--color-fg) 7%, transparent);
 
-  /* CTA buttons — intentional black-monochrome, independent of the blue
-     accent that still drives links/focus/callouts. Theme-independent
-     values (same in light + dark). */
-  --color-cta-primary-bg: oklch(20.8% 0.042 265.755);        /* gray-900 */
-  --color-cta-primary-bg-hover: oklch(27.4% 0.006 286.03);   /* a touch lighter (zinc-800) */
-  --color-cta-primary-fg: oklch(96.7% 0.003 264.542);        /* gray-100 text */
-  --color-cta-secondary-bg: oklch(96.7% 0.003 264.542);      /* gray-100 */
-  --color-cta-secondary-bg-hover: oklch(92% 0.004 286.32);   /* gray-200-ish (zinc-200) */
-  --color-cta-secondary-fg: oklch(20.8% 0.042 265.755);      /* charcoal text */
-  --color-cta-secondary-border: var(--color-zinc-300);       /* hairline so gray-100 reads against the near-same body */
+  /* CTA buttons — neutral monochrome (no hue; the old values carried a faint
+     blue cast). Theme-AWARE: light mode below is a dark primary / light
+     secondary; the dark blocks invert the primary to full white and dim the
+     secondary to a muted white. */
+  --color-cta-primary-bg: var(--color-zinc-900);             /* near-black, neutral */
+  --color-cta-primary-bg-hover: var(--color-zinc-800);
+  --color-cta-primary-fg: var(--color-zinc-50);              /* near-white text */
+  --color-cta-secondary-bg: var(--color-zinc-100);
+  --color-cta-secondary-bg-hover: var(--color-zinc-200);
+  --color-cta-secondary-fg: var(--color-zinc-900);           /* dark text */
+  --color-cta-secondary-border: var(--color-zinc-300);       /* hairline so the light fill reads against the near-same body */
   --color-code-bg: var(--color-zinc-100);
 
   /* Callout types — GitHub alert vocabulary, editorial-calm palette */
@@ -202,16 +203,18 @@ body.ov-body-landing {
 /* Dark theme — auto + explicit */
 @media (prefers-color-scheme: dark) {
   :root[data-theme='auto'] {
-    --color-bg: oklch(14.1% 0 0);
+    /* Dark surfaces lifted one step off pure-black (2026-06-06) — still
+       clearly dark, but no longer reads as a void. */
+    --color-bg: oklch(17.5% 0 0);
     /* Chrome lifts ~6% L above body in dark mode (elevation inversion:
        you can't go darker than near-black without reading as a void).
        The gap is bigger than light mode's 4% because the human eye
        discriminates lightness deltas worse in dark regions. */
-    --color-bg-chrome: oklch(20% 0 0);
+    --color-bg-chrome: oklch(23.5% 0 0);
     --color-bg-subtle: var(--color-zinc-900);
     --color-bg-muted: var(--color-zinc-800);
-    /* Card sits between body (14.1%) and chrome (20%) — a gentle lift. */
-    --color-surface: oklch(17.5% 0 0);
+    /* Card sits a gentle step above body. */
+    --color-surface: oklch(21% 0 0);
     --color-fg: var(--color-zinc-100);
     --color-fg-muted: var(--color-zinc-300);
     --color-fg-subtle: var(--color-zinc-500);
@@ -219,15 +222,26 @@ body.ov-body-landing {
        dark foreground — no per-theme redeclaration needed. */
     --color-code-bg: var(--color-zinc-900);
     /* callouts are fg-derived in :root and auto-adapt — no redeclaration. */
+    /* CTAs for dark: primary = full-contrast white fill (dark text); secondary
+       = dark recessed fill (zinc-800) with light text — dimmer than the
+       primary, every value from the zinc scale (no off-scale literals). */
+    --color-cta-primary-bg: var(--color-zinc-50);
+    --color-cta-primary-bg-hover: var(--color-zinc-200);
+    --color-cta-primary-fg: var(--color-zinc-900);
+    --color-cta-secondary-bg: var(--color-zinc-800);
+    --color-cta-secondary-bg-hover: var(--color-zinc-700);
+    --color-cta-secondary-fg: var(--color-zinc-100);
+    --color-cta-secondary-border: var(--color-zinc-700);
   }
 }
 
 :root[data-theme='dark'] {
-  --color-bg: oklch(14.1% 0 0);
-  --color-bg-chrome: oklch(20% 0 0);
+  /* Dark surfaces lifted one step off pure-black (2026-06-06). */
+  --color-bg: oklch(17.5% 0 0);
+  --color-bg-chrome: oklch(23.5% 0 0);
   --color-bg-subtle: var(--color-zinc-900);
   --color-bg-muted: var(--color-zinc-800);
-  --color-surface: oklch(17.5% 0 0);
+  --color-surface: oklch(21% 0 0);
   --color-fg: var(--color-zinc-100);
   --color-fg-muted: var(--color-zinc-300);
   --color-fg-subtle: var(--color-zinc-500);
@@ -235,6 +249,15 @@ body.ov-body-landing {
      dark foreground — no per-theme redeclaration needed. */
   --color-code-bg: var(--color-zinc-900);
   /* callouts are fg-derived in :root and auto-adapt — no redeclaration. */
+  /* CTAs for dark: primary = full-contrast white fill (dark text); secondary =
+     dark recessed fill (zinc-800) with light text — dimmer, all from the scale. */
+  --color-cta-primary-bg: var(--color-zinc-50);
+  --color-cta-primary-bg-hover: var(--color-zinc-200);
+  --color-cta-primary-fg: var(--color-zinc-900);
+  --color-cta-secondary-bg: var(--color-zinc-800);
+  --color-cta-secondary-bg-hover: var(--color-zinc-700);
+  --color-cta-secondary-fg: var(--color-zinc-100);
+  --color-cta-secondary-border: var(--color-zinc-700);
 }
 
 /* Reset + base */
@@ -1662,6 +1685,12 @@ body.ov-body-404 .ov-content-card {
   .ov-footer {
     border-block-start: 1px solid #ccc;
     color: #555;
+  }
+  /* The footer's "+" corner marks belong to the on-screen frame — drop them
+     on paper. */
+  .ov-footer-inner::before,
+  .ov-footer-inner::after {
+    display: none;
   }
 }
 
