@@ -102,6 +102,23 @@ describe('buildNav', () => {
     expect(findAdjacent(NAV, '/nowhere/')).toEqual({});
   });
 
+  it('findAdjacent skips the 404 page so it never becomes a neighbour', () => {
+    // The 404 sorts ahead of real content, so without the exclusion it would
+    // land as the "Previous" of the first page.
+    const navWith404: NavNode = {
+      ...NAV,
+      children: [
+        { title: 'Page not found', url: '/404/', sourcePath: 'content/404.md', children: [] },
+        ...NAV.children,
+      ],
+    };
+    // First real page (the root) has no prev, not the 404.
+    expect(findAdjacent(navWith404, '/').prev).toBeUndefined();
+    expect(findAdjacent(navWith404, '/getting-started/').prev?.url).toBe('/');
+    // The 404 itself isn't part of the reading flow.
+    expect(findAdjacent(navWith404, '/404/')).toEqual({});
+  });
+
   it('uses _meta.json title for directories with no index.md', async () => {
     // The live website relies on this: content/guides/ etc. have no
     // index.md, only sibling .md files plus a _meta.json. The sidebar

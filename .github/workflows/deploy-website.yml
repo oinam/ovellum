@@ -48,9 +48,6 @@ jobs:
       - name: Build website
         run: node packages/cli/dist/index.js build --cwd website
 
-      - name: Post-build fix-ups (404, etc.)
-        run: node scripts/website-postbuild.mjs
-
       - name: Configure Pages
         uses: actions/configure-pages@v5
 

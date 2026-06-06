@@ -61,6 +61,7 @@
   --font-mono:
     ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New',
     monospace;
+  --font-serif: ui-serif, Georgia, Cambria, 'Times New Roman', Times, serif;
 
   /* Type scale (Major Third → Perfect Fourth) — full Utopia values */
   --font-size-0: clamp(0.9375rem, 0.9158rem + 0.1087vw, 1rem);
@@ -83,6 +84,7 @@
   /* Radii (subset shipped) */
   --radius-md: 0.375rem;
   --radius-lg: 0.5rem;
+  --radius-xl: 0.75rem;
 
   /* @tokens:from-styles-md:end */
 
@@ -102,13 +104,22 @@
   --color-fg: var(--color-zinc-900);
   --color-fg-muted: var(--color-zinc-700);
   --color-fg-subtle: var(--color-zinc-500);
-  --color-border: var(--color-zinc-200);
-  --color-border-strong: var(--color-zinc-300);
-  --color-border-focus: var(--color-blue-500);
-  --color-accent: var(--color-blue-600);
-  --color-accent-hover: var(--color-blue-700);
-  --color-link: var(--color-blue-600);
-  --color-link-hover: var(--color-blue-700);
+  /* Borders are translucent tints of the foreground, so they read as faint
+     hairlines on either theme and auto-adapt when --color-fg flips — defined
+     once here rather than per-theme. This is the editorial "framed page"
+     palette: structure carried by whisper-thin rules, not boxes. */
+  --color-border: color-mix(in oklch, var(--color-fg) 10%, transparent);
+  --color-border-strong: color-mix(in oklch, var(--color-fg) 18%, transparent);
+  --color-border-focus: var(--color-zinc-500);
+  /* Monochrome chrome: accent + links resolve to the foreground neutral.
+     The blue palette stays defined (Tier 1) but is reserved for semantic
+     callouts — chrome itself carries no hue. */
+  --color-accent: var(--color-fg);
+  --color-accent-hover: var(--color-fg-muted);
+  --color-link: var(--color-fg);
+  --color-link-hover: var(--color-fg-muted);
+  /* Faintest hairline of all — the page-edge framing rules. */
+  --color-frame-line: color-mix(in oklch, var(--color-fg) 7%, transparent);
 
   /* CTA buttons — intentional black-monochrome, independent of the blue
      accent that still drives links/focus/callouts. Theme-independent
@@ -123,16 +134,26 @@
   --color-code-bg: var(--color-zinc-100);
 
   /* Callout types — GitHub alert vocabulary, editorial-calm palette */
-  --callout-note-fg: var(--color-blue-700);
-  --callout-note-bg: var(--color-blue-50);
-  --callout-tip-fg: var(--color-green-700);
-  --callout-tip-bg: var(--color-green-50);
-  --callout-important-fg: var(--color-violet-700);
-  --callout-important-bg: var(--color-violet-50);
-  --callout-warning-fg: var(--color-amber-800);
-  --callout-warning-bg: var(--color-amber-50);
-  --callout-caution-fg: var(--color-red-700);
-  --callout-caution-bg: var(--color-red-50);
+  /* Callouts are monochrome too — only code syntax stays colourful. Every
+     type keeps its uppercase label for meaning; the rule + tint are neutral
+     and fg-derived, so a single :root definition auto-adapts across themes
+     (the dark blocks no longer redeclare them). High-contrast: fg rule/label
+     on a subtle tint. */
+  --callout-note-fg: var(--color-fg);
+  --callout-note-bg: var(--color-bg-subtle);
+  --callout-tip-fg: var(--color-fg);
+  --callout-tip-bg: var(--color-bg-subtle);
+  --callout-important-fg: var(--color-fg);
+  --callout-important-bg: var(--color-bg-subtle);
+  --callout-warning-fg: var(--color-fg);
+  --callout-warning-bg: var(--color-bg-subtle);
+  --callout-caution-fg: var(--color-fg);
+  --callout-caution-bg: var(--color-bg-subtle);
+
+  /* Body font role. Defaults to the sans stack; the serif stack takes over
+     when the page opts in via [data-font='serif'] (driven by `site.font`).
+     Headings + prose inherit this; code keeps --font-mono. */
+  --font-body: var(--font-sans);
 
   /* Deliberate deviations from STYLES.md:
      - shadows inlined (no shared --shadow-color token in this build)
@@ -146,9 +167,23 @@
   --leading-mono: 1.55;
 
   /* Layout widths (site-specific, not in STYLES.md) */
+  --ov-header-h: 4rem;
+  /* Editorial frame geometry. --frame-inset is where the vertical rules sit
+     (measured in from the --chrome-max box edge); --frame-gutter is the
+     breathing room between those rules and the content inside them. Topbar,
+     footer, and the doc layout all inset their content by inset + gutter, so
+     every surface clears the lines by the same rhythmic step. Tune the gutter
+     (e.g. --space-xs for tighter, --space-m for airier) in one place. */
+  --frame-inset: var(--space-m);
+  --frame-gutter: var(--space-s);
   --sidebar-w: 260px;
   --toc-w: 220px;
   --content-max: 76ch;
+  /* Content-card outer width — the prose measure plus the card's L/R padding,
+     so the card hugs the reading column rather than filling the whole content
+     track. Shared by .ov-content-card and the prev/next pair below it so their
+     edges line up. */
+  --content-card-max: calc(var(--content-max) + var(--space-l) * 2);
   /* Width tokens.
      --chrome-max stays constant across every page — topbar and footer
      read this so the chrome never shifts width between landing and docs
@@ -180,24 +215,10 @@ body.ov-body-landing {
     --color-fg: var(--color-zinc-100);
     --color-fg-muted: var(--color-zinc-300);
     --color-fg-subtle: var(--color-zinc-500);
-    --color-border: var(--color-zinc-800);
-    --color-border-strong: var(--color-zinc-700);
-    --color-border-focus: var(--color-blue-400);
-    --color-accent: var(--color-blue-400);
-    --color-accent-hover: var(--color-blue-300);
-    --color-link: var(--color-blue-400);
-    --color-link-hover: var(--color-blue-300);
+    /* border / accent / link are fg-derived in :root and auto-adapt to the
+       dark foreground — no per-theme redeclaration needed. */
     --color-code-bg: var(--color-zinc-900);
-    --callout-note-fg: var(--color-blue-300);
-    --callout-note-bg: var(--color-blue-950);
-    --callout-tip-fg: var(--color-green-300);
-    --callout-tip-bg: var(--color-green-950);
-    --callout-important-fg: var(--color-violet-300);
-    --callout-important-bg: var(--color-violet-950);
-    --callout-warning-fg: var(--color-amber-300);
-    --callout-warning-bg: var(--color-amber-950);
-    --callout-caution-fg: var(--color-red-300);
-    --callout-caution-bg: var(--color-red-950);
+    /* callouts are fg-derived in :root and auto-adapt — no redeclaration. */
   }
 }
 
@@ -210,24 +231,10 @@ body.ov-body-landing {
   --color-fg: var(--color-zinc-100);
   --color-fg-muted: var(--color-zinc-300);
   --color-fg-subtle: var(--color-zinc-500);
-  --color-border: var(--color-zinc-800);
-  --color-border-strong: var(--color-zinc-700);
-  --color-border-focus: var(--color-blue-400);
-  --color-accent: var(--color-blue-400);
-  --color-accent-hover: var(--color-blue-300);
-  --color-link: var(--color-blue-400);
-  --color-link-hover: var(--color-blue-300);
+  /* border / accent / link are fg-derived in :root and auto-adapt to the
+     dark foreground — no per-theme redeclaration needed. */
   --color-code-bg: var(--color-zinc-900);
-  --callout-note-fg: var(--color-blue-300);
-  --callout-note-bg: var(--color-blue-950);
-  --callout-tip-fg: var(--color-green-300);
-  --callout-tip-bg: var(--color-green-950);
-  --callout-important-fg: var(--color-violet-300);
-  --callout-important-bg: var(--color-violet-950);
-  --callout-warning-fg: var(--color-amber-300);
-  --callout-warning-bg: var(--color-amber-950);
-  --callout-caution-fg: var(--color-red-300);
-  --callout-caution-bg: var(--color-red-950);
+  /* callouts are fg-derived in :root and auto-adapt — no redeclaration. */
 }
 
 /* Reset + base */
@@ -251,9 +258,14 @@ body {
 html {
   background: var(--color-bg);
 }
+/* Serif opt-in (site.font: 'serif'). Swaps the body-font role for the whole
+   document — body, headings, and prose follow; code stays monospace. */
+:root[data-font='serif'] {
+  --font-body: var(--font-serif);
+}
 
 body {
-  font-family: var(--font-sans);
+  font-family: var(--font-body);
   font-size: var(--font-size-0);
   line-height: var(--leading-normal);
   color: var(--color-fg);
@@ -292,7 +304,13 @@ a:hover {
      thin hairline border-block-end. Footer keeps the chrome tint —
      the asymmetry is intentional: a tinted footer reads as a closing
      baseline, a tinted topbar fought every other surface on the page. */
+  /* Frosted continuation of the body: a translucent body tint with a blur,
+     so content scrolls under the bar (coss-style). The solid fallback is
+     declared first for browsers without backdrop-filter. */
   background: var(--color-bg);
+  background: color-mix(in oklch, var(--color-bg) 82%, transparent);
+  backdrop-filter: blur(8px) saturate(1.4);
+  -webkit-backdrop-filter: blur(8px) saturate(1.4);
   border-block-end: 1px solid var(--color-border);
 }
 .ov-topbar-inner {
@@ -300,8 +318,10 @@ a:hover {
   /* brand | search (fills the middle) | icon cluster */
   grid-template-columns: auto 1fr auto;
   align-items: center;
+  /* Fixed height so the frame's corner nodes can pin to the header baseline. */
+  min-block-size: var(--ov-header-h);
   gap: var(--space-m);
-  padding: var(--space-2xs) var(--space-m);
+  padding: var(--space-2xs) calc(var(--frame-inset) + var(--frame-gutter));
   max-inline-size: var(--chrome-max);
   margin-inline: auto;
   inline-size: 100%;
@@ -433,7 +453,7 @@ a:hover {
   --pagefind-ui-border: var(--color-border-strong);
   --pagefind-ui-tag: var(--color-bg-muted);
   --pagefind-ui-border-width: 1px;
-  --pagefind-ui-border-radius: var(--radius-md);
+  --pagefind-ui-border-radius: var(--radius-xl);
   --pagefind-ui-font: var(--font-sans);
 }
 /* Let the search collapse with its grid column — an <input>'s intrinsic
@@ -571,7 +591,7 @@ a:hover {
 .ov-mobile-nav {
   display: none;
   position: fixed;
-  top: 3.25rem;
+  top: var(--ov-header-h);
   inset-inline: 0;
   z-index: 9;
   flex-direction: column;
@@ -609,9 +629,11 @@ body.ov-menu-open {
 
 @media (max-width: 720px) {
   /* Tighter inner gap so the centered search keeps room next to the
-     larger brand and the hamburger. */
+     larger brand and the hamburger. The frame is hidden here, so the
+     frame-clearance gutter is dropped back to the plain mobile inset. */
   .ov-topbar-inner {
     gap: var(--space-xs);
+    padding-inline: var(--space-s);
   }
   .ov-topbar-nav {
     display: none;
@@ -625,83 +647,191 @@ body.ov-menu-open {
   }
 }
 
+/* Editorial frame
+   ===
+   Two whisper-faint full-viewport vertical rules hugging the outer content
+   edges, pinned at the header baseline by small square corner nodes — the
+   "framed page" motif. The frame is fixed + pointer-events:none, so it
+   overlays the scroll without ever intercepting a click, and aligns to
+   --chrome-max (the constant chrome width) so the rules sit flush with the
+   topbar brand and footer edges on every page, the landing included. */
+.ov-frame {
+  position: fixed;
+  inset: 0;
+  z-index: 11;
+  pointer-events: none;
+}
+.ov-frame-inner {
+  position: relative;
+  block-size: 100%;
+  max-inline-size: var(--chrome-max);
+  margin-inline: auto;
+}
+.ov-frame-inner::before,
+.ov-frame-inner::after {
+  content: '';
+  position: absolute;
+  inset-block: 0;
+  inline-size: 1px;
+  background: var(--color-frame-line);
+}
+.ov-frame-inner::before {
+  inset-inline-start: var(--frame-inset);
+}
+.ov-frame-inner::after {
+  inset-inline-end: var(--frame-inset);
+}
+/* Corner marks — a small, darker "+" where each vertical rule meets the header
+   baseline. Drawn as two 1px crossing gradients (no fill, no border), in
+   fg-subtle, so the intersection reads as a deliberate-but-quiet cross rather
+   than a pronounced dot. The vertical arm overlays the rail; the horizontal arm
+   crosses it. */
+.ov-frame-node {
+  position: absolute;
+  top: calc(var(--ov-header-h) - 5px);
+  inline-size: 10px;
+  block-size: 10px;
+  background:
+    linear-gradient(var(--color-fg-subtle), var(--color-fg-subtle)) center / 1px 100% no-repeat,
+    linear-gradient(var(--color-fg-subtle), var(--color-fg-subtle)) center / 100% 1px no-repeat;
+}
+.ov-frame-node--tl {
+  inset-inline-start: calc(var(--frame-inset) - 5px);
+}
+.ov-frame-node--tr {
+  inset-inline-end: calc(var(--frame-inset) - 5px);
+}
+@media (max-width: 720px) {
+  /* Below the mobile breakpoint the sidebar collapses inline and the gutters
+     shrink, so the rules would cut through stacked content — drop the frame. */
+  .ov-frame {
+    display: none;
+  }
+}
+
 /* Layout */
 .ov-layout {
   display: grid;
   grid-template-columns: var(--sidebar-w) minmax(0, 1fr) var(--toc-w);
-  gap: var(--space-l);
+  /* Wider column gaps now that the sidebar/ToC have shed their borders — gives
+     the main content more breathing room on both sides. */
+  gap: var(--space-xl);
   max-inline-size: var(--page-max);
   margin-inline: auto;
-  padding: var(--space-m);
+  /* Asymmetric inline padding: the LEFT edge sits exactly on the frame's left
+     rail (--frame-inset) so the sidebar touches it — one visual border, not two.
+     The RIGHT edge keeps the --frame-gutter clearance so the ToC doesn't crowd
+     the right rail. */
+  padding-block: var(--space-m);
+  padding-inline: var(--frame-inset) calc(var(--frame-inset) + var(--frame-gutter));
 }
 
 /* Sidebar */
 .ov-sidebar {
   position: sticky;
-  top: calc(2rem + var(--space-s) * 2);
+  top: calc(var(--ov-header-h) + var(--space-s));
   align-self: start;
-  block-size: calc(100vh - 4rem);
+  block-size: calc(100dvh - var(--ov-header-h) - var(--space-m));
   overflow-y: auto;
+  /* No right border — the content card now carries the page's structure, so
+     the sidebar reads as a quiet list and the main column gets more room. */
   padding-inline-end: var(--space-s);
-  border-inline-end: 1px solid var(--color-border);
 }
 .ov-sidebar-nav ul {
   list-style: none;
   margin: 0;
   padding: 0;
 }
+/* No separate sidebar track: the frame's left rail IS the sidebar's left
+   border (one line, not two). The layout pulls the sidebar flush onto that rail
+   (see .ov-layout padding-inline-start), so the active indicator below lands
+   directly on it. */
 .ov-sidebar-nav > ul > li {
-  margin-block-end: var(--space-s);
-  padding-block-end: var(--space-s);
-  border-block-end: 1px solid var(--color-border);
+  /* No section divider rules — the bold group heading carries the break. */
+  margin-block-end: var(--space-m);
 }
 .ov-sidebar-nav > ul > li:last-child {
-  border-block-end: 0;
-  padding-block-end: 0;
+  margin-block-end: 0;
 }
 .ov-sidebar-nav li {
   margin-block-end: var(--space-3xs);
 }
 .ov-nav-link {
+  position: relative;
   display: block;
-  padding: var(--space-3xs) var(--space-2xs);
+  padding-block: var(--space-3xs);
+  /* Flush-left: a minimal inline inset so text clears the rail and leaves room
+     for the active bar — no indent hierarchy (the active highlight, not
+     indentation, marks the current page). */
+  padding-inline: var(--space-2xs);
   border-radius: var(--radius-sm);
   text-decoration: none;
   color: var(--color-fg-muted);
   font-size: 0.95em;
-  border-inline-start: 2px solid transparent;
-  margin-inline-start: -2px;
-  transition: color 120ms ease, border-color 120ms ease, background-color 120ms ease;
+  transition: color 120ms ease, background-color 120ms ease;
 }
 .ov-nav-link:hover {
   color: var(--color-fg);
 }
 .ov-nav-link.is-active {
-  color: var(--color-accent-fg, var(--color-accent));
-  font-weight: 600;
-  border-inline-start-color: var(--color-accent);
+  /* Current location: a darker colour (not bold) plus a high-contrast dark
+     indicator bar coinciding with the sidebar's left border. */
+  color: var(--color-fg);
+}
+.ov-nav-link.is-active::before {
+  content: '';
+  position: absolute;
+  inset-block: 0;
+  inset-inline-start: -1px;
+  inline-size: 2px;
+  background: var(--color-fg);
 }
 .ov-nav-group {
   display: block;
-  padding: var(--space-2xs) var(--space-2xs);
-  color: var(--color-fg-subtle);
+  padding-block: var(--space-2xs);
+  /* Same flush-left inset as the links, so headings and their links share one
+     left edge. */
+  padding-inline: var(--space-2xs);
+  /* Bold + full-strength foreground so the heading itself separates the
+     sections, now that the divider rules are gone. */
+  color: var(--color-fg);
   text-transform: uppercase;
   letter-spacing: 0.025em;
   font-size: 0.78em;
-  font-weight: 600;
+  font-weight: 700;
 }
 .ov-nav-children {
-  margin-inline-start: var(--space-s);
-  border-inline-start: 1px solid var(--color-border);
-  padding-inline-start: var(--space-2xs);
+  /* Flat list: no indent. Nested links share the same flush-left edge as the
+     group heading and top-level links — the active highlight (not indentation)
+     marks the current page. */
+  margin-inline-start: 0;
+  padding-inline-start: 0;
 }
 
 /* Content */
 .ov-content {
   min-inline-size: 0;
 }
+/* Content card — the main reading column lifted onto a light, subtly bordered
+   surface with a soft drop-shadow (coss-style). It carries the width cap (so
+   the box hugs the prose measure), and the prose's own cap is released inside
+   it. Breadcrumbs, page-meta, the article, and the edit link live in the card;
+   the prev/next pair sits outside, below it. */
+.ov-content-card {
+  max-inline-size: var(--content-card-max);
+  padding: var(--space-l);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  box-shadow:
+    0 1px 2px oklch(0% 0 0 / 0.05),
+    0 6px 20px -8px oklch(0% 0 0 / 0.06);
+}
 .ov-prose {
   max-inline-size: var(--content-max);
+}
+.ov-content-card .ov-prose {
+  max-inline-size: none;
 }
 .ov-prose h1 {
   font-size: var(--font-size-4);
@@ -1132,9 +1262,11 @@ body.ov-menu-open {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: var(--space-m);
-  margin-block: var(--space-2xl) var(--space-m);
-  padding-block-start: var(--space-l);
-  border-block-start: 1px solid var(--color-border);
+  /* Sits below the content card — the card's own border already separates it
+     from the article, so no top rule here; just rhythm above and below. Capped
+     to the card width so the two buttons align with the card's edges. */
+  margin-block: var(--space-m);
+  max-inline-size: var(--content-card-max);
 }
 .ov-prevnext-link {
   display: flex;
@@ -1150,8 +1282,10 @@ body.ov-menu-open {
   min-inline-size: 0;
 }
 .ov-prevnext-link:hover {
-  border-color: var(--color-border-strong);
-  background: var(--color-bg-subtle);
+  /* Higher-contrast hover: a foreground-strength border and a darker fill so
+     the target reads clearly against the body. */
+  border-color: var(--color-fg-muted);
+  background: var(--color-bg-muted);
   color: var(--color-accent);
 }
 .ov-prevnext-next {
@@ -1218,9 +1352,9 @@ body.ov-menu-open {
 /* Right ToC */
 .ov-toc {
   position: sticky;
-  top: calc(2rem + var(--space-s) * 2);
+  top: calc(var(--ov-header-h) + var(--space-s));
   align-self: start;
-  block-size: calc(100vh - 4rem);
+  block-size: calc(100dvh - var(--ov-header-h) - var(--space-m));
   overflow-y: auto;
   font-size: 0.9em;
 }
@@ -1290,14 +1424,37 @@ body.ov-menu-open {
   font-size: 0.84em;
 }
 .ov-footer-inner {
+  position: relative;
   display: grid;
   grid-template-columns: auto 1fr auto;
   align-items: center;
   gap: var(--space-m);
-  padding: var(--space-m);
+  padding: var(--space-m) calc(var(--frame-inset) + var(--frame-gutter));
   max-inline-size: var(--chrome-max);
   margin-inline: auto;
   inline-size: 100%;
+}
+/* Corner marks where the frame rails meet the footer's top border — the same
+   "+" intersection as the header baseline, mirrored at the foot of the page.
+   Positioned to the footer-inner box (= the --chrome-max box the rails align
+   to), straddling the footer's top rule. */
+.ov-footer-inner::before,
+.ov-footer-inner::after {
+  content: '';
+  position: absolute;
+  top: -5px;
+  inline-size: 10px;
+  block-size: 10px;
+  background:
+    linear-gradient(var(--color-fg-subtle), var(--color-fg-subtle)) center / 1px 100% no-repeat,
+    linear-gradient(var(--color-fg-subtle), var(--color-fg-subtle)) center / 100% 1px no-repeat;
+  pointer-events: none;
+}
+.ov-footer-inner::before {
+  inset-inline-start: calc(var(--frame-inset) - 5px);
+}
+.ov-footer-inner::after {
+  inset-inline-end: calc(var(--frame-inset) - 5px);
 }
 .ov-footer-left {
   grid-column: 1;
@@ -1358,6 +1515,15 @@ body.ov-menu-open {
     grid-template-columns: 1fr;
     gap: var(--space-2xs);
   }
+  .ov-footer-inner {
+    padding-inline: var(--space-s);
+  }
+  /* The frame (and its corner nodes) are hidden on mobile — drop the footer
+     nodes too so they don't float without their rails. */
+  .ov-footer-inner::before,
+  .ov-footer-inner::after {
+    display: none;
+  }
   .ov-footer-left {
     grid-column: 1;
   }
@@ -1381,6 +1547,9 @@ body.ov-menu-open {
     grid-template-columns: minmax(0, 1fr);
     padding-inline: var(--space-s);
   }
+  .ov-content-card {
+    padding: var(--space-s);
+  }
   .ov-sidebar {
     position: static;
     block-size: auto;
@@ -1391,8 +1560,9 @@ body.ov-menu-open {
 }
 
 ::selection {
-  background: var(--color-blue-200);
-  color: var(--color-blue-900);
+  /* Monochrome highlight — a translucent fg tint that works in both themes
+     and keeps the selected text's own color. */
+  background: color-mix(in oklch, var(--color-fg) 16%, transparent);
 }
 
 /* ====================================================================== */
@@ -1417,6 +1587,15 @@ body.ov-body-404 .ov-prose h1 {
   font-size: var(--font-size-4);
   letter-spacing: -0.03em;
 }
+/* The 404 is a centred, minimal page — drop the card chrome so the message
+   floats on the body rather than sitting in a box. */
+body.ov-body-404 .ov-content-card {
+  max-inline-size: none;
+  padding: 0;
+  background: none;
+  border: 0;
+  box-shadow: none;
+}
 
 /* ====================================================================== */
 /* Print                                                                   */
@@ -1427,6 +1606,7 @@ body.ov-body-404 .ov-prose h1 {
     --color-bg: #ffffff;
     --color-fg: #000000;
   }
+  .ov-frame,
   .ov-topbar,
   .ov-sidebar,
   .ov-toc,
@@ -1445,6 +1625,13 @@ body.ov-body-404 .ov-prose h1 {
   }
   .ov-content {
     max-inline-size: none;
+  }
+  .ov-content-card {
+    max-inline-size: none;
+    padding: 0;
+    background: none;
+    border: 0;
+    box-shadow: none;
   }
   .ov-prose {
     max-inline-size: none;

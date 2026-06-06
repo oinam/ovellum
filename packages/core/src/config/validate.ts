@@ -6,6 +6,7 @@ const FORMATS = ['md', 'mdx'] as const;
 const ORPHAN_STRATEGIES = ['quarantine', 'warn'] as const;
 const THEMES = ['auto', 'light', 'dark'] as const;
 const CODE_THEMES = ['github', 'nord', 'solarized'] as const;
+const FONTS = ['sans', 'serif'] as const;
 const CTA_STYLES = ['primary', 'secondary'] as const;
 
 function isPlainObject(value: unknown): value is Record<string, unknown> {
@@ -134,6 +135,9 @@ export function validateUserConfig(input: unknown): OvellumUserConfig {
       !THEMES.includes(s.defaultTheme as (typeof THEMES)[number])
     ) {
       throw new ConfigError(`\`site.defaultTheme\` must be one of: ${THEMES.join(', ')}.`);
+    }
+    if (s.font !== undefined && !FONTS.includes(s.font as (typeof FONTS)[number])) {
+      throw new ConfigError(`\`site.font\` must be one of: ${FONTS.join(', ')}.`);
     }
     if (
       s.codeTheme !== undefined &&

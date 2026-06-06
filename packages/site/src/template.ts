@@ -45,7 +45,7 @@ function renderShell(opts: ShellOptions): string {
   </script>`
     : '';
   return `<!doctype html>
-<html lang="en" data-theme="${escapeAttr(opts.site.defaultTheme)}">
+<html lang="en" data-theme="${escapeAttr(opts.site.defaultTheme)}" data-font="${escapeAttr(opts.site.font ?? 'sans')}">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -86,6 +86,7 @@ function renderShell(opts: ShellOptions): string {
   </script>
 </head>
 <body${opts.bodyClass ? ` class="${escapeAttr(opts.bodyClass)}"` : ''}>
+  ${renderFrame()}
   ${renderTopbar(opts.site, assets, opts.docsHref ? siteUrl(opts.docsHref, basePath) : undefined, searchEnabled, basePath)}
   ${opts.body}
   ${renderFooter(opts.site, opts.generatedAt, basePath)}
@@ -94,6 +95,16 @@ function renderShell(opts: ShellOptions): string {
 </body>
 </html>
 `;
+}
+
+/**
+ * The faint editorial page-frame: two full-viewport vertical rules hugging
+ * the content edges, pinned at the header baseline by small square corner
+ * nodes. Purely decorative (aria-hidden; pointer-events:none in CSS), styled
+ * entirely via `.ov-frame*` in the stylesheet.
+ */
+function renderFrame(): string {
+  return `<div class="ov-frame" aria-hidden="true"><div class="ov-frame-inner"><span class="ov-frame-node ov-frame-node--tl"></span><span class="ov-frame-node ov-frame-node--tr"></span></div></div>`;
 }
 
 // Ovellum wordmark glyph. Source of truth lives at
@@ -310,10 +321,12 @@ export function renderPage(input: RenderPageInput): string {
   const body = `<div class="ov-layout">
     <aside class="ov-sidebar" aria-label="Site navigation">${sidebar}</aside>
     <main class="ov-content">
-      ${breadcrumbs}
-      ${pageMeta}
-      <article class="ov-prose">${input.bodyHtml}</article>
-      ${editLink}
+      <div class="ov-content-card">
+        ${breadcrumbs}
+        ${pageMeta}
+        <article class="ov-prose">${input.bodyHtml}</article>
+        ${editLink}
+      </div>
       ${prevNext}
     </main>
     <aside class="ov-toc" aria-label="On this page">${toc}</aside>

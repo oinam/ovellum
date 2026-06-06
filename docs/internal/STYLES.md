@@ -501,14 +501,20 @@ These are what components consume. Every theme redefines this set.
   --color-fg-subtle: <neutral-500>; /* Tertiary, hints, placeholders */
   --color-fg-inverse: <neutral-50>; /* On --color-bg-inverse */
 
-  /* Borders */
-  --color-border: <neutral-200>;
-  --color-border-strong: <neutral-300>;
-  --color-border-focus: <accent-500>;
+  /* Borders — translucent tints of the foreground, so one :root definition
+     adapts to either theme as --color-fg flips (no per-theme redeclaration).
+     This is the "framed page" palette: structure carried by whisper-thin
+     hairlines, not filled boxes. */
+  --color-border: color-mix(in oklch, var(--color-fg) 10%, transparent);
+  --color-border-strong: color-mix(in oklch, var(--color-fg) 18%, transparent);
+  --color-border-focus: <neutral-500>; /* neutral ring — chrome carries no hue */
+  --color-frame-line: color-mix(in oklch, var(--color-fg) 7%, transparent); /* page-edge frame rules + corner nodes */
 
-  /* Accent (primary brand-ish role) */
-  --color-accent: <accent-600>;
-  --color-accent-hover: <accent-700>;
+  /* Accent — MONOCHROME chrome (decided 2026-06-04). Resolves to the
+     foreground neutral; the blue ramp stays defined but is reserved for
+     semantic status/callouts only, never for chrome. */
+  --color-accent: var(--color-fg);
+  --color-accent-hover: var(--color-fg-muted);
   --color-accent-bg: <accent-50>;
   --color-accent-fg: <accent-700>;
 
@@ -522,7 +528,8 @@ These are what components consume. Every theme redefines this set.
   --color-danger-bg: <red-50>;
   --color-danger-fg: <red-700>;
 
-  /* Links */
+  /* Links — follow the (now monochrome) accent: foreground neutral, set apart
+     from body text by the underline rather than a hue. */
   --color-link: var(--color-accent);
   --color-link-hover: var(--color-accent-hover);
   --color-link-visited: <violet-700>;
@@ -531,7 +538,10 @@ These are what components consume. Every theme redefines this set.
      the blue accent above. Theme-independent: the same values ship in light
      and dark (do NOT re-bind these per theme). Primary = charcoal (gray-900)
      surface with gray-100 text; secondary = gray-100 surface with charcoal
-     text + a zinc-300 hairline. Links/focus/callouts still follow accent. */
+     text + a zinc-300 hairline. As of 2026-06-04 the whole UI is monochrome —
+     chrome (accent = fg) AND callouts (neutral, fg-derived). The only colour
+     left on a page is code syntax highlighting. The blue/green/amber/etc. ramps
+     stay defined for possible future use but drive nothing in the shipped UI. */
   --color-cta-primary-bg: <gray-900>;
   --color-cta-primary-bg-hover: <zinc-800>;
   --color-cta-primary-fg: <gray-100>;

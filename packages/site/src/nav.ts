@@ -64,7 +64,11 @@ export interface AdjacentPages {
  * when there's no neighbour on a given side.
  */
 export function findAdjacent(root: NavNode, url: string): AdjacentPages {
-  const flat = flattenNav(root);
+  // The 404 page carries a sourcePath (so it renders) but isn't part of the
+  // linear reading flow — drop it so it never becomes a prev/next neighbour
+  // (otherwise it lands as the "Previous" of the first real page, since
+  // `/404/` sorts ahead of the content URLs).
+  const flat = flattenNav(root).filter((p) => p.url !== '/404/');
   const idx = flat.findIndex((p) => p.url === url);
   if (idx === -1) return {};
   return {

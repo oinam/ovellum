@@ -210,6 +210,43 @@ the feature grid and the trust strip. Treat it as the "Why" section.
 
 Full landing reference: [config → site.landing](/docs/reference/config/#sitelanding).
 
+## The 404 page
+
+A `content/404.md` file becomes your site's not-found page. It's an
+ordinary Markdown page — write whatever you like (a short apology, a
+link back home, a search prompt):
+
+```markdown
+---
+title: Page not found
+---
+
+# Page not found
+
+That page doesn't exist. Head back to the [documentation](/).
+```
+
+It's treated as a **special page**, not a normal doc:
+
+- It renders on a centred, narrower column with a larger heading, and the
+  sidebar, on-this-page ToC, breadcrumbs, prev/next, and edit-this-page
+  links are all hidden — it's a dead end, so it drops the navigation
+  chrome.
+- It's kept out of the **reading flow**: it never appears in the sidebar,
+  the `sitemap.xml`, the RSS feed, or as a prev/next neighbour (so the
+  first real page's "Previous" is empty, not the 404).
+
+The build emits it as **both** `dist/404/index.html` (the pretty URL) and a
+top-level **`dist/404.html`**. The second is the file most static hosts
+(GitHub Pages, Netlify, Cloudflare, …) serve on missing URLs — so your
+custom 404 triggers in production with no extra step. The dev server
+(`ovellum dev` / `ovellum serve`) serves it for missing paths too, so it
+behaves the same locally.
+
+> [!NOTE]
+> On a host served from a subpath (`site.basePath`), the 404 still works —
+> internal links inside it are prefixed like every other page.
+
 ## Theme switching
 
 Three themes ship in the default template: `auto` (follow OS),

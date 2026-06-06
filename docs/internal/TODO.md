@@ -575,6 +575,7 @@ announcements are in [`TODO-Human.md`](./TODO-Human.md).
 
 ## Backlog (Post-v1, not scheduled)
 
+- [ ] **Custom font families via config (beyond the `site.font: 'sans' \| 'serif'` toggle).** The 2026-06-04 redesign shipped a system-font sans/serif switch (`site.font` → `data-font` on `<html>` → `--font-body` swaps `--font-sans`/`--font-serif`; code stays `--font-mono`). Future: let users name their own family — likely `site.font` accepts an object (e.g. `{ body, mono, source: 'system' | 'google' | 'local' }`) alongside the current string enum. Open design questions: webfont loading (the locked "no webfonts" principle in `STYLES.md §1.3` would need an explicit opt-out + FOUT handling), `@font-face`/preload injection, self-host vs CDN, and how it interacts with `headExtra`. **Not wired** — the enum is the only supported shape today; the CSS indirection (`--font-body`) is the seam a future implementation hangs off.
 - [ ] Plugin API for custom IR transforms and output formats
 - [ ] Static site renderer (the hosting platform)
 - [ ] Python language support

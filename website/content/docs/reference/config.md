@@ -88,6 +88,7 @@ interface OvellumSiteConfig {
   baseUrl?: string;
   basePath?: string;
   defaultTheme: 'auto' | 'light' | 'dark';
+  font: 'sans' | 'serif';
   codeTheme: 'github' | 'nord' | 'solarized';
   footer: string;
   editUrlPattern?: string;
@@ -106,6 +107,7 @@ interface OvellumSiteConfig {
 | `baseUrl`        | `string?`                           | `undefined`                   | E.g. `'https://docs.example.com'`. Used for `<link rel="canonical">`, OG cards, and the `sitemap.xml`. Omit for relative-link output.                                                                                          |
 | `basePath`       | `string?`                           | `''`                          | Jekyll-style subpath. Leading slash, no trailing slash (e.g. `'/ovellum'`). Prepended to every internal URL, asset path, canonical link, and sitemap entry. Authors keep writing root-relative links; the build adds the prefix. |
 | `defaultTheme`   | `'auto' \| 'light' \| 'dark'`       | `'auto'`                      | Initial theme before user preference loads.                                                                                                                                                                                    |
+| `font`           | `'sans' \| 'serif'`                 | `'sans'`                      | Body font family for the whole site. `'sans'` uses the system sans-serif stack; `'serif'` switches body, headings, and prose to the system serif stack. Code blocks always stay monospace. Both are system-font stacks — no webfonts.                                       |
 | `codeTheme`      | `'github' \| 'nord' \| 'solarized'` | `'github'`                    | Shiki theme pair for fenced code blocks. Both halves of the pair are emitted via CSS variables so a single build serves both light and dark. `github` → github-light + github-dark; `nord` → min-light + nord (nord ships dark-only); `solarized` → solarized-light + solarized-dark. |
 | `footer`         | `string`                            | `'Built with Ovellum'`        | Empty string disables the footer entirely.                                                                                                                                                                                     |
 | `editUrlPattern` | `string?`                           | `undefined`                   | URL pattern with a `{path}` placeholder. `{path}` is the page's source path **relative to the build cwd** (`--cwd`). Include any repo prefix yourself, e.g. `'https://github.com/owner/repo/edit/main/website/{path}'`. When unset, the "Edit this page" link is not rendered. |

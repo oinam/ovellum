@@ -19,6 +19,15 @@ export interface ProtectConfig {
 export type OvellumDefaultTheme = 'auto' | 'light' | 'dark';
 
 /**
+ * Body font family for the whole site (docs + landing). `'sans'` uses the
+ * system sans-serif stack (default); `'serif'` switches body, headings, and
+ * prose to the system serif stack. Code always stays monospace. Both are
+ * system-font stacks — no webfonts. Custom font families are a planned future
+ * extension (see `docs/internal/TODO.md`).
+ */
+export type OvellumFont = 'sans' | 'serif';
+
+/**
  * Code-block theme pair (passed to shiki). Each option resolves to a
  * `{ light, dark }` pair so a single build serves both colour schemes
  * via CSS variables. Defaults to `'github'`.
@@ -214,6 +223,8 @@ export interface OvellumSiteConfig {
   basePath?: string;
   /** Initial theme before user preference loads. */
   defaultTheme: OvellumDefaultTheme;
+  /** Body font family for the whole site. Defaults to `'sans'`. */
+  font: OvellumFont;
   /** Footer text. Empty string disables the footer entirely. */
   footer: string;
   /**
@@ -304,6 +315,7 @@ export const DEFAULT_CONFIG: OvellumConfig = {
   },
   site: {
     defaultTheme: 'auto',
+    font: 'sans',
     codeTheme: 'github',
     footer: 'Built with Ovellum',
     search: { enabled: false },

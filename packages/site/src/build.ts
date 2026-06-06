@@ -200,6 +200,14 @@ export async function buildSite(options: BuildSiteOptions): Promise<BuildSiteRes
       });
       await mkdir(path.dirname(outputPath), { recursive: true });
       await writeFile(outputPath, result.html, 'utf8');
+      // Mirror the not-found page to a top-level `404.html`. The pretty-URL
+      // output is `404/index.html`, but most static hosts (GitHub Pages,
+      // Netlify, Cloudflare, …) serve a root-level `404.html` for missing
+      // paths and never look inside `404/index.html`. Emitting both makes a
+      // custom 404 actually trigger in production with no extra build step.
+      if (url === '/404/') {
+        await writeFile(path.join(outputAbs, '404.html'), result.html, 'utf8');
+      }
       pages.push({
         sourcePath: path.relative(cwd, file).replace(/\\/g, '/'),
         outputPath: path.relative(cwd, outputPath).replace(/\\/g, '/'),

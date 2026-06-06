@@ -23,7 +23,7 @@ The site at `https://ovellum.oss.oinam.com` is built from
 | Documentation pages              | `website/content/**/*.md`                                               |
 | Stylesheet + theme-toggle script | `@ovellum/site` default template (copied at build time into `assets/`)  |
 | Custom domain                    | `website/content/CNAME` → `dist/CNAME` (`ovellum.oss.oinam.com`)        |
-| 404                              | `website/content/404.md` → `dist/404/index.html`, copied to `dist/404.html` by `scripts/website-postbuild.mjs` |
+| 404                              | `website/content/404.md` → `dist/404/index.html` **and** `dist/404.html` (both emitted by `ovellum build` in core; GH Pages serves the latter) |
 
 The `website/dist/` directory is generated; it's gitignored.
 
@@ -179,11 +179,11 @@ identical regardless of host.
   the Pages settings haven't reverted the domain (clicking the X next
   to the domain in the UI removes it; you have to re-enter it).
 - **404 page not served.** GH Pages serves `dist/404.html` on missing
-  paths. Our build emits `dist/404/index.html`; the post-build script
-  (`scripts/website-postbuild.mjs`) copies it to `dist/404.html`. Both
-  workflows invoke the script after `ovellum build`. If the 404 stops
-  working, check that the post-build step actually ran (look for
-  `[website-postbuild] wrote dist/404.html` in the run log).
+  paths. `ovellum build` now emits both `dist/404/index.html` and the
+  top-level `dist/404.html` in core (since 2026-06-06) — no post-build
+  step needed. (The old `scripts/website-postbuild.mjs` that did this copy
+  has been retired.) If the 404 stops working, confirm `website/content/404.md`
+  exists and that `dist/404.html` is present in the build output.
 
 ## 9. Shipped follow-ups
 

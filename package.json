@@ -19,7 +19,7 @@
     "demo:clean": "rm -rf examples/simple-ts/docs",
     "demo:site": "turbo run build --filter=ovellum... && node packages/cli/dist/index.js build --cwd examples/manual-site",
     "demo:site:clean": "rm -rf examples/manual-site/dist",
-    "build:website": "turbo run build --filter=ovellum... && node packages/cli/dist/index.js build --cwd website && node scripts/website-postbuild.mjs",
+    "build:website": "turbo run build --filter=ovellum... && node packages/cli/dist/index.js build --cwd website",
     "build:website:clean": "rm -rf website/dist",
     "dev:website": "turbo run build --filter=ovellum... && node packages/cli/dist/index.js dev --cwd website",
     "watch:website": "turbo run build --filter=ovellum... && node packages/cli/dist/index.js watch --cwd website",

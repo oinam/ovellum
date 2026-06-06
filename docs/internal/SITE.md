@@ -377,6 +377,77 @@ rubber-band overscroll continues the topbar's body color cleanly.
 Bottom overscroll will reveal body instead of the footer's chrome
 tint — accepted tradeoff (top overscroll is the one users notice).
 
+### 8b. Editorial frame + monochrome chrome (added 2026-06-04)
+
+A neutral, "framed page" treatment applied site-wide (docs **and** landing).
+Three moving parts:
+
+- **Fully monochrome (incl. dark mode).** Chrome AND callouts are neutral in
+  both themes — the only colour on a page is code syntax highlighting. Callout
+  type tokens (`--callout-*-fg/-bg`) are fg-derived (`--color-fg` rule/label on
+  a `--color-bg-subtle` tint), defined once in `:root` so they auto-adapt to
+  dark; the dark blocks no longer redeclare them. Each callout still carries its
+  uppercase label for meaning. The active sidebar item and other "current/
+  selected" states use `--color-fg` (high-contrast monochrome), never a hue.
+- **Monochrome chrome.** `--color-accent` and `--color-link` resolve to the
+  foreground neutral (`--color-fg`), and `--color-border-focus` to a neutral
+  gray — chrome carries no hue. The blue ramp stays defined but is reserved
+  for semantic callouts (the only hue-bearing surfaces left). Links are set
+  apart from body text by their underline, not a color. See STYLES.md §6.3.
+- **Translucent hairlines.** `--color-border` / `--color-border-strong` are
+  now `color-mix` tints of `--color-fg` (~10% / ~18%), defined **once** in
+  `:root` — they auto-adapt when `--color-fg` flips per theme, so the dark
+  blocks no longer redeclare them. Whisper-thin structure over filled boxes.
+- **The frame.** `renderFrame()` (template.ts) injects a fixed,
+  `pointer-events:none`, `aria-hidden` `.ov-frame` right after `<body>`. Its
+  inner box is centered to `--chrome-max` (the *constant* chrome width, so the
+  rules line up with the topbar brand + footer edges on every page including
+  the landing). Two `::before`/`::after` vertical rules in `--color-frame-line`
+  (~7% fg, the faintest hairline) sit `--frame-inset` (`--space-m`) inside the
+  inner box's edges; at each header-baseline crossing sits a small darker **`+`**
+  mark (`.ov-frame-node--tl/--tr`) — a 10px box drawn with two 1px crossing
+  `--color-fg-subtle` gradients (no fill, no border), so the intersection reads
+  as a quiet cross, not a dot. The vertical arm overlays the rail; the
+  horizontal arm crosses it. The **footer** mirrors this: `.ov-footer-inner::before/::after`
+  draw the same `+` where the rails cross the footer's top border (positioned to
+  the footer-inner = `--chrome-max` box, so they coincide with the fixed rails).
+  Both header and footer marks are hidden below 720px (frame off); the footer
+  uses `::before`/`::after` because the footer isn't fixed, so a viewport-fixed
+  node couldn't track its scrolling top edge.
+- **Sidebar = one border, flat list.** There is no separate sidebar track: the
+  frame's **left rail is** the sidebar's left border. `.ov-layout` uses
+  asymmetric inline padding — left = `--frame-inset` (flush onto the rail),
+  right = `--frame-inset + --frame-gutter` (ToC clears the right rail) — so the
+  sidebar touches the single left line. Group headings and links (including
+  nested children) share one flush-left edge with only a minimal `--space-2xs`
+  inset (no indent hierarchy — children indent via nothing). The active link is
+  marked by darker colour (`--color-fg`, not bold) plus a 2px `--color-fg`
+  `::before` strip that lands on the rail; section group headings stay bold
+  `--color-fg`.
+- **Content card.** On doc pages the reading column (breadcrumbs + page-meta +
+  article + edit link) is wrapped in `.ov-content-card` — a light `--color-surface`
+  box with a hairline border, `--radius-lg` corners, and a soft drop-shadow,
+  lifted off the body. The card carries the width cap via `--content-card-max`
+  (`--content-max` + the card's L/R padding) and releases the prose's own cap,
+  so the box hugs the reading measure rather than filling the whole track. The
+  **prev/next** pair sits *outside* (below) the card — capped to the same width
+  so its edges align — and lost its old top rule (the card's border separates
+  it now). The card is neutralised on the centred 404 and in print. Landing
+  pages keep their own (un-carded) section layout.
+- **Consistent clearance.** Two tokens carry the geometry: `--frame-inset`
+  (`--space-m`) positions the rules + corner nodes, and `--frame-gutter`
+  (`--space-s`) is the breathing room inside them. The topbar, footer, and doc
+  `.ov-layout` all pad their content by `calc(--frame-inset + --frame-gutter)`,
+  so every surface clears the lines by the same rhythmic (utopia) step rather
+  than sitting flush against them. Tune the gutter in one place. On mobile the
+  frame is hidden and the content drops back to a plain `--space-s` inset.
+
+The header is now a fixed-height (`--ov-header-h: 4rem`) frosted bar:
+`.ov-topbar` paints a translucent `--color-bg` tint plus `backdrop-filter:
+blur()` (solid fallback declared first), so content scrolls under it. The
+header height token also drives the sidebar/ToC sticky offsets, the mobile-nav
+top, and the frame's corner-node baseline.
+
 ## 9. Theme integration
 
 The stylesheet sources its tokens from `docs/internal/STYLES.md` (Tier 1 +
