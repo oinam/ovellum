@@ -1,9 +1,9 @@
 ---
-title: Configuration reference
+title: Configuration
 description: Every field in `ovellum.config.{json,ts,js}` with its type, default, and effect.
 ---
 
-# Configuration reference
+# Configuration
 
 Every field that lives in `ovellum.config.*`. Authoritative; updated
 alongside any schema change.
