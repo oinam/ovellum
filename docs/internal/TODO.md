@@ -30,9 +30,62 @@ Legend: `[ ]` not started · `[~]` in progress · `[x]` done · `[!]` blocked
 
 ---
 
-## Current state (2026-05-31)
+## Current state (2026-06-07)
 
-**Live and shipped:**
+**Publish state (read this first):** npm `latest` is still **`ovellum@0.2.2`**.
+Local `packages/cli/package.json` is **`0.2.3`** (the `--version` fix —
+committed `a3769a2`/`529475e`, never published). Two unconsumed changesets in
+`.changeset/` (one `minor` for the update notifier, one `patch` for the
+`--version` fix) will roll the next release to **`0.3.0`**. Everything since
+0.2.2 IS pushed to `origin/main` (HEAD = `9507330`, tree clean) but **none of
+it is on npm yet** — this is a deliberate "publish the minor later" hold; it's
+not breaking. To release: `pnpm changeset version` (applies the bump + writes
+`packages/cli/CHANGELOG.md`), then `npm publish` from `packages/cli/`, then
+bump `site.version` in `website/ovellum.config.ts` (drives the brand badge)
+and push the tag (`git push origin main --follow-tags`).
+
+**Shipped since 0.2.2 (this session — on `main`, not yet on npm):**
+- **coss.com/ui-inspired redesign** of the default theme + website: bordered
+  content box w/ drop-shadow, borderless bold-heading sidebar w/ full-length
+  active highlight, rounded search, editorial frame rails + `+` intersection
+  marks. **Token architecture** refactored to one grey ramp
+  (`--color-gray-50…950`) + role triples (primary/secondary/accent
+  ×value/-fg/-hover) + Tier-2 semantics; dark = reversed-ramp remap; colours no
+  longer synced from STYLES.md (only fonts/space/radii are). Modular type scale
+  via named-ratio CSS vars (`--ratio: var(--major-third)`).
+- **`site.font: 'sans' | 'serif'`** body-font toggle (system stacks) via the
+  `--font-body` indirection + `data-font` on `<html>`.
+- **Content exclusion** (`7a55216`): `site.ignoreFolders`, `_meta.json
+  "hidden": true`, frontmatter `draft: true`; asset-only folders (`public/`)
+  auto-pruned from the sidebar. Build now emits both `dist/404.html` and
+  `dist/404/index.html`; page `<title>` falls back to first H1.
+- **Search documented** (Pagefind) — new `/docs/guides/search/`.
+- **Back-to-top** (`f107adf`, `5f143fe`): part of the global default template.
+  Floats while scrolling, parks above the footer via a zero-height
+  `position:sticky` anchor (`.ov-to-top-anchor`); smooth scroll is pure CSS
+  (`html { scroll-behavior:smooth }` gated by `prefers-reduced-motion`), JS
+  click is just `scrollTo({top:0})`. Optional JS custom-easing is a backlog TODO.
+- **Website typeface = Geist** (`e7d2b4a`): self-hosted Geist (sans) + Geist
+  Mono (code) in `website/content/public/{site.css,fonts/}`, chosen over
+  Satoshi (too thin, ~50kb) and Inter (~350kb). Inter + Satoshi kept declared
+  as `@font-face` for tinkering (zero cost until selected); live face chosen by
+  `data-typeface` on `<html>`, set pre-paint from localStorage (default geist)
+  via a `headExtra` script that also exposes `ovSetTypeface()` for console
+  auditioning. **Live reference/blueprint** for the backlog "custom fonts via
+  config" + a future UI font picker. Default theme package untouched (system-font).
+- **CLI update notifier + `ovellum upgrade`** (`9507330` — the headline
+  feature). `update` config block (`{ check, intervalHours }`). After a command,
+  a one-line "update available" notice (stderr) when npm's `latest` is ahead —
+  cached per intervalHours (24h), silent in CI / non-TTY / `NO_UPDATE_NOTIFIER`
+  / `--no-update-check` / `update.check:false`, never blocks or fails.
+  `ovellum upgrade` does the explicit install (detects mgr + global/local,
+  `--dry-run`, `--yes`). **Notice-only by design** (Path A — we explicitly
+  rejected silent auto-apply: fights package managers + breaks reproducibility).
+  Code: `packages/cli/src/update/{semver,registry,cache,install,notifier}.ts`
+  + `commands/upgrade.ts`; hand-rolled semver (no new dep). There are now
+  **seven** CLI commands (added `upgrade`).
+
+**Live and shipped (0.2.2 and earlier):**
 - `ovellum@0.2.2` on npm — <https://www.npmjs.com/package/ovellum> (published 2026-05-31; tag `ovellum@0.2.2` + GitHub release done). `0.2.1` published 2026-05-30; `0.2.0` first public release 2026-05-17. Tags `ovellum@0.2.0` (retro at `a85aae4`), `0.2.1`, `0.2.2`. `0.2.2` shipped `site.headExtra` (raw `<head>` injection — used for Oinam Analytics on the website only; end-user docs unaffected unless they opt in).
 - **Landing install snippets** (`site.landing.install`) render after the hero CTAs: each title folds into the block as a leading comment (language-aware `#`/`//`), but the copy button yields the bare command via `data-copy-text`. Install blocks use a right-centered **icon** copy button and drop the language label; docs code blocks keep the language eyebrow + **text** copy button.
 - **Black-monochrome CTAs**: charcoal primary / gray-100 secondary via dedicated `--color-cta-*` tokens. The blue `--color-accent` (links, focus rings, callouts, ToC) is deliberately untouched.
@@ -44,10 +97,10 @@ Legend: `[ ]` not started · `[~]` in progress · `[x]` done · `[!]` blocked
 - **MDX in manual mode** is queued (Phase 4.5): tier 1 = widen the `.mdx` discovery regexes in `nav.ts`/`build.ts` (near-trivial); tier 2 = full `remark-mdx`.
 - **Process gotcha:** the tool-output channel glitched repeatedly this session (empty/delayed Bash + Read; one bad parallel call cancelled a whole batch). Subagents were the reliable path — their final message returns intact. See `CLAUDE.local.md`.
 - Docs site live with TLS — <https://ovellum.oss.oinam.com> (version badge now `v0.2.2`)
-- All six CLI commands working: `init`, `build`, `dev`, `watch`, `serve`, `check`
+- All seven CLI commands working: `init`, `build`, `dev`, `watch`, `serve`, `check`, `upgrade`
 - Manual-mode static site builder is feature-complete for a real docs site
 - Landing feature grid is now a **subtle card** style (`.ov-card` primitive + `--color-surface` token) — reverses the earlier editorial-calm "no cards" experiment. See SITE.md §1.2 + STYLES.md surfaces.
-- Workspace test count: ~198 vitest cases across 23 files, all passing. Coverage tooling added 2026-05-30 (`@vitest/coverage-v8` + root-only `vitest.coverage.ts`, run via `pnpm test:coverage`; deliberately not auto-discovered so `turbo run test` stays per-package). Baseline ~65% lines / 76% branches / 86% funcs. Release-readiness pass hardened the *engine* (the previously 0%-instrumented critical path): hybrid `run-build.ts` 0→91% via an in-process merge-survival golden test (`packages/cli/src/__tests__/merge-survival.test.ts` — asserts protected prose survives rebuilds and is quarantined, not lost, when its symbol is removed); `parser/extractors.ts` 73→99%; `generator/templates.ts` 53→93%. Note: CLI command layer + `site/build.ts` still read ~0% in coverage because `cli-smoke.test.ts` exercises them in a subprocess v8 can't instrument — they ARE tested, just not counted.
+- Workspace test count: **232 vitest cases across 24 files, all passing** (`npm test`); new this session: `packages/cli/src/__tests__/update.test.ts` (semver precedence incl. prerelease, manager detection, command building) + 5 core `validate.test.ts` update-block cases. Coverage tooling added 2026-05-30 (`@vitest/coverage-v8` + root-only `vitest.coverage.ts`, run via `pnpm test:coverage`; deliberately not auto-discovered so `turbo run test` stays per-package). Baseline ~65% lines / 76% branches / 86% funcs. Release-readiness pass hardened the *engine* (the previously 0%-instrumented critical path): hybrid `run-build.ts` 0→91% via an in-process merge-survival golden test (`packages/cli/src/__tests__/merge-survival.test.ts` — asserts protected prose survives rebuilds and is quarantined, not lost, when its symbol is removed); `parser/extractors.ts` 73→99%; `generator/templates.ts` 53→93%. Note: CLI command layer + `site/build.ts` still read ~0% in coverage because `cli-smoke.test.ts` exercises them in a subprocess v8 can't instrument — they ARE tested, just not counted.
 
 **Active focus:** the Agora-inspired landing pass is complete. Imagery hero (2026-05-19) plus interleaved section scenes (2026-05-22) cover the calm-scene direction; both are config-driven so adding/swapping art is a file-drop in `content/public/`. Next focus moves back to the deferred items lower in this file (orphans CLI, MDX, Nord/Solarized page themes) — pick when the maintainer wants something to ship.
 
