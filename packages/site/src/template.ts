@@ -90,6 +90,7 @@ function renderShell(opts: ShellOptions): string {
   ${renderTopbar(opts.site, assets, opts.docsHref ? siteUrl(opts.docsHref, basePath) : undefined, searchEnabled, basePath)}
   ${opts.body}
   ${renderFooter(opts.site, opts.generatedAt, basePath)}
+  <button class="ov-to-top" type="button" aria-label="Back to top" data-ov-to-top>${renderIcon('arrow-up', { size: 18 })}</button>
   ${searchScripts}
   <script src="${escapeAttr(assets)}assets/ovellum.js" defer></script>
 </body>

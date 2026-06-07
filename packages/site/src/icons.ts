@@ -21,6 +21,7 @@
  * tiny (≈100B per icon after tree-shaking).
  */
 
+import ArrowUp from 'lucide/dist/esm/icons/arrow-up.mjs';
 import Check from 'lucide/dist/esm/icons/check.mjs';
 import ChevronDown from 'lucide/dist/esm/icons/chevron-down.mjs';
 import Copy from 'lucide/dist/esm/icons/copy.mjs';
@@ -61,6 +62,7 @@ const REGISTRY = {
   sun: Sun,
   moon: Moon,
   monitor: Monitor,
+  'arrow-up': ArrowUp,
   'chevron-down': ChevronDown,
   github: GITHUB_MARK,
   'external-link': ExternalLink,

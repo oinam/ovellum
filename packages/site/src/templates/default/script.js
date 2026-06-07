@@ -284,4 +284,21 @@
 
     recompute();
   })();
+
+  // Back-to-top: reveal the button past a scroll threshold; click scrolls up.
+  (function backToTop() {
+    var btn = document.querySelector('[data-ov-to-top]');
+    if (!btn) return;
+    var THRESHOLD = 600;
+    function update() {
+      if (window.scrollY > THRESHOLD) btn.classList.add('is-visible');
+      else btn.classList.remove('is-visible');
+    }
+    update();
+    window.addEventListener('scroll', update, { passive: true });
+    btn.addEventListener('click', function () {
+      var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      window.scrollTo({ top: 0, behavior: reduce ? 'auto' : 'smooth' });
+    });
+  })();
 })();

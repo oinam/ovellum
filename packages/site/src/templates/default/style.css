@@ -1652,6 +1652,63 @@ body.ov-body-404 .ov-content-card {
 }
 
 /* ====================================================================== */
+/* Back-to-top button
+   ===
+   Floating, fixed bottom-right. Hidden until the page is scrolled (script.js
+   toggles `.is-visible`). Up-arrow icon, rounded border, a subtle surface a
+   step off the body — for long docs pages. */
+.ov-to-top {
+  position: fixed;
+  inset-block-end: var(--space-l);
+  inset-inline-end: var(--space-l);
+  z-index: 20;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  inline-size: 2.5rem;
+  block-size: 2.5rem;
+  color: var(--color-fg-muted);
+  background: var(--color-bg-subtle);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  cursor: pointer;
+  /* Hidden + non-interactive until scrolled; the delayed visibility lets the
+     fade-out play before it leaves the tab order. */
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(0.5rem);
+  transition:
+    opacity 160ms ease,
+    transform 160ms ease,
+    visibility 0s linear 160ms,
+    color 120ms ease,
+    background-color 120ms ease,
+    border-color 120ms ease;
+}
+.ov-to-top.is-visible {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+  transition-delay: 0s;
+}
+.ov-to-top:hover {
+  color: var(--color-fg);
+  background: var(--color-bg-muted);
+  border-color: var(--color-border-strong);
+}
+.ov-to-top:focus-visible {
+  outline: 2px solid var(--color-border-focus);
+  outline-offset: 2px;
+}
+@media (max-width: 720px) {
+  .ov-to-top {
+    inset-block-end: var(--space-m);
+    inset-inline-end: var(--space-m);
+  }
+}
+
+/* ====================================================================== */
 /* Print                                                                   */
 /* ====================================================================== */
 
@@ -1669,6 +1726,7 @@ body.ov-body-404 .ov-content-card {
   .ov-search,
   .ov-theme-toggle,
   .heading-anchor,
+  .ov-to-top,
   .ov-copy-btn {
     display: none !important;
   }
