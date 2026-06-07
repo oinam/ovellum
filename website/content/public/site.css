@@ -1,0 +1,34 @@
+/*
+ * Ovellum website-only overrides.
+ *
+ * Loaded via `site.headExtra` (see ovellum.config.ts), AFTER the theme's
+ * assets/ovellum.css, so the declarations here win. This is NOT part of the
+ * shipped default theme — the default stays system-font.
+ *
+ * ── Custom font: Satoshi (variable), self-hosted ──────────────────────────
+ * Switching the site's typeface is just a CSS-variable change: override
+ * --font-sans (body + headings follow it through --font-body) and leave
+ * --font-mono on the system stack. The variable woff2 is carried in
+ * content/public/fonts/ and shipped with dist/.
+ *
+ * How to do this for your own site (incl. self-hosting tips):
+ *   https://ovellum.oss.oinam.com/docs/guides/themes/#fonts   (Typography › Fonts)
+ */
+
+@font-face {
+  font-family: 'Satoshi';
+  src: url('/public/fonts/satoshi/Satoshi-Variable.woff2') format('woff2');
+  font-weight: 300 900; /* variable weight axis (Light → Black) */
+  font-style: normal;
+  font-display: swap; /* show fallback immediately; swap when Satoshi loads */
+}
+
+:root {
+  /* Override only the sans role; everything else (headings, prose, the
+     --font-body indirection) follows. --font-mono is intentionally left on the
+     system monospace stack. Satoshi falls back to the system sans while it
+     loads (or if the woff2 is missing). */
+  --font-sans: 'Satoshi', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
+    'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans', sans-serif,
+    'Apple Color Emoji', 'Segoe UI Emoji';
+}

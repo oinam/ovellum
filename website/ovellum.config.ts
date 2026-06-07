@@ -21,7 +21,10 @@ export default {
     editUrlPattern: 'https://github.com/oinam/ovellum/edit/main/website/{path}',
     // Raw HTML, injected verbatim into <head>. Backticks mean third-party
     // snippets (which are full of double quotes) paste in with no escaping.
-    headExtra: `<script defer src="https://analytics.oinam.net/script.js" data-website-id="672bf7be-897e-423d-838b-ab70b056328f"></script>`,
+    headExtra: `
+      <link rel="preload" href="/public/fonts/satoshi/Satoshi-Variable.woff2" as="font" type="font/woff2" crossorigin>
+      <link rel="stylesheet" href="/public/site.css">
+      <script defer src="https://analytics.oinam.net/script.js" data-website-id="672bf7be-897e-423d-838b-ab70b056328f"></script>`,
     search: { enabled: true },
     pageMeta: { readingTime: false, lastModified: true },
     topbarNav: [

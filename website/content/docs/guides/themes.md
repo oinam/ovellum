@@ -57,6 +57,56 @@ what additional themes plug into (each ships its own ramp + role values and a
 reversed-ramp dark block). Code-block syntax themes are independent and already
 selectable via [`site.codeTheme`](#code-block-themes).
 
+## Typography
+
+### Fonts
+
+Three font roles, all CSS variables:
+
+- `--font-sans` — body and headings.
+- `--font-mono` — code blocks and inline code.
+- `--font-serif` — used when `site.font: 'serif'`.
+
+The active body font is `--font-body`, which points at `--font-sans` or
+`--font-serif` depending on `site.font`. The shipped default theme is
+**system-font only** — instant first paint, no webfont hop.
+
+To use a **custom font**, override the token; it's just a CSS-variable change.
+**Self-hosting is recommended** over a Google Fonts link — it avoids the
+third-party connection (better performance) and the privacy/GDPR concern of
+sending visitor IPs to a font CDN, and the old "shared browser cache" argument
+no longer holds (browsers partition their cache per-site).
+
+1. Drop the font's variable `woff2` into `content/public/` — it passes through
+   to `dist/`.
+2. In a small follow-up stylesheet referenced from `site.headExtra`,
+   `@font-face` it and override `--font-sans` (leave `--font-mono` alone to keep
+   code on the system monospace):
+
+```css
+/* content/public/site.css */
+@font-face {
+  font-family: 'Satoshi';
+  src: url('/public/fonts/satoshi/Satoshi-Variable.woff2') format('woff2');
+  font-weight: 300 900; /* variable weight axis */
+  font-display: swap;
+}
+:root {
+  --font-sans: 'Satoshi', ui-sans-serif, system-ui, sans-serif;
+}
+```
+
+```html
+<!-- site.headExtra (ovellum.config.*) -->
+<link rel="preload" href="/public/fonts/satoshi/Satoshi-Variable.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="/public/site.css">
+```
+
+Body, headings, and prose pick up `--font-sans` automatically. The `headExtra`
+stylesheet loads after the theme's CSS, so its `:root` override wins; the
+`preload` warms the font fetch. This site itself runs on self-hosted Satoshi
+exactly this way.
+
 ## Switching themes
 
 Three values for `<html data-theme>`:
