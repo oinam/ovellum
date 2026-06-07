@@ -148,8 +148,15 @@ function renderTopbarLinks(
   items: ResolvedTopbarItem[],
   docsHref: string | undefined,
   compact: boolean,
+  only?: 'text' | 'icon',
 ): string {
-  const links = items.map(({ label, href, external, icon }) => {
+  const subset =
+    only === 'text'
+      ? items.filter((it) => !it.icon)
+      : only === 'icon'
+        ? items.filter((it) => it.icon)
+        : items;
+  const links = subset.map(({ label, href, external, icon }) => {
     const rel = external ? ' rel="noopener" target="_blank"' : '';
     if (icon && compact) {
       return `<a class="ov-topbar-link ov-topbar-link--icon" href="${escapeAttr(href)}"${rel} aria-label="${escapeAttr(label)}" title="${escapeAttr(label)}">${renderIcon(icon, { class: 'ov-topbar-glyph', size: 18 })}<span class="ov-sr-only">${escapeHtml(label)}</span></a>`;
@@ -161,7 +168,8 @@ function renderTopbarLinks(
         : '';
     return `<a class="ov-topbar-link" href="${escapeAttr(href)}"${rel}>${glyph}${escapeHtml(label)}${ext}</a>`;
   });
-  if (docsHref && !items.some((it) => it.href === docsHref)) {
+  // The implicit Docs link is a text link — skip it for the icon-only group.
+  if (only !== 'icon' && docsHref && !items.some((it) => it.href === docsHref)) {
     links.push(
       `<a class="ov-topbar-link ov-topbar-link--docs" href="${escapeAttr(docsHref)}">Docs</a>`,
     );
@@ -177,7 +185,10 @@ function renderTopbar(
   basePath: string,
 ): string {
   const items = resolveTopbarItems(site, basePath);
-  const desktopLinks = renderTopbarLinks(items, docsHref, true);
+  // Desktop splits text links from icon links so a divider can sit between
+  // them; the mobile sheet keeps them in one labelled list.
+  const desktopTextLinks = renderTopbarLinks(items, docsHref, true, 'text');
+  const desktopIconLinks = renderTopbarLinks(items, docsHref, true, 'icon');
   const mobileLinks = renderTopbarLinks(items, docsHref, false);
   const search = searchEnabled ? `<div id="ov-search" class="ov-search"></div>` : '';
   // The hamburger only appears below the responsive breakpoint via CSS.
@@ -207,8 +218,12 @@ function renderTopbar(
       </div>
       <div class="ov-topbar-search">${search}</div>
       <div class="ov-topbar-right">
-        <nav class="ov-topbar-nav" aria-label="Primary">${desktopLinks}</nav>
-        ${themeButton}
+        <nav class="ov-topbar-nav" aria-label="Primary">${desktopTextLinks}</nav>
+        ${desktopTextLinks ? '<span class="ov-topbar-divider" aria-hidden="true"></span>' : ''}
+        <div class="ov-topbar-icons">
+          ${desktopIconLinks}
+          ${themeButton}
+        </div>
         ${menuButton}
       </div>
       <nav id="ov-mobile-nav" class="ov-mobile-nav" aria-label="Mobile">

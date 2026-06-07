@@ -409,27 +409,39 @@ a:hover {
   color: var(--color-fg);
   background: var(--color-bg-subtle);
 }
-/* Icon-only links (e.g. GitHub, npm) and the theme toggle share one look:
-   rounded-corner square buttons with a hairline border, spaced apart. */
+/* Icon links (GitHub, npm) and the theme toggle: plain clickable icons — no
+   border, no fill — sitting close together. Hover just deepens the colour. */
 .ov-topbar-link--icon,
 .ov-theme-toggle {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  inline-size: 2.25rem;
-  block-size: 2.25rem;
-  padding: 0;
-  border: 1px solid var(--color-border);
-  background: var(--color-bg-subtle);
+  inline-size: auto;
+  block-size: auto;
+  padding: var(--space-3xs);
+  border: 0;
+  background: transparent;
   color: var(--color-fg-muted);
-  border-radius: var(--radius-md);
-  transition: color 120ms ease, background-color 120ms ease, border-color 120ms ease;
+  border-radius: var(--radius-sm);
+  transition: color 120ms ease;
 }
 .ov-topbar-link--icon:hover,
 .ov-theme-toggle:hover {
   color: var(--color-fg);
-  background: var(--color-bg-muted);
-  border-color: var(--color-border-strong);
+  background: transparent;
+}
+/* Vertical rule between the text nav and the icon cluster. */
+.ov-topbar-divider {
+  flex: none;
+  inline-size: 1px;
+  block-size: 1.25rem;
+  background: var(--color-border);
+}
+/* Tight cluster of flat icons (icon links + theme toggle). */
+.ov-topbar-icons {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-3xs);
 }
 .ov-topbar-glyph {
   line-height: 0;
@@ -653,11 +665,11 @@ body.ov-menu-open {
     gap: var(--space-xs);
     padding-inline: var(--space-s);
   }
-  .ov-topbar-nav {
-    display: none;
-  }
-  /* The desktop theme toggle hides on mobile; the sheet carries its own. */
-  .ov-topbar-right > .ov-theme-toggle {
+  /* The whole desktop cluster — text nav, divider, and the icon group (which
+     now holds the theme toggle) — collapses into the hamburger sheet. */
+  .ov-topbar-nav,
+  .ov-topbar-divider,
+  .ov-topbar-icons {
     display: none;
   }
   .ov-topbar-menu {
