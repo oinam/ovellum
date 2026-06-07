@@ -275,6 +275,17 @@ body {
    one users actually notice. */
 html {
   background: var(--color-bg);
+  /* CSS-only smooth scrolling. Governs every programmatic scroll (the
+     back-to-top button calls `scrollTo` with no `behavior`) and in-page
+     anchor jumps (ToC, heading links) — a quick ease that settles to a
+     stop, no JS easing library. Disabled below for reduced-motion. */
+  scroll-behavior: smooth;
+}
+/* Honour the OS "Reduce motion" setting: scroll instantly, no animation. */
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
 }
 /* Serif opt-in (site.font: 'serif'). Swaps the body-font role for the whole
    document — body, headings, and prose follow; code stays monospace. */
@@ -1657,14 +1668,29 @@ body.ov-body-404 .ov-content-card {
 /* ====================================================================== */
 /* Back-to-top button
    ===
-   Floating, fixed bottom-right. Hidden until the page is scrolled (script.js
+   Floats bottom-right while you scroll, then parks just above the footer so it
+   never overlaps footer content. The float-then-park is pure CSS: a
+   zero-height `position: sticky` anchor sits in flow right before the footer.
+   While there's content below it, the anchor pins to the viewport bottom;
+   once you reach the end, it settles at its flow position above the footer.
+   Height 0 means it reserves no space (no layout gap). The button itself is
+   absolutely placed inside the anchor. Hidden until scrolled (script.js
    toggles `.is-visible`). Up-arrow icon, rounded border, a subtle surface a
    step off the body — for long docs pages. */
-.ov-to-top {
-  position: fixed;
+.ov-to-top-anchor {
+  position: sticky;
   inset-block-end: var(--space-l);
-  inset-inline-end: var(--space-l);
   z-index: 20;
+  block-size: 0;
+  /* The zero-height anchor must not swallow clicks aimed at the footer below
+     it; only the button re-enables pointer events. */
+  pointer-events: none;
+}
+.ov-to-top {
+  position: absolute;
+  inset-block-end: 0;
+  inset-inline-end: var(--space-l);
+  pointer-events: auto;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -1705,8 +1731,10 @@ body.ov-body-404 .ov-content-card {
   outline-offset: 2px;
 }
 @media (max-width: 720px) {
-  .ov-to-top {
+  .ov-to-top-anchor {
     inset-block-end: var(--space-m);
+  }
+  .ov-to-top {
     inset-inline-end: var(--space-m);
   }
 }

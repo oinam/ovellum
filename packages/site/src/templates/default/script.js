@@ -296,9 +296,11 @@
     }
     update();
     window.addEventListener('scroll', update, { passive: true });
+    // No `behavior` here on purpose: the smooth scroll (and its reduced-motion
+    // opt-out) lives entirely in CSS via `html { scroll-behavior }`. The JS
+    // just asks to go to the top; CSS decides whether to animate.
     btn.addEventListener('click', function () {
-      var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-      window.scrollTo({ top: 0, behavior: reduce ? 'auto' : 'smooth' });
+      window.scrollTo({ top: 0 });
     });
   })();
 })();
