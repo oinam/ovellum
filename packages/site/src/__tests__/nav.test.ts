@@ -156,4 +156,52 @@ describe('buildNav', () => {
     const nav = await buildNav('./content', tmp);
     expect(nav.children.map((c) => c.url)).toEqual([]);
   });
+
+  it('prunes asset-only folders (no markdown) from the nav', async () => {
+    const content = path.join(tmp, 'content');
+    const pub = path.join(content, 'public', 'fonts');
+    mkdirSync(pub, { recursive: true });
+    writeFileSync(path.join(content, 'index.md'), '# Home\n');
+    writeFileSync(path.join(content, 'public', 'logo.svg'), '<svg/>');
+    writeFileSync(path.join(pub, 'font.woff2'), 'binary');
+
+    const nav = await buildNav('./content', tmp);
+    expect(nav.children.find((c) => c.url === '/public/')).toBeUndefined();
+  });
+
+  it('excludes folders listed in ignoreFolders (by name, any depth)', async () => {
+    const content = path.join(tmp, 'content');
+    const drafts = path.join(content, 'drafts');
+    mkdirSync(drafts, { recursive: true });
+    writeFileSync(path.join(content, 'index.md'), '# Home\n');
+    writeFileSync(path.join(drafts, 'wip.md'), '# Work in progress\n');
+
+    const nav = await buildNav('./content', tmp, ['drafts']);
+    expect(nav.children.find((c) => c.url === '/drafts/')).toBeUndefined();
+  });
+
+  it('hides a folder via _meta.json "hidden": true', async () => {
+    const content = path.join(tmp, 'content');
+    const secret = path.join(content, 'secret');
+    mkdirSync(secret, { recursive: true });
+    writeFileSync(path.join(content, 'index.md'), '# Home\n');
+    writeFileSync(path.join(secret, 'page.md'), '# Secret\n');
+    writeFileSync(path.join(secret, '_meta.json'), JSON.stringify({ hidden: true }));
+
+    const nav = await buildNav('./content', tmp);
+    expect(nav.children.find((c) => c.url === '/secret/')).toBeUndefined();
+  });
+
+  it('omits pages with frontmatter draft: true', async () => {
+    const content = path.join(tmp, 'content');
+    mkdirSync(content);
+    writeFileSync(path.join(content, 'index.md'), '# Home\n');
+    writeFileSync(path.join(content, 'live.md'), '# Live page\n');
+    writeFileSync(path.join(content, 'wip.md'), '---\ndraft: true\n---\n# Draft page\n');
+
+    const nav = await buildNav('./content', tmp);
+    const urls = nav.children.map((c) => c.url);
+    expect(urls).toContain('/live/');
+    expect(urls).not.toContain('/wip/');
+  });
 });

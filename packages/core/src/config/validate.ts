@@ -209,6 +209,9 @@ export function validateUserConfig(input: unknown): OvellumUserConfig {
         throw new ConfigError('`site.pageMeta.lastModified` must be a boolean.');
       }
     }
+    if (s.ignoreFolders !== undefined && !isStringArray(s.ignoreFolders)) {
+      throw new ConfigError('`site.ignoreFolders` must be an array of folder-name strings.');
+    }
     if (s.landing !== undefined) validateLanding(s.landing);
   }
 

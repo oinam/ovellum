@@ -107,6 +107,36 @@ content/
 Without a `_meta.json`, the folder's pages simply sort alphabetically — often
 exactly what you want.
 
+### Excluding pages and folders
+
+Three ways to keep content out of the published site, from broad to narrow:
+
+- **`site.ignoreFolders`** — list folder *names* in your config to drop them
+  entirely (no sidebar entry, not rendered, not copied). Matched at any depth:
+
+  ```json
+  { "site": { "ignoreFolders": ["drafts", "internal"] } }
+  ```
+
+- **`_meta.json` `"hidden": true`** — let a folder opt itself out, in place:
+
+  ```json
+  { "hidden": true }
+  ```
+
+- **Frontmatter `draft: true`** — unpublish a single page:
+
+  ```markdown
+  ---
+  title: Work in progress
+  draft: true
+  ---
+  ```
+
+All three drop the content from the sidebar **and** the build. (Asset-only
+folders with no Markdown — like `public/` — are already kept out of the sidebar
+automatically, while their files still pass through to `dist/`.)
+
 ## Callouts
 
 Five labelled callout types — `[!NOTE]`, `[!TIP]`, `[!IMPORTANT]`,

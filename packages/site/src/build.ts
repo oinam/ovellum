@@ -5,7 +5,7 @@ import { fileURLToPath } from 'node:url';
 import matter from 'gray-matter';
 import type { OvellumConfig, OvellumSiteConfig } from '@ovellum/core';
 import { renderMarkdown } from './markdown.js';
-import { buildNav, findAdjacent, findBreadcrumbs, type NavNode } from './nav.js';
+import { buildNav, findAdjacent, findBreadcrumbs, isHiddenDir, type NavNode } from './nav.js';
 import { countWords, lastModifiedISO, readingMinutes } from './page-meta.js';
 import { indexSite } from './search.js';
 import { generateRss } from './rss.js';
@@ -108,7 +108,7 @@ export async function buildSite(options: BuildSiteOptions): Promise<BuildSiteRes
   }
 
   const site = resolveSiteConfig(config);
-  const nav = await buildNav(config.input, cwd);
+  const nav = await buildNav(config.input, cwd, site.ignoreFolders);
   const warnings: string[] = [];
 
   await mkdir(assetsAbs, { recursive: true });
@@ -167,7 +167,7 @@ export async function buildSite(options: BuildSiteOptions): Promise<BuildSiteRes
     landingRendered = true;
   }
 
-  for await (const file of walkContent(inputAbs)) {
+  for await (const file of walkContent(inputAbs, site.ignoreFolders)) {
     const relFromInput = path.relative(inputAbs, file).replace(/\\/g, '/');
     if (isMarkdown(file)) {
       const url = urlFor(relFromInput);
@@ -198,6 +198,7 @@ export async function buildSite(options: BuildSiteOptions): Promise<BuildSiteRes
         breadcrumbs,
         sourceRelFromCwd,
       });
+      if (!result) continue; // draft page (frontmatter draft: true) — skip
       await mkdir(path.dirname(outputPath), { recursive: true });
       await writeFile(outputPath, result.html, 'utf8');
       // Mirror the not-found page to a top-level `404.html`. The pretty-URL
@@ -293,10 +294,12 @@ interface RenderOneResult {
   warnings: string[];
 }
 
-async function renderOne(input: RenderOneInput): Promise<RenderOneResult> {
+async function renderOne(input: RenderOneInput): Promise<RenderOneResult | null> {
   const raw = await readFile(input.absInput, 'utf8');
   const parsed = matter(raw);
-  const frontmatter = parsed.data as { title?: string; description?: string };
+  const frontmatter = parsed.data as { title?: string; description?: string; draft?: boolean };
+  // Draft pages are unpublished — skip rendering (nav.ts keeps them out too).
+  if (frontmatter.draft === true) return null;
   const { html: bodyHtml, headings } = await renderMarkdown(parsed.content, {
     codeTheme: input.site.codeTheme,
   });
@@ -406,14 +409,18 @@ function resolveSiteConfig(config: OvellumConfig): OvellumSiteConfig & { title: 
   return { ...config.site, title };
 }
 
-async function* walkContent(dirAbs: string): AsyncGenerator<string> {
+async function* walkContent(dirAbs: string, ignoreFolders: string[]): AsyncGenerator<string> {
   const entries = await readdir(dirAbs);
   for (const name of entries) {
     if (name.startsWith('_')) continue;
     const abs = path.join(dirAbs, name);
     const st = await stat(abs);
     if (st.isDirectory()) {
-      yield* walkContent(abs);
+      // Skip excluded folders entirely — no render, no asset copy: explicit
+      // `ignoreFolders`, or a folder opting out via `_meta.json` "hidden": true.
+      if (ignoreFolders.includes(name)) continue;
+      if (await isHiddenDir(abs)) continue;
+      yield* walkContent(abs, ignoreFolders);
     } else {
       yield abs;
     }

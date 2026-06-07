@@ -95,6 +95,7 @@ interface OvellumSiteConfig {
   headExtra?: string;
   search: { enabled: boolean };
   pageMeta: { readingTime: boolean; lastModified: boolean };
+  ignoreFolders: string[];
   topbarNav: Array<{ label: string; href: string; icon?: string; external?: boolean }>;
   landing: OvellumLandingConfig;
 }
@@ -114,6 +115,7 @@ interface OvellumSiteConfig {
 | `headExtra`      | `string?`                           | `undefined`                   | Raw HTML injected verbatim into `<head>` on every page, just after the search bits and before the inline theme-boot script. **Not escaped or sanitised** — only set markup you control. Unset by default. Primary use: analytics snippets, e.g. `'<script defer src="https://analytics.example.com/script.js" data-website-id="…"></script>'`. |
 | `search`         | `{ enabled: boolean }`              | `{ enabled: false }`          | When `true`, `ovellum build` runs Pagefind against the output dir and the topbar gains a search box. Adds `dist/pagefind/` to the build.                                                                                       |
 | `pageMeta`       | `{ readingTime, lastModified }`     | both `true`                   | Per-page meta line above the article: `N min read · Updated YYYY-MM-DD`. `readingTime` estimates at ~200 wpm after stripping code/HTML. `lastModified` prefers `git log -1 --format=%cI` then falls back to filesystem mtime; the line is omitted if neither resolves. Set either to `false` to hide that half. |
+| `ignoreFolders`  | `string[]`                          | `[]`                          | Folder **names** (matched at any depth) to exclude entirely from the manual-mode site — not in the sidebar, not rendered, not copied to the output. Use for WIP/private dirs. A folder can also self-hide via `_meta.json` `"hidden": true`, and a single page via frontmatter `draft: true`. (Asset-only folders like `public/` are already kept out of the sidebar automatically.) |
 | `topbarNav`      | `Array<{label, href, icon?, external?}>` | `[]`                     | Items render in order to the right of the search box. Items with an `icon` render icon-only on desktop (label kept for screen readers) and icon + label inside the mobile sheet. External links (`external: true` or `href` starting with `http(s)://`) open in a new tab with `rel="noopener"`; text items also get a small external-link icon. Below 720px the top row is just logo + version + search + hamburger — the nav and theme toggle move into the sheet. |
 | `landing`        | `OvellumLandingConfig`              | `{ enabled: false, … }`       | See below.                                                                                                                                                                                                                     |
 

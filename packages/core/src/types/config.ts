@@ -247,6 +247,14 @@ export interface OvellumSiteConfig {
   /** Per-page meta line (reading time + last-modified) above the article. */
   pageMeta: OvellumSitePageMetaConfig;
   /**
+   * Folder names to exclude entirely from the manual-mode site — matched by
+   * name at any depth. Excluded folders are skipped in the sidebar nav, are not
+   * rendered, and their files are not copied to the output. Empty by default.
+   * (A folder can also opt out via `_meta.json` `"hidden": true`; a single page
+   * via frontmatter `draft: true`.)
+   */
+  ignoreFolders: string[];
+  /**
    * Right-aligned topbar nav items, rendered to the right of the brand on
    * every page (including the landing). Empty by default. Order is preserved.
    */
@@ -320,6 +328,7 @@ export const DEFAULT_CONFIG: OvellumConfig = {
     footer: 'Built with Ovellum',
     search: { enabled: false },
     pageMeta: { readingTime: true, lastModified: true },
+    ignoreFolders: [],
     topbarNav: [],
     footerNav: [],
     landing: {

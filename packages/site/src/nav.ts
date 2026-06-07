@@ -80,6 +80,8 @@ export function findAdjacent(root: NavNode, url: string): AdjacentPages {
 interface MetaJson {
   title?: string;
   order?: string[];
+  /** When true, the folder and all its content are excluded from nav + build. */
+  hidden?: boolean;
 }
 
 interface FsItem {
@@ -99,10 +101,21 @@ interface FsItem {
  *  - Without explicit order, items sort alphabetically by slug, but any
  *    directory's `index` always leads.
  */
-export async function buildNav(rootDir: string, cwd: string): Promise<NavNode> {
+export async function buildNav(
+  rootDir: string,
+  cwd: string,
+  ignoreFolders: string[] = [],
+): Promise<NavNode> {
   const absRoot = path.resolve(cwd, rootDir);
   const rel = (abs: string) => '/' + path.posix.relative(absRoot, abs).replace(/\\/g, '/');
-  return walk(absRoot, '/', cwd, rel);
+  const root = await walk(absRoot, '/', cwd, rel, ignoreFolders, true);
+  // walk() returns null for hidden/empty dirs; the root is never pruned.
+  return root ?? { title: 'Untitled', url: '/', children: [] };
+}
+
+/** True when `<dirAbs>/_meta.json` marks the folder `"hidden": true`. */
+export async function isHiddenDir(dirAbs: string): Promise<boolean> {
+  return (await readMeta(dirAbs))?.hidden === true;
 }
 
 async function walk(
@@ -110,7 +123,9 @@ async function walk(
   urlPrefix: string,
   cwd: string,
   rel: (abs: string) => string,
-): Promise<NavNode> {
+  ignoreFolders: string[],
+  isRoot: boolean,
+): Promise<NavNode | null> {
   const items = await listDir(dirAbs);
   const meta = await readMeta(dirAbs);
 
@@ -122,13 +137,21 @@ async function walk(
     if (item.name.startsWith('_')) continue;
     if (item === indexItem) continue;
     if (item.isDir) {
+      if (ignoreFolders.includes(item.name)) continue;
+      if (await isHiddenDir(item.abs)) continue;
       const childUrl = ensureTrailingSlash(urlPrefix + item.name + '/');
-      children.push(await walk(item.abs, childUrl, cwd, rel));
+      const child = await walk(item.abs, childUrl, cwd, rel, ignoreFolders, false);
+      if (child) children.push(child);
     } else if (isMarkdown(item.name)) {
       const childUrl = ensureTrailingSlash(urlPrefix + stem(item.name) + '/');
-      children.push(await pageNode(item.abs, childUrl, cwd));
+      const node = await pageNode(item.abs, childUrl, cwd);
+      if (node) children.push(node);
     }
   }
+
+  // Prune non-root folders that contribute no pages — asset-only dirs (e.g.
+  // `public/`), or folders left empty after draft/hidden exclusions.
+  if (!isRoot && !indexNode?.sourcePath && children.length === 0) return null;
 
   applyOrdering(children, meta);
 
@@ -144,9 +167,11 @@ async function walk(
   };
 }
 
-async function pageNode(abs: string, url: string, cwd: string): Promise<NavNode> {
+async function pageNode(abs: string, url: string, cwd: string): Promise<NavNode | null> {
   const raw = await readFile(abs, 'utf8');
   const { data, content } = matter(raw);
+  // Draft pages are unpublished — kept out of the nav (and the build).
+  if (data.draft === true) return null;
   const fmTitle = typeof data.title === 'string' ? data.title : undefined;
   const h1 = firstH1(content);
   const title = fmTitle ?? h1 ?? titleFromSegment(stem(path.basename(abs))) ?? 'Untitled';
