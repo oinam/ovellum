@@ -822,9 +822,12 @@ body.ov-menu-open {
   color: var(--color-fg);
 }
 .ov-nav-link.is-active {
-  /* Current location: a darker colour (not bold) plus a high-contrast dark
-     indicator bar coinciding with the sidebar's left border. */
+  /* Current location: darker text, a full-length subtle highlight (one ramp
+     step off the body), and the dark indicator bar on the left rail. Square
+     corners so the highlight reads as a full-width row flush with the bar. */
   color: var(--color-fg);
+  background: var(--color-bg-muted);
+  border-radius: 0;
 }
 .ov-nav-link.is-active::before {
   content: '';
