@@ -19,6 +19,7 @@ export type {
   OvellumLandingTrustStrip,
   OvellumLandingTrustItem,
   OvellumConfig,
+  OvellumUpdateConfig,
   OvellumUserConfig,
   OvellumFrontmatterOverride,
 } from './types/config.js';

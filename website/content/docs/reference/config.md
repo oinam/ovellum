@@ -54,6 +54,7 @@ All fields are optional; sensible defaults apply.
 | `defaultFormat`   | `'md' \| 'mdx'`                  | `'md'`                                                                | `manual` mode requires `'md'` in v1.                       |
 | `protect`         | `ProtectConfig`                  | see below                                                             |                                                            |
 | `site`            | `OvellumSiteConfig`              | see below                                                             |                                                            |
+| `update`          | `OvellumUpdateConfig`            | see below                                                             | CLI update-check behaviour.                                |
 
 ## `protect` (hybrid mode + merger)
 
@@ -247,6 +248,30 @@ When `site.landing.enabled` is `true`, the build looks for
 grid and the trust strip as the "Why" section. The underscore prefix
 keeps it out of the regular page walk, so it doesn't appear in the
 sidebar or as a standalone URL.
+
+## `update`
+
+Controls the CLI's update check — the one-line "update available" notice
+printed after a command finishes. It's a courtesy only: nothing is
+installed without [`ovellum upgrade`](/docs/reference/cli/#ovellum-upgrade).
+
+```typescript
+interface OvellumUpdateConfig {
+  check: boolean;
+  intervalHours: number;
+}
+```
+
+| Field           | Type      | Default | Notes                                                                                          |
+| --------------- | --------- | ------- | ---------------------------------------------------------------------------------------------- |
+| `check`         | `boolean` | `true`  | Look up the latest published version on npm and print a notice when the running CLI is behind. |
+| `intervalHours` | `number`  | `24`    | Minimum hours between checks; the result is cached, so most runs do no network I/O.            |
+
+The check is **additionally suppressed** — regardless of `check` — in CI,
+in non-interactive shells, when the `NO_UPDATE_NOTIFIER` environment
+variable is set, and when `--no-update-check` is passed. It never delays or
+fails a command; every error path (offline, timeout, bad response) is
+swallowed silently.
 
 ## Per-file overrides <a id="per-file-overrides"></a>
 

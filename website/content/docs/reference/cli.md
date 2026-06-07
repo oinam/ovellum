@@ -20,6 +20,7 @@ package manager's task runner.
 | `watch`    | available | Build, then rebuild on every change under `input/` (debounced 300 ms).   |
 | `serve`    | available | Serve the built site over HTTP. No watch, no live reload.                |
 | `check`    | available | Validate config + check for broken internal links + flag unsafe URLs.    |
+| `upgrade`  | available | Check npm for a newer Ovellum and install it.                            |
 | `orphans`  | planned   | List / inspect / reattach quarantined manual blocks.                     |
 | `clean`    | planned   | Remove auto-generated outputs while preserving manual files.             |
 
@@ -372,6 +373,52 @@ ovellum watch [--cwd <dir>] [--config <path>]
 
 No HTTP server, no live reload — pair with `ovellum serve` in another
 terminal, or hit a different static server of your choice.
+
+## `ovellum upgrade`
+
+Check the npm registry for a newer published `ovellum` and install it. The
+command detects how Ovellum was installed (global vs. a local
+devDependency, and which package manager) and runs the matching install
+command.
+
+### Synopsis
+
+```
+ovellum upgrade [--dry-run] [--yes]
+```
+
+### Flags
+
+| Flag        | Type    | Default | Notes                                                          |
+| ----------- | ------- | ------- | -------------------------------------------------------------- |
+| `--dry-run` | boolean | `false` | Print the upgrade command without running it.                  |
+| `--yes, -y` | boolean | `false` | Skip the confirmation prompt and run immediately.              |
+
+### Behaviour
+
+- If you're already on the latest version, it says so and exits `0`.
+- Otherwise it prints `current → latest` and the exact install command.
+- Interactively, it confirms before running (defaults to yes). With
+  `--yes` it runs without asking; with `--dry-run` it only prints.
+- In a **non-interactive** shell (no TTY) without `--yes`, it prints the
+  command and exits without running — it never silently mutates your
+  environment in CI or scripts.
+- The install runs in a subprocess with inherited output; `ovellum
+  upgrade` exits with that process's exit code.
+
+### The update notice
+
+Independently of this command, Ovellum prints a one-line **"update
+available"** notice after a command finishes when a newer version exists.
+It's a courtesy only — nothing is installed without `ovellum upgrade`. The
+check:
+
+- hits npm at most once per `update.intervalHours` (default 24h); the
+  result is cached, so most runs do no network I/O;
+- is **silent** in CI, in non-interactive shells, when `NO_UPDATE_NOTIFIER`
+  is set, when `--no-update-check` is passed, and when
+  [`update.check`](/docs/reference/config/#update) is `false`;
+- never delays or fails a command — every error path is swallowed.
 
 ## Planned subcommands
 

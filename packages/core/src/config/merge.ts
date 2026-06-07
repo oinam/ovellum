@@ -2,15 +2,16 @@ import type {
   OvellumConfig,
   OvellumLandingConfig,
   OvellumSiteConfig,
+  OvellumUpdateConfig,
   OvellumUserConfig,
   ProtectConfig,
 } from '../types/config.js';
 
 /**
  * Shallow merge a user override onto a resolved config. Arrays are replaced
- * wholesale (no concat); the nested `protect`, `site`, `site.landing`, and
- * `site.landing.hero` objects are merged field-by-field. Child wins on every
- * conflict.
+ * wholesale (no concat); the nested `protect`, `update`, `site`,
+ * `site.landing`, and `site.landing.hero` objects are merged field-by-field.
+ * Child wins on every conflict.
  */
 export function mergeConfig(base: OvellumConfig, override: OvellumUserConfig): OvellumConfig {
   const merged: OvellumConfig = { ...base };
@@ -19,6 +20,10 @@ export function mergeConfig(base: OvellumConfig, override: OvellumUserConfig): O
     if (value === undefined) continue;
     if (key === 'protect') {
       merged.protect = { ...base.protect, ...(value as Partial<ProtectConfig>) };
+      continue;
+    }
+    if (key === 'update') {
+      merged.update = { ...base.update, ...(value as Partial<OvellumUpdateConfig>) };
       continue;
     }
     if (key === 'site') {

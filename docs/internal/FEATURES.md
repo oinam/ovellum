@@ -8,7 +8,7 @@ deferred items see [`TODO.md`](./TODO.md). For human-only tasks (writing prose,
 product decisions, release) see [`TODO-Human.md`](./TODO-Human.md). For
 terminology see the [glossary](https://ovellum.oss.oinam.com/docs/reference/glossary/).
 
-Last updated: 2026-06-06 (token architecture: grey ramp + role triples; dark = reversed-ramp remap)
+Last updated: 2026-06-07 (CLI update notifier + `ovellum upgrade`; `update` config block)
 
 Status legend:
 
@@ -148,8 +148,16 @@ See the [CLI reference](https://ovellum.oss.oinam.com/docs/reference/cli/) for f
 | `ovellum watch`   | done     | manual / hybrid / auto |
 | `ovellum serve`   | done     |
 | `ovellum check`   | done     | manual / hybrid / auto |
+| `ovellum upgrade` | done     | npm dist-tag check; detects mgr + global/local; `--dry-run`, `--yes` |
 | `ovellum orphans` | deferred |
 | `ovellum clean`   | deferred |
+
+Update notifier: after a command completes, a one-line "update available"
+notice prints when the npm `latest` dist-tag is newer than the running CLI.
+Cached per `update.intervalHours` (default 24h); silent in CI / non-TTY /
+`NO_UPDATE_NOTIFIER` / `--no-update-check` / `update.check: false`; never
+blocks or fails a run. Notice only — install is the explicit `upgrade`
+command. Code: `packages/cli/src/update/{semver,registry,cache,install,notifier}.ts`.
 
 | Flag               | Status            |
 | ------------------ | ----------------- |

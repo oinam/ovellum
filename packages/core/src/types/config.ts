@@ -278,6 +278,22 @@ export interface OvellumSiteConfig {
   headExtra?: string;
 }
 
+/**
+ * Update-check behaviour for the `ovellum` CLI. This is a courtesy notice
+ * only — the CLI never installs anything on its own; `ovellum upgrade` is the
+ * explicit action. The check is additionally auto-disabled in CI, in
+ * non-interactive shells, and when `NO_UPDATE_NOTIFIER` is set, regardless of
+ * these values.
+ */
+export interface OvellumUpdateConfig {
+  /** Look up the latest published version on npm and print a one-line notice
+   *  when the running CLI is behind. */
+  check: boolean;
+  /** Minimum hours between background checks; the result is cached in between
+   *  so most runs do no network I/O. */
+  intervalHours: number;
+}
+
 export interface OvellumConfig {
   /** Defaults to `package.json#name`. */
   name?: string;
@@ -296,12 +312,15 @@ export interface OvellumConfig {
   protect: ProtectConfig;
   /** Site-builder settings used by `manual` mode. */
   site: OvellumSiteConfig;
+  /** CLI update-check behaviour (notice only; never auto-installs). */
+  update: OvellumUpdateConfig;
 }
 
 /** All fields optional — what users actually write in `ovellum.config.ts`. */
-export type OvellumUserConfig = Partial<Omit<OvellumConfig, 'protect' | 'site'>> & {
+export type OvellumUserConfig = Partial<Omit<OvellumConfig, 'protect' | 'site' | 'update'>> & {
   protect?: Partial<ProtectConfig>;
   site?: Partial<OvellumSiteConfig>;
+  update?: Partial<OvellumUpdateConfig>;
 };
 
 export const DEFAULT_CONFIG: OvellumConfig = {
@@ -337,6 +356,10 @@ export const DEFAULT_CONFIG: OvellumConfig = {
       features: [],
       scenes: [],
     },
+  },
+  update: {
+    check: true,
+    intervalHours: 24,
   },
 };
 

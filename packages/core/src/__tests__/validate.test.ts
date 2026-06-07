@@ -148,4 +148,29 @@ describe('validateUserConfig', () => {
       }),
     ).toThrow(/site\.landing\.scenes\[0\]\.alt/);
   });
+
+  it('accepts a valid update block', () => {
+    const input = { update: { check: false, intervalHours: 12 } };
+    expect(validateUserConfig(input)).toEqual(input);
+  });
+
+  it('rejects a non-object update', () => {
+    expect(() => validateUserConfig({ update: 'on' })).toThrow(/update/);
+  });
+
+  it('rejects non-boolean update.check', () => {
+    expect(() => validateUserConfig({ update: { check: 'yes' } })).toThrow(/update\.check/);
+  });
+
+  it('rejects non-numeric update.intervalHours', () => {
+    expect(() => validateUserConfig({ update: { intervalHours: 'daily' } })).toThrow(
+      /update\.intervalHours/,
+    );
+  });
+
+  it('rejects negative update.intervalHours', () => {
+    expect(() => validateUserConfig({ update: { intervalHours: -1 } })).toThrow(
+      /update\.intervalHours/,
+    );
+  });
 });

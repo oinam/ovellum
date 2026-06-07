@@ -215,6 +215,24 @@ export function validateUserConfig(input: unknown): OvellumUserConfig {
     if (s.landing !== undefined) validateLanding(s.landing);
   }
 
+  if (c.update !== undefined) {
+    if (!isPlainObject(c.update)) {
+      throw new ConfigError('`update` must be an object.');
+    }
+    const u = c.update;
+    if (u.check !== undefined && typeof u.check !== 'boolean') {
+      throw new ConfigError('`update.check` must be a boolean.');
+    }
+    if (u.intervalHours !== undefined) {
+      if (typeof u.intervalHours !== 'number' || !Number.isFinite(u.intervalHours)) {
+        throw new ConfigError('`update.intervalHours` must be a finite number of hours.');
+      }
+      if (u.intervalHours < 0) {
+        throw new ConfigError('`update.intervalHours` must be >= 0.');
+      }
+    }
+  }
+
   return c as OvellumUserConfig;
 }
 
