@@ -22,8 +22,26 @@ export default {
     // Raw HTML, injected verbatim into <head>. Backticks mean third-party
     // snippets (which are full of double quotes) paste in with no escaping.
     headExtra: `
-      <link rel="preload" href="/public/fonts/satoshi/Satoshi-Variable.woff2" as="font" type="font/woff2" crossorigin>
+      <link rel="preload" href="/public/fonts/geist/Geist%5Bwght%5D.ttf" as="font" type="font/ttf" crossorigin>
       <link rel="stylesheet" href="/public/site.css">
+      <!-- Pre-paint typeface switch: set <html data-typeface> before first paint
+           so the right font (see /public/site.css) applies with no flash. Mirrors
+           the theme toggle's data-theme pattern — this is the seam a future UI
+           font picker would drive. Compare live in the console:
+             ovSetTypeface('geist' | 'inter' | 'satoshi')   // persists + reloads -->
+      <script>
+        (function () {
+          var KEY = 'ovellum-typeface', FACES = ['geist', 'inter', 'satoshi'], DEFAULT = 'geist';
+          var t;
+          try { t = localStorage.getItem(KEY); } catch (e) {}
+          document.documentElement.setAttribute('data-typeface', FACES.indexOf(t) >= 0 ? t : DEFAULT);
+          window.ovSetTypeface = function (name) {
+            if (FACES.indexOf(name) < 0) { console.warn('typeface must be one of', FACES); return; }
+            try { localStorage.setItem(KEY, name); } catch (e) {}
+            location.reload();
+          };
+        })();
+      </script>
       <script defer src="https://analytics.oinam.net/script.js" data-website-id="672bf7be-897e-423d-838b-ab70b056328f"></script>`,
     search: { enabled: true },
     pageMeta: { readingTime: false, lastModified: true },

@@ -5,30 +5,84 @@
  * assets/ovellum.css, so the declarations here win. This is NOT part of the
  * shipped default theme — the default stays system-font.
  *
- * ── Custom font: Satoshi (variable), self-hosted ──────────────────────────
- * Switching the site's typeface is just a CSS-variable change: override
- * --font-sans (body + headings follow it through --font-body) and leave
- * --font-mono on the system stack. The variable woff2 is carried in
- * content/public/fonts/ and shipped with dist/.
+ * ── Typeface: Geist (default), self-hosted ───────────────────────────────
+ * This site runs on Geist, with Geist Mono for code. Inter and Satoshi are
+ * kept declared below for tinkering — declaring @font-face costs nothing until
+ * a face is actually selected, so only Geist is fetched in production.
  *
- * How to do this for your own site (incl. self-hosting tips):
+ * Which face is live is chosen by a `data-typeface` attribute on <html>; a
+ * tiny pre-paint script in `headExtra` sets it from localStorage (default
+ * 'geist') — the same pattern as the light/dark theme toggle, and the seam a
+ * future UI font picker would drive. To audition the others without a rebuild:
+ *
+ *   ovSetTypeface('geist' | 'inter' | 'satoshi')   // console; persists + reloads
+ *
+ * The seam itself is just the --font-sans / --font-mono variables: body and
+ * headings follow --font-sans through --font-body; code follows --font-mono.
+ *
+ * Self-hosting tips for your own site:
  *   https://ovellum.oss.oinam.com/docs/guides/themes/#fonts   (Typography › Fonts)
  */
 
+/* ── @font-face: the three variable families ──────────────────────────────
+   All upright-only (italics are synthesised) to keep the payload lean while
+   comparing. Geist ships TTF (brackets in the filename are URL-encoded) and a
+   dedicated monospace; Inter and Satoshi ship woff2 with no mono. */
+@font-face {
+  font-family: 'Geist';
+  src: url('/public/fonts/geist/Geist%5Bwght%5D.ttf') format('truetype');
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Geist Mono';
+  src: url('/public/fonts/geist/GeistMono%5Bwght%5D.ttf') format('truetype');
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Inter';
+  src: url('/public/fonts/inter/InterVariable.woff2') format('woff2');
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}
 @font-face {
   font-family: 'Satoshi';
   src: url('/public/fonts/satoshi/Satoshi-Variable.woff2') format('woff2');
   font-weight: 300 900; /* variable weight axis (Light → Black) */
   font-style: normal;
-  font-display: swap; /* show fallback immediately; swap when Satoshi loads */
+  font-display: swap;
 }
 
+/* ── Shared fallback stacks ───────────────────────────────────────────────
+   Each typeface falls back to these while it loads (or if the file is
+   missing). Mirrors the theme's system stacks. */
 :root {
-  /* Override only the sans role; everything else (headings, prose, the
-     --font-body indirection) follows. --font-mono is intentionally left on the
-     system monospace stack. Satoshi falls back to the system sans while it
-     loads (or if the woff2 is missing). */
-  --font-sans: 'Satoshi', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
+  --font-fallback-sans: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
     'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans', sans-serif,
     'Apple Color Emoji', 'Segoe UI Emoji';
+  --font-fallback-mono: ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas,
+    'Liberation Mono', 'Courier New', monospace;
+}
+
+/* ── The switch ───────────────────────────────────────────────────────────
+   Bare :root is the no-JS / pre-script default and must match the script's
+   DEFAULT below ('geist'). Only the --font-sans role is overridden per
+   typeface; --font-mono follows only where a matching monospace exists
+   (Geist → Geist Mono). Inter/Satoshi leave code on the system mono stack. */
+:root,
+:root[data-typeface='geist'] {
+  --font-sans: 'Geist', var(--font-fallback-sans);
+  --font-mono: 'Geist Mono', var(--font-fallback-mono);
+}
+:root[data-typeface='inter'] {
+  --font-sans: 'Inter', var(--font-fallback-sans);
+  --font-mono: var(--font-fallback-mono);
+}
+:root[data-typeface='satoshi'] {
+  --font-sans: 'Satoshi', var(--font-fallback-sans);
+  --font-mono: var(--font-fallback-mono);
 }

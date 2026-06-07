@@ -77,35 +77,43 @@ third-party connection (better performance) and the privacy/GDPR concern of
 sending visitor IPs to a font CDN, and the old "shared browser cache" argument
 no longer holds (browsers partition their cache per-site).
 
-1. Drop the font's variable `woff2` into `content/public/` — it passes through
+1. Drop the font's variable file into `content/public/` — it passes through
    to `dist/`.
 2. In a small follow-up stylesheet referenced from `site.headExtra`,
-   `@font-face` it and override `--font-sans` (leave `--font-mono` alone to keep
-   code on the system monospace):
+   `@font-face` it and override `--font-sans`. If your family ships a matching
+   monospace, override `--font-mono` too; otherwise leave it on the system
+   stack:
 
 ```css
 /* content/public/site.css */
 @font-face {
-  font-family: 'Satoshi';
-  src: url('/public/fonts/satoshi/Satoshi-Variable.woff2') format('woff2');
-  font-weight: 300 900; /* variable weight axis */
+  font-family: 'Geist';
+  src: url('/public/fonts/geist/Geist%5Bwght%5D.ttf') format('truetype');
+  font-weight: 100 900; /* variable weight axis */
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Geist Mono';
+  src: url('/public/fonts/geist/GeistMono%5Bwght%5D.ttf') format('truetype');
+  font-weight: 100 900;
   font-display: swap;
 }
 :root {
-  --font-sans: 'Satoshi', ui-sans-serif, system-ui, sans-serif;
+  --font-sans: 'Geist', ui-sans-serif, system-ui, sans-serif;
+  --font-mono: 'Geist Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
 }
 ```
 
 ```html
 <!-- site.headExtra (ovellum.config.*) -->
-<link rel="preload" href="/public/fonts/satoshi/Satoshi-Variable.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="/public/fonts/geist/Geist%5Bwght%5D.ttf" as="font" type="font/ttf" crossorigin>
 <link rel="stylesheet" href="/public/site.css">
 ```
 
-Body, headings, and prose pick up `--font-sans` automatically. The `headExtra`
-stylesheet loads after the theme's CSS, so its `:root` override wins; the
-`preload` warms the font fetch. This site itself runs on self-hosted Satoshi
-exactly this way.
+Body, headings, and prose pick up `--font-sans` automatically; code follows
+`--font-mono`. The `headExtra` stylesheet loads after the theme's CSS, so its
+`:root` override wins; the `preload` warms the font fetch. This site itself
+runs on self-hosted Geist (with Geist Mono for code) exactly this way.
 
 ## Switching themes
 
