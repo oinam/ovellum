@@ -10,6 +10,31 @@
 
   `ovellum upgrade` performs the explicit install: it checks npm, detects your package manager (npm/pnpm/yarn/bun) and install scope (global vs. local devDependency), shows `current → latest`, and runs the matching install command (`--dry-run` to print only, `--yes` to skip the prompt). Adds an `update` config block (`{ check, intervalHours }`).
 
+### Also in this release
+
+The update notifier above is the only changeset-tracked change. The following
+landed on `main` without changesets between 0.2.2 and this release (and the
+0.2.3 `--version` fix below, never published on its own, also ships here). All
+of it is in the bundled site builder / core:
+
+- **Default theme — monochrome editorial redesign.** Bordered content card,
+  borderless sidebar with a full-length active highlight, rounded search with
+  full-width clickable results, a distinct code-block surface, refined topbar.
+  Rebuilt on a single grey ramp + role-token color system (light/dark from one
+  source) and a ratio-driven type scale; theme CSS/JS now ship minified.
+- **Content exclusion** — `site.ignoreFolders` (by folder name, any depth),
+  `_meta.json` `"hidden": true`, and frontmatter `draft: true`. Asset-only
+  folders (e.g. `public/`) are auto-pruned from the sidebar.
+- **`site.font: 'sans' | 'serif'`** — switch the whole site between the system
+  sans and serif stacks; code stays monospace.
+- **Back-to-top button** on long pages — floats while scrolling, parks above
+  the footer, smooth-scrolls (respecting `prefers-reduced-motion`).
+- **Landing** — install snippets (`site.landing.install`) and black-monochrome
+  CTAs.
+- **404** — the build emits both `dist/404.html` and `dist/404/index.html`, so
+  static hosts serve a custom 404 with no extra config.
+- Page `<title>` falls back to the first `# H1` on frontmatter-less pages.
+
 ## 0.2.3
 
 ### Patch Changes

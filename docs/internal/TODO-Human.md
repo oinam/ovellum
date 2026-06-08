@@ -108,30 +108,64 @@ a hand-driven sequence after a changeset is merged.
    npm publish
    ```
 
+   `npm publish` auto-runs `prepublishOnly: pnpm -w build`, so `dist/`
+   (gitignored) is always rebuilt fresh — the explicit `pnpm -w build` above is
+   belt-and-suspenders. It uses the maintainer's logged-in `oinam` session; no
+   `NPM_TOKEN` involved.
+
    After `npm publish` succeeds, **bump the version badge** in
-   `website/ovellum.config.ts` → `site.version` to match the new
-   release (e.g. `'v0.2.2'`). Commit + push so the deployed site shows
-   the right version next to the logo. (For an already-staged release like
-   0.2.2, the bump + changelog are done — skip straight to `npm publish`.)
+   `website/ovellum.config.ts` → **`site.version`** (the field inside the
+   `site:` block, e.g. `'v0.3.0'`). Commit + push so the deployed site shows
+   the right version next to the logo. ⚠️ Do **not** touch the top-level
+   `version` field (it's `'0.1.0'` — the documented-project version, unused by
+   the manual-mode site; only `site.version` drives the badge).
 
-   `npm publish` uses the maintainer's logged-in `oinam` session.
-   No `NPM_TOKEN` involved.
+5. **Tag and push** the release. `npm publish` does **not** create tags (only
+   `changeset publish` would, in CI); do it by hand.
 
-5. **Tag and push** the release (changeset publish would normally do this
-   in CI; doing it by hand here):
+   ⚠️ **Tags must be signed-annotated.** This repo's git config has
+   `tag.gpgSign = true` + `tag.forceSignAnnotated = true`, so a plain
+   `git tag <name>` fails with `fatal: no tag message?`. Use a signed tag with
+   a message (convention: the message **is** the tag name), which matches the
+   existing `ovellum@0.2.x` tags. Signing triggers a GPG **pinentry passphrase
+   prompt**, so run it in an interactive terminal (not a non-interactive
+   script/agent):
 
    ```sh
-   git tag "ovellum@$(node -p "require('./package.json').version")"
-   git push --tags
+   v="ovellum@$(node -p "require('./package.json').version")"
+   git tag -s "$v" -m "$v"
+   git push origin "$v"        # push the one tag (avoids dragging unrelated tags)
    ```
 
-6. **GitHub release notes.** Copy the relevant section from
-   `packages/cli/CHANGELOG.md` into a new release at
-   <https://github.com/oinam/ovellum/releases/new>, attach the tag.
+6. **GitHub release notes.** New release at
+   <https://github.com/oinam/ovellum/releases/new>, attach the `ovellum@x.y.z`
+   tag. Paste the matching `## x.y.z` section from `packages/cli/CHANGELOG.md`.
+   The **Full diff** link format is
+   `https://github.com/oinam/ovellum/compare/ovellum@<prev>...ovellum@<new>`.
 
-If `npm publish` fails: usually an OTP prompt; re-run with `--otp=…`.
-If the version on npm already matches `package.json`, the publish is a no-op
-— means a prior attempt succeeded; just continue with steps 5–6.
+**Failure modes:**
+- `npm publish` → usually an OTP prompt; re-run with `--otp=…`. If the npm
+  version already matches `package.json`, publish is a no-op (a prior attempt
+  succeeded) — continue with steps 5–6.
+- `git push origin ovellum@x.y.z` → `src refspec … does not match any` means the
+  tag was never created locally (the `git tag` step didn't run or errored — see
+  the signed-tag note above). Create it first, then push.
+
+**Changeset gotchas that bit real releases (do these to avoid hand-fixing):**
+- The version PR only consumes changesets **already on `origin`** when CI runs
+  it. A changeset committed locally but **not pushed** gets left out of that
+  release. Either push all changesets before the PR merges, or — if you already
+  merged — rebase the stray commit onto the merged `main` and drop/fold the
+  orphaned changeset (an unconsumed changeset would otherwise trigger a spurious
+  next-patch release). **Pick exactly one** of "merge the version PR" *or*
+  `pnpm changeset version` locally — never both.
+- **Direct-to-`main` pushes bypass the PR-only changeset guard**, so the
+  auto-CHANGELOG under-records the release (happened for 0.2.1 and 0.3.0). When
+  it does, flesh out the version's section by hand with an **"### Also in this
+  release"** subsection, reconstructed from
+  `git log ovellum@<prev>..ovellum@<new>` (filter to commits touching
+  `packages/core` / `packages/site/src` / `packages/cli/src` — website-only and
+  docs-only commits don't ship in the package).
 
 ### v0.1.0 / launch backlog
 
