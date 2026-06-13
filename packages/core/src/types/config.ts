@@ -333,6 +333,15 @@ export interface OvellumSiteConfig {
    */
   ignoreFolders: string[];
   /**
+   * **Reserved** static-assets directory (relative to `input`). Its contents
+   * are copied to the **output root** as-is — `public/favicon.ico` →
+   * `/favicon.ico`, `public/img/logo.svg` → `/img/logo.svg` — and the folder is
+   * never treated as content (no pages, no sidebar entry). **Defaults to
+   * `'public'`.** It's the first of Ovellum's reserved folder names. (Static
+   * files *outside* this folder still pass through, but keep their path.)
+   */
+  publicDir: string;
+  /**
    * File globs to exclude from the manual-mode site — both Markdown pages and
    * passthrough assets, honoured by `build` **and** `check`. A pattern without
    * `/` matches the basename at any depth (`README.md`, `*.draft.md`); a
@@ -441,6 +450,7 @@ export const DEFAULT_CONFIG: OvellumConfig = {
     pageMeta: { readingTime: true, lastModified: true },
     sidebar: { collapse: true },
     backToTop: { enabled: true, threshold: 360 },
+    publicDir: 'public',
     ignoreFolders: [],
     ignoreFiles: [],
     topbarNav: [],

@@ -119,6 +119,7 @@ interface CheckInput {
 async function checkManual({ config, cwd }: CheckInput): Promise<CheckRun> {
   const inputAbs = path.resolve(cwd, config.input);
   const outputAbs = path.resolve(cwd, config.output);
+  const publicAbs = path.join(inputAbs, config.site.publicDir);
   // Honour the same exclusions as `build` (ignoreFolders / ignoreFiles, the
   // structural auto-excludes, and the output dir) so `check` lints only real
   // content — never `node_modules`, dotfiles, dependency READMEs, or a nested
@@ -134,6 +135,7 @@ async function checkManual({ config, cwd }: CheckInput): Promise<CheckRun> {
     config.site.ignoreFiles,
     outputAbs,
     homeBasename,
+    publicAbs,
   );
   const validUrls = collectValidUrls(nav, config);
 
@@ -144,6 +146,7 @@ async function checkManual({ config, cwd }: CheckInput): Promise<CheckRun> {
     ignoreFolders: config.site.ignoreFolders,
     ignoreFiles: config.site.ignoreFiles ?? [],
     outputAbs,
+    publicAbs,
   })) {
     if (!/\.(md|markdown)$/i.test(file)) continue;
     files.push(file);

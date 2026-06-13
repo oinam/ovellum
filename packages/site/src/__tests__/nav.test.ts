@@ -97,6 +97,42 @@ describe('buildNav', () => {
     expect(nav.children.map((c) => c.url)).toEqual(['/guide/']);
   });
 
+  it('uses a subfolder README as that folder index (index.* wins when both exist)', async () => {
+    const content = path.join(tmp, 'content');
+    const readmeOnly = path.join(content, 'readme-only');
+    const both = path.join(content, 'both');
+    mkdirSync(readmeOnly, { recursive: true });
+    mkdirSync(both, { recursive: true });
+    writeFileSync(path.join(content, 'index.md'), '# Root\n');
+    writeFileSync(path.join(readmeOnly, 'README.md'), '# Readme Section\n');
+    writeFileSync(path.join(readmeOnly, 'page.md'), '# Page\n');
+    writeFileSync(path.join(both, 'index.md'), '# The Index\n');
+    writeFileSync(path.join(both, 'README.md'), '# The Readme\n');
+
+    const nav = await buildNav('./content', tmp);
+    const byUrl = Object.fromEntries(nav.children.map((c) => [c.url, c]));
+    // README is the section page → folder node has a sourcePath, no /readme/ child.
+    const ro = byUrl['/readme-only/']!;
+    expect(ro.sourcePath).toContain('README.md');
+    expect(ro.children.map((c) => c.url)).toEqual(['/readme-only/page/']);
+    // When both exist, index.* wins.
+    expect(byUrl['/both/']!.sourcePath).toContain('index.md');
+  });
+
+  it('honours a frontmatter permalink as the page URL', async () => {
+    const content = path.join(tmp, 'content');
+    mkdirSync(content);
+    writeFileSync(path.join(content, 'index.md'), '# Root\n');
+    writeFileSync(path.join(content, 'deep-slug.md'), '---\npermalink: /custom/\n---\n# Custom\n');
+    writeFileSync(path.join(content, 'bare.md'), '---\npermalink: bare-path\n---\n# Bare\n');
+
+    const nav = await buildNav('./content', tmp);
+    const urls = nav.children.map((c) => c.url).sort();
+    expect(urls).toContain('/custom/'); // not /deep-slug/
+    expect(urls).toContain('/bare-path/'); // normalised: leading + trailing slash
+    expect(urls).not.toContain('/deep-slug/');
+  });
+
   it('captures a folder _meta.json collapse override on the nav node', async () => {
     const content = path.join(tmp, 'content');
     const open = path.join(content, 'always-open');

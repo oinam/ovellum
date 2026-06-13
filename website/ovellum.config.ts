@@ -12,8 +12,8 @@ export default {
   defaultFormat: 'md',
   site: {
     title: 'Ovellum',
-    logo: '/public/ovellum-logo.svg',
-    favicon: '/public/ovellum-logo.svg',
+    logo: '/ovellum-logo.svg',
+    favicon: '/ovellum-logo.svg',
     version: 'v0.5.1',
     description:
       'Markdown documentation for TypeScript and JavaScript projects. A merge engine that lets auto-generated API docs and hand-written prose coexist in the same files, plus a Jekyll-style static-site builder for purely manual docs.',
@@ -26,10 +26,10 @@ export default {
     // Raw HTML, injected verbatim into <head>. Backticks mean third-party
     // snippets (which are full of double quotes) paste in with no escaping.
     headExtra: `
-      <link rel="preload" href="/public/fonts/geist/Geist%5Bwght%5D.ttf" as="font" type="font/ttf" crossorigin>
-      <link rel="stylesheet" href="/public/site.css">
+      <link rel="preload" href="/fonts/geist/Geist%5Bwght%5D.ttf" as="font" type="font/ttf" crossorigin>
+      <link rel="stylesheet" href="/site.css">
       <!-- Pre-paint typeface switch: set <html data-typeface> before first paint
-           so the right font (see /public/site.css) applies with no flash. Mirrors
+           so the right font (see /site.css) applies with no flash. Mirrors
            the theme toggle's data-theme pattern — this is the seam a future UI
            font picker would drive. Compare live in the console:
              ovSetTypeface('geist' | 'inter' | 'satoshi')   // persists + reloads -->

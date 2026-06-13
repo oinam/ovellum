@@ -86,24 +86,25 @@ third-party connection (better performance) and the privacy/GDPR concern of
 sending visitor IPs to a font CDN, and the old "shared browser cache" argument
 no longer holds (browsers partition their cache per-site).
 
-1. Drop the font's variable file into `content/public/` — it passes through
-   to `dist/`.
-2. In a small follow-up stylesheet referenced from `site.headExtra`,
-   `@font-face` it and override `--font-sans`. If your family ships a matching
-   monospace, override `--font-mono` too; otherwise leave it on the system
-   stack:
+1. Drop the font (and a small stylesheet) into the
+   [`publicDir`](/docs/reference/config/) — `content/public/` is copied to the
+   **output root**, so `content/public/fonts/…` is served at `/fonts/…` and
+   `content/public/site.css` at `/site.css`.
+2. In that stylesheet, referenced from `site.headExtra`, `@font-face` it and
+   override `--font-sans`. If your family ships a matching monospace, override
+   `--font-mono` too; otherwise leave it on the system stack:
 
 ```css
-/* content/public/site.css */
+/* content/public/site.css → served at /site.css */
 @font-face {
   font-family: 'Geist';
-  src: url('/public/fonts/geist/Geist%5Bwght%5D.ttf') format('truetype');
+  src: url('/fonts/geist/Geist%5Bwght%5D.ttf') format('truetype');
   font-weight: 100 900; /* variable weight axis */
   font-display: swap;
 }
 @font-face {
   font-family: 'Geist Mono';
-  src: url('/public/fonts/geist/GeistMono%5Bwght%5D.ttf') format('truetype');
+  src: url('/fonts/geist/GeistMono%5Bwght%5D.ttf') format('truetype');
   font-weight: 100 900;
   font-display: swap;
 }
@@ -115,8 +116,8 @@ no longer holds (browsers partition their cache per-site).
 
 ```html
 <!-- site.headExtra (ovellum.config.*) -->
-<link rel="preload" href="/public/fonts/geist/Geist%5Bwght%5D.ttf" as="font" type="font/ttf" crossorigin>
-<link rel="stylesheet" href="/public/site.css">
+<link rel="preload" href="/fonts/geist/Geist%5Bwght%5D.ttf" as="font" type="font/ttf" crossorigin>
+<link rel="stylesheet" href="/site.css">
 ```
 
 Body, headings, and prose pick up `--font-sans` automatically; code follows

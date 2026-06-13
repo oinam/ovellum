@@ -75,6 +75,20 @@ describe('renderPage', () => {
     expect(collapsed).not.toContain('<details class="ov-nav-section" open>');
   });
 
+  it('emits <meta name="keywords"> from page tags', () => {
+    const html = renderPage({
+      site: { title: 'X', defaultTheme: 'auto', footer: '' },
+      nav: NAV,
+      url: '/',
+      title: 'X',
+      tags: ['howto', 'setup'],
+      bodyHtml: '',
+      headings: [],
+      generatedAt: '2026-06-13T00:00:00.000Z',
+    });
+    expect(html).toContain('<meta name="keywords" content="howto, setup">');
+  });
+
   it('renders the back-to-top button with the default threshold, and honours config', () => {
     const def = renderPage({
       site: { title: 'X', defaultTheme: 'auto', footer: '' },

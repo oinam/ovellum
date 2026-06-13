@@ -1,12 +1,19 @@
 import { existsSync } from 'node:fs';
-import { copyFile, mkdir, readFile, readdir, stat, writeFile } from 'node:fs/promises';
+import { copyFile, cp, mkdir, readFile, readdir, stat, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import matter from 'gray-matter';
 import type { OvellumConfig, OvellumSiteConfig } from '@ovellum/core';
 import { renderMarkdown } from './markdown.js';
 import { isExcludedContentFile, isExcludedDirName } from './content-filter.js';
-import { buildNav, findAdjacent, findBreadcrumbs, isHiddenDir, type NavNode } from './nav.js';
+import {
+  buildNav,
+  findAdjacent,
+  findBreadcrumbs,
+  flattenNav,
+  isHiddenDir,
+  type NavNode,
+} from './nav.js';
 import { countWords, lastModifiedISO, readingMinutes } from './page-meta.js';
 import { indexSite } from './search.js';
 import { generateRss } from './rss.js';
@@ -110,6 +117,9 @@ export async function buildSite(options: BuildSiteOptions): Promise<BuildSiteRes
   }
 
   const site = resolveSiteConfig(config);
+  // The reserved static-assets dir (default `public`) — its contents are copied
+  // to the output root below; it's skipped everywhere else (no pages, no nav).
+  const publicAbs = path.join(inputAbs, site.publicDir);
   // Resolve the home page: `site.home`, else root `index.md`, else root
   // `README.md`. The file mapped to `/` (instead of its own slug); the nav root
   // uses it as its index so it doesn't double as a child entry.
@@ -122,11 +132,36 @@ export async function buildSite(options: BuildSiteOptions): Promise<BuildSiteRes
     site.ignoreFiles ?? [],
     outputAbs,
     homeBasename,
+    publicAbs,
   );
+  // The nav is the single source of truth for page URLs — it resolves
+  // index/README folder pages and frontmatter `permalink`s with full
+  // folder-sibling awareness. Map each page's source path to its URL so the
+  // build emits files at exactly the URLs the sidebar/links point to.
+  const urlBySource = new Map<string, string>();
+  for (const node of flattenNav(nav)) {
+    if (node.sourcePath) urlBySource.set(node.sourcePath, node.url);
+  }
   const warnings: string[] = [];
 
   await mkdir(assetsAbs, { recursive: true });
   await writeStaticAssets(assetsAbs);
+
+  // Copy the reserved publicDir's contents to the output ROOT — the SSG norm
+  // (Next/Astro/Vite/VitePress/Hugo `static`): `public/favicon.ico` →
+  // `/favicon.ico`, so root-required files (favicon, robots.txt, CNAME, …) land
+  // where browsers/crawlers look. Each top-level entry is copied by name so it
+  // lands at the root, not nested under the folder name. Files are copied
+  // verbatim (a `.md` here is an asset, never rendered). Runs before page
+  // rendering, so a generated route wins over a same-named public file.
+  if (existsSync(publicAbs) && publicAbs !== outputAbs) {
+    for (const name of await readdir(publicAbs)) {
+      await cp(path.join(publicAbs, name), path.join(outputAbs, name), {
+        recursive: true,
+        force: true,
+      });
+    }
+  }
 
   const landingEnabled = site.landing.enabled === true;
   const docsHref = landingEnabled ? (site.landing.docsHref ?? firstNavUrl(nav)) : undefined;
@@ -190,11 +225,14 @@ export async function buildSite(options: BuildSiteOptions): Promise<BuildSiteRes
     ignoreFolders: site.ignoreFolders,
     ignoreFiles: site.ignoreFiles ?? [],
     outputAbs,
+    publicAbs,
   })) {
     const relFromInput = path.relative(inputAbs, file).replace(/\\/g, '/');
     if (isMarkdown(file)) {
-      // The resolved home file renders at `/` (not its own slug, e.g. `/README/`).
-      const url = relFromInput === homeRel ? '/' : urlFor(relFromInput);
+      // URL comes from the nav (handles index/README folder pages + permalinks);
+      // urlFor is only a fallback for a file the nav didn't surface.
+      const sourceRelFromCwd = path.relative(cwd, file).replace(/\\/g, '/');
+      const url = urlBySource.get(sourceRelFromCwd) ?? urlFor(relFromInput);
       if (landingEnabled && url === '/') {
         warnings.push(
           `Skipped ${relFromInput} because site.landing.enabled is true; ` +
@@ -206,7 +244,6 @@ export async function buildSite(options: BuildSiteOptions): Promise<BuildSiteRes
       const outputPath = path.join(outputAbs, urlToOutputPath(url));
       const { prev, next } = findAdjacent(nav, url);
       const breadcrumbs = findBreadcrumbs(nav, url).map((n) => ({ title: n.title, url: n.url }));
-      const sourceRelFromCwd = path.relative(cwd, file).replace(/\\/g, '/');
       const result = await renderOne({
         absInput: file,
         url,
@@ -352,9 +389,20 @@ interface RenderOneResult {
 async function renderOne(input: RenderOneInput): Promise<RenderOneResult | null> {
   const raw = await readFile(input.absInput, 'utf8');
   const parsed = matter(raw);
-  const frontmatter = parsed.data as { title?: string; description?: string; draft?: boolean };
+  const frontmatter = parsed.data as {
+    title?: string;
+    description?: string;
+    draft?: boolean;
+    tags?: unknown;
+  };
   // Draft pages are unpublished — skip rendering (nav.ts keeps them out too).
   if (frontmatter.draft === true) return null;
+  // `tags` (string or string[]) → <meta name="keywords">. Coerced + trimmed.
+  const tags = Array.isArray(frontmatter.tags)
+    ? frontmatter.tags.filter((t): t is string => typeof t === 'string')
+    : typeof frontmatter.tags === 'string'
+      ? [frontmatter.tags]
+      : undefined;
   const { html: bodyHtml, headings } = await renderMarkdown(parsed.content, {
     codeTheme: input.site.codeTheme,
   });
@@ -381,6 +429,7 @@ async function renderOne(input: RenderOneInput): Promise<RenderOneResult | null>
     url: input.url,
     title,
     description: frontmatter.description,
+    tags,
     bodyHtml,
     headings,
     generatedAt: input.generatedAt,
@@ -471,6 +520,8 @@ interface WalkOpts {
   /** Absolute output dir — skipped when it nests inside input (e.g. `input: '.'`,
    *  `output: 'dist'`), so the build never walks/copies its own output. */
   outputAbs?: string;
+  /** Absolute reserved publicDir — skipped here (copied to the root separately). */
+  publicAbs?: string;
 }
 
 export async function* walkContent(dirAbs: string, opts: WalkOpts): AsyncGenerator<string> {
@@ -484,6 +535,7 @@ export async function* walkContent(dirAbs: string, opts: WalkOpts): AsyncGenerat
       // (`_`/dot/`node_modules`), explicit `ignoreFolders`, or a folder opting
       // out via `_meta.json` "hidden": true.
       if (opts.outputAbs && abs === opts.outputAbs) continue;
+      if (opts.publicAbs && abs === opts.publicAbs) continue;
       if (isExcludedDirName(name)) continue;
       if (opts.ignoreFolders.includes(name)) continue;
       if (await isHiddenDir(abs)) continue;

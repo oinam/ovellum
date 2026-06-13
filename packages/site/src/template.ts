@@ -10,6 +10,8 @@ export interface ShellOptions {
   fullTitle: string;
   /** Used in <meta name="description"> and the canonical link. */
   description?: string;
+  /** Frontmatter tags → <meta name="keywords">. */
+  tags?: string[];
   /** Site-relative URL for canonical/OG; empty for landings. */
   url: string;
   /** Path prefix for static assets, defaults to '/'. */
@@ -75,6 +77,7 @@ function renderShell(opts: ShellOptions): string {
        (no page impact) — an accepted tradeoff for staying all-OKLCH. -->
   <meta name="theme-color" id="ov-theme-color" data-light="oklch(97% 0 0)" data-dark="oklch(20.5% 0 0)" content="oklch(97% 0 0)">
   <title>${escapeHtml(opts.fullTitle)}</title>
+  ${opts.tags && opts.tags.length ? `<meta name="keywords" content="${escapeAttr(opts.tags.join(', '))}">` : ''}
   ${desc ? `<meta name="description" content="${escapeAttr(desc)}">` : ''}
   ${opts.site.baseUrl ? `<link rel="canonical" href="${escapeAttr(join(opts.site.baseUrl, basePath + opts.url))}">` : ''}
   ${opts.site.baseUrl ? `<link rel="alternate" type="application/rss+xml" title="${escapeAttr(opts.site.title)}" href="${escapeAttr(join(opts.site.baseUrl, basePath + '/feed.xml'))}">` : ''}
@@ -431,6 +434,8 @@ export interface RenderPageInput {
   title: string;
   /** Optional description for `<meta name="description">`. */
   description?: string;
+  /** Frontmatter tags → `<meta name="keywords">`. */
+  tags?: string[];
   /** Rendered body HTML. */
   bodyHtml: string;
   /** Headings extracted from the body for the right-side ToC. */
@@ -497,6 +502,7 @@ export function renderPage(input: RenderPageInput): string {
     site: input.site,
     fullTitle,
     description: input.description,
+    tags: input.tags,
     url: input.url,
     assetsPrefix: input.assetsPrefix,
     docsHref: input.docsHref,

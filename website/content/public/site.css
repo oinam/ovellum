@@ -30,28 +30,28 @@
    dedicated monospace; Inter and Satoshi ship woff2 with no mono. */
 @font-face {
   font-family: 'Geist';
-  src: url('/public/fonts/geist/Geist%5Bwght%5D.ttf') format('truetype');
+  src: url('/fonts/geist/Geist%5Bwght%5D.ttf') format('truetype');
   font-weight: 100 900;
   font-style: normal;
   font-display: swap;
 }
 @font-face {
   font-family: 'Geist Mono';
-  src: url('/public/fonts/geist/GeistMono%5Bwght%5D.ttf') format('truetype');
+  src: url('/fonts/geist/GeistMono%5Bwght%5D.ttf') format('truetype');
   font-weight: 100 900;
   font-style: normal;
   font-display: swap;
 }
 @font-face {
   font-family: 'Inter';
-  src: url('/public/fonts/inter/InterVariable.woff2') format('woff2');
+  src: url('/fonts/inter/InterVariable.woff2') format('woff2');
   font-weight: 100 900;
   font-style: normal;
   font-display: swap;
 }
 @font-face {
   font-family: 'Satoshi';
-  src: url('/public/fonts/satoshi/Satoshi-Variable.woff2') format('woff2');
+  src: url('/fonts/satoshi/Satoshi-Variable.woff2') format('woff2');
   font-weight: 300 900; /* variable weight axis (Light → Black) */
   font-style: normal;
   font-display: swap;

@@ -295,6 +295,7 @@ ${descLine}
     // pageMeta: { readingTime: true, lastModified: true },
     // sidebar: { collapse: true }, // collapse folders by default (a folder's _meta.json can override per-folder)
     // backToTop: { enabled: true, threshold: 360 }, // floating button after THRESHOLD px of scroll
+    // publicDir: 'public',      // RESERVED static-assets dir → copied to the output ROOT (public/favicon.ico → /favicon.ico); never processed
     // ignoreFolders: [],        // folder names to exclude at any depth
     // ignoreFiles: [],          // file globs to exclude, e.g. ['README.md', 'drafts/**']
     // topbarNav: [              // right-aligned top-bar links (title + URL)

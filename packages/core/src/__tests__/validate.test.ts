@@ -78,6 +78,15 @@ describe('validateUserConfig', () => {
     );
   });
 
+  it('accepts a plain site.publicDir and rejects slashes / traversal', () => {
+    expect(validateUserConfig({ site: { publicDir: 'static' } })).toEqual({
+      site: { publicDir: 'static' },
+    });
+    expect(() => validateUserConfig({ site: { publicDir: '' } })).toThrow(/site\.publicDir/);
+    expect(() => validateUserConfig({ site: { publicDir: 'a/b' } })).toThrow(/site\.publicDir/);
+    expect(() => validateUserConfig({ site: { publicDir: '../up' } })).toThrow(/site\.publicDir/);
+  });
+
   it('accepts site.backToTop and rejects bad shapes', () => {
     expect(validateUserConfig({ site: { backToTop: { enabled: false, threshold: 200 } } })).toEqual(
       { site: { backToTop: { enabled: false, threshold: 200 } } },

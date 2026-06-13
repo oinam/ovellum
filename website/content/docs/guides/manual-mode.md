@@ -157,8 +157,10 @@ Four ways to keep content out of the published site, from broad to narrow:
 
 All four drop the content from the sidebar **and** the build, and both
 `build` and `check` honour them (so `check` never lints excluded files).
-Asset-only folders with no Markdown — like `public/` — are already kept out of
-the sidebar automatically, while their files still pass through to `dist/`.
+Asset-only folders with no Markdown are kept out of the sidebar automatically,
+while their files still pass through to `dist/`. The reserved
+[`public/`](#static-assets) folder is special — it's copied to the output root
+(see Static assets below).
 
 **Running from your project root?** `input: "."` is fine — dotfiles,
 `node_modules`, package manifests/lockfiles, your `ovellum.config.*`, and the
@@ -241,6 +243,26 @@ dist/
     screenshot.png
   hello/index.html
 ```
+
+### The reserved `public/` folder → site root
+
+The **[`publicDir`](/docs/reference/config/)** (default `public`) is a
+**reserved** folder copied to the **output root** — the convention you know from
+Next, Astro, Vite, and Hugo (`static/`). It's the place for files that must live
+at the site root (`favicon.ico`, `robots.txt`, `CNAME`, OG images) plus any
+other static assets:
+
+```
+content/
+  public/
+    favicon.ico        →  /favicon.ico
+    robots.txt         →  /robots.txt
+    fonts/Geist.ttf    →  /fonts/Geist.ttf
+```
+
+Nothing inside it is processed (no pages, no sidebar entries — even a `.md` is
+copied as-is). Rename it via `site.publicDir`. (Static files *outside* `public/`,
+like the `images/` example above, still pass through keeping their own path.)
 
 ## Landing page <a id="landing"></a>
 

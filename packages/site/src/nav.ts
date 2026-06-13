@@ -120,6 +120,8 @@ export async function buildNav(
   outputAbs?: string,
   /** Basename of the root home file (e.g. `README.md`) — used as the root index. */
   homeBasename?: string,
+  /** Absolute reserved publicDir — skipped (static assets, not content). */
+  publicAbs?: string,
 ): Promise<NavNode> {
   const absRoot = path.resolve(cwd, rootDir);
   const rel = (abs: string) => '/' + path.posix.relative(absRoot, abs).replace(/\\/g, '/');
@@ -133,6 +135,7 @@ export async function buildNav(
     absRoot,
     outputAbs,
     homeBasename,
+    publicAbs,
     true,
   );
   // walk() returns null for hidden/empty dirs; the root is never pruned.
@@ -154,26 +157,35 @@ async function walk(
   absRoot: string,
   outputAbs: string | undefined,
   homeBasename: string | undefined,
+  publicAbs: string | undefined,
   isRoot: boolean,
 ): Promise<NavNode | null> {
   const items = await listDir(dirAbs);
   const meta = await readMeta(dirAbs);
 
-  // At the root, the home file (index.md / README.md / site.home) is the index;
-  // elsewhere the index is `index.md` as usual.
+  // Every folder's index resolves to `index.*` first, then **`README.md`** (the
+  // GitHub norm) — so a folder with only a README uses it as the section page.
+  // At the root, an explicit `site.home` (homeBasename) wins over both.
   const indexItem =
     isRoot && homeBasename
       ? items.find((i) => !i.isDir && i.name === homeBasename && isMarkdown(i.name))
-      : items.find((i) => !i.isDir && stem(i.name) === 'index' && isMarkdown(i.name));
+      : (items.find(
+          (i) => !i.isDir && isMarkdown(i.name) && stem(i.name).toLowerCase() === 'index',
+        ) ??
+        items.find(
+          (i) => !i.isDir && isMarkdown(i.name) && stem(i.name).toLowerCase() === 'readme',
+        ));
   const indexNode = indexItem ? await pageNode(indexItem.abs, urlPrefix, cwd) : undefined;
 
   const children: NavNode[] = [];
   for (const item of items) {
     if (item === indexItem) continue;
     if (item.isDir) {
-      // Output dir (avoids self-recursion under `input: '.'`), structural
-      // (`_`/dot/`node_modules`), configured, and self-hidden folders.
+      // Output dir (avoids self-recursion under `input: '.'`), the reserved
+      // publicDir (static assets), structural (`_`/dot/`node_modules`),
+      // configured, and self-hidden folders.
       if (outputAbs && item.abs === outputAbs) continue;
+      if (publicAbs && item.abs === publicAbs) continue;
       if (isExcludedDirName(item.name)) continue;
       if (ignoreFolders.includes(item.name)) continue;
       if (await isHiddenDir(item.abs)) continue;
@@ -188,6 +200,7 @@ async function walk(
         absRoot,
         outputAbs,
         homeBasename,
+        publicAbs,
         false,
       );
       if (child) children.push(child);
@@ -230,9 +243,15 @@ async function pageNode(abs: string, url: string, cwd: string): Promise<NavNode 
   const fmTitle = typeof data.title === 'string' ? data.title : undefined;
   const h1 = firstH1(content);
   const title = fmTitle ?? h1 ?? titleFromSegment(stem(path.basename(abs))) ?? 'Untitled';
+  // Frontmatter `permalink` overrides the computed URL (leaf pages). Normalised
+  // to a root-absolute, trailing-slash path: `custom` / `/custom` → `/custom/`.
+  const permalink =
+    typeof data.permalink === 'string' && data.permalink.trim()
+      ? ensureTrailingSlash(data.permalink.startsWith('/') ? data.permalink : '/' + data.permalink)
+      : undefined;
   return {
     title,
-    url: ensureTrailingSlash(url),
+    url: permalink ?? ensureTrailingSlash(url),
     sourcePath: path.relative(cwd, abs).replace(/\\/g, '/'),
     children: [],
   };
