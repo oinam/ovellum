@@ -1215,6 +1215,46 @@ body.ov-menu-open {
   padding-inline-start: 0;
 }
 
+/* Collapsible folders — each folder is a <details>; the <summary> is the row
+   (group heading or section-index link) with a chevron at the right edge that
+   rotates on open. Native disclosure triangle removed so only our chevron
+   shows. The label keeps its flush-left inset; the chevron right-aligns so the
+   flat, indent-free look is preserved. */
+.ov-nav-summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
+  list-style: none;
+}
+.ov-nav-summary::-webkit-details-marker {
+  display: none;
+}
+.ov-nav-summary > .ov-nav-group,
+.ov-nav-summary > .ov-nav-link {
+  flex: 1 1 auto;
+  min-inline-size: 0;
+}
+.ov-nav-chevron {
+  flex: none;
+  margin-inline-end: var(--space-s);
+  color: var(--color-fg-subtle);
+  /* Collapsed = pointing right; open = pointing down. */
+  transform: rotate(-90deg);
+  transition: transform 150ms ease;
+}
+.ov-nav-section[open] > .ov-nav-summary .ov-nav-chevron {
+  transform: rotate(0deg);
+}
+.ov-nav-summary:hover .ov-nav-chevron {
+  color: var(--color-fg);
+}
+@media (prefers-reduced-motion: reduce) {
+  .ov-nav-chevron {
+    transition: none;
+  }
+}
+
 /* Content */
 .ov-content {
   min-inline-size: 0;

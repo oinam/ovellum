@@ -448,7 +448,10 @@ export function renderPage(input: RenderPageInput): string {
       : input.site.title;
 
   const basePath = normaliseBasePath(input.site.basePath);
-  const sidebar = renderSidebar(input.nav, input.url, basePath);
+  // Collapse folders unless the site opts out (`site.sidebar.collapse: false`).
+  // Optional-chained: partial site fixtures (tests/landing) may omit `sidebar`.
+  const collapseSidebar = input.site.sidebar?.collapse !== false;
+  const sidebar = renderSidebar(input.nav, input.url, basePath, collapseSidebar);
   const toc = renderToc(input.headings);
   const prevNext = renderPrevNext(input.prev, input.next, basePath);
   const breadcrumbs = renderBreadcrumbs(input.breadcrumbs, basePath);
@@ -674,23 +677,46 @@ function renderTrustStrip(trust: OvellumLandingConfig['trustStrip']): string {
 
 // -- shared helpers ------------------------------------------------------
 
-function renderSidebar(nav: NavNode, activeUrl: string, basePath: string): string {
-  return `<nav class="ov-sidebar-nav"><ul>${navList(nav.children, activeUrl, basePath)}</ul></nav>`;
+function renderSidebar(
+  nav: NavNode,
+  activeUrl: string,
+  basePath: string,
+  collapse: boolean,
+): string {
+  return `<nav class="ov-sidebar-nav"><ul>${navList(nav.children, activeUrl, basePath, collapse)}</ul></nav>`;
 }
 
-function navList(nodes: NavNode[], activeUrl: string, basePath: string): string {
+/** True when this node, or any descendant, is the active page. */
+function subtreeHasActive(node: NavNode, activeUrl: string): boolean {
+  if (node.url === activeUrl) return true;
+  return node.children.some((c) => subtreeHasActive(c, activeUrl));
+}
+
+function navList(
+  nodes: NavNode[],
+  activeUrl: string,
+  basePath: string,
+  collapse: boolean,
+): string {
   if (nodes.length === 0) return '';
   return nodes
     .map((node) => {
       const isActive = node.url === activeUrl;
       const hasChildren = node.children.length > 0;
-      const link = node.sourcePath
+      // A section-index folder carries its own page (sourcePath) → a link in
+      // the summary; a pure folder is a bold group heading.
+      const label = node.sourcePath
         ? `<a class="ov-nav-link${isActive ? ' is-active' : ''}" href="${escapeAttr(siteUrl(node.url, basePath))}">${escapeHtml(node.title)}</a>`
         : `<span class="ov-nav-group">${escapeHtml(node.title)}</span>`;
-      const children = hasChildren
-        ? `<ul class="ov-nav-children">${navList(node.children, activeUrl, basePath)}</ul>`
-        : '';
-      return `<li>${link}${children}</li>`;
+      if (!hasChildren) return `<li>${label}</li>`;
+      // Folder → a <details> disclosure (no JS). Collapsed by default, but the
+      // branch holding the current page stays open so the active item is
+      // visible; `collapse: false` opens every folder. The chevron rotates via
+      // CSS on [open]. Clicking a section-index link navigates (full reload),
+      // so the toggle-and-link overlap is harmless on a static multi-page site.
+      const open = !collapse || subtreeHasActive(node, activeUrl);
+      const children = `<ul class="ov-nav-children">${navList(node.children, activeUrl, basePath, collapse)}</ul>`;
+      return `<li><details class="ov-nav-section"${open ? ' open' : ''}><summary class="ov-nav-summary">${label}${renderIcon('chevron-down', { class: 'ov-nav-chevron', size: 14 })}</summary>${children}</details></li>`;
     })
     .join('');
 }

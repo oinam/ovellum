@@ -68,6 +68,10 @@ required.** Two rules cover the whole structure:
 - **Each subfolder is a section**, titled after the folder name, title-cased:
   `getting-started/` → "Getting started".
 
+Sections **collapse by default** in the sidebar (a click expands them) — the
+section holding the page you're on stays open, so you always see where you are.
+Prefer everything expanded? Set [`site.sidebar.collapse: false`](/docs/reference/config/).
+
 Page titles resolve, in order:
 
 1. The frontmatter `title:` field, if set.

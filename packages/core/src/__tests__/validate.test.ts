@@ -70,6 +70,16 @@ describe('validateUserConfig', () => {
     expect(() => validateUserConfig({ protect: 'on' })).toThrow(/protect/);
   });
 
+  it('accepts site.sidebar.collapse and rejects a non-boolean', () => {
+    expect(validateUserConfig({ site: { sidebar: { collapse: false } } })).toEqual({
+      site: { sidebar: { collapse: false } },
+    });
+    expect(() => validateUserConfig({ site: { sidebar: { collapse: 'yes' } } })).toThrow(
+      /site\.sidebar\.collapse/,
+    );
+    expect(() => validateUserConfig({ site: { sidebar: true } })).toThrow(/site\.sidebar/);
+  });
+
   it('accepts string site.logo and site.favicon', () => {
     const input = { site: { logo: '/public/logo.svg', favicon: '/favicon.ico' } };
     expect(validateUserConfig(input)).toEqual(input);

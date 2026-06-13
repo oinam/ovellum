@@ -46,6 +46,49 @@ describe('renderPage', () => {
     expect(html).toContain('fin');
   });
 
+  it('collapses sidebar folders by default, opening only the active branch', () => {
+    // Active page is inside "Guides" → that folder opens; it's the only folder.
+    const html = renderPage({
+      site: { title: 'X', defaultTheme: 'auto', footer: '' },
+      nav: NAV,
+      url: '/guides/deploy/',
+      title: 'Deploy',
+      bodyHtml: '',
+      headings: [],
+      generatedAt: '2026-06-13T00:00:00.000Z',
+    });
+    // Folder is a <details> with a chevron, and it's open (holds the active page).
+    expect(html).toContain('<details class="ov-nav-section" open>');
+    expect(html).toContain('class="ov-nav-chevron"');
+
+    // On an unrelated page, the same folder collapses (no `open`).
+    const collapsed = renderPage({
+      site: { title: 'X', defaultTheme: 'auto', footer: '' },
+      nav: NAV,
+      url: '/getting-started/',
+      title: 'Getting started',
+      bodyHtml: '',
+      headings: [],
+      generatedAt: '2026-06-13T00:00:00.000Z',
+    });
+    expect(collapsed).toContain('<details class="ov-nav-section">');
+    expect(collapsed).not.toContain('<details class="ov-nav-section" open>');
+  });
+
+  it('auto-expands every folder when site.sidebar.collapse is false', () => {
+    const html = renderPage({
+      site: { title: 'X', defaultTheme: 'auto', footer: '', sidebar: { collapse: false } },
+      nav: NAV,
+      url: '/getting-started/',
+      title: 'Getting started',
+      bodyHtml: '',
+      headings: [],
+      generatedAt: '2026-06-13T00:00:00.000Z',
+    });
+    expect(html).toContain('<details class="ov-nav-section" open>');
+    expect(html).not.toContain('<details class="ov-nav-section">');
+  });
+
   it('omits the brand mark when site.logo is unset, keeping just the title', () => {
     const html = renderPage({
       site: { title: 'My site', defaultTheme: 'auto', footer: '' },

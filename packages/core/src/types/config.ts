@@ -182,6 +182,16 @@ export interface OvellumSitePageMetaConfig {
   lastModified: boolean;
 }
 
+export interface OvellumSidebarConfig {
+  /**
+   * Collapse sidebar folders by default (each is a disclosure the visitor can
+   * expand). The folder branch containing the current page always stays open,
+   * so you can see where you are. **Default `true`.** Set `false` to render the
+   * whole tree auto-expanded.
+   */
+  collapse: boolean;
+}
+
 export interface OvellumLandingConfig {
   /** Render a landing page at `/` instead of the regular doc index. */
   enabled: boolean;
@@ -285,6 +295,8 @@ export interface OvellumSiteConfig {
   search: OvellumSiteSearchConfig;
   /** Per-page meta line (reading time + last-modified) above the article. */
   pageMeta: OvellumSitePageMetaConfig;
+  /** Sidebar folder behaviour (collapsed by default; the active branch stays open). */
+  sidebar: OvellumSidebarConfig;
   /**
    * Folder names to exclude entirely from the manual-mode site — matched by
    * name at any depth. Excluded folders are skipped in the sidebar nav, are not
@@ -387,6 +399,7 @@ export const DEFAULT_CONFIG: OvellumConfig = {
     footer: 'Built with Ovellum',
     search: { enabled: false },
     pageMeta: { readingTime: true, lastModified: true },
+    sidebar: { collapse: true },
     ignoreFolders: [],
     topbarNav: [],
     footerNav: [],

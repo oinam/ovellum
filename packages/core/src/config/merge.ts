@@ -49,6 +49,9 @@ function mergeSite(
   if (override.pageMeta !== undefined) {
     out.pageMeta = { ...base.pageMeta, ...override.pageMeta };
   }
+  if (override.sidebar !== undefined) {
+    out.sidebar = { ...base.sidebar, ...override.sidebar };
+  }
   return out;
 }
 
