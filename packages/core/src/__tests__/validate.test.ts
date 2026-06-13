@@ -78,6 +78,11 @@ describe('validateUserConfig', () => {
     );
   });
 
+  it('accepts site.credit boolean and rejects non-boolean', () => {
+    expect(validateUserConfig({ site: { credit: false } })).toEqual({ site: { credit: false } });
+    expect(() => validateUserConfig({ site: { credit: 'no' } })).toThrow(/site\.credit/);
+  });
+
   it('accepts site.home and rejects empty/non-string', () => {
     expect(validateUserConfig({ site: { home: 'overview.md' } })).toEqual({
       site: { home: 'overview.md' },

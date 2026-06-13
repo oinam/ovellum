@@ -144,6 +144,9 @@ export function validateUserConfig(input: unknown): OvellumUserConfig {
     if (s.footer !== undefined && typeof s.footer !== 'string') {
       throw new ConfigError('`site.footer` must be a string.');
     }
+    if (s.credit !== undefined && typeof s.credit !== 'boolean') {
+      throw new ConfigError('`site.credit` must be a boolean.');
+    }
     if (s.editUrlPattern !== undefined && typeof s.editUrlPattern !== 'string') {
       throw new ConfigError('`site.editUrlPattern` must be a string URL template.');
     }

@@ -75,6 +75,48 @@ describe('renderPage', () => {
     expect(collapsed).not.toContain('<details class="ov-nav-section" open>');
   });
 
+  it('shows a "Built with Ovellum" credit by default, and omits it when credit is false', () => {
+    const withCredit = renderPage({
+      site: { title: 'X', defaultTheme: 'auto', footer: 'My copyright' },
+      nav: NAV,
+      url: '/',
+      title: 'X',
+      bodyHtml: '',
+      headings: [],
+      generatedAt: '2026-06-13T00:00:00.000Z',
+    });
+    expect(withCredit).toContain('class="ov-footer-credit" href="https://ovellum.oss.oinam.com"');
+    expect(withCredit).toContain('Built with Ovellum');
+    expect(withCredit).toContain('My copyright');
+
+    const noCredit = renderPage({
+      site: { title: 'X', defaultTheme: 'auto', footer: 'My copyright', credit: false },
+      nav: NAV,
+      url: '/',
+      title: 'X',
+      bodyHtml: '',
+      headings: [],
+      generatedAt: '2026-06-13T00:00:00.000Z',
+    });
+    expect(noCredit).not.toContain('ov-footer-credit');
+    expect(noCredit).toContain('My copyright');
+  });
+
+  it('renders a footer with just the credit when there is no footer text', () => {
+    const html = renderPage({
+      site: { title: 'X', defaultTheme: 'auto', footer: '' },
+      nav: NAV,
+      url: '/',
+      title: 'X',
+      bodyHtml: '',
+      headings: [],
+      generatedAt: '2026-06-13T00:00:00.000Z',
+    });
+    // Default credit:true means the footer still renders (just the credit link).
+    expect(html).toContain('<footer class="ov-footer">');
+    expect(html).toContain('ov-footer-credit');
+  });
+
   it('renders a folder with its own index page as a bold category heading link', () => {
     const navWithSectionIndex: NavNode = {
       title: 'Home',

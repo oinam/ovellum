@@ -20,6 +20,8 @@ export default {
     baseUrl: 'https://ovellum.oss.oinam.com',
     defaultTheme: 'auto',
     footer: 'Ovellum is MIT-licensed. Built with itself.',
+    // This site IS Ovellum — no self-crediting link in the footer.
+    credit: false,
     editUrlPattern: 'https://github.com/oinam/ovellum/edit/main/website/{path}',
     // Raw HTML, injected verbatim into <head>. Backticks mean third-party
     // snippets (which are full of double quotes) paste in with no escaping.

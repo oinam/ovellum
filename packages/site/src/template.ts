@@ -368,11 +368,23 @@ function renderFooter(
 ): string {
   const items = site.footerNav ?? [];
   const hasItems = items.length > 0;
-  if (!site.footer && !hasItems) return '';
+  const showCredit = site.credit !== false; // default true
+  if (!site.footer && !hasItems && !showCredit) return '';
 
-  const left = site.footer
-    ? `<div class="ov-footer-left"><span>${escapeHtml(site.footer)}</span><span class="ov-footer-sep">·</span><time datetime="${escapeAttr(generatedAt)}">${escapeHtml(generatedAt.slice(0, 10))}</time></div>`
-    : '<div class="ov-footer-left"></div>';
+  // Left column: the author's footer text (+ build date), then an optional
+  // "Built with Ovellum" credit link. Either may be absent; joined by a dot.
+  const bits: string[] = [];
+  if (site.footer) {
+    bits.push(
+      `<span>${escapeHtml(site.footer)}</span><span class="ov-footer-sep">·</span><time datetime="${escapeAttr(generatedAt)}">${escapeHtml(generatedAt.slice(0, 10))}</time>`,
+    );
+  }
+  if (showCredit) {
+    bits.push(
+      `<a class="ov-footer-credit" href="https://ovellum.oss.oinam.com" rel="noopener" target="_blank">Built with Ovellum</a>`,
+    );
+  }
+  const left = `<div class="ov-footer-left">${bits.join('<span class="ov-footer-sep">·</span>')}</div>`;
 
   const right = hasItems
     ? `<nav class="ov-footer-right" aria-label="Site links">${items.map((item) => renderFooterNavItem(item, basePath)).join('')}</nav>`

@@ -282,8 +282,14 @@ export interface OvellumSiteConfig {
   accent?: string;
   /** Body font family for the whole site. Defaults to `'sans'`. */
   font: OvellumFont;
-  /** Footer text. Empty string disables the footer entirely. */
+  /** Footer text (e.g. a copyright line). Empty string shows no footer text. */
   footer: string;
+  /**
+   * Show a small "Built with Ovellum" credit link in the footer (to
+   * <https://ovellum.oss.oinam.com>). **Defaults to `true`.** Set `false` to
+   * remove it entirely — crediting Ovellum is appreciated but never required.
+   */
+  credit: boolean;
   /**
    * Pattern for the "Edit this page" link in the page footer. The literal
    * `{path}` is replaced with each page's source path **relative to the
@@ -416,7 +422,8 @@ export const DEFAULT_CONFIG: OvellumConfig = {
     palette: 'default',
     font: 'sans',
     codeTheme: 'github',
-    footer: 'Built with Ovellum',
+    footer: '',
+    credit: true,
     search: { enabled: false },
     pageMeta: { readingTime: true, lastModified: true },
     sidebar: { collapse: true },

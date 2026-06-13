@@ -1971,6 +1971,16 @@ a.ov-nav-group--link.is-active::before {
   margin-inline: 0.05em;
   opacity: 0.5;
 }
+/* "Built with Ovellum" credit (site.credit) — a quiet inline link, same weight
+   as the rest of the footer, brightening on hover. */
+.ov-footer-credit {
+  color: var(--color-fg-muted);
+  text-decoration: none;
+  transition: color 120ms ease;
+}
+.ov-footer-credit:hover {
+  color: var(--color-fg);
+}
 .ov-sr-only {
   position: absolute;
   inline-size: 1px;

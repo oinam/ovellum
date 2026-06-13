@@ -97,6 +97,7 @@ interface OvellumSiteConfig {
   font: 'sans' | 'serif';
   codeTheme: 'github' | 'nord' | 'solarized';
   footer: string;
+  credit: boolean;
   editUrlPattern?: string;
   headExtra?: string;
   search: { enabled: boolean };
@@ -124,7 +125,8 @@ interface OvellumSiteConfig {
 | `accent`         | `string?`                           | `undefined`                   | Default primary colour — any CSS colour value (`'#3b82f6'`, `'oklch(57% 0.16 255)'`, …). Drives the CTA buttons plus links, focus rings, and the ToC indicator; hover states are mixed automatically. Unset = each palette's own primary. Visitors can override it from the appearance control ("Color"). |
 | `font`           | `'sans' \| 'serif'`                 | `'sans'`                      | Body font family for the whole site. `'sans'` uses the system sans-serif stack; `'serif'` switches body, headings, and prose to the system serif stack. Code blocks always stay monospace. Both are system-font stacks — no webfonts.                                       |
 | `codeTheme`      | `'github' \| 'nord' \| 'solarized'` | `'github'`                    | Shiki theme pair for fenced code blocks. Both halves of the pair are emitted via CSS variables so a single build serves both light and dark. `github` → github-light + github-dark; `nord` → min-light + nord (nord ships dark-only); `solarized` → solarized-light + solarized-dark. |
-| `footer`         | `string`                            | `'Built with Ovellum'`        | Empty string disables the footer entirely.                                                                                                                                                                                     |
+| `footer`         | `string`                            | `''`                          | Footer text, e.g. a copyright line (rendered with the build date). Empty string shows no footer text. |
+| `credit`         | `boolean`                           | `true`                        | Show a small "Built with Ovellum" credit link in the footer (→ <https://ovellum.oss.oinam.com>). Set `false` to remove it — crediting is appreciated but never required. |
 | `editUrlPattern` | `string?`                           | `undefined`                   | URL pattern with a `{path}` placeholder. `{path}` is the page's source path **relative to the build cwd** (`--cwd`). Include any repo prefix yourself, e.g. `'https://github.com/owner/repo/edit/main/website/{path}'`. When unset, the "Edit this page" link is not rendered. |
 | `headExtra`      | `string?`                           | `undefined`                   | Raw HTML injected verbatim into `<head>` on every page, just after the search bits and before the inline theme-boot script. **Not escaped or sanitised** — only set markup you control. Unset by default. Primary use: analytics snippets, e.g. `'<script defer src="https://analytics.example.com/script.js" data-website-id="…"></script>'`. |
 | `search`         | `{ enabled: boolean }`              | `{ enabled: false }`          | When `true`, `ovellum build` runs Pagefind against the output dir and the topbar gains a search box. Adds `dist/pagefind/` to the build.                                                                                       |
