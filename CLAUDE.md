@@ -3,8 +3,8 @@
 Ovellum is an open-source documentation tool for TypeScript and JavaScript: a
 merge engine that lets auto-generated API docs and hand-written prose live in
 the same files, plus a Jekyll-style static-site builder for purely manual docs.
-TypeScript monorepo, pnpm + turbo. Published package: `ovellum` (currently
-**0.2.2**, live on npm at 0.2.1). Site: <https://ovellum.oss.oinam.com>.
+TypeScript monorepo, pnpm + turbo. Published package: `ovellum` (**0.3.0**,
+live on npm). Site: <https://ovellum.oss.oinam.com>.
 
 ## Your role
 
@@ -25,7 +25,9 @@ ask only when a decision is genuinely the maintainer's to make.
 - `docs/internal/**` — maintainer-only docs. `TODO.md` is the onboarding
   entry point: read its "Current state" block first. Keepers: `DESIGN.md`,
   `SITE.md`, `STYLES.md`, `DEPLOY.md` (this repo's own CI wiring), `FEATURES.md`,
-  `TODO.md`, `TODO-Human.md`. CLI/config/glossary/security now live on the site.
+  `ROADMAP.md` (the prioritized 10x plan — features/security/usability; pick
+  next work from here), `TODO.md`, `TODO-Human.md`. CLI/config/glossary/security
+  now live on the site.
 
 ## Commands
 
