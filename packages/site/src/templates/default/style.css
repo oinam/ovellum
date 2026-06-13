@@ -525,11 +525,23 @@ a:hover {
   font-size: 1.125rem;
   letter-spacing: -0.01em;
 }
+/* Optional brand mark (site.logo). Drawn as a currentColor silhouette via a
+   CSS mask — the logo image supplies the shape (mask-image set inline per
+   site), the foreground colour fills it, so it flips with light/dark like the
+   rest of the monochrome chrome. No logo configured → this element isn't
+   emitted and the title stands alone. */
 .ov-brand-mark {
   flex: none;
+  display: inline-block;
   inline-size: 1.5rem;
   block-size: 1.5rem;
-  line-height: 0;
+  background-color: currentColor;
+  -webkit-mask-position: center;
+  mask-position: center;
+  -webkit-mask-size: contain;
+  mask-size: contain;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
 }
 /* Center zone — the search box stretches to fill it. */
 .ov-topbar-search {

@@ -71,6 +71,7 @@ function renderShell(opts: ShellOptions): string {
   ${desc ? `<meta name="description" content="${escapeAttr(desc)}">` : ''}
   ${opts.site.baseUrl ? `<link rel="canonical" href="${escapeAttr(join(opts.site.baseUrl, basePath + opts.url))}">` : ''}
   ${opts.site.baseUrl ? `<link rel="alternate" type="application/rss+xml" title="${escapeAttr(opts.site.title)}" href="${escapeAttr(join(opts.site.baseUrl, basePath + '/feed.xml'))}">` : ''}
+  <link rel="icon" href="${escapeAttr(siteUrl(opts.site.favicon ?? '/favicon.ico', basePath))}">
   <link rel="stylesheet" href="${escapeAttr(assets)}assets/ovellum.css">
   ${searchHead}
   ${opts.site.headExtra ?? ''}
@@ -142,14 +143,6 @@ function renderShell(opts: ShellOptions): string {
 function renderFrame(): string {
   return `<div class="ov-frame" aria-hidden="true"><div class="ov-frame-inner"><span class="ov-frame-node ov-frame-node--tl"></span><span class="ov-frame-node ov-frame-node--tr"></span></div></div>`;
 }
-
-// Ovellum wordmark glyph. Source of truth lives at
-// `website/brand/ovellum-logo.afdesign`; the canonical export sits at
-// `website/content/public/ovellum-logo.svg`. Inlined here (stripped of the
-// XML prolog and editor-specific namespaces, `fill="currentColor"` set) so
-// the mark follows light/dark theme alongside the wordmark beside it.
-// Decorative: the adjacent text "Ovellum" carries the accessible name.
-const BRAND_MARK = `<svg class="ov-brand-mark" width="24" height="24" viewBox="0 0 3334 3334" fill="currentColor" aria-hidden="true" xmlns="http://www.w3.org/2000/svg"><path d="M1610.79,192.942l-603.283,-0.069c-72.722,290.674 -294.48,871.657 -294.48,871.657c-53.158,128.398 -37.404,275.067 41.795,389.217l743.687,1149.95l0,233.06c-42.509,41.505 -68.98,99.335 -68.98,163.352c-0.069,126.096 102.07,228.236 228.167,228.167c126.096,0.069 228.308,-102.144 228.235,-228.236c-0,-64.017 -26.471,-121.847 -68.985,-163.21l0,-233.06l743.765,-1150.03c79.122,-114.228 94.806,-260.819 41.722,-389.143c0,-0 -221.472,-580.983 -294.052,-871.652l-603.352,0l-94.239,-0.005Zm323.188,921.357c0,140.409 -104.731,256.078 -240.177,273.7l0,1386.96c-11.868,-1.795 -23.809,-3.093 -36.036,-3.093c-12.375,-0 -24.243,1.224 -36.037,3.093l-0,-1386.97c-135.593,-17.623 -240.251,-133.218 -240.251,-273.627c0,-152.635 123.652,-276.287 276.288,-276.287c152.635,0 276.282,123.656 276.213,276.223Z"/></svg>`;
 
 interface ResolvedTopbarItem {
   label: string;
@@ -329,10 +322,22 @@ function renderTopbar(
   const versionBadge = site.version
     ? `<span class="ov-brand-version" aria-label="Stable version ${escapeAttr(site.version)}">${escapeHtml(site.version)}</span>`
     : '';
+  // Optional brand mark. Rendered as a CSS-masked element so it inherits the
+  // foreground colour and flips with the theme (a monochrome silhouette,
+  // on-brand with the editorial palette). Decorative — the title text carries
+  // the accessible name. Unset = no mark; the title stands alone. The logo URL
+  // is validated to exclude characters that could break out of the url('…').
+  // Unquoted url() — the logo is validated to contain no whitespace, quotes,
+  // or parens, so it needs no quoting, and that keeps it clean through HTML
+  // attribute escaping (which would otherwise turn the quotes into entities).
+  const logoUrl = site.logo ? siteUrl(site.logo, basePath) : '';
+  const logoMark = logoUrl
+    ? `<span class="ov-brand-mark" aria-hidden="true" style="${escapeAttr(`-webkit-mask-image:url(${logoUrl});mask-image:url(${logoUrl})`)}"></span>`
+    : '';
   return `<header class="ov-topbar">
     <div class="ov-topbar-inner">
       <div class="ov-brand-row">
-        <a class="ov-brand" href="${escapeAttr(assets)}">${BRAND_MARK}<span class="ov-brand-name">${escapeHtml(site.title)}</span></a>
+        <a class="ov-brand" href="${escapeAttr(assets)}">${logoMark}<span class="ov-brand-name">${escapeHtml(site.title)}</span></a>
         ${versionBadge}
       </div>
       <div class="ov-topbar-search">${search}</div>

@@ -85,6 +85,8 @@ Settings consumed by the static-site builder.
 ```typescript
 interface OvellumSiteConfig {
   title?: string;
+  logo?: string;
+  favicon?: string;
   description?: string;
   baseUrl?: string;
   basePath?: string;
@@ -108,6 +110,8 @@ interface OvellumSiteConfig {
 | Field            | Type                                | Default                       | Notes                                                                                                                                                                                                                          |
 | ---------------- | ----------------------------------- | ----------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | `title`          | `string?`                           | `name` ↦ `'Ovellum site'`     | Used in the topbar and `<title>`.                                                                                                                                                                                              |
+| `logo`           | `string?`                           | `undefined`                   | Optional brand mark shown before the title — a path/URL to an image (e.g. `'/public/logo.svg'`). Renders as a **monochrome silhouette that flips with the theme** (drawn in the foreground colour via a CSS mask), so provide a single-colour SVG/PNG. **Unset = no mark; the title text stands alone.** Decorative — the title carries the accessible name. (Must not contain quotes, parentheses, or whitespace, since it goes into a CSS `url()`.) |
+| `favicon`        | `string?`                           | `'/favicon.ico'`              | Path/URL to the favicon. Defaults to a root-level `favicon.ico` — just drop one at your project root (it passes through to the output) and it works. Set this to point elsewhere (e.g. `'/public/icon.svg'`). basePath-aware. |
 | `description`    | `string?`                           | `undefined`                   | Used in `<meta>` and the footer.                                                                                                                                                                                               |
 | `baseUrl`        | `string?`                           | `undefined`                   | E.g. `'https://docs.example.com'`. Used for `<link rel="canonical">`, OG cards, and the `sitemap.xml`. Omit for relative-link output.                                                                                          |
 | `basePath`       | `string?`                           | `''`                          | Jekyll-style subpath. Leading slash, no trailing slash (e.g. `'/ovellum'`). Prepended to every internal URL, asset path, canonical link, and sitemap entry. Authors keep writing root-relative links; the build adds the prefix. |

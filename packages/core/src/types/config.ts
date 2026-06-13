@@ -209,6 +209,22 @@ export interface OvellumSiteConfig {
   /** Site title. Defaults to `OvellumConfig.name` or `'Ovellum site'`. */
   title?: string;
   /**
+   * Optional brand logo shown before the title in the top bar — a path or URL
+   * to an image (e.g. `'/public/logo.svg'`). It renders as a **monochrome mark
+   * that adapts to the active theme** (drawn in the foreground colour via a CSS
+   * mask), matching the editorial design; provide a single-colour silhouette
+   * SVG/PNG. **Unset = no mark; the title text stands alone** — the logo is never
+   * mandatory. The title always carries the accessible brand name, so the mark
+   * is decorative.
+   */
+  logo?: string;
+  /**
+   * Path or URL to the site favicon. **Defaults to `'/favicon.ico'`** — drop a
+   * `favicon.ico` at your project root (it passes through to the output root)
+   * and it just works. Set this to point elsewhere (e.g. `'/public/icon.svg'`).
+   */
+  favicon?: string;
+  /**
    * Optional version badge rendered next to the brand in the top bar
    * (e.g. `"v0.2.0"`). The site has no idea what version of the
    * underlying tool the docs describe — write whatever you want here.

@@ -11,6 +11,7 @@ import { indexSite } from './search.js';
 import { generateRss } from './rss.js';
 import { generateSitemap } from './sitemap.js';
 import { renderLanding, renderPage } from './template.js';
+import { normaliseBasePath, siteUrl } from './url.js';
 
 export interface BuildSiteOptions {
   config: OvellumConfig;
@@ -119,6 +120,10 @@ export async function buildSite(options: BuildSiteOptions): Promise<BuildSiteRes
 
   const pages: PageOutput[] = [];
   let landingRendered = false;
+  // Tracks whether the content walk produced a /404/ page (from content/404.md).
+  // If not, we synthesise a default one below — every site gets a 404 that
+  // matches the template, whether or not the author wrote one.
+  let notFoundRendered = false;
 
   // Render the landing page first (if enabled) so `content/index.md`
   // can be detected as a conflict during the walk.
@@ -208,6 +213,7 @@ export async function buildSite(options: BuildSiteOptions): Promise<BuildSiteRes
       // custom 404 actually trigger in production with no extra build step.
       if (url === '/404/') {
         await writeFile(path.join(outputAbs, '404.html'), result.html, 'utf8');
+        notFoundRendered = true;
       }
       pages.push({
         sourcePath: path.relative(cwd, file).replace(/\\/g, '/'),
@@ -224,6 +230,36 @@ export async function buildSite(options: BuildSiteOptions): Promise<BuildSiteRes
       await mkdir(path.dirname(outputPath), { recursive: true });
       await copyFile(file, outputPath);
     }
+  }
+
+  // Always emit a 404 that matches the template. If the author wrote
+  // `content/404.md` it was rendered above; otherwise synthesise a default
+  // here. Both `404/index.html` (pretty URL) and a root `404.html` are written
+  // so static hosts that look for the root file (GitHub Pages, Netlify, …)
+  // trigger it. A platform that serves its own 404 simply ignores ours.
+  if (!notFoundRendered) {
+    const homeHref = siteUrl('/', normaliseBasePath(site.basePath));
+    const bodyHtml =
+      `<h1>Page not found</h1>\n` +
+      `<p>The page you’re looking for doesn’t exist or may have moved.</p>\n` +
+      `<p><a href="${homeHref}">Go to the homepage</a></p>`;
+    const html = renderPage({
+      site,
+      nav: sidebarRootFor(nav),
+      url: '/404/',
+      title: 'Page not found',
+      bodyHtml,
+      headings: [],
+      generatedAt: now.toISOString(),
+      docsHref,
+      bodyClass: 'ov-body-404',
+    });
+    await mkdir(path.join(outputAbs, '404'), { recursive: true });
+    await writeFile(path.join(outputAbs, '404', 'index.html'), html, 'utf8');
+    await writeFile(path.join(outputAbs, '404.html'), html, 'utf8');
+    // Intentionally NOT pushed to `pages`: the default 404 is infrastructure,
+    // not authored content, so it shouldn't inflate the build's page count
+    // (nor appear in sitemap/RSS, which already exclude /404/).
   }
 
   // Sort pages for deterministic summary output (but keep `/` first).

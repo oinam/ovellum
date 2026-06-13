@@ -266,8 +266,10 @@ Full landing reference: [config → site.landing](/docs/reference/config/#sitela
 
 ## The 404 page
 
-A `content/404.md` file becomes your site's not-found page. It's an
-ordinary Markdown page — write whatever you like (a short apology, a
+**Every build ships a 404 page** — you don't have to write one. If you
+don't, Ovellum generates a default "Page not found" that matches your
+theme (with a link home). To customise it, add a `content/404.md` file —
+an ordinary Markdown page, write whatever you like (a short apology, a
 link back home, a search prompt):
 
 ```markdown

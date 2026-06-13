@@ -108,6 +108,22 @@ export function validateUserConfig(input: unknown): OvellumUserConfig {
     if (s.description !== undefined && typeof s.description !== 'string') {
       throw new ConfigError('`site.description` must be a string.');
     }
+    if (s.logo !== undefined) {
+      if (typeof s.logo !== 'string' || s.logo.trim() === '') {
+        throw new ConfigError('`site.logo` must be a non-empty path or URL string.');
+      }
+      // The logo is rendered into a CSS `mask-image: url('…')`; quotes, parens,
+      // and whitespace would break out of that. A real path/URL never needs them.
+      if (/['"()<>;\\\s]/.test(s.logo)) {
+        throw new ConfigError(
+          '`site.logo` must not contain quotes, parentheses, angle brackets, semicolons, or whitespace.',
+          { hint: 'Use a plain path or URL, e.g. "/public/logo.svg".' },
+        );
+      }
+    }
+    if (s.favicon !== undefined && (typeof s.favicon !== 'string' || s.favicon.trim() === '')) {
+      throw new ConfigError('`site.favicon` must be a non-empty path or URL string.');
+    }
     if (s.baseUrl !== undefined && typeof s.baseUrl !== 'string') {
       throw new ConfigError('`site.baseUrl` must be a string URL.');
     }

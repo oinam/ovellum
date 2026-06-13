@@ -199,14 +199,24 @@ describe('renderLanding', () => {
     expect(html).toContain('rel="noopener" target="_blank"');
   });
 
-  it('renders a placeholder brand mark beside the wordmark', () => {
-    const html = renderLanding({
+  it('shows the wordmark, and a brand mark only when site.logo is set', () => {
+    // Default: no logo configured → just the wordmark, no mark.
+    const plain = renderLanding({
       site: SITE,
       landing: landingConfig(),
       generatedAt: '2026-05-16T00:00:00.000Z',
     });
-    expect(html).toContain('class="ov-brand-mark"');
-    expect(html).toContain('<span class="ov-brand-name">Demo</span>');
+    expect(plain).toContain('<span class="ov-brand-name">Demo</span>');
+    expect(plain).not.toContain('ov-brand-mark');
+
+    // With a logo → the masked mark appears in the landing topbar too.
+    const withLogo = renderLanding({
+      site: { ...SITE, logo: '/public/logo.svg' },
+      landing: landingConfig(),
+      generatedAt: '2026-05-16T00:00:00.000Z',
+    });
+    expect(withLogo).toContain('class="ov-brand-mark"');
+    expect(withLogo).toContain('mask-image:url(/public/logo.svg)');
   });
 
   it('uses the landing body class on <body>', () => {

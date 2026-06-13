@@ -165,6 +165,12 @@ The default topbar is a three-column grid: brand on the left,
 right-aligned nav, and a controls cluster (search slot + appearance
 control + mobile menu button).
 
+The brand is the **site title** by default. Add an optional mark before it
+with [`site.logo`](/docs/reference/config/) (a path to a single-colour
+SVG/PNG — it renders as a theme-flipping monochrome silhouette); leave it
+unset and the title stands alone. The favicon defaults to a root
+`/favicon.ico`, overridable with `site.favicon`.
+
 Add nav items via `site.topbarNav`:
 
 ```json

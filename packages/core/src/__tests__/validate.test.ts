@@ -70,6 +70,18 @@ describe('validateUserConfig', () => {
     expect(() => validateUserConfig({ protect: 'on' })).toThrow(/protect/);
   });
 
+  it('accepts string site.logo and site.favicon', () => {
+    const input = { site: { logo: '/public/logo.svg', favicon: '/favicon.ico' } };
+    expect(validateUserConfig(input)).toEqual(input);
+  });
+
+  it('rejects a site.logo with characters that would break the CSS mask url()', () => {
+    expect(() => validateUserConfig({ site: { logo: '' } })).toThrow(/site\.logo/);
+    expect(() => validateUserConfig({ site: { logo: "/a'b.svg" } })).toThrow(/site\.logo/);
+    expect(() => validateUserConfig({ site: { logo: '/a (1).svg' } })).toThrow(/site\.logo/);
+    expect(() => validateUserConfig({ site: { favicon: 42 } })).toThrow(/site\.favicon/);
+  });
+
   it('accepts every named site.palette and a CSS-colour accent', () => {
     for (const palette of ['default', 'nord', 'flexoki', 'solarized', 'eink']) {
       expect(validateUserConfig({ site: { palette } })).toEqual({ site: { palette } });

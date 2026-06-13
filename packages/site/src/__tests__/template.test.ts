@@ -46,6 +46,58 @@ describe('renderPage', () => {
     expect(html).toContain('fin');
   });
 
+  it('omits the brand mark when site.logo is unset, keeping just the title', () => {
+    const html = renderPage({
+      site: { title: 'My site', defaultTheme: 'auto', footer: '' },
+      nav: NAV,
+      url: '/',
+      title: 'X',
+      bodyHtml: '',
+      headings: [],
+      generatedAt: '2026-06-13T00:00:00.000Z',
+    });
+    expect(html).not.toContain('ov-brand-mark');
+    expect(html).toContain('<span class="ov-brand-name">My site</span>');
+    // Favicon defaults to /favicon.ico.
+    expect(html).toContain('<link rel="icon" href="/favicon.ico">');
+  });
+
+  it('renders a masked, theme-flipping brand mark when site.logo is set', () => {
+    const html = renderPage({
+      site: { title: 'X', defaultTheme: 'auto', footer: '', logo: '/public/logo.svg' },
+      nav: NAV,
+      url: '/',
+      title: 'X',
+      bodyHtml: '',
+      headings: [],
+      generatedAt: '2026-06-13T00:00:00.000Z',
+    });
+    expect(html).toContain('class="ov-brand-mark"');
+    expect(html).toContain('mask-image:url(/public/logo.svg)');
+  });
+
+  it('respects a custom favicon and basePath-prefixes it', () => {
+    const html = renderPage({
+      site: {
+        title: 'X',
+        defaultTheme: 'auto',
+        footer: '',
+        favicon: '/icon.svg',
+        basePath: '/docs',
+        logo: '/public/logo.svg',
+      },
+      nav: NAV,
+      url: '/',
+      title: 'X',
+      bodyHtml: '',
+      headings: [],
+      generatedAt: '2026-06-13T00:00:00.000Z',
+    });
+    expect(html).toContain('<link rel="icon" href="/docs/icon.svg">');
+    // The logo path is basePath-prefixed inside the mask too.
+    expect(html).toContain('mask-image:url(/docs/public/logo.svg)');
+  });
+
   it('renders the appearance control with mode, palette, and accent groups', () => {
     const html = renderPage({
       site: { title: 'X', defaultTheme: 'auto', footer: '' },
