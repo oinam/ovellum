@@ -12,7 +12,7 @@ export default {
   defaultFormat: 'md',
   site: {
     title: 'Ovellum',
-    version: 'v0.3.0',
+    version: 'v0.4.0',
     description:
       'Markdown documentation for TypeScript and JavaScript projects. A merge engine that lets auto-generated API docs and hand-written prose coexist in the same files, plus a Jekyll-style static-site builder for purely manual docs.',
     baseUrl: 'https://ovellum.oss.oinam.com',
