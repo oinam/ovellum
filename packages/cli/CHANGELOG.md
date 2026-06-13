@@ -1,5 +1,53 @@
 # ovellum
 
+## 0.6.0
+
+### Minor Changes
+
+- 68fab9c: Configurable back-to-top, and a fully-commented config from `ovellum init`.
+  - **`site.backToTop`** — `{ enabled, threshold }`, default `{ enabled: true,
+threshold: 360 }` (was a hardcoded 600px). Lower the threshold so the button
+    appears sooner on short-page sites, or set `enabled: false` to remove it.
+  - **`ovellum init` now scaffolds a fully-annotated `ovellum.config.ts`** (was a
+    minimal `.json`): every option is present — the ones you chose are set, the
+    rest are commented with their defaults and allowed values — so you can tinker
+    entirely in that file without opening the docs. It uses
+    `import type { OvellumUserConfig } from 'ovellum'` + `satisfies` (erased at
+    load, so no runtime dependency). The existing-config guard now recognises any
+    `ovellum.config.{ts,js,mjs,cjs,json}`.
+
+- fb520e3: Footer "Built with Ovellum" credit link, controlled by `site.credit` (default
+  `true`). It renders a small credit link to <https://ovellum.oss.oinam.com> in
+  the footer; set `site.credit: false` to remove it entirely — crediting is
+  appreciated but never required. `site.footer` now defaults to `''` (the credit
+  is the default attribution; set `footer` for your own copyright line).
+- 2fbd4b8: README-as-index everywhere, more frontmatter, and a reserved `public/` assets dir.
+  - **`README.md` is the folder index at every level** (was root-only). A folder
+    resolves its page to `index.*` first, then `README.md` — the GitHub norm. To
+    keep this consistent, `build` now derives page URLs from the nav, so the
+    emitted files always match the sidebar/links.
+  - **Frontmatter `permalink`** overrides a page's URL (normalised to a
+    root-absolute, trailing-slash path); **`tags`** become `<meta name="keywords">`.
+    (`title` and `description` were already respected.)
+  - **`site.publicDir`** (default `'public'`) — a **reserved** static-assets folder
+    copied to the **output root**, the SSG convention (Next/Astro/Vite/Hugo):
+    `public/favicon.ico` → `/favicon.ico`. Use it for root-served files (favicon,
+    `robots.txt`, `CNAME`, OG images) and other static assets. Nothing inside is
+    processed (no pages, no sidebar; even a `.md` is copied as-is). Renamable via
+    config; static files outside it still pass through keeping their path.
+
+    **Breaking:** previously `content/public/` was copied to `dist/public/`; it now
+    copies to the output **root**. Drop the `/public` prefix from any references
+    (e.g. `/public/logo.svg` → `/logo.svg`), or set `site.publicDir` to a different
+    folder name to keep path-preserving passthrough behaviour for that folder.
+
+### Patch Changes
+
+- 09c858a: Sidebar hierarchy polish: sub-items are now indented a little under their
+  category to show nesting, and a folder's heading is **bold like every other
+  category even when it has its own `index.md`** (it becomes a bold, clickable
+  category heading rather than a plain link).
+
 ## 0.5.1
 
 ### Patch Changes
