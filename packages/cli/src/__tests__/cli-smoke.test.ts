@@ -64,13 +64,17 @@ describe('ovellum init', () => {
     const { code, stdout } = await runCli(['init', '--yes'], { cwd: dir });
     expect(code).toBe(0);
     expect(stdout).toContain('ovellum project initialised');
-    expect(existsSync(path.join(dir, 'ovellum.config.json'))).toBe(true);
+    expect(existsSync(path.join(dir, 'ovellum.config.ts'))).toBe(true);
     expect(existsSync(path.join(dir, 'content', 'index.md'))).toBe(true);
     expect(existsSync(path.join(dir, '.gitignore'))).toBe(true);
 
-    const cfg = JSON.parse(await readFile(path.join(dir, 'ovellum.config.json'), 'utf8'));
-    expect(cfg.mode).toBe('manual');
-    expect(cfg.name).toBeTypeOf('string');
+    // The generated config is annotated TypeScript: active options set, the
+    // rest commented with defaults so users can tinker in-file.
+    const cfg = await readFile(path.join(dir, 'ovellum.config.ts'), 'utf8');
+    expect(cfg).toContain("mode: 'manual'");
+    expect(cfg).toContain('satisfies OvellumUserConfig');
+    expect(cfg).toContain('// backToTop:'); // a commented, documented option
+    expect(cfg).toContain('// search:');
 
     const gi = await readFile(path.join(dir, '.gitignore'), 'utf8');
     expect(gi).toContain('dist/');
@@ -156,14 +160,12 @@ describe('ovellum check', () => {
   });
 
   it('errors out cleanly when an output dir is missing in hybrid/auto mode', async () => {
-    // Switch the scaffolded project to hybrid mode but skip the build.
-    const cfgPath = path.join(dir, 'ovellum.config.json');
-    const cfg = JSON.parse(await readFile(cfgPath, 'utf8'));
-    cfg.mode = 'hybrid';
-    cfg.tsconfig = 'tsconfig.json';
-    cfg.output = 'docs';
-    delete cfg.input;
-    writeFileSync(cfgPath, JSON.stringify(cfg, null, 2));
+    // Replace the scaffolded manual config with a hybrid one (skip the build).
+    await rm(path.join(dir, 'ovellum.config.ts'), { force: true });
+    writeFileSync(
+      path.join(dir, 'ovellum.config.json'),
+      JSON.stringify({ name: 'x', mode: 'hybrid', tsconfig: 'tsconfig.json', output: 'docs' }, null, 2),
+    );
     // Tiny TS file to keep parser happy.
     mkdirSync(path.join(dir, 'src'), { recursive: true });
     writeFileSync(path.join(dir, 'src', 'index.ts'), 'export const x = 1;\n');

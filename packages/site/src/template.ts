@@ -51,6 +51,13 @@ function renderShell(opts: ShellOptions): string {
   const accentAttrs = opts.site.accent
     ? ` data-accent="custom" style="--ov-accent: ${escapeAttr(opts.site.accent)}"`
     : '';
+  // Back-to-top button (config-gated). The threshold rides on the data
+  // attribute so the (theme-agnostic) script reads it without inlining config.
+  const bt = opts.site.backToTop;
+  const backToTop =
+    bt?.enabled === false
+      ? ''
+      : `<div class="ov-to-top-anchor"><button class="ov-to-top" type="button" aria-label="Back to top" data-ov-to-top="${bt?.threshold ?? 360}">${renderIcon('arrow-up', { size: 18 })}</button></div>`;
   return `<!doctype html>
 <html lang="en" data-theme="${escapeAttr(opts.site.defaultTheme)}" data-palette="${escapeAttr(palette)}" data-font="${escapeAttr(opts.site.font ?? 'sans')}"${accentAttrs}>
 <head>
@@ -125,7 +132,7 @@ function renderShell(opts: ShellOptions): string {
   ${renderFrame()}
   ${renderTopbar(opts.site, assets, opts.docsHref ? siteUrl(opts.docsHref, basePath) : undefined, searchEnabled, basePath)}
   ${opts.body}
-  <div class="ov-to-top-anchor"><button class="ov-to-top" type="button" aria-label="Back to top" data-ov-to-top>${renderIcon('arrow-up', { size: 18 })}</button></div>
+  ${backToTop}
   ${renderFooter(opts.site, opts.generatedAt, basePath)}
   ${searchScripts}
   <script src="${escapeAttr(assets)}assets/ovellum.js" defer></script>

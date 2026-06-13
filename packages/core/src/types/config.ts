@@ -182,6 +182,17 @@ export interface OvellumSitePageMetaConfig {
   lastModified: boolean;
 }
 
+export interface OvellumBackToTopConfig {
+  /** Show the floating "back to top" button. Default `true`. */
+  enabled: boolean;
+  /**
+   * Scroll distance (px) before the button fades in. Default `360`. Lower it
+   * for short-page sites so the button shows sooner; raise it to hide it until
+   * the visitor is well down the page.
+   */
+  threshold: number;
+}
+
 export interface OvellumSidebarConfig {
   /**
    * Collapse sidebar folders by default (each is a disclosure the visitor can
@@ -311,6 +322,8 @@ export interface OvellumSiteConfig {
   pageMeta: OvellumSitePageMetaConfig;
   /** Sidebar folder behaviour (collapsed by default; the active branch stays open). */
   sidebar: OvellumSidebarConfig;
+  /** Floating "back to top" button (shown after scrolling past `threshold`). */
+  backToTop: OvellumBackToTopConfig;
   /**
    * Folder names to exclude entirely from the manual-mode site — matched by
    * name at any depth. Excluded folders are skipped in the sidebar nav, are not
@@ -427,6 +440,7 @@ export const DEFAULT_CONFIG: OvellumConfig = {
     search: { enabled: false },
     pageMeta: { readingTime: true, lastModified: true },
     sidebar: { collapse: true },
+    backToTop: { enabled: true, threshold: 360 },
     ignoreFolders: [],
     ignoreFiles: [],
     topbarNav: [],

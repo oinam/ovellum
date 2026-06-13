@@ -78,6 +78,18 @@ describe('validateUserConfig', () => {
     );
   });
 
+  it('accepts site.backToTop and rejects bad shapes', () => {
+    expect(validateUserConfig({ site: { backToTop: { enabled: false, threshold: 200 } } })).toEqual(
+      { site: { backToTop: { enabled: false, threshold: 200 } } },
+    );
+    expect(() => validateUserConfig({ site: { backToTop: { threshold: -1 } } })).toThrow(
+      /backToTop\.threshold/,
+    );
+    expect(() => validateUserConfig({ site: { backToTop: { enabled: 'yes' } } })).toThrow(
+      /backToTop\.enabled/,
+    );
+  });
+
   it('accepts site.credit boolean and rejects non-boolean', () => {
     expect(validateUserConfig({ site: { credit: false } })).toEqual({ site: { credit: false } });
     expect(() => validateUserConfig({ site: { credit: 'no' } })).toThrow(/site\.credit/);

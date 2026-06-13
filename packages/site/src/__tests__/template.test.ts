@@ -75,6 +75,41 @@ describe('renderPage', () => {
     expect(collapsed).not.toContain('<details class="ov-nav-section" open>');
   });
 
+  it('renders the back-to-top button with the default threshold, and honours config', () => {
+    const def = renderPage({
+      site: { title: 'X', defaultTheme: 'auto', footer: '' },
+      nav: NAV,
+      url: '/',
+      title: 'X',
+      bodyHtml: '',
+      headings: [],
+      generatedAt: '2026-06-13T00:00:00.000Z',
+    });
+    expect(def).toContain('data-ov-to-top="360"'); // default threshold
+
+    const custom = renderPage({
+      site: { title: 'X', defaultTheme: 'auto', footer: '', backToTop: { enabled: true, threshold: 200 } },
+      nav: NAV,
+      url: '/',
+      title: 'X',
+      bodyHtml: '',
+      headings: [],
+      generatedAt: '2026-06-13T00:00:00.000Z',
+    });
+    expect(custom).toContain('data-ov-to-top="200"');
+
+    const off = renderPage({
+      site: { title: 'X', defaultTheme: 'auto', footer: '', backToTop: { enabled: false, threshold: 360 } },
+      nav: NAV,
+      url: '/',
+      title: 'X',
+      bodyHtml: '',
+      headings: [],
+      generatedAt: '2026-06-13T00:00:00.000Z',
+    });
+    expect(off).not.toContain('ov-to-top');
+  });
+
   it('shows a "Built with Ovellum" credit by default, and omits it when credit is false', () => {
     const withCredit = renderPage({
       site: { title: 'X', defaultTheme: 'auto', footer: 'My copyright' },

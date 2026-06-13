@@ -52,6 +52,9 @@ function mergeSite(
   if (override.sidebar !== undefined) {
     out.sidebar = { ...base.sidebar, ...override.sidebar };
   }
+  if (override.backToTop !== undefined) {
+    out.backToTop = { ...base.backToTop, ...override.backToTop };
+  }
   return out;
 }
 

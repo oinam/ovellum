@@ -439,7 +439,8 @@
   (function backToTop() {
     var btn = document.querySelector('[data-ov-to-top]');
     if (!btn) return;
-    var THRESHOLD = 600;
+    // Threshold (px) comes from the data attribute (site.backToTop.threshold).
+    var THRESHOLD = parseInt(btn.getAttribute('data-ov-to-top'), 10) || 360;
     function update() {
       if (window.scrollY > THRESHOLD) btn.classList.add('is-visible');
       else btn.classList.remove('is-visible');

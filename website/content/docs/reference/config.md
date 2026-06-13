@@ -8,6 +8,11 @@ description: Every field in `ovellum.config.{json,ts,js}` with its type, default
 Every field that lives in `ovellum.config.*`. Authoritative; updated
 alongside any schema change.
 
+> **Tip:** `ovellum init` writes a fully-commented `ovellum.config.ts` with
+> every option present — active ones set, the rest commented with their
+> defaults and allowed values. You can tinker entirely in that file; this page
+> is the deeper reference.
+
 ## File format
 
 Place an `ovellum.config.{ts,mts,cts,js,mjs,cjs,json}` at the project
@@ -103,6 +108,7 @@ interface OvellumSiteConfig {
   search: { enabled: boolean };
   pageMeta: { readingTime: boolean; lastModified: boolean };
   sidebar: { collapse: boolean };
+  backToTop: { enabled: boolean; threshold: number };
   ignoreFolders: string[];
   ignoreFiles: string[];
   topbarNav: Array<{ label: string; href: string; icon?: string; external?: boolean }>;
@@ -132,6 +138,7 @@ interface OvellumSiteConfig {
 | `search`         | `{ enabled: boolean }`              | `{ enabled: false }`          | When `true`, `ovellum build` runs Pagefind against the output dir and the topbar gains a search box. Adds `dist/pagefind/` to the build.                                                                                       |
 | `pageMeta`       | `{ readingTime, lastModified }`     | both `true`                   | Per-page meta line above the article: `N min read · Updated YYYY-MM-DD`. `readingTime` estimates at ~200 wpm after stripping code/HTML. `lastModified` prefers `git log -1 --format=%cI` then falls back to filesystem mtime; the line is omitted if neither resolves. Set either to `false` to hide that half. |
 | `sidebar`        | `{ collapse: boolean }`             | `{ collapse: true }`          | Sidebar folder behaviour. `collapse: true` (default) renders each folder as a collapsible disclosure, closed by default — the branch containing the current page always stays open, so you can see where you are. Set `collapse: false` to render the whole tree auto-expanded. A folder's `_meta.json` may override this per-folder with `"collapse": false` (always open) or `"collapse": true` (always closed). |
+| `backToTop`      | `{ enabled, threshold }`            | `{ enabled: true, threshold: 360 }` | Floating "back to top" button. `enabled: false` removes it. `threshold` is the scroll distance (px) before it fades in — lower it for short-page sites so it appears sooner, raise it to hide it until further down. |
 | `ignoreFolders`  | `string[]`                          | `[]`                          | Folder **names** (matched at any depth) to exclude entirely from the manual-mode site — not in the sidebar, not rendered, not copied to the output. Use for WIP/private dirs. A folder can also self-hide via `_meta.json` `"hidden": true`, and a single page via frontmatter `draft: true`. (Asset-only folders like `public/` are already kept out of the sidebar automatically.) |
 | `ignoreFiles`    | `string[]`                          | `[]`                          | File **globs** to exclude — both Markdown pages and passthrough assets, honoured by `build` **and** `check`. No-slash patterns match the basename at any depth (`README.md`, `*.draft.md`); slashed patterns match the path relative to `input` (`drafts/**`). Supports `*`, `**`, `?`. Use it to drop a single file (e.g. a repo `README.md`) without touching it. **Always auto-excluded** (no config needed): dotfiles, `node_modules`, package manifests/lockfiles, the Ovellum config, and the output dir itself — so `input: "."` doesn't leak project files. |
 | `topbarNav`      | `Array<{label, href, icon?, external?}>` | `[]`                     | Items render in order to the right of the search box. Items with an `icon` render icon-only on desktop (label kept for screen readers) and icon + label inside the mobile sheet. External links (`external: true` or `href` starting with `http(s)://`) open in a new tab with `rel="noopener"`; text items also get a small external-link icon. Below 720px the top row is just logo + version + search + hamburger — the nav and theme toggle move into the sheet. |

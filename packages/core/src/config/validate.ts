@@ -246,6 +246,22 @@ export function validateUserConfig(input: unknown): OvellumUserConfig {
         throw new ConfigError('`site.sidebar.collapse` must be a boolean.');
       }
     }
+    if (s.backToTop !== undefined) {
+      if (!isPlainObject(s.backToTop)) {
+        throw new ConfigError('`site.backToTop` must be an object.');
+      }
+      if (s.backToTop.enabled !== undefined && typeof s.backToTop.enabled !== 'boolean') {
+        throw new ConfigError('`site.backToTop.enabled` must be a boolean.');
+      }
+      if (
+        s.backToTop.threshold !== undefined &&
+        (typeof s.backToTop.threshold !== 'number' ||
+          !Number.isFinite(s.backToTop.threshold) ||
+          s.backToTop.threshold < 0)
+      ) {
+        throw new ConfigError('`site.backToTop.threshold` must be a non-negative number (px).');
+      }
+    }
     if (s.ignoreFolders !== undefined && !isStringArray(s.ignoreFolders)) {
       throw new ConfigError('`site.ignoreFolders` must be an array of folder-name strings.');
     }

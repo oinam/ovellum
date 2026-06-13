@@ -10,7 +10,9 @@ import { defineCommand } from 'citty';
  * Writes (only what's missing — never clobbers an existing file unless
  * `--force` is passed):
  *
- *   ovellum.config.json   — primary entry. Mode-specific shape.
+ *   ovellum.config.ts     — primary entry, fully commented (every option is
+ *                           listed; active ones set, the rest documented inline
+ *                           so users can tinker without leaving the file).
  *   content/index.md      — starter doc, manual + hybrid modes only.
  *   .gitignore            — appended with `dist/` and `.orphans/` if missing.
  *
@@ -33,7 +35,7 @@ export const initCommand = defineCommand({
     },
     force: {
       type: 'boolean',
-      description: 'Overwrite ovellum.config.json if it already exists.',
+      description: 'Overwrite an existing ovellum.config.* if present.',
     },
   },
   async run({ args }) {
@@ -41,10 +43,14 @@ export const initCommand = defineCommand({
     const yes = args.yes === true;
     const force = args.force === true;
 
-    const configPath = path.join(cwd, 'ovellum.config.json');
-    if (existsSync(configPath) && !force) {
+    const configPath = path.join(cwd, 'ovellum.config.ts');
+    // Don't clobber any existing config, whatever its extension.
+    const existingConfig = ['ts', 'js', 'mjs', 'cjs', 'json']
+      .map((ext) => path.join(cwd, `ovellum.config.${ext}`))
+      .find((p) => existsSync(p));
+    if (existingConfig && !force) {
       process.stderr.write(
-        `ovellum.config.json already exists at ${configPath}.\n` +
+        `${path.basename(existingConfig)} already exists at ${existingConfig}.\n` +
           `Pass --force to overwrite, or run \`ovellum init\` in a different directory.\n`,
       );
       process.exit(2);
@@ -70,8 +76,7 @@ export const initCommand = defineCommand({
 
     const writes: string[] = [];
 
-    const configJson = renderConfig(answers);
-    await writeFile(configPath, configJson, 'utf8');
+    await writeFile(configPath, renderConfig(answers), 'utf8');
     writes.push(path.relative(cwd, configPath));
 
     if (answers.mode !== 'auto') {
@@ -196,47 +201,116 @@ async function ask(d: InitAnswers): Promise<InitAnswers> {
   return { name, mode, title, description, input: input_, output, tsconfig, defaultTheme, landing };
 }
 
-function renderConfig(a: InitAnswers): string {
-  // Hand-rolling JSON instead of JSON.stringify so the field order matches the
-  // documented schema and the file reads top-to-bottom the same way the docs
-  // describe it.
-  const base: Record<string, unknown> = {
-    $schema: 'https://ovellum.oss.oinam.com/schema/ovellum.config.schema.json',
-    name: a.name,
-    mode: a.mode,
-  };
-  if (a.mode === 'manual') {
-    base.input = a.input;
-    base.output = a.output;
-  } else {
-    base.tsconfig = a.tsconfig;
-    base.output = a.output;
-  }
-  base.site = renderSiteBlock(a);
-  return JSON.stringify(base, null, 2) + '\n';
+/** Single-quote a string value for embedding in the generated TS. */
+function q(s: string): string {
+  return "'" + s.replace(/\\/g, '\\\\').replace(/'/g, "\\'") + "'";
 }
 
-function renderSiteBlock(a: InitAnswers): Record<string, unknown> {
-  const site: Record<string, unknown> = {
-    title: a.title,
-    defaultTheme: a.defaultTheme,
-  };
-  if (a.description) site.description = a.description;
-  if (a.mode !== 'auto' && a.landing) {
-    site.landing = {
+/**
+ * Render a fully-commented `ovellum.config.ts`. Every option is present —
+ * active ones set from the answers, the rest commented with their default (or
+ * an example) plus the allowed values — so a user can tinker entirely in this
+ * file without opening the docs. `import type` is erased at config-load time,
+ * so there's no runtime dependency on `ovellum` resolving from the project.
+ */
+function renderConfig(a: InitAnswers): string {
+  const isManual = a.mode === 'manual';
+
+  const sourceLines = isManual
+    ? `  input: ${q(a.input)}, // content directory — your .md files
+  output: ${q(a.output)},`
+    : `  input: ${q(a.input)}, // TS/JS source to document
+  output: ${q(a.output)},
+  // tsconfig: ${q(a.tsconfig)},
+  // include: ['**/*.ts', '**/*.tsx', '**/*.js', '**/*.jsx'],
+  // exclude: ['node_modules', 'dist', '**/*.test.*', '**/*.d.ts'],
+  // includeInternal: false, // include @internal-tagged symbols
+  // includePrivate: false,  // include private class members`;
+
+  const descLine = a.description
+    ? `    description: ${q(a.description)},`
+    : `    // description: 'One-line summary used in <meta> and the footer.',`;
+
+  const landingBlock =
+    !isManual || !a.landing
+      ? `    // landing: { enabled: false }, // homepage at / (hero + feature grid + CTAs)`
+      : `    landing: {
       enabled: true,
       hero: {
-        title: a.title,
-        subtitle: a.description || 'Edit this in ovellum.config.json.',
+        title: ${q(a.title)},
+        subtitle: ${q(a.description || 'Edit this in ovellum.config.ts.')},
         ctas: [
           { label: 'Get started', href: '/getting-started/' },
           { label: 'View on GitHub', href: 'https://github.com/' },
         ],
       },
       features: [],
-    };
-  }
-  return site;
+    },`;
+
+  const protectBlock =
+    a.mode === 'hybrid'
+      ? `
+  // Hybrid only — protected-zone markers + orphan handling (defaults shown):
+  // protect: {
+  //   blockTag: '@manual', inlineTag: '@preserve',
+  //   orphanStrategy: 'quarantine', orphanDir: '.ovellum/orphans', orphanRetention: 90,
+  // },`
+      : '';
+
+  return `// ovellum.config.ts — your Ovellum site configuration.
+//
+// Every option is listed below: active lines are set, commented lines show the
+// default (or an example) plus the allowed values, so you can tinker right here
+// without leaving the file. Full reference:
+//   https://ovellum.oss.oinam.com/docs/reference/config/
+//
+// \`import type\` is erased when the config loads, so this file has no runtime
+// dependency on \`ovellum\` resolving here — it's purely for editor autocomplete.
+import type { OvellumUserConfig } from 'ovellum';
+
+export default {
+  name: ${q(a.name)},
+  // version: 'auto', // 'auto' reads package.json#version; or a literal like '1.2.0'
+  mode: ${q(a.mode)}, // 'manual' | 'auto' | 'hybrid'
+${sourceLines}
+  // defaultFormat: 'md', // 'md' | 'mdx'
+
+  site: {
+    title: ${q(a.title)},
+${descLine}
+    // logo: '/public/logo.svg', // brand mark before the title (theme-flipping monochrome); unset = title only
+    // favicon: '/favicon.ico',  // default: a root-level favicon.ico
+    // home: 'index.md',         // page rendered at /; auto-resolves to index.md, else a root README.md
+    // baseUrl: 'https://example.com', // enables sitemap.xml, RSS, and canonical links
+    // basePath: '/docs',        // serve under a subpath (e.g. GitHub project pages)
+    defaultTheme: ${q(a.defaultTheme)}, // 'auto' | 'light' | 'dark'
+    // palette: 'default',       // 'default' | 'nord' | 'flexoki' | 'solarized' | 'eink'
+    // accent: 'oklch(57% 0.16 255)', // primary colour (CTA buttons, links, focus); any CSS colour
+    // font: 'sans',             // 'sans' | 'serif' (system stacks; no webfonts)
+    // footer: 'Your Name',      // footer text / copyright line
+    // credit: true,             // 'Built with Ovellum' footer link; set false to remove
+    // codeTheme: 'github',      // 'github' | 'nord' | 'solarized'
+    // editUrlPattern: 'https://github.com/you/repo/edit/main/{path}',
+    // search: { enabled: false }, // true → Pagefind search box + Cmd/K (adds a build pass + client payload)
+    // pageMeta: { readingTime: true, lastModified: true },
+    // sidebar: { collapse: true }, // collapse folders by default (a folder's _meta.json can override per-folder)
+    // backToTop: { enabled: true, threshold: 360 }, // floating button after THRESHOLD px of scroll
+    // ignoreFolders: [],        // folder names to exclude at any depth
+    // ignoreFiles: [],          // file globs to exclude, e.g. ['README.md', 'drafts/**']
+    // topbarNav: [              // right-aligned top-bar links (title + URL)
+    //   { label: 'GitHub', href: 'https://github.com/you/repo', icon: 'github', external: true },
+    // ],
+    // footerNav: [              // footer links (icon optional: github | npm | rss | mail)
+    //   { label: 'GitHub', href: 'https://github.com/you/repo', icon: 'github', external: true },
+    // ],
+    // headExtra: '', // raw HTML injected into <head> (analytics, fonts) — author-controlled, NOT sanitised
+${landingBlock}
+  },
+
+  // update: { check: true, intervalHours: 24 }, // CLI "update available" notice (auto-off in CI / non-TTY)
+${protectBlock}
+} satisfies OvellumUserConfig;
+`;
 }
 
 function renderStarterIndex(a: InitAnswers): string {
