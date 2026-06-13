@@ -84,88 +84,10 @@ inside CI without significant setup; cheaper to do by hand before each release.
 
 Account/credential operations and one-shot launch tasks.
 
-### Manual release recipe (the routine flow)
-
-CI auto-publish is parked (see Current state in `TODO.md`). Each release is
-a hand-driven sequence after a changeset is merged.
-
-1. **Author** a changeset alongside the feature PR:
-   `pnpm changeset` → describe the change → commit the generated
-   `.changeset/*.md` with the PR. This is what triggers the version PR.
-
-2. **Merge the PR.** The `Version PR` workflow opens / refreshes a
-   `chore: version packages` PR with the version bump and changelog.
-
-3. **Review and merge the version PR.** This commits the bumped
-   `package.json` files and updated `CHANGELOG.md` to `main`.
-
-4. **Pull and publish locally** from a clean working tree on `main`:
-
-   ```sh
-   git checkout main && git pull
-   pnpm -w build
-   cd packages/cli
-   npm publish
-   ```
-
-   `npm publish` auto-runs `prepublishOnly: pnpm -w build`, so `dist/`
-   (gitignored) is always rebuilt fresh — the explicit `pnpm -w build` above is
-   belt-and-suspenders. It uses the maintainer's logged-in `oinam` session; no
-   `NPM_TOKEN` involved.
-
-   After `npm publish` succeeds, **bump the version badge** in
-   `website/ovellum.config.ts` → **`site.version`** (the field inside the
-   `site:` block, e.g. `'v0.3.0'`). Commit + push so the deployed site shows
-   the right version next to the logo. ⚠️ Do **not** touch the top-level
-   `version` field (it's `'0.1.0'` — the documented-project version, unused by
-   the manual-mode site; only `site.version` drives the badge).
-
-5. **Tag and push** the release. `npm publish` does **not** create tags (only
-   `changeset publish` would, in CI); do it by hand.
-
-   ⚠️ **Tags must be signed-annotated.** This repo's git config has
-   `tag.gpgSign = true` + `tag.forceSignAnnotated = true`, so a plain
-   `git tag <name>` fails with `fatal: no tag message?`. Use a signed tag with
-   a message (convention: the message **is** the tag name), which matches the
-   existing `ovellum@0.2.x` tags. Signing triggers a GPG **pinentry passphrase
-   prompt**, so run it in an interactive terminal (not a non-interactive
-   script/agent):
-
-   ```sh
-   v="ovellum@$(node -p "require('./package.json').version")"
-   git tag -s "$v" -m "$v"
-   git push origin "$v"        # push the one tag (avoids dragging unrelated tags)
-   ```
-
-6. **GitHub release notes.** New release at
-   <https://github.com/oinam/ovellum/releases/new>, attach the `ovellum@x.y.z`
-   tag. Paste the matching `## x.y.z` section from `packages/cli/CHANGELOG.md`.
-   The **Full diff** link format is
-   `https://github.com/oinam/ovellum/compare/ovellum@<prev>...ovellum@<new>`.
-
-**Failure modes:**
-- `npm publish` → usually an OTP prompt; re-run with `--otp=…`. If the npm
-  version already matches `package.json`, publish is a no-op (a prior attempt
-  succeeded) — continue with steps 5–6.
-- `git push origin ovellum@x.y.z` → `src refspec … does not match any` means the
-  tag was never created locally (the `git tag` step didn't run or errored — see
-  the signed-tag note above). Create it first, then push.
-
-**Changeset gotchas that bit real releases (do these to avoid hand-fixing):**
-- The version PR only consumes changesets **already on `origin`** when CI runs
-  it. A changeset committed locally but **not pushed** gets left out of that
-  release. Either push all changesets before the PR merges, or — if you already
-  merged — rebase the stray commit onto the merged `main` and drop/fold the
-  orphaned changeset (an unconsumed changeset would otherwise trigger a spurious
-  next-patch release). **Pick exactly one** of "merge the version PR" *or*
-  `pnpm changeset version` locally — never both.
-- **Direct-to-`main` pushes bypass the PR-only changeset guard**, so the
-  auto-CHANGELOG under-records the release (happened for 0.2.1 and 0.3.0). When
-  it does, flesh out the version's section by hand with an **"### Also in this
-  release"** subsection, reconstructed from
-  `git log ovellum@<prev>..ovellum@<new>` (filter to commits touching
-  `packages/core` / `packages/site/src` / `packages/cli/src` — website-only and
-  docs-only commits don't ship in the package).
+The step-by-step publish runbook lives in its own file:
+**[`RELEASE.md`](./RELEASE.md)** — open it and run top to bottom when we're
+ready to ship (changeset → version PR → `npm publish` → badge → signed tag →
+GitHub notes, plus failure modes and changeset gotchas).
 
 ### v0.1.0 / launch backlog
 

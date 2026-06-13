@@ -26,7 +26,8 @@ ask only when a decision is genuinely the maintainer's to make.
   entry point: read its "Current state" block first. Keepers: `DESIGN.md`,
   `SITE.md`, `STYLES.md`, `DEPLOY.md` (this repo's own CI wiring), `FEATURES.md`,
   `ROADMAP.md` (the prioritized 10x plan — features/security/usability; pick
-  next work from here), `TODO.md`, `TODO-Human.md`. CLI/config/glossary/security
+  next work from here), `RELEASE.md` (the npm publish runbook — run top to
+  bottom when shipping), `TODO.md`, `TODO-Human.md`. CLI/config/glossary/security
   now live on the site.
 
 ## Commands
