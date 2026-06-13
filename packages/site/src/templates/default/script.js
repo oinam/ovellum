@@ -201,7 +201,9 @@
     var a = active.getBoundingClientRect();
     if (a.top >= s.top && a.bottom <= s.bottom) return; // already visible
     // Center the active item in the sidebar viewport (browser clamps the ends).
-    sidebar.scrollTop += a.top - s.top - (sidebar.clientHeight - a.offsetHeight) / 2;
+    // `a` is a DOMRect → use `.height` (not `.offsetHeight`, which is undefined
+    // here and would make the whole expression NaN, a silent no-op).
+    sidebar.scrollTop += a.top - s.top - (sidebar.clientHeight - a.height) / 2;
   })();
 
   // Mobile menu
