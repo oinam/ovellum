@@ -1,4 +1,4 @@
 {
   "title": "Guides",
-  "order": ["manual-mode", "hybrid-mode", "development", "themes", "search", "deploy"]
+  "order": ["manual-mode", "hybrid-mode", "development", "assets", "themes", "search", "deploy"]
 }

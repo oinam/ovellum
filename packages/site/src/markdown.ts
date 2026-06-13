@@ -77,12 +77,41 @@ const SHIKI_LANGS = [
 // from <img src>, because data:image/svg+xml can carry executable JS).
 const SANITIZE_SCHEMA: Schema = {
   ...defaultSchema,
+  // Allow native media players in Markdown — <video>/<audio> (+ their
+  // <source>/<track> children). The default schema strips these; we add them
+  // so authors can embed an mp4/webm/mp3 inline, not just link to it.
+  tagNames: [...(defaultSchema.tagNames ?? []), 'video', 'audio', 'source', 'track'],
   attributes: {
     ...defaultSchema.attributes,
     // Authors writing raw <code> blocks should keep their language class
     // so shiki picks them up on the next pass; defaultSchema already permits
     // `className`, but we widen `code` explicitly to be defensive.
     code: [...(defaultSchema.attributes?.code ?? []), 'className'],
+    // Presentational + playback attributes only — no event handlers (on*),
+    // which aren't listed and so are stripped. `src`/`poster` URLs are still
+    // scheme-checked by `protocols` below.
+    video: [
+      'src',
+      'controls',
+      'width',
+      'height',
+      'poster',
+      'preload',
+      'loop',
+      'muted',
+      'autoPlay',
+      'playsInline',
+    ],
+    audio: ['src', 'controls', 'preload', 'loop', 'muted', 'autoPlay'],
+    source: ['src', 'type', 'srcSet', 'media', 'sizes'],
+    track: ['src', 'kind', 'srcLang', 'label', 'default'],
+  },
+  protocols: {
+    ...defaultSchema.protocols,
+    // Media `src` + the poster image are limited to http(s) (and relative),
+    // so `javascript:`/`data:` can't sneak in via a media element.
+    src: [...(defaultSchema.protocols?.src ?? []), 'http', 'https'],
+    poster: ['http', 'https'],
   },
 };
 

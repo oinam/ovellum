@@ -218,6 +218,9 @@ get a working ToC.
 
 ## Static assets
 
+> For the full picture — images, video/audio embeds, PDFs and other downloads —
+> see the [**Assets & downloads**](/docs/guides/assets/) guide. The essentials:
+
 Anything in `content/` that isn't a `.md` file passes through verbatim:
 
 ```

@@ -63,6 +63,14 @@ The default schema permits the HTML elements authors actually use:
 `<details>`, `<summary>`, `<kbd>`, `<sup>`, `<sub>`, `<mark>`, `<abbr>`,
 tables, etc.
 
+Ovellum also allows native media players — **`<video>`, `<audio>`, and their
+`<source>`/`<track>` children** — so you can embed an mp4/webm/mp3 inline (see
+[Assets & downloads](/docs/guides/assets/)). Only presentational/playback
+attributes are kept (`controls`, `width`, `height`, `poster`, `preload`,
+`loop`, `muted`, `autoplay`, `playsinline`); `src`/`poster` go through the same
+`http(s)`-only scheme check, and event handlers are still stripped — so a media
+embed can't carry script.
+
 ### Order matters
 
 Sanitization runs **before** shiki highlighting. Shiki emits inline

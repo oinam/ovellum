@@ -203,6 +203,34 @@ describe('renderMarkdown — HTML sanitization', () => {
     expect(html).toContain('<kbd>');
   });
 
+  it('allows <video>/<audio> players with safe attributes', async () => {
+    const video = await renderMarkdown(
+      '<video src="/media/demo.mp4" controls width="640" poster="/media/cover.jpg"></video>',
+    );
+    expect(video.html).toContain('<video');
+    expect(video.html).toContain('controls');
+    expect(video.html).toContain('/media/demo.mp4');
+    expect(video.html).toContain('poster="/media/cover.jpg"');
+
+    const audio = await renderMarkdown(
+      '<audio controls><source src="/media/talk.mp3" type="audio/mpeg"></audio>',
+    );
+    expect(audio.html).toContain('<audio');
+    expect(audio.html).toContain('<source');
+    expect(audio.html).toContain('/media/talk.mp3');
+  });
+
+  it('still strips dangerous bits from media elements', async () => {
+    // onerror handler dropped, javascript: src dropped, but the tag survives.
+    const { html } = await renderMarkdown(
+      '<video src="javascript:alert(1)" onerror="alert(1)" controls></video>',
+    );
+    expect(html).toContain('<video');
+    expect(html).toContain('controls');
+    expect(html.toLowerCase()).not.toContain('javascript:');
+    expect(html).not.toContain('onerror');
+  });
+
   it('keeps shiki output (inline styles) intact — sanitization runs before highlighting', async () => {
     const { html } = await renderMarkdown(['```typescript', 'const x = 1;', '```'].join('\n'));
     expect(html).toContain('style="');
