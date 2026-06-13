@@ -64,7 +64,11 @@
 
   function setPalette(palette) {
     root.setAttribute('data-palette', palette);
-    store(PALETTE_KEY, palette === 'default' ? '' : palette);
+    // Always persist the explicit choice — including 'default'. Storing '' for
+    // 'default' would clear the override, which on the next page reverts to the
+    // server-rendered `site.palette`; when that's a non-default palette (e.g.
+    // 'eink'), picking the default would silently bounce back to it.
+    store(PALETTE_KEY, palette);
     syncThemeColor();
     refreshAppearance();
   }
@@ -180,6 +184,25 @@
     if (mq.addEventListener) mq.addEventListener('change', onMqChange);
     else if (mq.addListener) mq.addListener(onMqChange);
   } catch (_) {}
+
+  // Sidebar: bring the active link into view within the (independently
+  // scrollable) sidebar on load. Each full-page navigation resets the
+  // sidebar's scrollTop to 0, which loses your place in a long nav — anchor
+  // to the clicked item instead. Scrolls only the sidebar, never the page.
+  (function () {
+    var sidebar = document.querySelector('.ov-sidebar');
+    if (!sidebar) return;
+    var active = sidebar.querySelector('.ov-nav-link.is-active');
+    if (!active) return;
+    // Only when the sidebar actually scrolls (desktop sticky column — not the
+    // static stacked nav on mobile).
+    if (sidebar.scrollHeight <= sidebar.clientHeight) return;
+    var s = sidebar.getBoundingClientRect();
+    var a = active.getBoundingClientRect();
+    if (a.top >= s.top && a.bottom <= s.bottom) return; // already visible
+    // Center the active item in the sidebar viewport (browser clamps the ends).
+    sidebar.scrollTop += a.top - s.top - (sidebar.clientHeight - a.offsetHeight) / 2;
+  })();
 
   // Mobile menu
   var menuBtn = document.querySelector('[data-ov-menu-toggle]');

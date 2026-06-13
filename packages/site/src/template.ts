@@ -711,10 +711,12 @@ function navList(
       if (!hasChildren) return `<li>${label}</li>`;
       // Folder → a <details> disclosure (no JS). Collapsed by default, but the
       // branch holding the current page stays open so the active item is
-      // visible; `collapse: false` opens every folder. The chevron rotates via
-      // CSS on [open]. Clicking a section-index link navigates (full reload),
-      // so the toggle-and-link overlap is harmless on a static multi-page site.
-      const open = !collapse || subtreeHasActive(node, activeUrl);
+      // visible; `site.sidebar.collapse: false` opens every folder. A folder's
+      // `_meta.json` may override the global default per-folder (`node.collapse`).
+      // The chevron rotates via CSS on [open]. Clicking a section-index link
+      // navigates (full reload), so the toggle/link overlap is harmless.
+      const effectiveCollapse = node.collapse ?? collapse;
+      const open = !effectiveCollapse || subtreeHasActive(node, activeUrl);
       const children = `<ul class="ov-nav-children">${navList(node.children, activeUrl, basePath, collapse)}</ul>`;
       return `<li><details class="ov-nav-section"${open ? ' open' : ''}><summary class="ov-nav-summary">${label}${renderIcon('chevron-down', { class: 'ov-nav-chevron', size: 14 })}</summary>${children}</details></li>`;
     })

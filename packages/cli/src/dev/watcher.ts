@@ -45,11 +45,26 @@ export async function watchAndBuild(input: WatchAndBuildOptions): Promise<Active
   await safeBuild(config, cwd, onBuild, logError);
 
   const inputAbs = path.resolve(cwd, config.input);
+  const outputAbs = path.resolve(cwd, config.output);
+  const ignoreFolders = config.site?.ignoreFolders ?? [];
   const watchPaths = [inputAbs];
   if (configFile) watchPaths.push(configFile);
 
+  // Don't watch the output dir, node_modules, dot-dirs, or configured ignore
+  // folders. Critically, watching the output dir under `input: '.'` caused an
+  // endless rebuild loop — each build writes `dist/`, which fired a change
+  // event, which triggered another build. The config file is still watched
+  // (added explicitly above and not matched here) so config edits reload.
+  const ignored = (testPath: string): boolean => {
+    const relOut = path.relative(outputAbs, testPath);
+    if (relOut === '' || (!relOut.startsWith('..') && !path.isAbsolute(relOut))) return true;
+    const segs = path.relative(inputAbs, testPath).split(path.sep);
+    return segs.some((s) => s === 'node_modules' || s.startsWith('.') || ignoreFolders.includes(s));
+  };
+
   const watcher: FSWatcher = chokidar.watch(watchPaths, {
     ignoreInitial: true,
+    ignored,
     awaitWriteFinish: { stabilityThreshold: 80, pollInterval: 25 },
   });
 

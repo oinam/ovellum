@@ -124,6 +124,9 @@ export function validateUserConfig(input: unknown): OvellumUserConfig {
     if (s.favicon !== undefined && (typeof s.favicon !== 'string' || s.favicon.trim() === '')) {
       throw new ConfigError('`site.favicon` must be a non-empty path or URL string.');
     }
+    if (s.home !== undefined && (typeof s.home !== 'string' || s.home.trim() === '')) {
+      throw new ConfigError('`site.home` must be a non-empty path to a Markdown file.');
+    }
     if (s.baseUrl !== undefined && typeof s.baseUrl !== 'string') {
       throw new ConfigError('`site.baseUrl` must be a string URL.');
     }
@@ -242,6 +245,9 @@ export function validateUserConfig(input: unknown): OvellumUserConfig {
     }
     if (s.ignoreFolders !== undefined && !isStringArray(s.ignoreFolders)) {
       throw new ConfigError('`site.ignoreFolders` must be an array of folder-name strings.');
+    }
+    if (s.ignoreFiles !== undefined && !isStringArray(s.ignoreFiles)) {
+      throw new ConfigError('`site.ignoreFiles` must be an array of glob-pattern strings.');
     }
     if (s.landing !== undefined) validateLanding(s.landing);
   }

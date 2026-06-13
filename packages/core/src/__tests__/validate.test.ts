@@ -70,6 +70,22 @@ describe('validateUserConfig', () => {
     expect(() => validateUserConfig({ protect: 'on' })).toThrow(/protect/);
   });
 
+  it('accepts site.ignoreFiles as a string array and rejects non-arrays', () => {
+    const input = { site: { ignoreFiles: ['README.md', 'drafts/**'] } };
+    expect(validateUserConfig(input)).toEqual(input);
+    expect(() => validateUserConfig({ site: { ignoreFiles: 'README.md' } })).toThrow(
+      /site\.ignoreFiles/,
+    );
+  });
+
+  it('accepts site.home and rejects empty/non-string', () => {
+    expect(validateUserConfig({ site: { home: 'overview.md' } })).toEqual({
+      site: { home: 'overview.md' },
+    });
+    expect(() => validateUserConfig({ site: { home: '' } })).toThrow(/site\.home/);
+    expect(() => validateUserConfig({ site: { home: 5 } })).toThrow(/site\.home/);
+  });
+
   it('accepts site.sidebar.collapse and rejects a non-boolean', () => {
     expect(validateUserConfig({ site: { sidebar: { collapse: false } } })).toEqual({
       site: { sidebar: { collapse: false } },

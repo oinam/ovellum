@@ -4,7 +4,14 @@ import path from 'node:path';
 import { defineCommand } from 'citty';
 import matter from 'gray-matter';
 import { ConfigError, loadOvellumConfig, type OvellumConfig } from '@ovellum/core';
-import { buildNav, extractMarkdownLinks, flattenNav, type NavNode } from '@ovellum/site';
+import {
+  buildNav,
+  extractMarkdownLinks,
+  flattenNav,
+  resolveHomeRel,
+  walkContent,
+  type NavNode,
+} from '@ovellum/site';
 import { detectUnsafeScheme } from './check-utils.js';
 
 interface Issue {
@@ -111,12 +118,34 @@ interface CheckInput {
  */
 async function checkManual({ config, cwd }: CheckInput): Promise<CheckRun> {
   const inputAbs = path.resolve(cwd, config.input);
-  const nav = await buildNav(config.input, cwd);
+  const outputAbs = path.resolve(cwd, config.output);
+  // Honour the same exclusions as `build` (ignoreFolders / ignoreFiles, the
+  // structural auto-excludes, and the output dir) so `check` lints only real
+  // content — never `node_modules`, dotfiles, dependency READMEs, or a nested
+  // output dir under `input: '.'`.
+  // Resolve the home file the same way `build` does, so a README/site.home home
+  // maps to `/` in the nav — otherwise `check` would flag `/` links as broken.
+  const homeRel = resolveHomeRel(inputAbs, config.site);
+  const homeBasename = homeRel && !homeRel.includes('/') ? homeRel : undefined;
+  const nav = await buildNav(
+    config.input,
+    cwd,
+    config.site.ignoreFolders,
+    config.site.ignoreFiles,
+    outputAbs,
+    homeBasename,
+  );
   const validUrls = collectValidUrls(nav, config);
 
   const issues: Issue[] = [];
   const files: string[] = [];
-  for await (const file of walkMarkdown(inputAbs)) {
+  for await (const file of walkContent(inputAbs, {
+    inputAbs,
+    ignoreFolders: config.site.ignoreFolders,
+    ignoreFiles: config.site.ignoreFiles ?? [],
+    outputAbs,
+  })) {
+    if (!/\.(md|markdown)$/i.test(file)) continue;
     files.push(file);
     const rel = path.relative(cwd, file).replace(/\\/g, '/');
     const raw = await readFile(file, 'utf8');

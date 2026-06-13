@@ -235,6 +235,14 @@ export interface OvellumSiteConfig {
    */
   favicon?: string;
   /**
+   * Which Markdown file is the site home (rendered at `/`). A root-level path
+   * relative to `input` (e.g. `'overview.md'`). When unset, the home resolves
+   * automatically: `index.md`, else a root **`README.md`** — so a repo's
+   * README becomes the docs home with no config. Don't want that? Add `README.md`
+   * to `ignoreFiles`, or point `home` elsewhere. Honoured by `build` and the nav.
+   */
+  home?: string;
+  /**
    * Optional version badge rendered next to the brand in the top bar
    * (e.g. `"v0.2.0"`). The site has no idea what version of the
    * underlying tool the docs describe — write whatever you want here.
@@ -305,6 +313,18 @@ export interface OvellumSiteConfig {
    * via frontmatter `draft: true`.)
    */
   ignoreFolders: string[];
+  /**
+   * File globs to exclude from the manual-mode site — both Markdown pages and
+   * passthrough assets, honoured by `build` **and** `check`. A pattern without
+   * `/` matches the basename at any depth (`README.md`, `*.draft.md`); a
+   * pattern with `/` matches the path relative to `input` (`drafts/**`).
+   * Supports `*`, `**`, and `?`. Empty by default.
+   *
+   * Note: dotfiles (`.gitignore`), `node_modules`, package manifests/lockfiles,
+   * and the Ovellum config file are **always** excluded automatically, so a
+   * root `input: '.'` doesn't leak project files — you don't need to list them.
+   */
+  ignoreFiles: string[];
   /**
    * Right-aligned topbar nav items, rendered to the right of the brand on
    * every page (including the landing). Empty by default. Order is preserved.
@@ -401,6 +421,7 @@ export const DEFAULT_CONFIG: OvellumConfig = {
     pageMeta: { readingTime: true, lastModified: true },
     sidebar: { collapse: true },
     ignoreFolders: [],
+    ignoreFiles: [],
     topbarNav: [],
     footerNav: [],
     landing: {

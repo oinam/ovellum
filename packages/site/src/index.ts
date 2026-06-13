@@ -1,5 +1,11 @@
-export { buildSite } from './build.js';
+export { buildSite, resolveHomeRel, walkContent } from './build.js';
 export type { BuildSiteOptions, BuildSiteResult, PageOutput } from './build.js';
+export {
+  isExcludedContentFile,
+  isExcludedDirName,
+  isAutoExcludedFileName,
+  matchesIgnoreFiles,
+} from './content-filter.js';
 export { renderMarkdown } from './markdown.js';
 export type { RenderedMarkdown, Heading } from './markdown.js';
 export { buildNav, findAdjacent, findBreadcrumbs, flattenNav } from './nav.js';

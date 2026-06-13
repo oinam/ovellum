@@ -1,6 +1,7 @@
 import { readdir, readFile, stat } from 'node:fs/promises';
 import path from 'node:path';
 import matter from 'gray-matter';
+import { isExcludedContentFile, isExcludedDirName } from './content-filter.js';
 
 export interface NavNode {
   /** Display title. */
@@ -9,6 +10,11 @@ export interface NavNode {
   url: string;
   /** Source file relative to project root, or undefined for directory-only nodes. */
   sourcePath?: string;
+  /**
+   * Per-folder sidebar collapse override from `_meta.json` (`false` = always
+   * expanded, `true` = collapsed). Undefined = inherit `site.sidebar.collapse`.
+   */
+  collapse?: boolean;
   /** Child nodes (sub-pages and sub-directories). */
   children: NavNode[];
 }
@@ -82,6 +88,11 @@ interface MetaJson {
   order?: string[];
   /** When true, the folder and all its content are excluded from nav + build. */
   hidden?: boolean;
+  /**
+   * Per-folder override of the sidebar collapse default (`site.sidebar.collapse`).
+   * `false` keeps this folder expanded; `true` collapses it. Unset = inherit.
+   */
+  collapse?: boolean;
 }
 
 interface FsItem {
@@ -105,10 +116,25 @@ export async function buildNav(
   rootDir: string,
   cwd: string,
   ignoreFolders: string[] = [],
+  ignoreFiles: string[] = [],
+  outputAbs?: string,
+  /** Basename of the root home file (e.g. `README.md`) — used as the root index. */
+  homeBasename?: string,
 ): Promise<NavNode> {
   const absRoot = path.resolve(cwd, rootDir);
   const rel = (abs: string) => '/' + path.posix.relative(absRoot, abs).replace(/\\/g, '/');
-  const root = await walk(absRoot, '/', cwd, rel, ignoreFolders, true);
+  const root = await walk(
+    absRoot,
+    '/',
+    cwd,
+    rel,
+    ignoreFolders,
+    ignoreFiles,
+    absRoot,
+    outputAbs,
+    homeBasename,
+    true,
+  );
   // walk() returns null for hidden/empty dirs; the root is never pruned.
   return root ?? { title: 'Untitled', url: '/', children: [] };
 }
@@ -124,25 +150,53 @@ async function walk(
   cwd: string,
   rel: (abs: string) => string,
   ignoreFolders: string[],
+  ignoreFiles: string[],
+  absRoot: string,
+  outputAbs: string | undefined,
+  homeBasename: string | undefined,
   isRoot: boolean,
 ): Promise<NavNode | null> {
   const items = await listDir(dirAbs);
   const meta = await readMeta(dirAbs);
 
-  const indexItem = items.find((i) => !i.isDir && stem(i.name) === 'index' && isMarkdown(i.name));
+  // At the root, the home file (index.md / README.md / site.home) is the index;
+  // elsewhere the index is `index.md` as usual.
+  const indexItem =
+    isRoot && homeBasename
+      ? items.find((i) => !i.isDir && i.name === homeBasename && isMarkdown(i.name))
+      : items.find((i) => !i.isDir && stem(i.name) === 'index' && isMarkdown(i.name));
   const indexNode = indexItem ? await pageNode(indexItem.abs, urlPrefix, cwd) : undefined;
 
   const children: NavNode[] = [];
   for (const item of items) {
-    if (item.name.startsWith('_')) continue;
     if (item === indexItem) continue;
     if (item.isDir) {
+      // Output dir (avoids self-recursion under `input: '.'`), structural
+      // (`_`/dot/`node_modules`), configured, and self-hidden folders.
+      if (outputAbs && item.abs === outputAbs) continue;
+      if (isExcludedDirName(item.name)) continue;
       if (ignoreFolders.includes(item.name)) continue;
       if (await isHiddenDir(item.abs)) continue;
       const childUrl = ensureTrailingSlash(urlPrefix + item.name + '/');
-      const child = await walk(item.abs, childUrl, cwd, rel, ignoreFolders, false);
+      const child = await walk(
+        item.abs,
+        childUrl,
+        cwd,
+        rel,
+        ignoreFolders,
+        ignoreFiles,
+        absRoot,
+        outputAbs,
+        homeBasename,
+        false,
+      );
       if (child) children.push(child);
     } else if (isMarkdown(item.name)) {
+      // Honour the same file excludes as the build walk — auto-excluded files
+      // (`_meta`, dotfiles, manifests, the config) and `site.ignoreFiles` globs
+      // so an emitted page never appears in the sidebar.
+      const relForMatch = path.posix.relative(absRoot, item.abs).replace(/\\/g, '/');
+      if (isExcludedContentFile(relForMatch, item.name, ignoreFiles)) continue;
       const childUrl = ensureTrailingSlash(urlPrefix + stem(item.name) + '/');
       const node = await pageNode(item.abs, childUrl, cwd);
       if (node) children.push(node);
@@ -163,6 +217,7 @@ async function walk(
     title,
     url,
     sourcePath: indexNode?.sourcePath,
+    collapse: meta?.collapse,
     children,
   };
 }

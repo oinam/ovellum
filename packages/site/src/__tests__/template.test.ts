@@ -75,6 +75,38 @@ describe('renderPage', () => {
     expect(collapsed).not.toContain('<details class="ov-nav-section" open>');
   });
 
+  it('lets a folder _meta collapse override the global default', () => {
+    // node.collapse === false forces the folder open even when the global
+    // default collapses; node.collapse === true collapses it even when the
+    // global default expands.
+    const navWithOverride: NavNode = {
+      title: 'Home',
+      url: '/',
+      sourcePath: 'content/index.md',
+      children: [
+        {
+          title: 'Pinned open',
+          url: '/pinned/',
+          collapse: false,
+          children: [
+            { title: 'Child', url: '/pinned/child/', sourcePath: 'content/pinned/child.md', children: [] },
+          ],
+        },
+      ],
+    };
+    // Global collapse=true, but the folder's override (false) keeps it open.
+    const collapsedGlobal = renderPage({
+      site: { title: 'X', defaultTheme: 'auto', footer: '', sidebar: { collapse: true } },
+      nav: navWithOverride,
+      url: '/somewhere-else/',
+      title: 'X',
+      bodyHtml: '',
+      headings: [],
+      generatedAt: '2026-06-13T00:00:00.000Z',
+    });
+    expect(collapsedGlobal).toContain('<details class="ov-nav-section" open>');
+  });
+
   it('auto-expands every folder when site.sidebar.collapse is false', () => {
     const html = renderPage({
       site: { title: 'X', defaultTheme: 'auto', footer: '', sidebar: { collapse: false } },

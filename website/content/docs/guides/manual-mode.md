@@ -68,6 +68,11 @@ required.** Two rules cover the whole structure:
 - **Each subfolder is a section**, titled after the folder name, title-cased:
   `getting-started/` → "Getting started".
 
+The **home page** (`/`) resolves automatically: `index.md`, else a root
+**`README.md`** — so an existing repo README becomes the docs home with no
+config. To use a different file, set [`site.home`](/docs/reference/config/)
+(e.g. `"overview.md"`); to keep the README out entirely, add it to `ignoreFiles`.
+
 Sections **collapse by default** in the sidebar (a click expands them) — the
 section holding the page you're on stays open, so you always see where you are.
 Prefer everything expanded? Set [`site.sidebar.collapse: false`](/docs/reference/config/).
@@ -107,19 +112,32 @@ content/
 - `title` overrides the (title-cased) folder name.
 - `order` is a list of slugs (filenames / subfolder names without `.md`);
   anything not listed sorts alphabetically after the explicit set.
+- `collapse` overrides the sidebar [`site.sidebar.collapse`](/docs/reference/config/)
+  default for this folder: `false` keeps it always expanded, `true` always
+  collapsed.
+- `hidden: true` drops the folder (and everything under it) from the build.
 
 Without a `_meta.json`, the folder's pages simply sort alphabetically — often
 exactly what you want.
 
 ### Excluding pages and folders
 
-Three ways to keep content out of the published site, from broad to narrow:
+Four ways to keep content out of the published site, from broad to narrow:
 
 - **`site.ignoreFolders`** — list folder *names* in your config to drop them
   entirely (no sidebar entry, not rendered, not copied). Matched at any depth:
 
   ```json
   { "site": { "ignoreFolders": ["drafts", "internal"] } }
+  ```
+
+- **`site.ignoreFiles`** — file **globs** to drop individual files (Markdown
+  pages *and* passthrough assets), without editing them. No-slash patterns
+  match the basename anywhere; slashed patterns match the path relative to
+  `input`:
+
+  ```json
+  { "site": { "ignoreFiles": ["README.md", "*.draft.md", "drafts/**"] } }
   ```
 
 - **`_meta.json` `"hidden": true`** — let a folder opt itself out, in place:
@@ -137,9 +155,15 @@ Three ways to keep content out of the published site, from broad to narrow:
   ---
   ```
 
-All three drop the content from the sidebar **and** the build. (Asset-only
-folders with no Markdown — like `public/` — are already kept out of the sidebar
-automatically, while their files still pass through to `dist/`.)
+All four drop the content from the sidebar **and** the build, and both
+`build` and `check` honour them (so `check` never lints excluded files).
+Asset-only folders with no Markdown — like `public/` — are already kept out of
+the sidebar automatically, while their files still pass through to `dist/`.
+
+**Running from your project root?** `input: "."` is fine — dotfiles,
+`node_modules`, package manifests/lockfiles, your `ovellum.config.*`, and the
+output dir itself are **always** excluded automatically, so none of them leak
+into the build. Use `ignoreFiles` for anything else (like a repo `README.md`).
 
 ## Callouts
 

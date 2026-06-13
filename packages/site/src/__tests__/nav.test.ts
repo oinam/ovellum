@@ -61,6 +61,60 @@ describe('buildNav', () => {
     expect(nav.children[1]!.title).toBe('Get in touch'); // h1 fallback
   });
 
+  it('excludes node_modules, dotfiles/dirs, manifests, and ignoreFiles globs from the nav', async () => {
+    const content = path.join(tmp, 'site');
+    mkdirSync(content);
+    writeFileSync(path.join(content, 'index.md'), '# Home\n');
+    writeFileSync(path.join(content, 'guide.md'), '# Guide\n');
+    // Noise that must NOT become pages:
+    writeFileSync(path.join(content, 'README.md'), '# Repo readme\n');
+    writeFileSync(path.join(content, 'package.json'), '{}');
+    writeFileSync(path.join(content, '.gitignore'), 'dist\n');
+    mkdirSync(path.join(content, 'node_modules', 'dep'), { recursive: true });
+    writeFileSync(path.join(content, 'node_modules', 'dep', 'README.md'), '# dep\n');
+    mkdirSync(path.join(content, '.git'));
+    writeFileSync(path.join(content, '.git', 'notes.md'), '# git\n');
+
+    const nav = await buildNav('./site', tmp, [], ['README.md']);
+    expect(nav.children.map((c) => c.url)).toEqual(['/guide/']);
+    // README (ignoreFiles), package.json/.gitignore (auto), node_modules + .git
+    // (structural dirs) are all gone.
+    expect(JSON.stringify(nav)).not.toContain('README');
+    expect(JSON.stringify(nav)).not.toContain('node_modules');
+  });
+
+  it('uses a root README as the home index when homeBasename is given', async () => {
+    const content = path.join(tmp, 'site');
+    mkdirSync(content);
+    writeFileSync(path.join(content, 'README.md'), '# Welcome\n');
+    writeFileSync(path.join(content, 'guide.md'), '# Guide\n');
+
+    const nav = await buildNav('./site', tmp, [], [], undefined, 'README.md');
+    // README becomes the root's own page (url '/'), not a separate child.
+    expect(nav.url).toBe('/');
+    expect(nav.sourcePath).toBe(path.join('site', 'README.md').replace(/\\/g, '/'));
+    expect(nav.title).toBe('Welcome');
+    expect(nav.children.map((c) => c.url)).toEqual(['/guide/']);
+  });
+
+  it('captures a folder _meta.json collapse override on the nav node', async () => {
+    const content = path.join(tmp, 'content');
+    const open = path.join(content, 'always-open');
+    const shut = path.join(content, 'always-shut');
+    mkdirSync(open, { recursive: true });
+    mkdirSync(shut, { recursive: true });
+    writeFileSync(path.join(content, 'index.md'), '# Root\n');
+    writeFileSync(path.join(open, 'a.md'), '# A\n');
+    writeFileSync(path.join(open, '_meta.json'), JSON.stringify({ collapse: false }));
+    writeFileSync(path.join(shut, 'b.md'), '# B\n');
+    writeFileSync(path.join(shut, '_meta.json'), JSON.stringify({ collapse: true }));
+
+    const nav = await buildNav('./content', tmp);
+    const byUrl = Object.fromEntries(nav.children.map((c) => [c.url, c]));
+    expect(byUrl['/always-open/']!.collapse).toBe(false);
+    expect(byUrl['/always-shut/']!.collapse).toBe(true);
+  });
+
   it('nests subdirectories and honors _meta.json order + title', async () => {
     const content = path.join(tmp, 'content');
     const sub = path.join(content, 'guides');

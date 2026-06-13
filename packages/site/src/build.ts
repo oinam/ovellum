@@ -5,6 +5,7 @@ import { fileURLToPath } from 'node:url';
 import matter from 'gray-matter';
 import type { OvellumConfig, OvellumSiteConfig } from '@ovellum/core';
 import { renderMarkdown } from './markdown.js';
+import { isExcludedContentFile, isExcludedDirName } from './content-filter.js';
 import { buildNav, findAdjacent, findBreadcrumbs, isHiddenDir, type NavNode } from './nav.js';
 import { countWords, lastModifiedISO, readingMinutes } from './page-meta.js';
 import { indexSite } from './search.js';
@@ -109,7 +110,19 @@ export async function buildSite(options: BuildSiteOptions): Promise<BuildSiteRes
   }
 
   const site = resolveSiteConfig(config);
-  const nav = await buildNav(config.input, cwd, site.ignoreFolders);
+  // Resolve the home page: `site.home`, else root `index.md`, else root
+  // `README.md`. The file mapped to `/` (instead of its own slug); the nav root
+  // uses it as its index so it doesn't double as a child entry.
+  const homeRel = resolveHomeRel(inputAbs, site);
+  const homeBasename = homeRel && !homeRel.includes('/') ? homeRel : undefined;
+  const nav = await buildNav(
+    config.input,
+    cwd,
+    site.ignoreFolders,
+    site.ignoreFiles ?? [],
+    outputAbs,
+    homeBasename,
+  );
   const warnings: string[] = [];
 
   await mkdir(assetsAbs, { recursive: true });
@@ -172,10 +185,16 @@ export async function buildSite(options: BuildSiteOptions): Promise<BuildSiteRes
     landingRendered = true;
   }
 
-  for await (const file of walkContent(inputAbs, site.ignoreFolders)) {
+  for await (const file of walkContent(inputAbs, {
+    inputAbs,
+    ignoreFolders: site.ignoreFolders,
+    ignoreFiles: site.ignoreFiles ?? [],
+    outputAbs,
+  })) {
     const relFromInput = path.relative(inputAbs, file).replace(/\\/g, '/');
     if (isMarkdown(file)) {
-      const url = urlFor(relFromInput);
+      // The resolved home file renders at `/` (not its own slug, e.g. `/README/`).
+      const url = relFromInput === homeRel ? '/' : urlFor(relFromInput);
       if (landingEnabled && url === '/') {
         warnings.push(
           `Skipped ${relFromInput} because site.landing.enabled is true; ` +
@@ -445,19 +464,36 @@ function resolveSiteConfig(config: OvellumConfig): OvellumSiteConfig & { title: 
   return { ...config.site, title };
 }
 
-async function* walkContent(dirAbs: string, ignoreFolders: string[]): AsyncGenerator<string> {
+interface WalkOpts {
+  inputAbs: string;
+  ignoreFolders: string[];
+  ignoreFiles: string[];
+  /** Absolute output dir — skipped when it nests inside input (e.g. `input: '.'`,
+   *  `output: 'dist'`), so the build never walks/copies its own output. */
+  outputAbs?: string;
+}
+
+export async function* walkContent(dirAbs: string, opts: WalkOpts): AsyncGenerator<string> {
   const entries = await readdir(dirAbs);
   for (const name of entries) {
-    if (name.startsWith('_')) continue;
     const abs = path.join(dirAbs, name);
     const st = await stat(abs);
     if (st.isDirectory()) {
-      // Skip excluded folders entirely — no render, no asset copy: explicit
-      // `ignoreFolders`, or a folder opting out via `_meta.json` "hidden": true.
-      if (ignoreFolders.includes(name)) continue;
+      // Skip excluded folders entirely — no render, no asset copy: the output
+      // dir itself (avoids the `input: '.'` self-recursion), structural
+      // (`_`/dot/`node_modules`), explicit `ignoreFolders`, or a folder opting
+      // out via `_meta.json` "hidden": true.
+      if (opts.outputAbs && abs === opts.outputAbs) continue;
+      if (isExcludedDirName(name)) continue;
+      if (opts.ignoreFolders.includes(name)) continue;
       if (await isHiddenDir(abs)) continue;
-      yield* walkContent(abs, ignoreFolders);
+      yield* walkContent(abs, opts);
     } else {
+      // Drop structural/project files (`_meta.json`, dotfiles, the config,
+      // manifests) and anything matching `site.ignoreFiles`, so a root
+      // `input: '.'` never leaks package.json/lockfiles/etc. into the output.
+      const rel = path.relative(opts.inputAbs, abs).replace(/\\/g, '/');
+      if (isExcludedContentFile(rel, name, opts.ignoreFiles)) continue;
       yield abs;
     }
   }
@@ -475,6 +511,33 @@ function isMarkdown(p: string): boolean {
  *   guides/install.md    → /guides/install/
  *   guides/index.md      → /guides/
  */
+/**
+ * Resolve which Markdown file is the site home (rendered at `/`):
+ * `site.home` → root `index.md` → root `README.md`. Returns the input-relative
+ * posix path, or undefined when none exists (then the site simply has no `/`).
+ * A candidate listed in `site.ignoreFiles` is skipped — so a user can opt a
+ * root README out of being the home.
+ */
+export function resolveHomeRel(inputAbs: string, site: OvellumSiteConfig): string | undefined {
+  const ignoreFiles = site.ignoreFiles ?? [];
+  const consider = (relName: string): string | undefined => {
+    const relPosix = relName.replace(/\\/g, '/');
+    if (!existsSync(path.join(inputAbs, relPosix))) return undefined;
+    if (isExcludedContentFile(relPosix, path.basename(relPosix), ignoreFiles)) return undefined;
+    return relPosix;
+  };
+  if (site.home) {
+    const explicit = consider(site.home);
+    if (explicit) return explicit;
+  }
+  return (
+    consider('index.md') ??
+    consider('index.markdown') ??
+    consider('README.md') ??
+    consider('readme.md')
+  );
+}
+
 function urlFor(relFromInput: string): string {
   const noExt = relFromInput.replace(/\.(md|markdown)$/i, '');
   const parts = noExt.split('/').filter(Boolean);
