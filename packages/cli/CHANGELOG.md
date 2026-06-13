@@ -1,5 +1,63 @@
 # ovellum
 
+## 0.5.0
+
+### Minor Changes
+
+- 4879ee0: Collapsible sidebar folders, collapsed by default.
+
+  Each sidebar folder is now a no-JS `<details>` disclosure with a chevron that
+  rotates on open. Folders are **collapsed by default** — the branch containing
+  the current page stays open so the active item is always visible. Set
+  `site.sidebar.collapse: false` to render the whole tree auto-expanded.
+
+- 662f770: More manual-mode dogfooding fixes:
+  - **Home page resolution.** `/` now resolves automatically to `site.home`
+    (explicit), else root `index.md`, else a root **`README.md`** — so an
+    existing repo README becomes the docs home with no config. The file renders
+    at `/` (not `/README/`); opt out by adding `README.md` to `ignoreFiles` or
+    pointing `site.home` elsewhere.
+  - **`ovellum dev`/`watch` rebuild loop fixed.** The watcher no longer watches
+    the output dir, `node_modules`, dot-dirs, or `ignoreFolders` — under
+    `input: "."` it was rebuilding endlessly (each build wrote `dist/`, which
+    re-triggered the watch).
+  - **Sidebar keeps its place.** On navigation the sidebar now scrolls the active
+    link into view instead of resetting to the top (matters with a long nav).
+  - **Per-folder sidebar collapse.** A folder's `_meta.json "collapse"` overrides
+    the global `site.sidebar.collapse` (`false` = always open, `true` = always
+    collapsed).
+
+- 662f770: Manual-mode fixes from dogfooding an `input: "."` site: consistent file/folder
+  exclusion across `build` and `check`, and a theme-persistence fix.
+  - **`check` now honours the same exclusions as `build`.** Previously `ovellum
+check` walked `node_modules` and reported bogus "broken links" inside
+    dependency READMEs. Exclusion logic is now centralised (`content-filter.ts`)
+    and shared by `build`, the nav builder, and `check`.
+  - **`site.ignoreFiles` (globs)** — exclude individual files (Markdown pages and
+    passthrough assets), e.g. `["README.md", "drafts/**"]`. Supports `*`, `**`,
+    `?` with gitignore-style basename-vs-path matching.
+  - **Auto-excludes for `input: "."`** — dotfiles, `node_modules`, package
+    manifests/lockfiles, the `ovellum.config.*`, and the **output dir itself**
+    are always skipped, so project files no longer leak into the build and the
+    output dir can't recurse into itself on rebuild. No config needed.
+  - **Theme persistence:** picking the default ("Ovellum") palette now persists
+    across navigation. It was stored as "no override", which reverted to a
+    configured non-default `site.palette` (e.g. `"eink"`) on the next page.
+
+- 068aee7: Optional brand logo, configurable favicon, and an always-generated 404.
+  - **`site.logo` is now optional and no longer hardcoded.** Earlier builds
+    embedded Ovellum's own brand mark into every site's topbar; that's gone.
+    Set `site.logo` to a path/URL for a brand mark (rendered as a theme-flipping
+    monochrome silhouette via a CSS mask) — leave it unset and the site title
+    stands alone.
+  - **`site.favicon`** — a `<link rel="icon">` is emitted on every page,
+    defaulting to a root `/favicon.ico` (drop one at your project root and it
+    works) and overridable to any path/URL. basePath-aware.
+  - **Every build now ships a 404 page.** If you don't write `content/404.md`,
+    Ovellum generates a default "Page not found" that matches the template. Both
+    `dist/404/index.html` and a root `dist/404.html` are emitted (the default 404
+    is infrastructure, so it isn't counted in the build's page total).
+
 ## 0.4.0
 
 ### Minor Changes
