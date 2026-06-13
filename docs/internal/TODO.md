@@ -32,16 +32,44 @@ Legend: `[ ]` not started · `[~]` in progress · `[x]` done · `[!]` blocked
 
 ## Current state (2026-06-13)
 
-**Publish state (read this first):** **`ovellum@0.4.0` is live on npm** and
-matches local (`packages/cli/package.json` = 0.4.0). Released 2026-06-13 via
-local `pnpm changeset version` (not a PR this time) + `npm publish`; signed
-tag `ovellum@0.4.0` pushed (at `6d6dc8c`), site badge bumped to `v0.4.0`,
-GitHub release published. CHANGELOG was clean (proper changeset, no
-hand-fill). The release runbook now lives in its own file —
-[`RELEASE.md`](./RELEASE.md) — run it top to bottom next time. **Uncommitted:**
-a docs-only hardening of `RELEASE.md` step 6 (multi-line tag block → one
-copy-safe `&&` one-liner; the 0.4.0 tag failed from a partial paste, GPG is
-fine) — suggested commit handed to maintainer, not yet run.
+**Publish state (read this first):** **`ovellum@0.6.0` is live on npm** and
+matches local. A fast run of releases on 2026-06-13: 0.4.0 → 0.5.0 → 0.5.1 →
+0.6.0, all via the [`RELEASE.md`](./RELEASE.md) flow (local `pnpm changeset
+version` + `npm publish`; signed tags + GitHub releases done). Tree clean on
+`main`, fully pushed. No pending changesets. The release runbook lives in
+`RELEASE.md` — run it top to bottom; the maintainer does `npm publish`
+(session + OTP) and the signed `git tag` (GPG); everything else is scripted.
+
+**What shipped 0.4.0–0.6.0 (this session):**
+- **0.4.0** — topbar **appearance control**: light/dark/auto mode + five
+  page-wide OKLCH palettes (Default/Ovellum, E-ink, Flexoki, Nord, Solarized;
+  macOS trialled then dropped) + accent/Color picker; all persisted in
+  localStorage, applied pre-paint. All theme colours converted to OKLCH (CSS
+  minify drops `minifySyntax` so esbuild can't rewrite oklch→hex). Ovellum
+  theme glyph = pen-nib.
+- **0.5.0** — optional `site.logo` (theme-flipping mask; removed the hardcoded
+  Ovellum mark that wrongly shipped to every site) · `site.favicon` (always
+  emits `<link rel=icon>`, default `/favicon.ico`) · always-generated themed
+  404 · collapsible sidebar folders (`site.sidebar.collapse`, per-folder
+  `_meta.json "collapse"` override) · sidebar scroll-restore to active link ·
+  `site.ignoreFiles` globs + **`check` now shares build's exclusions** (was
+  linting node_modules) + auto-excludes (dotfiles/node_modules/manifests/config
+  /output dir) so `input: "."` is clean · README-as-home + `site.home` ·
+  fixed the `dev`/`watch` rebuild loop under `input: "."` · palette-default
+  persistence fix.
+- **0.5.1** — fix: sidebar scroll-restore was inert (`.offsetHeight` on a
+  DOMRect → NaN); now uses `.height`.
+- **0.6.0** — **README is the folder index at every level** (build derives page
+  URLs from the nav so they never drift) · frontmatter **`permalink`** (URL
+  override) + **`tags`** (→ `<meta keywords>`) · **`site.publicDir`** (default
+  `public`) reserved → copied to the **site root** (SSG norm; **breaking** vs
+  the old `dist/public/`) · configurable **`site.backToTop`** (default
+  threshold 360) · footer **`site.credit`** link (default on) · sidebar
+  hierarchy polish (indent + bold index-folders) · **`ovellum init` now
+  scaffolds a fully-commented `ovellum.config.ts`** (every option documented
+  inline). Decision log: `publicDir → root` (not `dist/public/`) is the SSG
+  standard and the only place root-required files (favicon/robots/CNAME) work —
+  see [[feedback-counter-with-conventions]].
 
 **2026-06-12 — full audit + 10x roadmap.** A four-track audit (CLI, site
 builder, engine packages, docs/website) was synthesized into
