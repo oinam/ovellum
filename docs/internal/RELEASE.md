@@ -78,11 +78,18 @@ the logo.
 so do it by hand. Convention: the tag message **is** the tag name, matching the
 existing `ovellum@0.2.x` / `0.3.x` tags.
 
+One self-contained line, run from the **repo root** — `&&`-chained so it's
+all-or-nothing, and it reads the version from the package file so there's no
+separate variable line to forget and no `cd` to get wrong (a multi-line form
+bit the 0.4.0 release: only the `git tag` line got copied, `$v` was empty, and
+`git tag -s ""` failed):
+
 ```sh
-v="ovellum@$(node -p "require('./package.json').version")"   # run from packages/cli
-git tag -s "$v" -m "$v"     # signed — triggers the GPG pinentry prompt
-git push origin "$v"        # push the one tag (avoids dragging unrelated tags)
+v="ovellum@$(node -p "require('./packages/cli/package.json').version")" && git tag -s "$v" -m "$v" && git push origin "$v"
 ```
+
+It's signed (triggers the GPG pinentry prompt) and pushes only that one tag. If
+signing fails in your shell, see "Failure modes" below.
 
 ### 7. GitHub release notes
 
@@ -99,6 +106,22 @@ New release at <https://github.com/oinam/ovellum/releases/new>, attach the
 - **`git push origin ovellum@x.y.z` → `src refspec … does not match any`** — the
   tag was never created locally (the `git tag` step didn't run or errored; see
   the signed-tag note in Prerequisites). Create it first, then push.
+- **`git tag -s` fails to sign** — first rule out a partial copy/paste (an empty
+  `$v` gives an invalid-tag error, *not* a signing error — use the one-liner in
+  step 6). To test signing itself in your shell, clear the agent cache and try a
+  throwaway tag:
+
+  ```sh
+  echo "GPG_TTY=${GPG_TTY:-<UNSET>}"; gpgconf --kill gpg-agent
+  git tag -s _gpgtest -m _gpgtest && { echo OK; git tag -d _gpgtest; } || echo FAILED
+  ```
+
+  If it errors with `Inappropriate ioctl for device`, `GPG_TTY` was unset —
+  `echo 'export GPG_TTY=$(tty)' >> ~/.zshrc && source ~/.zshrc`. If pinentry is
+  missing: `brew install pinentry-mac` and add
+  `pinentry-program $(brew --prefix)/bin/pinentry-mac` to `~/.gnupg/gpg-agent.conf`.
+  (Verified 2026-06-13: signing itself works on this machine — the 0.4.0 tag
+  failure was a partial paste, not a GPG problem.)
 
 ## Changeset gotchas (these bit real releases — do them to avoid hand-fixing)
 

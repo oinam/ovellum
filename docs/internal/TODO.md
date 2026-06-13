@@ -30,16 +30,18 @@ Legend: `[ ]` not started · `[~]` in progress · `[x]` done · `[!]` blocked
 
 ---
 
-## Current state (2026-06-12)
+## Current state (2026-06-13)
 
-**Publish state (read this first):** **`ovellum@0.3.0` is live on npm** and
-matches local (`packages/cli/package.json` = 0.3.0). Released 2026-06-07/08
-via the changeset version PR (#2) + local `npm publish`; signed tag pushed,
-site badge bumped (`15b01c7`), CHANGELOG hand-completed (`e4a88a9` — direct-
-to-main commits under-record; see release-tagging memory). Tree clean on
-`main`. No unconsumed changesets. Release recipe unchanged: `pnpm changeset
-version` → `npm publish` from `packages/cli/` → bump `site.version` in
-`website/ovellum.config.ts` → `git push origin main --follow-tags`.
+**Publish state (read this first):** **`ovellum@0.4.0` is live on npm** and
+matches local (`packages/cli/package.json` = 0.4.0). Released 2026-06-13 via
+local `pnpm changeset version` (not a PR this time) + `npm publish`; signed
+tag `ovellum@0.4.0` pushed (at `6d6dc8c`), site badge bumped to `v0.4.0`,
+GitHub release published. CHANGELOG was clean (proper changeset, no
+hand-fill). The release runbook now lives in its own file —
+[`RELEASE.md`](./RELEASE.md) — run it top to bottom next time. **Uncommitted:**
+a docs-only hardening of `RELEASE.md` step 6 (multi-line tag block → one
+copy-safe `&&` one-liner; the 0.4.0 tag failed from a partial paste, GPG is
+fine) — suggested commit handed to maintainer, not yet run.
 
 **2026-06-12 — full audit + 10x roadmap.** A four-track audit (CLI, site
 builder, engine packages, docs/website) was synthesized into
@@ -50,8 +52,8 @@ command, recorded there). **Start the next work session from ROADMAP.md**;
 its "Suggested sequencing" names slice 1 (security hardening + quick wins)
 as the first PR-sized unit.
 
-**2026-06-12 — topbar appearance control shipped (unreleased, changeset
-`minor` queued → next is 0.4.0).** The light/dark cycle toggle is now a
+**2026-06-12/13 — topbar appearance control (shipped in 0.4.0).** The
+light/dark cycle toggle is now a
 palette-icon **popover** (inlined into the mobile sheet): Mode (auto/light/
 dark) + Theme (five palettes: Ovellum, E-ink, Flexoki, Nord, Solarized — line glyphs; macOS dropped 2026-06-13) + Color (drives primary CTA + accent) +
 Accent (six presets, native colour input, clear swatch). Architecture notes:
