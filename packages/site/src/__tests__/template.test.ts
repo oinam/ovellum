@@ -75,6 +75,38 @@ describe('renderPage', () => {
     expect(collapsed).not.toContain('<details class="ov-nav-section" open>');
   });
 
+  it('renders a folder with its own index page as a bold category heading link', () => {
+    const navWithSectionIndex: NavNode = {
+      title: 'Home',
+      url: '/',
+      sourcePath: 'content/index.md',
+      children: [
+        {
+          title: 'Guides',
+          url: '/guides/',
+          sourcePath: 'content/guides/index.md', // folder HAS an index.md
+          children: [
+            { title: 'Install', url: '/guides/install/', sourcePath: 'content/guides/install.md', children: [] },
+          ],
+        },
+      ],
+    };
+    const html = renderPage({
+      site: { title: 'X', defaultTheme: 'auto', footer: '' },
+      nav: navWithSectionIndex,
+      url: '/guides/install/',
+      title: 'Install',
+      bodyHtml: '',
+      headings: [],
+      generatedAt: '2026-06-13T00:00:00.000Z',
+    });
+    // The folder heading is a group-styled (bold) link, not a plain nav-link.
+    expect(html).toContain('class="ov-nav-group ov-nav-group--link" href="/guides/"');
+    expect(html).not.toContain('class="ov-nav-link" href="/guides/"');
+    // The leaf child stays a normal link.
+    expect(html).toContain('class="ov-nav-link is-active" href="/guides/install/"');
+  });
+
   it('lets a folder _meta collapse override the global default', () => {
     // node.collapse === false forces the folder open even when the global
     // default collapses; node.collapse === true collapses it even when the

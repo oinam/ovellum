@@ -703,22 +703,29 @@ function navList(
     .map((node) => {
       const isActive = node.url === activeUrl;
       const hasChildren = node.children.length > 0;
-      // A section-index folder carries its own page (sourcePath) → a link in
-      // the summary; a pure folder is a bold group heading.
-      const label = node.sourcePath
-        ? `<a class="ov-nav-link${isActive ? ' is-active' : ''}" href="${escapeAttr(siteUrl(node.url, basePath))}">${escapeHtml(node.title)}</a>`
+      const href = node.sourcePath ? escapeAttr(siteUrl(node.url, basePath)) : undefined;
+      // Leaf page → a plain link (normal weight).
+      if (!hasChildren) {
+        const link = href
+          ? `<a class="ov-nav-link${isActive ? ' is-active' : ''}" href="${href}">${escapeHtml(node.title)}</a>`
+          : `<span class="ov-nav-group">${escapeHtml(node.title)}</span>`;
+        return `<li>${link}</li>`;
+      }
+      // Folder → a bold category heading (group style), even when the folder
+      // has its own `index.md` (then the heading is a clickable link to it).
+      const heading = href
+        ? `<a class="ov-nav-group ov-nav-group--link${isActive ? ' is-active' : ''}" href="${href}">${escapeHtml(node.title)}</a>`
         : `<span class="ov-nav-group">${escapeHtml(node.title)}</span>`;
-      if (!hasChildren) return `<li>${label}</li>`;
-      // Folder → a <details> disclosure (no JS). Collapsed by default, but the
-      // branch holding the current page stays open so the active item is
-      // visible; `site.sidebar.collapse: false` opens every folder. A folder's
-      // `_meta.json` may override the global default per-folder (`node.collapse`).
-      // The chevron rotates via CSS on [open]. Clicking a section-index link
+      // <details> disclosure (no JS). Collapsed by default, but the branch
+      // holding the current page stays open so the active item is visible;
+      // `site.sidebar.collapse: false` opens every folder, and a folder's
+      // `_meta.json` may override the default per-folder (`node.collapse`).
+      // The chevron rotates via CSS on [open]. Clicking a heading link
       // navigates (full reload), so the toggle/link overlap is harmless.
       const effectiveCollapse = node.collapse ?? collapse;
       const open = !effectiveCollapse || subtreeHasActive(node, activeUrl);
       const children = `<ul class="ov-nav-children">${navList(node.children, activeUrl, basePath, collapse)}</ul>`;
-      return `<li><details class="ov-nav-section"${open ? ' open' : ''}><summary class="ov-nav-summary">${label}${renderIcon('chevron-down', { class: 'ov-nav-chevron', size: 14 })}</summary>${children}</details></li>`;
+      return `<li><details class="ov-nav-section"${open ? ' open' : ''}><summary class="ov-nav-summary">${heading}${renderIcon('chevron-down', { class: 'ov-nav-chevron', size: 14 })}</summary>${children}</details></li>`;
     })
     .join('');
 }

@@ -1207,12 +1207,31 @@ body.ov-menu-open {
   font-size: 0.78em;
   font-weight: 700;
 }
+/* A category heading that links to its own index page — the folder is **bold
+   like every other category** even when it has an `index.md`, but clickable.
+   Same group treatment, minus the underline, plus the active indicator. */
+a.ov-nav-group--link {
+  position: relative;
+  text-decoration: none;
+  cursor: pointer;
+}
+a.ov-nav-group--link:hover {
+  color: var(--color-link);
+}
+a.ov-nav-group--link.is-active::before {
+  content: '';
+  position: absolute;
+  inset-block: 0;
+  inset-inline-start: -1px;
+  inline-size: 2px;
+  background: var(--color-fg);
+}
 .ov-nav-children {
-  /* Flat list: no indent. Nested links share the same flush-left edge as the
-     group heading and top-level links — the active highlight (not indentation)
-     marks the current page. */
+  /* Nest sub-items a tiny bit under their category to show the hierarchy. The
+     indent compounds per level for deeper trees; the active indicator rides
+     along to the item's (indented) left edge. */
   margin-inline-start: 0;
-  padding-inline-start: 0;
+  padding-inline-start: var(--space-xs);
 }
 
 /* Collapsible folders — each folder is a <details>; the <summary> is the row
