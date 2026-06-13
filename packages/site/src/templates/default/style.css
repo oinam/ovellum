@@ -204,6 +204,105 @@ body.ov-body-landing {
   --page-max: 1100px;
 }
 
+/* ── Palettes ─────────────────────────────────────────────────────────────
+   Named page-wide colour themes: `<html data-palette="…">`, chosen from the
+   topbar appearance control (persisted in localStorage; `site.palette` sets
+   the server-rendered default). Each palette re-skins the SAME grey ramp the
+   role tokens point at, so the light AND dark variants come free — light
+   mode reads the low steps, dark mode the reversed high steps via the
+   generic dark blocks below. Canonical palette hexes are used directly;
+   in-between steps are interpolated. Each palette also carries its own
+   accent (links, focus ring, ToC strip); the dark-accent variants and the
+   user accent override live AFTER the dark blocks, where specificity wins.
+   These blocks sit BEFORE the dark blocks on purpose: equal specificity
+   (0,2,0), so the later dark blocks keep winning the role remap in dark.
+   If a palette's bg hex moves, update the `bgs` map in the boot script
+   (template.ts) that drives Safari's theme-color meta. */
+
+/* Nord — arctic, north-bluish. Snow Storm lights / Polar Night darks.
+   OKLCH converted from Nord's canonical hex (kept in comments as the
+   fidelity reference); converted with the standard sRGB→OKLab matrices. */
+:root[data-palette='nord'] {
+  --color-gray-50: oklch(97.3% 0.006 265); /* #f4f6fa */
+  --color-gray-100: oklch(95.1% 0.007 261); /* #eceff4 nord6 — light bg */
+  --color-gray-200: oklch(93.3% 0.010 262); /* #e5e9f0 nord5 */
+  --color-gray-300: oklch(89.9% 0.016 263); /* #d8dee9 nord4 */
+  --color-gray-400: oklch(76.5% 0.026 263); /* #aab3c4 */
+  --color-gray-500: oklch(63.1% 0.036 263); /* #7e8aa0 */
+  --color-gray-600: oklch(52.3% 0.045 263); /* #5c6a84 */
+  --color-gray-700: oklch(45.2% 0.035 264); /* #4c566a nord3 */
+  --color-gray-800: oklch(37.9% 0.029 266); /* #3b4252 nord1 — dark surface */
+  --color-gray-900: oklch(32.4% 0.023 264); /* #2e3440 nord0 — dark bg */
+  --color-gray-950: oklch(29.8% 0.027 267); /* #272d3b */
+  --color-surface: var(--color-gray-50);
+  --color-accent: oklch(59.4% 0.077 254); /* #5e81ac frost-3 */
+  --color-accent-fg: oklch(95.1% 0.007 261); /* #eceff4 */
+  --color-accent-hover: oklch(69.7% 0.059 249); /* #81a1c1 frost-2 */
+}
+
+/* Flexoki — warm inky paper (flexoki.io). Hex in comments. */
+:root[data-palette='flexoki'] {
+  --color-gray-50: oklch(99.0% 0.016 95); /* #fffcf0 paper */
+  --color-gray-100: oklch(95.4% 0.015 98); /* #f2f0e5 base-50 — light bg */
+  --color-gray-200: oklch(91.7% 0.015 98); /* #e6e4d9 base-100 */
+  --color-gray-300: oklch(84.6% 0.014 102); /* #cecdc3 base-200 */
+  --color-gray-400: oklch(77.2% 0.013 96); /* #b7b5ac base-300 */
+  --color-gray-500: oklch(61.7% 0.008 89); /* #878580 base-500 */
+  --color-gray-600: oklch(53.8% 0.008 97); /* #6f6e69 base-600 */
+  --color-gray-700: oklch(45.3% 0.005 92); /* #575653 base-700 */
+  --color-gray-800: oklch(27.3% 0.002 68); /* #282726 base-900 — dark surface */
+  --color-gray-900: oklch(22.3% 0.002 68); /* #1c1b1a base-950 — dark bg */
+  --color-gray-950: oklch(17.0% 0.002 0); /* #100f0f black */
+  --color-surface: var(--color-gray-50);
+  --color-accent: oklch(48.2% 0.131 255); /* #205ea6 blue-600 */
+  --color-accent-fg: oklch(99.0% 0.016 95); /* #fffcf0 */
+  --color-accent-hover: oklch(59.9% 0.110 247); /* #4385be blue-400 */
+}
+
+/* Solarized — Ethan Schoonover's base tones. Hex in comments. */
+:root[data-palette='solarized'] {
+  --color-gray-50: oklch(98.7% 0.023 96); /* #fffbea */
+  --color-gray-100: oklch(97.4% 0.026 90); /* #fdf6e3 base3 — light bg */
+  --color-gray-200: oklch(93.1% 0.026 92); /* #eee8d5 base2 */
+  --color-gray-300: oklch(87.0% 0.031 90); /* #dcd4be */
+  --color-gray-400: oklch(69.8% 0.016 197); /* #93a1a1 base1 */
+  --color-gray-500: oklch(65.4% 0.020 205); /* #839496 base0 */
+  --color-gray-600: oklch(56.8% 0.029 222); /* #657b83 base00 */
+  --color-gray-700: oklch(52.3% 0.028 219); /* #586e75 base01 */
+  --color-gray-800: oklch(30.9% 0.052 220); /* #073642 base02 — dark surface */
+  --color-gray-900: oklch(26.7% 0.049 220); /* #002b36 base03 — dark bg */
+  --color-gray-950: oklch(23.0% 0.042 222); /* #00212b */
+  --color-surface: var(--color-gray-50);
+  --color-accent: oklch(61.5% 0.139 245); /* #268bd2 blue */
+  --color-accent-fg: oklch(97.4% 0.026 90); /* #fdf6e3 */
+  --color-accent-hover: oklch(51.3% 0.114 245); /* #1e6ca3 */
+}
+
+/* E-ink — warm paper + ink black, max-contrast and monochrome (like an
+   e-reader). A faint warm tint separates it from the neutral Default; the
+   ramp is pulled toward the extremes for the crisp paper/ink legibility
+   e-ink is known for. No coloured accent — links/focus are ink, so the only
+   thing that reads on the page is the text itself. Like Default, it carries
+   no per-palette dark accent: the generic dark block flips ink↔paper for a
+   proper dark-reader variant. Pairs especially well with `site.font: serif`. */
+:root[data-palette='eink'] {
+  --color-gray-50: oklch(97.4% 0.014 89); /* #faf6ec paper highlight (light surface) */
+  --color-gray-100: oklch(95.2% 0.019 91); /* #f4efe1 sepia paper — light bg */
+  --color-gray-200: oklch(91.0% 0.025 89); /* #e8e1cf */
+  --color-gray-300: oklch(85.6% 0.033 89); /* #d8cfb8 light borders */
+  --color-gray-400: oklch(73.5% 0.038 91); /* #b2a98f */
+  --color-gray-500: oklch(60.9% 0.028 87); /* #8a8270 */
+  --color-gray-600: oklch(50.6% 0.023 85); /* #6b6456 */
+  --color-gray-700: oklch(40.8% 0.020 83); /* #4f493e */
+  --color-gray-800: oklch(28.5% 0.015 90); /* #2d2a22 dark surface */
+  --color-gray-900: oklch(22.3% 0.014 88); /* #1e1b14 ink — dark bg */
+  --color-gray-950: oklch(17.8% 0.012 92); /* #13110b */
+  --color-surface: var(--color-gray-50);
+  --color-accent: oklch(22.3% 0.014 88); /* #1e1b14 ink */
+  --color-accent-fg: oklch(97.4% 0.014 89); /* #faf6ec */
+  --color-accent-hover: oklch(40.8% 0.020 83); /* #4f493e */
+}
+
 /* Dark theme — auto + explicit */
 /* Dark = the SAME ramp, remapped to reversed steps. No new colour values —
    only different gray indices — so editing the ramp re-skins both themes.
@@ -253,6 +352,61 @@ body.ov-body-landing {
   --color-accent: var(--color-gray-100);
   --color-accent-fg: var(--color-gray-900);
   --color-accent-hover: var(--color-gray-300);
+}
+
+/* Palette dark accents — the generic dark blocks above reset the accent to
+   the mono ramp, so each coloured palette restates its dark-variant accent
+   at higher specificity (0,3,0). Same pair of blocks per palette: explicit
+   dark + auto-under-OS-dark. */
+:root[data-palette='nord'][data-theme='dark'] {
+  --color-accent: oklch(77.5% 0.062 217); /* #88c0d0 frost-1 */
+  --color-accent-fg: oklch(32.4% 0.023 264); /* #2e3440 */
+  --color-accent-hover: oklch(76.3% 0.048 194); /* #8fbcbb frost-0 */
+}
+:root[data-palette='flexoki'][data-theme='dark'] {
+  --color-accent: oklch(59.9% 0.110 247); /* #4385be blue-400 */
+  --color-accent-fg: oklch(17.0% 0.002 0); /* #100f0f */
+  --color-accent-hover: oklch(68.1% 0.085 240); /* #66a0c8 */
+}
+:root[data-palette='solarized'][data-theme='dark'] {
+  --color-accent: oklch(61.5% 0.139 245); /* #268bd2 */
+  --color-accent-fg: oklch(26.7% 0.049 220); /* #002b36 */
+  --color-accent-hover: oklch(68.7% 0.119 241); /* #4da3dd */
+}
+@media (prefers-color-scheme: dark) {
+  :root[data-palette='nord'][data-theme='auto'] {
+    --color-accent: oklch(77.5% 0.062 217); /* #88c0d0 */
+    --color-accent-fg: oklch(32.4% 0.023 264); /* #2e3440 */
+    --color-accent-hover: oklch(76.3% 0.048 194); /* #8fbcbb */
+  }
+  :root[data-palette='flexoki'][data-theme='auto'] {
+    --color-accent: oklch(59.9% 0.110 247); /* #4385be */
+    --color-accent-fg: oklch(17.0% 0.002 0); /* #100f0f */
+    --color-accent-hover: oklch(68.1% 0.085 240); /* #66a0c8 */
+  }
+  :root[data-palette='solarized'][data-theme='auto'] {
+    --color-accent: oklch(61.5% 0.139 245); /* #268bd2 */
+    --color-accent-fg: oklch(26.7% 0.049 220); /* #002b36 */
+    --color-accent-hover: oklch(68.7% 0.119 241); /* #4da3dd */
+  }
+}
+
+/* User colour override — `--ov-accent` is set inline on <html> (by the boot
+   script / appearance control / `site.accent`) together with `data-accent`.
+   The repeated attribute selector is a deliberate specificity bump to
+   (0,4,0) so one block beats every palette+mode combination above. It drives
+   BOTH the accent role (links, focus, ToC strip) AND the primary role (CTA
+   buttons) so a chosen colour shows up everywhere it should. Hover is mixed
+   toward the foreground, so it darkens in light mode and lightens in dark
+   automatically; the presets are mid-tone, so the near-white on-colour text
+   holds its contrast. */
+:root[data-accent][data-accent][data-accent] {
+  --color-accent: var(--ov-accent);
+  --color-accent-hover: color-mix(in oklch, var(--ov-accent) 78%, var(--color-fg));
+  --color-accent-fg: oklch(98.5% 0 0);
+  --color-primary: var(--ov-accent);
+  --color-primary-hover: color-mix(in oklch, var(--ov-accent) 78%, var(--color-fg));
+  --color-primary-fg: oklch(98.5% 0 0);
 }
 
 /* Reset + base */
@@ -600,15 +754,184 @@ a:hover {
    `.ov-topbar-link--icon` above; here we only add the toggle's cursor. */
 .ov-theme-toggle {
   cursor: pointer;
-}
-.ov-theme-icon {
-  display: none;
   line-height: 0;
 }
-:root[data-theme='auto'] .ov-theme-icon-auto,
-:root[data-theme='light'] .ov-theme-icon-light,
-:root[data-theme='dark'] .ov-theme-icon-dark {
+
+/* Appearance control
+   ===
+   One palette-icon button opening a small popover: mode segmented control,
+   palette list, accent swatches. State lives on <html> (data-theme /
+   data-palette / --ov-accent); script.js mirrors it into aria-pressed, and
+   everything visual hangs off that — so the desktop popover and the inline
+   mobile-sheet copy can never disagree. */
+.ov-appearance {
+  position: relative;
   display: inline-flex;
+}
+.ov-appearance.is-open .ov-theme-toggle {
+  color: var(--color-fg);
+}
+.ov-appearance-panel {
+  display: grid;
+  gap: var(--space-s);
+  position: absolute;
+  top: calc(100% + var(--space-2xs));
+  inset-inline-end: 0;
+  z-index: 30;
+  inline-size: 248px;
+  padding: var(--space-s);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
+}
+/* Author display above would defeat the UA [hidden] rule — restore it. */
+.ov-appearance-panel[hidden] {
+  display: none;
+}
+.ov-appearance-group {
+  display: grid;
+  gap: var(--space-2xs);
+}
+.ov-appearance-label {
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-fg-subtle);
+}
+/* Mode — three-way segmented control on a hairline track. */
+.ov-appearance-modes {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
+.ov-appearance-mode {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35em;
+  padding: var(--space-3xs) 0;
+  border: 0;
+  background: transparent;
+  font: inherit;
+  font-size: 0.78rem;
+  color: var(--color-fg-muted);
+  cursor: pointer;
+}
+.ov-appearance-mode + .ov-appearance-mode {
+  border-inline-start: 1px solid var(--color-border);
+}
+.ov-appearance-mode:hover {
+  color: var(--color-fg);
+}
+.ov-appearance-mode[aria-pressed='true'] {
+  background: var(--color-bg-muted);
+  color: var(--color-fg);
+}
+/* Theme — quiet rows: a monochrome line glyph, name, check on the active row. */
+.ov-appearance-palettes {
+  display: grid;
+}
+.ov-appearance-palette {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2xs);
+  padding: var(--space-3xs) var(--space-2xs);
+  border: 0;
+  border-radius: var(--radius-md);
+  background: transparent;
+  font: inherit;
+  font-size: 0.85rem;
+  color: var(--color-fg-muted);
+  text-align: start;
+  cursor: pointer;
+}
+.ov-appearance-palette:hover {
+  background: var(--color-inline-code-bg);
+  color: var(--color-fg);
+}
+.ov-appearance-palette[aria-pressed='true'] {
+  color: var(--color-fg);
+}
+.ov-appearance-palette-name {
+  flex: 1;
+}
+.ov-appearance-check {
+  visibility: hidden;
+  color: var(--color-fg-subtle);
+}
+.ov-appearance-palette[aria-pressed='true'] .ov-appearance-check {
+  visibility: visible;
+}
+/* Theme glyph — a crisp monochrome line mark per theme. Kept subtle (subtle
+   fg tint, thinner-feeling) and brightened to full fg on hover / when active,
+   so the row reads calm until you engage it. */
+.ov-appearance-glyph {
+  flex: none;
+  line-height: 0;
+  color: var(--color-fg-subtle);
+}
+.ov-appearance-palette:hover .ov-appearance-glyph,
+.ov-appearance-palette[aria-pressed='true'] .ov-appearance-glyph {
+  color: var(--color-fg);
+}
+/* Color — swatch row; the leading "Default" swatch clears the override (back
+   to the theme's own primary), the trailing native colour input picks any. */
+.ov-appearance-accents {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2xs);
+}
+.ov-appearance-accent {
+  flex: none;
+  inline-size: 1.125rem;
+  block-size: 1.125rem;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: var(--swatch);
+  cursor: pointer;
+}
+.ov-appearance-accent[aria-pressed='true'] {
+  box-shadow:
+    0 0 0 2px var(--color-surface),
+    0 0 0 3.5px var(--color-fg-subtle);
+}
+/* "Default" — the first swatch shows the theme's own primary colour (the dark
+   charcoal in the Ovellum light theme) and clears the override when picked.
+   Filled with --color-fg, which tracks the default primary in both modes and
+   is NOT touched by the override block above, so it always shows the true
+   default even while a custom colour is active. */
+.ov-appearance-accent--default {
+  background: var(--color-fg);
+}
+/* Custom — the native colour input is the swatch itself. */
+.ov-appearance-accent--custom {
+  flex: none;
+  line-height: 0;
+}
+.ov-appearance-accent--custom input {
+  inline-size: 1.125rem;
+  block-size: 1.125rem;
+  padding: 0;
+  border: 1px solid var(--color-border-strong);
+  border-radius: 50%;
+  background: transparent;
+  cursor: pointer;
+}
+.ov-appearance-accent--custom input::-webkit-color-swatch-wrapper {
+  padding: 0;
+}
+.ov-appearance-accent--custom input::-webkit-color-swatch {
+  border: 0;
+  border-radius: 50%;
+}
+.ov-appearance-accent--custom input::-moz-color-swatch {
+  border: 0;
+  border-radius: 50%;
 }
 
 /* Mobile menu button — hidden on desktop, shown below the breakpoint. */
@@ -667,19 +990,24 @@ a:hover {
   font-size: 1.05em;
   gap: 0.6em;
 }
-/* Theme toggle lives in the sheet on mobile (kept out of the top row). */
+/* Appearance panel lives inline in the sheet on mobile — same markup as the
+   desktop popover, flattened: no border, no shadow, always visible (the
+   display rule deliberately defeats the [hidden] attribute here). */
 .ov-mobile-theme {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: var(--space-2xs) var(--space-s);
+  padding: var(--space-2xs) var(--space-3xs) 0;
   margin-block-start: var(--space-2xs);
   border-block-start: 1px solid var(--color-border);
 }
-.ov-mobile-theme-label {
-  font-size: 1.05em;
-  font-weight: 500;
-  color: var(--color-fg-muted);
+.ov-mobile-theme .ov-appearance-panel,
+.ov-mobile-theme .ov-appearance-panel[hidden] {
+  display: grid;
+  position: static;
+  inline-size: auto;
+  padding: var(--space-2xs) var(--space-s);
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
 }
 body.ov-menu-open {
   overflow: hidden;
@@ -693,12 +1021,17 @@ body.ov-menu-open {
     gap: var(--space-xs);
     padding-inline: var(--space-s);
   }
-  /* The whole desktop cluster — text nav, divider, and the icon group (which
-     now holds the theme toggle) — collapses into the hamburger sheet. */
+  /* The whole desktop cluster — text nav, dividers, icon group, and the
+     appearance popover — collapses into the hamburger sheet. */
   .ov-topbar-nav,
   .ov-topbar-divider,
-  .ov-topbar-icons {
+  .ov-topbar-icons,
+  .ov-appearance {
     display: none;
+  }
+  /* …but not the inline copy inside the sheet (same data hook, no class). */
+  .ov-mobile-nav [data-ov-appearance] {
+    display: block;
   }
   .ov-topbar-menu {
     display: inline-flex;
@@ -1745,8 +2078,8 @@ body.ov-body-404 .ov-content-card {
 
 @media print {
   :root {
-    --color-bg: #ffffff;
-    --color-fg: #000000;
+    --color-bg: oklch(100% 0 0); /* white */
+    --color-fg: oklch(0% 0 0); /* black */
   }
   .ov-frame,
   .ov-topbar,
@@ -1756,6 +2089,7 @@ body.ov-body-404 .ov-content-card {
   .ov-edit-page,
   .ov-search,
   .ov-theme-toggle,
+  .ov-appearance,
   .heading-anchor,
   .ov-to-top,
   .ov-copy-btn {
@@ -1789,13 +2123,13 @@ body.ov-body-404 .ov-content-card {
   .ov-prose a[href^='http']::after {
     content: ' (' attr(href) ')';
     font-size: 0.85em;
-    color: #555;
+    color: oklch(45% 0 0); /* #555 */
   }
   .ov-prose pre {
     page-break-inside: avoid;
-    border: 1px solid #ccc;
-    background: #f6f6f6;
-    color: #000;
+    border: 1px solid oklch(84.5% 0 0); /* #ccc */
+    background: oklch(97.3% 0 0); /* #f6f6f6 */
+    color: oklch(0% 0 0); /* black */
   }
   .ov-prose h1,
   .ov-prose h2,
@@ -1803,8 +2137,8 @@ body.ov-body-404 .ov-content-card {
     page-break-after: avoid;
   }
   .ov-footer {
-    border-block-start: 1px solid #ccc;
-    color: #555;
+    border-block-start: 1px solid oklch(84.5% 0 0); /* #ccc */
+    color: oklch(45% 0 0); /* #555 */
   }
   /* The footer's "+" corner marks belong to the on-screen frame — drop them
      on paper. */

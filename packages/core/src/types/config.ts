@@ -28,6 +28,15 @@ export type OvellumDefaultTheme = 'auto' | 'light' | 'dark';
 export type OvellumFont = 'sans' | 'serif';
 
 /**
+ * Named colour palette for the whole site (page chrome, surfaces, text —
+ * not just code blocks). Every palette ships a light and a dark variant;
+ * the light/dark/auto mode choice stays independent (`defaultTheme`).
+ * Visitors can switch palettes at runtime from the topbar appearance
+ * control; this value is the server-rendered starting point.
+ */
+export type OvellumPalette = 'default' | 'nord' | 'flexoki' | 'solarized' | 'eink';
+
+/**
  * Code-block theme pair (passed to shiki). Each option resolves to a
  * `{ light, dark }` pair so a single build serves both colour schemes
  * via CSS variables. Defaults to `'github'`.
@@ -223,6 +232,20 @@ export interface OvellumSiteConfig {
   basePath?: string;
   /** Initial theme before user preference loads. */
   defaultTheme: OvellumDefaultTheme;
+  /**
+   * Initial colour palette before user preference loads. Defaults to
+   * `'default'` (the monochrome editorial theme). Visitors can override it
+   * from the topbar appearance control (persisted in `localStorage`).
+   */
+  palette: OvellumPalette;
+  /**
+   * Default accent colour — any CSS colour value (`'#3b82f6'`,
+   * `'oklch(57% 0.16 255)'`, …). Links, focus rings, and the ToC strip
+   * derive from it; hover states are mixed from it automatically. Unset =
+   * each palette's own accent. Visitors can override it from the topbar
+   * appearance control.
+   */
+  accent?: string;
   /** Body font family for the whole site. Defaults to `'sans'`. */
   font: OvellumFont;
   /** Footer text. Empty string disables the footer entirely. */
@@ -342,6 +365,7 @@ export const DEFAULT_CONFIG: OvellumConfig = {
   },
   site: {
     defaultTheme: 'auto',
+    palette: 'default',
     font: 'sans',
     codeTheme: 'github',
     footer: 'Built with Ovellum',

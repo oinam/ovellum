@@ -5,6 +5,7 @@ const MODES = ['hybrid', 'manual', 'auto'] as const;
 const FORMATS = ['md', 'mdx'] as const;
 const ORPHAN_STRATEGIES = ['quarantine', 'warn'] as const;
 const THEMES = ['auto', 'light', 'dark'] as const;
+const PALETTES = ['default', 'nord', 'flexoki', 'solarized', 'eink'] as const;
 const CODE_THEMES = ['github', 'nord', 'solarized'] as const;
 const FONTS = ['sans', 'serif'] as const;
 const CTA_STYLES = ['primary', 'secondary'] as const;
@@ -135,6 +136,12 @@ export function validateUserConfig(input: unknown): OvellumUserConfig {
       !THEMES.includes(s.defaultTheme as (typeof THEMES)[number])
     ) {
       throw new ConfigError(`\`site.defaultTheme\` must be one of: ${THEMES.join(', ')}.`);
+    }
+    if (s.palette !== undefined && !PALETTES.includes(s.palette as (typeof PALETTES)[number])) {
+      throw new ConfigError(`\`site.palette\` must be one of: ${PALETTES.join(', ')}.`);
+    }
+    if (s.accent !== undefined && (typeof s.accent !== 'string' || s.accent.trim() === '')) {
+      throw new ConfigError('`site.accent` must be a non-empty CSS colour string.');
     }
     if (s.font !== undefined && !FONTS.includes(s.font as (typeof FONTS)[number])) {
       throw new ConfigError(`\`site.font\` must be one of: ${FONTS.join(', ')}.`);

@@ -1,56 +1,181 @@
 // Ovellum default template — client-side enhancements.
-// 1) Theme toggle (auto → light → dark) wired to <html data-theme="…">.
+// 1) Appearance control: mode (auto/light/dark), palette, accent — wired to
+//    <html data-theme / data-palette / --ov-accent>, persisted in localStorage.
 // 2) Copy button on every <pre> code block.
 // 3) Mobile menu toggle (hamburger ↔ sheet).
 // 4) Cmd/Ctrl+K → focus the search input; small kbd hint chip in the box.
 (function () {
-  var STORAGE_KEY = 'ovellum-theme';
-  var ORDER = ['auto', 'light', 'dark'];
+  var root = document.documentElement;
+  var MODE_KEY = 'ovellum-theme'; // legacy key name, kept for continuity
+  var PALETTE_KEY = 'ovellum-palette';
+  var ACCENT_KEY = 'ovellum-accent';
+  var MODES = ['auto', 'light', 'dark'];
 
-  function readStored() {
+  function readMode() {
     try {
-      var t = localStorage.getItem(STORAGE_KEY);
-      return ORDER.indexOf(t) >= 0 ? t : 'auto';
+      var t = localStorage.getItem(MODE_KEY);
+      return MODES.indexOf(t) >= 0 ? t : root.getAttribute('data-theme') || 'auto';
     } catch (_) {
       return 'auto';
     }
   }
 
-  function syncThemeColor(theme) {
+  function readAccent() {
+    try {
+      return localStorage.getItem(ACCENT_KEY) || '';
+    } catch (_) {
+      return '';
+    }
+  }
+
+  // Safari URL-bar tint. The per-palette [light, dark] bg map is emitted by
+  // the boot script (template.ts); the meta data-light/data-dark attributes
+  // remain as the default-palette fallback.
+  function syncThemeColor() {
     var meta = document.getElementById('ov-theme-color');
     if (!meta) return;
-    var effective = theme;
-    if (theme === 'auto') {
+    var mode = root.getAttribute('data-theme') || 'auto';
+    var effective = mode;
+    if (mode === 'auto') {
       effective = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
     }
-    var next = meta.getAttribute(effective === 'dark' ? 'data-dark' : 'data-light');
+    var palette = root.getAttribute('data-palette') || 'default';
+    var map = window.__OV_PALETTE_BG__;
+    var next =
+      map && map[palette]
+        ? map[palette][effective === 'dark' ? 1 : 0]
+        : meta.getAttribute(effective === 'dark' ? 'data-dark' : 'data-light');
     if (next) meta.setAttribute('content', next);
   }
 
-  function apply(theme) {
-    document.documentElement.setAttribute('data-theme', theme);
-    syncThemeColor(theme);
+  function store(key, value) {
     try {
-      localStorage.setItem(STORAGE_KEY, theme);
+      if (value) localStorage.setItem(key, value);
+      else localStorage.removeItem(key);
     } catch (_) {}
   }
 
-  // Theme toggle — there may be more than one instance (desktop cluster +
-  // mobile sheet). Wire every button; they share state via <html data-theme>.
-  document.querySelectorAll('[data-ov-theme-toggle]').forEach(function (btn) {
-    btn.addEventListener('click', function () {
-      var current = readStored();
-      var next = ORDER[(ORDER.indexOf(current) + 1) % ORDER.length];
-      apply(next);
+  function setMode(mode) {
+    root.setAttribute('data-theme', mode);
+    store(MODE_KEY, mode);
+    syncThemeColor();
+    refreshAppearance();
+  }
+
+  function setPalette(palette) {
+    root.setAttribute('data-palette', palette);
+    store(PALETTE_KEY, palette === 'default' ? '' : palette);
+    syncThemeColor();
+    refreshAppearance();
+  }
+
+  function setAccent(value) {
+    if (value) {
+      root.style.setProperty('--ov-accent', value);
+      root.setAttribute('data-accent', 'custom');
+    } else {
+      root.style.removeProperty('--ov-accent');
+      root.removeAttribute('data-accent');
+    }
+    store(ACCENT_KEY, value);
+    refreshAppearance();
+  }
+
+  // Mirror <html> state into every control instance (desktop popover +
+  // mobile sheet) — aria-pressed drives the visual state in CSS, so the
+  // copies can't drift.
+  function refreshAppearance() {
+    var mode = root.getAttribute('data-theme') || 'auto';
+    var palette = root.getAttribute('data-palette') || 'default';
+    var accent = readAccent();
+    document.querySelectorAll('[data-ov-mode]').forEach(function (btn) {
+      btn.setAttribute('aria-pressed', btn.getAttribute('data-ov-mode') === mode ? 'true' : 'false');
+    });
+    document.querySelectorAll('[data-ov-palette]').forEach(function (btn) {
+      btn.setAttribute(
+        'aria-pressed',
+        btn.getAttribute('data-ov-palette') === palette ? 'true' : 'false',
+      );
+    });
+    document.querySelectorAll('[data-ov-accent]').forEach(function (btn) {
+      btn.setAttribute(
+        'aria-pressed',
+        btn.getAttribute('data-ov-accent') === accent ? 'true' : 'false',
+      );
+    });
+    // The custom input doubles as the "current custom colour" swatch when the
+    // stored accent is a hex value (presets are oklch strings, skipped).
+    if (/^#[0-9a-f]{6}$/i.test(accent)) {
+      document.querySelectorAll('[data-ov-accent-custom]').forEach(function (input) {
+        input.value = accent;
+      });
+    }
+  }
+
+  function closeAppearance() {
+    document.querySelectorAll('[data-ov-appearance]').forEach(function (wrap) {
+      var panel = wrap.querySelector('[data-ov-appearance-panel]');
+      var toggle = wrap.querySelector('[data-ov-appearance-toggle]');
+      // Inline instances (mobile sheet) have no toggle — they stay open.
+      if (!toggle || !panel) return;
+      panel.hidden = true;
+      toggle.setAttribute('aria-expanded', 'false');
+      wrap.classList.remove('is-open');
+    });
+  }
+
+  document.querySelectorAll('[data-ov-appearance-toggle]').forEach(function (toggle) {
+    toggle.addEventListener('click', function (e) {
+      e.stopPropagation();
+      var wrap = toggle.closest('[data-ov-appearance]');
+      var panel = wrap && wrap.querySelector('[data-ov-appearance-panel]');
+      if (!panel) return;
+      var open = !panel.hidden;
+      closeAppearance();
+      if (!open) {
+        panel.hidden = false;
+        toggle.setAttribute('aria-expanded', 'true');
+        wrap.classList.add('is-open');
+      }
     });
   });
+  document.addEventListener('click', function (e) {
+    if (e.target && e.target.closest && e.target.closest('[data-ov-appearance]')) return;
+    closeAppearance();
+  });
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape') closeAppearance();
+  });
+
+  document.querySelectorAll('[data-ov-mode]').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      setMode(btn.getAttribute('data-ov-mode'));
+    });
+  });
+  document.querySelectorAll('[data-ov-palette]').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      setPalette(btn.getAttribute('data-ov-palette'));
+    });
+  });
+  document.querySelectorAll('[data-ov-accent]').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      setAccent(btn.getAttribute('data-ov-accent'));
+    });
+  });
+  document.querySelectorAll('[data-ov-accent-custom]').forEach(function (input) {
+    input.addEventListener('input', function () {
+      setAccent(input.value);
+    });
+  });
+
+  refreshAppearance();
 
   // When the user is on 'auto' and flips their OS theme, retune the
   // meta theme-color so Safari's URL bar follows the OS change.
   try {
     var mq = window.matchMedia('(prefers-color-scheme: dark)');
     var onMqChange = function () {
-      if (readStored() === 'auto') syncThemeColor('auto');
+      if (readMode() === 'auto') syncThemeColor();
     };
     if (mq.addEventListener) mq.addEventListener('change', onMqChange);
     else if (mq.addListener) mq.addListener(onMqChange);

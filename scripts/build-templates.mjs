@@ -33,11 +33,18 @@ export async function buildTemplates(srcDir, dstDir) {
     const ext = path.extname(entry.name).toLowerCase();
     if (ext === '.css' || ext === '.js') {
       const code = readFileSync(src, 'utf8');
-      const result = await transform(code, {
-        loader: ext === '.css' ? 'css' : 'js',
-        minify: true,
-        legalComments: 'none',
-      });
+      // CSS: minify whitespace + identifiers but NOT syntax. esbuild's
+      // syntax-level minification rewrites in-gamut `oklch()` colours to their
+      // shorter hex equivalents — lossless, but it would smuggle hex back into
+      // the shipped stylesheet, against the all-OKLCH design principle
+      // (STYLES.md). Skipping minifySyntax keeps every shipped colour in OKLCH
+      // for ~1% more bytes (mostly recovered by gzip). JS keeps full minify —
+      // there's no colour concern and minifySyntax earns its keep there.
+      const opts =
+        ext === '.css'
+          ? { loader: 'css', minifyWhitespace: true, minifyIdentifiers: true, legalComments: 'none' }
+          : { loader: 'js', minify: true, legalComments: 'none' };
+      const result = await transform(code, opts);
       writeFileSync(dst, result.code);
     } else {
       cpSync(src, dst);

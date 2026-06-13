@@ -46,16 +46,25 @@ the per-theme colour *values* live in the theme's stylesheet
 
 ## Available themes
 
-| Theme       | Status   | Notes                                                                                  |
-| ----------- | -------- | -------------------------------------------------------------------------------------- |
-| **Default** | shipping | Monochrome, pure-neutral grey ramp; light + dark (+ auto). The theme this site uses.   |
-| Nord        | planned  | Cool blue-grey palette, behind a future `site.theme` switch.                            |
-| Dracula     | planned  | Dark-first high-contrast palette. Roadmap.                                              |
+Five bundled page-wide palettes, each with a light **and** a dark variant
+(the light/dark/auto mode stays an independent choice). **Ovellum** is the
+default; the rest are listed alphabetically, as in the picker:
 
-Today the default is the only bundled **page** theme; the architecture above is
-what additional themes plug into (each ships its own ramp + role values and a
-reversed-ramp dark block). Code-block syntax themes are independent and already
-selectable via [`site.codeTheme`](#code-block-themes).
+| Theme         | Notes                                                                      |
+| ------------- | --------------------------------------------------------------------------- |
+| **Ovellum**   | Monochrome, pure-neutral grey ramp (`palette: 'default'`). The theme this site uses. |
+| **E-ink**     | Warm paper + ink black, max-contrast monochrome — like an e-reader. No coloured accent; pairs especially well with `site.font: 'serif'`. |
+| **Flexoki**   | Warm inky paper tones, after [Flexoki](https://stephango.com/flexoki).      |
+| **Nord**      | Arctic blue-greys — Snow Storm lights, Polar Night darks, Frost accent.     |
+| **Solarized** | Ethan Schoonover's base tones; cream light, deep-teal dark.                 |
+
+Each palette is implemented exactly the way the token model above promises: it
+re-skins the same eleven-step grey ramp the roles point at, so the dark variant
+comes free from the reversed-ramp remap. Set the server-rendered default with
+[`site.palette`](/docs/reference/config/); visitors switch at runtime from the
+topbar appearance control (persisted in `localStorage`, applied before paint).
+Code-block syntax themes are independent and selectable via
+[`site.codeTheme`](#code-block-themes).
 
 ## Typography
 
@@ -115,34 +124,46 @@ Body, headings, and prose pick up `--font-sans` automatically; code follows
 `:root` override wins; the `preload` warms the font fetch. This site itself
 runs on self-hosted Geist (with Geist Mono for code) exactly this way.
 
-## Switching themes
+## The appearance control
 
-Three values for `<html data-theme>`:
+The palette icon at the right end of the topbar opens a small panel with
+three controls (inlined into the menu sheet on mobile):
 
-- `auto` — follow the OS via `prefers-color-scheme`.
-- `light` — force light.
-- `dark` — force dark.
+- **Mode** — `auto` (follow the OS via `prefers-color-scheme`), `light`,
+  or `dark`, written to `<html data-theme>`.
+- **Theme** — one of the five bundled palettes (each with its own line
+  glyph), written to `<html data-palette>`.
+- **Color** — the primary colour that drives the **CTA buttons** as well as
+  links, focus rings, and the "On this page" indicator; hover states are
+  mixed from it automatically. Six presets, a native custom-colour picker,
+  and a leading **Default** swatch that returns to the theme's own primary
+  (the dark charcoal in Ovellum).
 
-The topbar toggle cycles between them with a monitor / sun / moon icon
-that swaps based on the current `data-theme`. The selection is saved in
-`localStorage` and applied before paint, so revisits never flash the
-wrong colours.
+Every choice is saved in `localStorage` and applied before paint, so
+revisits never flash the wrong colours, and a visitor's selections follow
+them across pages and sessions.
 
-To set the initial theme for first-time visitors:
+Set the first-visit defaults in config:
 
 ```json
 {
   "site": {
-    "defaultTheme": "dark"
+    "defaultTheme": "dark",
+    "palette": "nord",
+    "accent": "oklch(57% 0.16 255)"
   }
 }
 ```
 
+`accent` takes any CSS colour value and drives the primary + accent roles
+until the visitor picks their own. Unset, each theme uses its own primary
+(Ovellum's is the monochrome charcoal).
+
 ## Topbar
 
 The default topbar is a three-column grid: brand on the left,
-right-aligned nav, and a controls cluster (search slot + theme toggle
-+ mobile menu button).
+right-aligned nav, and a controls cluster (search slot + appearance
+control + mobile menu button).
 
 Add nav items via `site.topbarNav`:
 

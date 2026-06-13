@@ -44,19 +44,29 @@ function renderShell(opts: ShellOptions): string {
     });
   </script>`
     : '';
+  // Server-rendered appearance defaults; localStorage overrides pre-paint via
+  // the boot script. A configured `site.accent` rides in as the same inline
+  // custom property the runtime picker sets, so one CSS override serves both.
+  const palette = opts.site.palette ?? 'default';
+  const accentAttrs = opts.site.accent
+    ? ` data-accent="custom" style="--ov-accent: ${escapeAttr(opts.site.accent)}"`
+    : '';
   return `<!doctype html>
-<html lang="en" data-theme="${escapeAttr(opts.site.defaultTheme)}" data-font="${escapeAttr(opts.site.font ?? 'sans')}">
+<html lang="en" data-theme="${escapeAttr(opts.site.defaultTheme)}" data-palette="${escapeAttr(palette)}" data-font="${escapeAttr(opts.site.font ?? 'sans')}"${accentAttrs}>
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <!-- Drives Safari's URL bar tint and the top-of-page rubber-band area.
-       data-light / data-dark are hex approximations of --color-bg
-       (body) in light + dark — the topbar now reads as a continuation
-       of the body, so the URL bar should match body, not chrome.
-       Update these if --color-bg moves. The inline boot script below
-       picks the right one before paint, and script.js keeps it in
-       sync with the theme toggle + OS changes. -->
-  <meta name="theme-color" id="ov-theme-color" data-light="#f4f4f4" data-dark="#1a1a1a" content="#f4f4f4">
+       data-light / data-dark are the DEFAULT palette's --color-bg (body)
+       in light + dark, in OKLCH like the rest of the theme — the topbar
+       reads as a continuation of the body, so the URL bar matches body,
+       not chrome. These are only the fallback; the boot script's per-palette
+       bgs map below is the live source and must move with --color-bg. The
+       script picks the right value before paint, and script.js keeps it in
+       sync with the appearance control + OS changes. Note: theme-color is
+       UA-parsed; a browser that can't read oklch simply drops the tint
+       (no page impact) — an accepted tradeoff for staying all-OKLCH. -->
+  <meta name="theme-color" id="ov-theme-color" data-light="oklch(97% 0 0)" data-dark="oklch(20.5% 0 0)" content="oklch(97% 0 0)">
   <title>${escapeHtml(opts.fullTitle)}</title>
   ${desc ? `<meta name="description" content="${escapeAttr(desc)}">` : ''}
   ${opts.site.baseUrl ? `<link rel="canonical" href="${escapeAttr(join(opts.site.baseUrl, basePath + opts.url))}">` : ''}
@@ -67,11 +77,35 @@ function renderShell(opts: ShellOptions): string {
   <script>
     (function () {
       try {
+        var d = document.documentElement;
         var t = localStorage.getItem('ovellum-theme');
         if (t === 'light' || t === 'dark' || t === 'auto') {
-          document.documentElement.setAttribute('data-theme', t);
+          d.setAttribute('data-theme', t);
         } else {
-          t = document.documentElement.getAttribute('data-theme') || 'auto';
+          t = d.getAttribute('data-theme') || 'auto';
+        }
+        // [light, dark] --color-bg hex per palette. Single source for the
+        // theme-color meta — script.js reads it back via window.__OV_PALETTE_BG__.
+        // Keep in sync with the palette ramps in style.css.
+        // [light, dark] = each palette's resolved --color-bg (gray-100 / gray-900).
+        var bgs = {
+          'default': ['oklch(97% 0 0)', 'oklch(20.5% 0 0)'],
+          nord: ['oklch(95.1% 0.007 261)', 'oklch(32.4% 0.023 264)'],
+          flexoki: ['oklch(95.4% 0.015 98)', 'oklch(22.3% 0.002 68)'],
+          solarized: ['oklch(97.4% 0.026 90)', 'oklch(26.7% 0.049 220)'],
+          eink: ['oklch(95.2% 0.019 91)', 'oklch(22.3% 0.014 88)']
+        };
+        window.__OV_PALETTE_BG__ = bgs;
+        var p = localStorage.getItem('ovellum-palette');
+        if (p && bgs[p]) {
+          d.setAttribute('data-palette', p);
+        } else {
+          p = d.getAttribute('data-palette') || 'default';
+        }
+        var a = localStorage.getItem('ovellum-accent');
+        if (a) {
+          d.style.setProperty('--ov-accent', a);
+          d.setAttribute('data-accent', 'custom');
         }
         var effective = t;
         if (t === 'auto') {
@@ -79,7 +113,8 @@ function renderShell(opts: ShellOptions): string {
         }
         var meta = document.getElementById('ov-theme-color');
         if (meta) {
-          meta.setAttribute('content', meta.getAttribute(effective === 'dark' ? 'data-dark' : 'data-light'));
+          var pair = bgs[p] || bgs['default'];
+          meta.setAttribute('content', pair[effective === 'dark' ? 1 : 0]);
         }
       } catch (_) {}
     })();
@@ -178,6 +213,85 @@ function renderTopbarLinks(
   return links.join('\n        ');
 }
 
+/**
+ * Appearance panel body: mode segmented control, theme list, colour
+ * swatches. Pure markup — script.js wires the behaviour, CSS carries the
+ * pressed/active states off aria attributes so every instance stays in sync.
+ */
+function renderAppearancePanel(): string {
+  const modes = [
+    { id: 'auto', label: 'Auto', icon: 'monitor' as IconName },
+    { id: 'light', label: 'Light', icon: 'sun' as IconName },
+    { id: 'dark', label: 'Dark', icon: 'moon' as IconName },
+  ];
+  // Ovellum (the monochrome base, id 'default') pinned first; the rest
+  // alphabetical. Each carries a crisp monochrome line glyph that quietly
+  // evokes the palette (pen-tool = Ovellum's nib, echoing the brand mark;
+  // book = e-reader E-ink; feather = inky Flexoki; snowflake = arctic Nord;
+  // sun-dim = desaturated Solarized).
+  const palettes = [
+    { id: 'default', label: 'Ovellum', icon: 'pen-tool' as IconName },
+    { id: 'eink', label: 'E-ink', icon: 'book-open' as IconName },
+    { id: 'flexoki', label: 'Flexoki', icon: 'feather' as IconName },
+    { id: 'nord', label: 'Nord', icon: 'snowflake' as IconName },
+    { id: 'solarized', label: 'Solarized', icon: 'sun-dim' as IconName },
+  ];
+  // Mid-tone presets that hold up on both light and dark backgrounds and read
+  // as a legible button fill with near-white text. Selecting one drives the
+  // PRIMARY role (CTA buttons) and links/focus together. The leading "Default"
+  // swatch clears the override back to the theme's own primary (monochrome for
+  // Ovellum); the trailing custom swatch wraps a native colour input.
+  const accents = [
+    { value: 'oklch(57% 0.16 255)', label: 'Blue' },
+    { value: 'oklch(56% 0.18 295)', label: 'Violet' },
+    { value: 'oklch(56% 0.14 150)', label: 'Green' },
+    { value: 'oklch(66% 0.13 65)', label: 'Amber' },
+    { value: 'oklch(60% 0.17 15)', label: 'Rose' },
+    { value: 'oklch(60% 0.11 200)', label: 'Teal' },
+  ];
+  const modeButtons = modes
+    .map(
+      (m) => `<button type="button" class="ov-appearance-mode" data-ov-mode="${m.id}"
+            aria-pressed="false" aria-label="${m.label}" title="${m.label}">${renderIcon(m.icon, { size: 14 })}<span>${m.label}</span></button>`,
+    )
+    .join('\n          ');
+  const paletteButtons = palettes
+    .map(
+      (p) => `<button type="button" class="ov-appearance-palette" data-ov-palette="${p.id}"
+            aria-pressed="false">${renderIcon(p.icon, { size: 16, class: 'ov-appearance-glyph' })}<span class="ov-appearance-palette-name">${p.label}</span>${renderIcon('check', { size: 14, class: 'ov-appearance-check' })}</button>`,
+    )
+    .join('\n          ');
+  const accentButtons = accents
+    .map(
+      (a) => `<button type="button" class="ov-appearance-accent" data-ov-accent="${escapeAttr(a.value)}"
+            style="--swatch: ${escapeAttr(a.value)}" aria-pressed="false" aria-label="${a.label}" title="${a.label}"></button>`,
+    )
+    .join('\n          ');
+  return `<div class="ov-appearance-panel" data-ov-appearance-panel hidden>
+        <div class="ov-appearance-group">
+          <span class="ov-appearance-label">Mode</span>
+          <div class="ov-appearance-modes" role="group" aria-label="Colour mode">
+          ${modeButtons}
+          </div>
+        </div>
+        <div class="ov-appearance-group">
+          <span class="ov-appearance-label">Theme</span>
+          <div class="ov-appearance-palettes" role="group" aria-label="Theme">
+          ${paletteButtons}
+          </div>
+        </div>
+        <div class="ov-appearance-group">
+          <span class="ov-appearance-label">Color</span>
+          <div class="ov-appearance-accents" role="group" aria-label="Primary colour">
+          <button type="button" class="ov-appearance-accent ov-appearance-accent--default" data-ov-accent=""
+            aria-pressed="false" aria-label="Default" title="Default"></button>
+          ${accentButtons}
+          <span class="ov-appearance-accent ov-appearance-accent--custom" title="Custom colour"><input type="color" data-ov-accent-custom aria-label="Custom colour" value="#3b82f6"></span>
+          </div>
+        </div>
+      </div>`;
+}
+
 function renderTopbar(
   site: OvellumSiteConfig & { title: string },
   assets: string,
@@ -199,15 +313,19 @@ function renderTopbar(
       <span class="ov-topbar-menu-open">${renderIcon('menu', { size: 22 })}</span>
       <span class="ov-topbar-menu-close">${renderIcon('close', { size: 22 })}</span>
     </button>`;
-  // Two instances: one in the desktop cluster, one in the mobile sheet. Both
-  // carry `data-ov-theme-toggle` and stay in sync via the `:root[data-theme]`
-  // CSS — script.js wires every instance, not just the first.
-  const themeButton = `<button class="ov-theme-toggle" type="button"
-      aria-label="Toggle theme" title="Toggle theme" data-ov-theme-toggle>
-      <span class="ov-theme-icon ov-theme-icon-auto">${renderIcon('monitor')}</span>
-      <span class="ov-theme-icon ov-theme-icon-light">${renderIcon('sun')}</span>
-      <span class="ov-theme-icon ov-theme-icon-dark">${renderIcon('moon')}</span>
-    </button>`;
+  // Appearance control — mode (auto/light/dark), palette, and accent in one
+  // panel. Two instances: a popover in the desktop icon cluster, the panel
+  // inlined in the mobile sheet. State lives on <html> (data-theme /
+  // data-palette / --ov-accent); script.js wires every instance and keeps
+  // their pressed states in sync, so duplicates can't drift.
+  const appearancePopover = `<div class="ov-appearance" data-ov-appearance>
+      <button class="ov-theme-toggle" type="button"
+        aria-label="Appearance" title="Appearance"
+        aria-haspopup="true" aria-expanded="false" data-ov-appearance-toggle>
+        ${renderIcon('palette', { size: 18 })}
+      </button>
+      ${renderAppearancePanel()}
+    </div>`;
   const versionBadge = site.version
     ? `<span class="ov-brand-version" aria-label="Stable version ${escapeAttr(site.version)}">${escapeHtml(site.version)}</span>`
     : '';
@@ -221,17 +339,17 @@ function renderTopbar(
       <div class="ov-topbar-right">
         <nav class="ov-topbar-nav" aria-label="Primary">${desktopTextLinks}</nav>
         ${desktopTextLinks ? '<span class="ov-topbar-divider" aria-hidden="true"></span>' : ''}
-        <div class="ov-topbar-icons">
+        ${desktopIconLinks ? `<div class="ov-topbar-icons">
           ${desktopIconLinks}
-          ${themeButton}
         </div>
+        <span class="ov-topbar-divider" aria-hidden="true"></span>` : ''}
+        ${appearancePopover}
         ${menuButton}
       </div>
       <nav id="ov-mobile-nav" class="ov-mobile-nav" aria-label="Mobile">
         ${mobileLinks}
-        <div class="ov-mobile-theme">
-          <span class="ov-mobile-theme-label">Theme</span>
-          ${themeButton}
+        <div class="ov-mobile-theme" data-ov-appearance>
+          ${renderAppearancePanel()}
         </div>
       </nav>
     </div>

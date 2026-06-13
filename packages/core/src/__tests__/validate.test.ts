@@ -70,6 +70,22 @@ describe('validateUserConfig', () => {
     expect(() => validateUserConfig({ protect: 'on' })).toThrow(/protect/);
   });
 
+  it('accepts every named site.palette and a CSS-colour accent', () => {
+    for (const palette of ['default', 'nord', 'flexoki', 'solarized', 'eink']) {
+      expect(validateUserConfig({ site: { palette } })).toEqual({ site: { palette } });
+    }
+    const input = { site: { accent: 'oklch(57% 0.16 255)' } };
+    expect(validateUserConfig(input)).toEqual(input);
+  });
+
+  it('rejects unknown site.palette and non-string / empty site.accent', () => {
+    expect(() => validateUserConfig({ site: { palette: 'dracula' } })).toThrow(/site\.palette/);
+    // macOS was removed as a bundled palette.
+    expect(() => validateUserConfig({ site: { palette: 'macos' } })).toThrow(/site\.palette/);
+    expect(() => validateUserConfig({ site: { accent: 7 } })).toThrow(/site\.accent/);
+    expect(() => validateUserConfig({ site: { accent: '  ' } })).toThrow(/site\.accent/);
+  });
+
   it('accepts site.landing.hero.media with light + dark + alt', () => {
     const input = {
       site: {

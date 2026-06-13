@@ -46,6 +46,51 @@ describe('renderPage', () => {
     expect(html).toContain('fin');
   });
 
+  it('renders the appearance control with mode, palette, and accent groups', () => {
+    const html = renderPage({
+      site: { title: 'X', defaultTheme: 'auto', footer: '' },
+      nav: NAV,
+      url: '/',
+      title: 'X',
+      bodyHtml: '',
+      headings: [],
+      generatedAt: '2026-06-12T00:00:00.000Z',
+    });
+    // Unconfigured palette falls back to default on <html>.
+    expect(html).toContain('data-palette="default"');
+    expect(html).toContain('data-ov-appearance-toggle');
+    // Two panel instances: desktop popover + mobile sheet.
+    expect(html.match(/data-ov-appearance-panel/g)).toHaveLength(2);
+    for (const mode of ['auto', 'light', 'dark']) {
+      expect(html).toContain(`data-ov-mode="${mode}"`);
+    }
+    for (const palette of ['default', 'nord', 'flexoki', 'solarized', 'eink']) {
+      expect(html).toContain(`data-ov-palette="${palette}"`);
+    }
+    // macOS was removed; the "Default" palette displays as "Ovellum".
+    expect(html).not.toContain('data-ov-palette="macos"');
+    expect(html).toContain('Ovellum');
+    expect(html).toContain('data-ov-accent=""'); // "theme default" clear swatch
+    expect(html).toContain('data-ov-accent-custom');
+    // No accent configured → no server-rendered override on <html>.
+    expect(html).not.toContain('data-accent="custom"');
+  });
+
+  it('server-renders site.palette and site.accent onto <html>', () => {
+    const html = renderPage({
+      site: { title: 'X', defaultTheme: 'auto', footer: '', palette: 'nord', accent: '#a02f6f' },
+      nav: NAV,
+      url: '/',
+      title: 'X',
+      bodyHtml: '',
+      headings: [],
+      generatedAt: '2026-06-12T00:00:00.000Z',
+    });
+    expect(html).toContain('data-palette="nord"');
+    expect(html).toContain('data-accent="custom"');
+    expect(html).toContain('style="--ov-accent: #a02f6f"');
+  });
+
   it('marks the active sidebar link', () => {
     const html = renderPage({
       site: { title: 'X', defaultTheme: 'auto', footer: '' },

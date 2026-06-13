@@ -1,7 +1,7 @@
 # TODO
 
 Living checklist for code / automation work. Update in place as work progresses.
-Last updated: 2026-05-24 (Chrome split — width unified via `--chrome-max` (topbar + footer never jump width between landing and docs), but **only the footer is chrome-tinted**; topbar reverted to body color with a 1px border-bottom after two passes proving a tinted topbar fights Safari URL-bar sampling and reads noisy against the body. Meta `theme-color` now tracks `--color-bg`, not `--color-bg-chrome`. Also (2026-05-25): auto-theme toggle icon reverted eclipse → monitor (eclipse read weird; monitor is the least-bad option so far). Landing hero imagery removed — `hero.media` dropped from the site config; feature code kept dormant for a later, better imagery pass. Then (2026-05-25, follow-up): **fixed a latent rhythm bug** — `--space-2xl` / `--space-3xl` were referenced by the hero padding + feature-grid margin + 6 other rules but never defined in `style.css` (only in STYLES.md), so those `clamp(var(--space-2xl)…)` declarations were invalid and collapsed to 0. With imagery gone (which had given the hero height via `min-block-size`) the no-media hero went cramped against the topbar — defining the two tokens restores the intended hero top/bottom padding and the hero→body gap. Also **removed the hero's dotted-noise + accent-spotlight pseudo-layers** entirely and **neutralized the background hue site-wide**: `--color-bg` + `--color-bg-chrome` are now pure-neutral grays (chroma 0) in both themes, dropping the faint bluish tint ahead of a planned blended background image. `theme-color` meta hex neutralized to match (#f4f4f4 / #101010).)
+Last updated: 2026-06-12 (full audit → [`ROADMAP.md`](./ROADMAP.md); 0.3.0 live on npm). Previous: 2026-05-24 (Chrome split — width unified via `--chrome-max` (topbar + footer never jump width between landing and docs), but **only the footer is chrome-tinted**; topbar reverted to body color with a 1px border-bottom after two passes proving a tinted topbar fights Safari URL-bar sampling and reads noisy against the body. Meta `theme-color` now tracks `--color-bg`, not `--color-bg-chrome`. Also (2026-05-25): auto-theme toggle icon reverted eclipse → monitor (eclipse read weird; monitor is the least-bad option so far). Landing hero imagery removed — `hero.media` dropped from the site config; feature code kept dormant for a later, better imagery pass. Then (2026-05-25, follow-up): **fixed a latent rhythm bug** — `--space-2xl` / `--space-3xl` were referenced by the hero padding + feature-grid margin + 6 other rules but never defined in `style.css` (only in STYLES.md), so those `clamp(var(--space-2xl)…)` declarations were invalid and collapsed to 0. With imagery gone (which had given the hero height via `min-block-size`) the no-media hero went cramped against the topbar — defining the two tokens restores the intended hero top/bottom padding and the hero→body gap. Also **removed the hero's dotted-noise + accent-spotlight pseudo-layers** entirely and **neutralized the background hue site-wide**: `--color-bg` + `--color-bg-chrome` are now pure-neutral grays (chroma 0) in both themes, dropping the faint bluish tint ahead of a planned blended background image. `theme-color` meta hex neutralized to match (#f4f4f4 / #101010).)
 
 > Manual items — prose, decisions, releases, things only a human can do —
 > live in [`TODO-Human.md`](./TODO-Human.md). When in doubt: if the work
@@ -30,19 +30,44 @@ Legend: `[ ]` not started · `[~]` in progress · `[x]` done · `[!]` blocked
 
 ---
 
-## Current state (2026-06-07)
+## Current state (2026-06-12)
 
-**Publish state (read this first):** npm `latest` is still **`ovellum@0.2.2`**.
-Local `packages/cli/package.json` is **`0.2.3`** (the `--version` fix —
-committed `a3769a2`/`529475e`, never published). Two unconsumed changesets in
-`.changeset/` (one `minor` for the update notifier, one `patch` for the
-`--version` fix) will roll the next release to **`0.3.0`**. Everything since
-0.2.2 IS pushed to `origin/main` (HEAD = `9507330`, tree clean) but **none of
-it is on npm yet** — this is a deliberate "publish the minor later" hold; it's
-not breaking. To release: `pnpm changeset version` (applies the bump + writes
-`packages/cli/CHANGELOG.md`), then `npm publish` from `packages/cli/`, then
-bump `site.version` in `website/ovellum.config.ts` (drives the brand badge)
-and push the tag (`git push origin main --follow-tags`).
+**Publish state (read this first):** **`ovellum@0.3.0` is live on npm** and
+matches local (`packages/cli/package.json` = 0.3.0). Released 2026-06-07/08
+via the changeset version PR (#2) + local `npm publish`; signed tag pushed,
+site badge bumped (`15b01c7`), CHANGELOG hand-completed (`e4a88a9` — direct-
+to-main commits under-record; see release-tagging memory). Tree clean on
+`main`. No unconsumed changesets. Release recipe unchanged: `pnpm changeset
+version` → `npm publish` from `packages/cli/` → bump `site.version` in
+`website/ovellum.config.ts` → `git push origin main --follow-tags`.
+
+**2026-06-12 — full audit + 10x roadmap.** A four-track audit (CLI, site
+builder, engine packages, docs/website) was synthesized into
+[`ROADMAP.md`](./ROADMAP.md) — the prioritized 10x plan across features /
+security / usability, with verified severities (note: the "upgrade command
+injection" a reviewer flagged is a **false positive** — fixed-allowlist
+command, recorded there). **Start the next work session from ROADMAP.md**;
+its "Suggested sequencing" names slice 1 (security hardening + quick wins)
+as the first PR-sized unit.
+
+**2026-06-12 — topbar appearance control shipped (unreleased, changeset
+`minor` queued → next is 0.4.0).** The light/dark cycle toggle is now a
+palette-icon **popover** (inlined into the mobile sheet): Mode (auto/light/
+dark) + Theme (five palettes: Ovellum, E-ink, Flexoki, Nord, Solarized — line glyphs; macOS dropped 2026-06-13) + Color (drives primary CTA + accent) +
+Accent (six presets, native colour input, clear swatch). Architecture notes:
+each palette re-skins the grey ramp (`:root[data-palette='…']` placed BEFORE
+the dark blocks so the reversed-ramp dark remap still wins; per-palette dark
+accents after, at (0,3,0); the user-accent override block uses a repeated
+`[data-accent]` specificity bump to (0,4,0)). Accent = inline `--ov-accent`
+on `<html>`; hover via `color-mix` toward `--color-fg`. Boot script owns the
+per-palette `[light,dark]` bg map (`window.__OV_PALETTE_BG__`) for Safari's
+`theme-color` — **if a palette bg hex moves, update boot script + the
+`.ov-appearance-dot` gradients together**. New config: `site.palette`,
+`site.accent` (validated in core). localStorage keys: `ovellum-theme` (mode,
+legacy name), `ovellum-palette`, `ovellum-accent`. Tests: 236 passing (+2
+core validate, +2 site template). Known minor: with `site.accent` configured,
+the in-panel "theme default" swatch clears the accent for the session but the
+config accent returns on next page load (server attr + empty localStorage).
 
 **Shipped since 0.2.2 (this session — on `main`, not yet on npm):**
 - **coss.com/ui-inspired redesign** of the default theme + website: bordered
@@ -93,6 +118,10 @@ and push the tag (`git push origin main --follow-tags`).
 - Internal docs pruned: CLI/CONFIG/GLOSSARY/SECURITY removed — the website docs (`/docs/reference/`) are canonical. `docs/internal/` keeps DESIGN/SITE/STYLES/DEPLOY/FEATURES/TODO/TODO-Human. `CLAUDE.md` added (project + role guide); `CLAUDE.local.md` is gitignored private notes.
 
 **Pick up here (open threads):**
+- **The 10x roadmap** — [`ROADMAP.md`](./ROADMAP.md) is now the canonical
+  open-threads list (it absorbs and supersedes the per-item notes below;
+  custom fonts, MDX tier 1, orphans CLI, landing sections etc. all live
+  there with priorities). The bullets below are kept for their detail.
 - **Light-mode secondary CTA contrast.** "View on GitHub" is gray-100 (`oklch 96.7%`) on a near-identical body (`oklch 97%`) — separated only by the `--color-zinc-300` hairline border. Reads via the border but the fill is near-invisible in light mode. If it looks weak on the live site, bump `--color-cta-secondary-bg` a step (zinc-200) or strengthen the border. Tokens in `style.css` `:root`.
 - **MDX in manual mode** is queued (Phase 4.5): tier 1 = widen the `.mdx` discovery regexes in `nav.ts`/`build.ts` (near-trivial); tier 2 = full `remark-mdx`.
 - **Process gotcha:** the tool-output channel glitched repeatedly this session (empty/delayed Bash + Read; one bad parallel call cancelled a whole batch). Subagents were the reliable path — their final message returns intact. See `CLAUDE.local.md`.
@@ -344,7 +373,7 @@ New phase introduced 2026-05-15. Design lives in [`SITE.md`](./SITE.md).
 - [x] `pnpm -w run demo:site` end-to-end
 - [x] Smoke tests: 11 tests across markdown.ts, nav.ts, template.ts
 - [x] Token-extraction script: pull current `STYLES.md` values into `style.css` automatically — `scripts/extract-style-tokens.mjs`; npm scripts `extract-tokens` / `check-tokens`; marker-based scope so deliberate deviations stay hand-edited
-- [ ] Nord + Solarized themes wired into the theme switcher (palettes already in STYLES.md)
+- [x] Nord + Solarized themes wired into the theme switcher — shipped 2026-06-12 as the **topbar appearance control** (mode + palette + Color popover; palettes Ovellum/E-ink/Flexoki/Nord/Solarized — each a ramp re-skin so light+dark come free; macOS dropped 2026-06-13; `site.palette` / `site.accent` config)
 - [x] `_meta.json` title fallback for directories without their own `index.md` — already implemented in `buildNav`'s title resolution chain (`meta.title > indexNode.title > kebab segment > 'Untitled'`); the live website (no index.md in any of `concepts/`, `guides/`, `reference/`) relies on it. Behavior pinned by two explicit tests in `packages/site/src/__tests__/nav.test.ts`.
 - [x] Search (Pagefind integration as a separate package or `--search` flag)
 - [x] Sitemap.xml + RSS
@@ -364,7 +393,7 @@ New phase introduced 2026-05-15. Design lives in [`SITE.md`](./SITE.md).
 - [x] `site.codeTheme: 'github' | 'nord' | 'solarized'`
 - [x] HTML sanitization (rehype-raw + rehype-sanitize before shiki)
 - [x] Body type tightened to 15→16 px (Option A)
-- [ ] Page-level Nord + Solarized themes (palettes in STYLES.md; `codeTheme` ships but a full Tier-2 page theme switcher is still TODO)
+- [x] Page-level Nord + Solarized themes — shipped 2026-06-12 via the appearance control (plus Flexoki + E-ink; macOS dropped 2026-06-13). Implemented as grey-ramp re-skins (`:root[data-palette='…']` in `style.css`), not the STYLES.md §7 per-token blocks; dark variants come free from the reversed-ramp remap.
 - [x] Token-extraction script: pull current `STYLES.md` values into `style.css` automatically — shipped 2026-05-18
 - [x] `_meta.json` title fallback for directories without their own `index.md` — already implemented in `buildNav`'s title resolution chain (`meta.title > indexNode.title > kebab segment > 'Untitled'`); the live website (no index.md in any of `concepts/`, `guides/`, `reference/`) relies on it. Behavior pinned by two explicit tests in `packages/site/src/__tests__/nav.test.ts`.
 - [x] RSS feed auto-emit
