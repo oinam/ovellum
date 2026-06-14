@@ -32,11 +32,13 @@ Legend: `[ ]` not started · `[~]` in progress · `[x]` done · `[!]` blocked
 
 ## Current state (2026-06-14)
 
-**Publish state (read this first):** **`ovellum@0.10.0` is live on npm** and
-matches local. Tags `ovellum@0.7.0`…`0.10.0` pushed + GitHub releases published.
-**One pending changeset (`.changeset/footnotes.md`, patch)** for the next release
-— Markdown footnotes (see below); built + tested green (306 tests), not yet
-versioned/published. (**0.10.0** =
+**Publish state (read this first):** **`ovellum@0.10.1` is live on npm** and
+matches local. Tree clean on `main`, fully pushed, no pending changesets; tags
+`ovellum@0.7.0`…`0.10.1` pushed + GitHub releases published. (**0.10.1** =
+Markdown footnotes (GFM `[^id]`) + a fix for the doubled clobber-prefix that
+broke every footnote jump link + a global `scroll-padding-top` so anchor jumps
+clear the sticky topbar; 306 tests. See "In flight"→now-shipped block below.)
+(**0.10.0** =
 frontmatter `updated:` date override + git `--follow --diff-filter=AM` so renames
 don't reset "Edited" to "today"; rewrote Install→Upgrading docs for the
 `@latest`/caret + global-vs-local upgrade gotchas. The unpublished **0.9.1**
@@ -78,7 +80,7 @@ everything (changeset version, badge bump in `website/ovellum.config.ts`
   the caret-locks-minor-in-0.x trap, and the global-vs-local pitfall. The
   prepped-but-unpublished **0.9.1** (rename-fix patch) folded in here. 301 tests.
 
-**In flight (pending changeset, not yet released):**
+**0.10.1 — Markdown footnotes (shipped 2026-06-14):**
 - **Markdown footnotes (GFM `[^id]`).** `remark-gfm` already parsed footnotes,
   so this was really fixing a half-working feature. Headline fix: the
   `user-content-` clobber prefix was applied **twice** — `remark-rehype`
@@ -92,8 +94,8 @@ everything (changeset version, badge bump in `website/ovellum.config.ts`
   `scroll-padding-top: calc(var(--ov-header-h) + var(--space-s))`** on `html`
   now offsets *all* anchor jumps (headings + footnotes) so the target clears the
   sticky topbar instead of hiding behind it. Docs en+ja (manual-mode guide +
-  styleguide, with live examples), `FEATURES.md`, 5 new markdown tests. Framed
-  **patch** (0.10.1).
+  styleguide, with live examples), `FEATURES.md`, 5 new markdown tests. Shipped
+  as **0.10.1**.
 
 **Gotchas / standing notes for next session:**
 - **`ovellum upgrade` upgrades the wrong install** when run as a global binary
