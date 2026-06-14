@@ -93,14 +93,44 @@ npx ovellum build --help   # project-local; for a global install, drop `npx`
 
 ## アップグレード
 
+最も簡単なのは組み込みコマンドを使う方法です。npm で最新リリースを確認し、Ovellum を
+どのようにインストールしたか（どのパッケージマネージャーか、プロジェクトローカルか
+グローバルか）を検出して、適切なインストールを代わりに実行してくれます:
+
 ```bash
-pnpm update ovellum
-# or:
-npm update ovellum
+ovellum upgrade            # for a project-local install, prefix with npx
+npx ovellum upgrade
 ```
 
-Ovellum は semver に従います。1.0 より前のリリースでは、マイナーバージョンでも破壊的変更が
-含まれることがあります。バージョンを上げる前に
+`--dry-run` で何も変更せずにプレビューしたり、`--yes` で確認プロンプトをスキップしたり
+できます。（[`upgrade` リファレンス](/ja/docs/reference/cli/#ovellum-upgrade)を参照してください。）
+また Ovellum は、より新しいバージョンが存在するとき、コマンドの実行後に
+*「update available」* の通知を一行で表示します（キャッシュされます。設定で
+`update: { check: false }` を指定すると無効化できます）。
+
+### 手動でアップグレードする
+
+パッケージマネージャーを自分で実行したい場合は、明示的に **`@latest`** を
+インストールしてください:
+
+```bash
+pnpm add -D ovellum@latest
+# or: npm install -D ovellum@latest  ·  yarn add -D ovellum@latest  ·  bun add -d ovellum@latest
+```
+
+> **なぜ `npm update` ではなく `@latest` なのか？** Ovellum はまだ 1.0 より前であり、
+> キャレット範囲 — `"ovellum": "^0.9.0"`、インストーラーがデフォルトで書き込むもの — は
+> `0.x` バージョンでは `>=0.9.0 <0.10.0` を意味します。つまり**マイナーを固定する**のです。
+> そのため `npm update ovellum` / `pnpm update ovellum` は `0.9.x` のパッチは取得しますが、
+> **`0.10.0` には上げてくれません**。`ovellum@latest` をインストールすると範囲が書き換えられ、
+> 最新リリースを取得できます。（`ovellum upgrade` はこれを代わりに行います。）
+
+**グローバル**インストールの場合は、インストールしたときと同じ方法でアップグレードします。
+`ovellum upgrade` がこれを自動的に処理しますが、`npm install -g ovellum@latest`
+（自分のパッケージマネージャーに置き換えてください）でも構いません。
+
+Ovellum は semver に従います。1.0 より前のリリースでは、**マイナー**バージョンでも
+破壊的変更が含まれることがあります。バージョンを上げる前に
 [リリースノート](https://github.com/oinam/ovellum/releases)を確認してください。
 
 ## アンインストール

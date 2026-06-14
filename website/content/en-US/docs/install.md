@@ -95,14 +95,44 @@ extra `pnpm setup`).
 
 ## Upgrading
 
+The simplest way is the built-in command — it checks npm for the latest release,
+detects how you installed Ovellum (which package manager, project-local vs.
+global), and runs the right install for you:
+
 ```bash
-pnpm update ovellum
-# or:
-npm update ovellum
+ovellum upgrade            # for a project-local install, prefix with npx
+npx ovellum upgrade
 ```
 
-Ovellum follows semver. Pre-1.0 releases may include breaking changes on
-minor versions; check the [release notes](https://github.com/oinam/ovellum/releases)
+Preview without changing anything with `--dry-run`, or skip the confirmation
+prompt with `--yes`. (See the [`upgrade` reference](/docs/reference/cli/#ovellum-upgrade).)
+Ovellum also prints a one-line *"update available"* notice after commands when a
+newer version exists (cached; disable it with `update: { check: false }` in your
+config).
+
+### Upgrading by hand
+
+If you'd rather run the package manager yourself, install **`@latest`**
+explicitly:
+
+```bash
+pnpm add -D ovellum@latest
+# or: npm install -D ovellum@latest  ·  yarn add -D ovellum@latest  ·  bun add -d ovellum@latest
+```
+
+> **Why `@latest` and not `npm update`?** Ovellum is still pre-1.0, and a caret
+> range — `"ovellum": "^0.9.0"`, what the installers write by default — means
+> `>=0.9.0 <0.10.0` for `0.x` versions: it **pins the minor**. So `npm update
+> ovellum` / `pnpm update ovellum` will pick up `0.9.x` patches but **won't move
+> you to `0.10.0`**. Installing `ovellum@latest` rewrites the range and gets you
+> the newest release. (`ovellum upgrade` does this for you.)
+
+For a **global** install, upgrade it the same way you installed it —
+`ovellum upgrade` handles this automatically, or `npm install -g ovellum@latest`
+(swap in your package manager).
+
+Ovellum follows semver. Pre-1.0, **minor** versions may include breaking
+changes — skim the [release notes](https://github.com/oinam/ovellum/releases)
 before bumping.
 
 ## Uninstalling
