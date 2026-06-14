@@ -1,5 +1,63 @@
 # ovellum
 
+## 0.11.0
+
+### Minor Changes
+
+- 8d1bf35: Localize the static-site template's **UI chrome** for i18n sites. Every
+  hardcoded English string the template renders — "On this page", the "Edited"
+  line and its dates, "min read", the appearance-panel labels, prev/next, the 404
+  page, back-to-top, breadcrumbs, the draft ribbon, nav aria-labels, and the
+  copy-code button — now resolves through a per-locale string table. Built-in
+  translations ship for English and Japanese; any other locale falls back to
+  English per string, and you can override or add any string via
+  `site.locales[].strings`. Dates render with `Intl.DateTimeFormat` for the
+  locale, and right-to-left languages get `<html dir="rtl">`.
+
+  Single-language sites are unaffected — output is byte-for-byte identical (no
+  `dir` attribute, no injected strings, English chrome throughout).
+
+- 11f5d4f: Localize config-driven landing + navigation text for i18n sites. Any
+  user-facing label or copy string in the config — `topbarNav`/`footerNav`
+  labels, and the `landing` hero title/subtitle, CTA labels, feature
+  titles/descriptions, install titles, and trust-strip text — now accepts a
+  per-locale map (`{ 'en-US': '…', ja: '…' }`) in place of a plain string,
+  resolved to the current locale (falling back to the default locale). A plain
+  string still works and shows in every locale, so you only translate the strings
+  you want to. Combined with the chrome-string localization, an i18n site's
+  `/ja/` pages can now be fully Japanese end to end.
+- 7325cc9: Add an i18n **translation-staleness check** to `ovellum check`. On sites with
+  two or more `site.locales`, each translated page carries a `sourceHash` in its
+  frontmatter — a fingerprint of the default-locale page it mirrors (matched by
+  identical path across the `content/<code>/` folders). `check` recomputes the
+  source's fingerprint and flags, tagged `[i18n]`, any translation whose source
+  changed since it was stamped (stale), is missing its hash, or has no matching
+  source page (orphan). Any of these exits `1`, so CI catches translation drift.
+
+  Run `ovellum check --update-translations` to stamp (or re-stamp) every
+  translation's `sourceHash` to the current source after syncing — it touches only
+  that one frontmatter line. The fingerprint covers the page body (frontmatter
+  excluded) with normalized line endings, so reformatting won't trip a false
+  "stale".
+
+### Patch Changes
+
+- 212e889: Fix `ovellum check` reporting false broken internal links on i18n sites. It now
+  validates links **per-locale**: each `content/<code>/` subtree builds its own
+  locale-prefixed nav, and links are checked against the union of all locales'
+  URLs — so locale-prefixed (`/ja/…`), cross-locale (`/docs/…` to the default
+  locale), and relative links all resolve correctly. Single-language sites are
+  unaffected.
+- ccf9ac6: `ovellum upgrade` now prefers the project's local dependency. When the current
+  directory's `package.json` declares `ovellum` (in `dependencies`,
+  `devDependencies`, or `optionalDependencies`) — or it's already in
+  `node_modules` — the upgrade targets the project (`… add -D ovellum@latest`)
+  even when you invoke the global binary, instead of silently bumping the
+  unrelated global install. For a local upgrade the package manager is taken from
+  the project's lockfile (`pnpm-lock.yaml`, `yarn.lock`, …), so a pnpm/yarn
+  project upgrades with its own manager even from a bare global binary. The
+  "Update available" line now names which install it will touch.
+
 ## 0.10.1
 
 ### Patch Changes
