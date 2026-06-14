@@ -32,9 +32,12 @@ Legend: `[ ]` not started · `[~]` in progress · `[x]` done · `[!]` blocked
 
 ## Current state (2026-06-14)
 
-**Publish state (read this first):** **`ovellum@0.10.1` is live on npm** and
-matches local. Tree clean on `main`, fully pushed, no pending changesets; tags
-`ovellum@0.7.0`…`0.10.1` pushed + GitHub releases published. (**0.10.1** =
+**Publish state (read this first):** **`ovellum@0.10.1` is live on npm.** Tags
+`ovellum@0.7.0`…`0.10.1` pushed + GitHub releases published. **THREE pending
+changesets for the next release (minor → 0.11.0):** `upgrade-prefers-local`
+(patch), `translation-staleness` (minor), `chrome-i18n` (minor) — all committed
+to `main`, built + tested green (319 tests), NOT yet versioned/published. See
+"In flight" below. (**0.10.1** =
 Markdown footnotes (GFM `[^id]`) + a fix for the doubled clobber-prefix that
 broke every footnote jump link + a global `scroll-padding-top` so anchor jumps
 clear the sticky topbar; 306 tests. See "In flight"→now-shipped block below.)
@@ -97,20 +100,41 @@ everything (changeset version, badge bump in `website/ovellum.config.ts`
   styleguide, with live examples), `FEATURES.md`, 5 new markdown tests. Shipped
   as **0.10.1**.
 
-**Gotchas / standing notes for next session:**
-- **`ovellum upgrade` upgrades the wrong install** when run as a global binary
-  inside a project that has Ovellum as a local devDependency (it bumps the
-  global, not the project — surfaced live on notes.oinam.com). Docs now warn
-  about it; the real fix is to make `upgrade` prefer the cwd's local dependency.
-  Offered as a 0.10.x patch, deferred — a good small next task.
-- **Translation drift** — the site is now full English↔Japanese 1:1, maintained
-  **by hand**. Any English doc edit needs its `content/ja/` mirror updated or it
-  drifts. The fix is **ROADMAP B7's translation-staleness check** (store source
-  hash in each translation's frontmatter; `ovellum check` flags stale ones) — a
-  strong, on-brand next i18n slice.
-- **i18n chrome strings still English** — landing hero, `topbarNav` LABELS
-  ("Docs"), "Edited", appearance-panel labels are English on `/ja/` (only page
-  *content* is translated). The next i18n slice is UI-string localization.
+**In flight (3 pending changesets → 0.11.0, committed but not released):**
+- **`ovellum upgrade` prefers the local dep** (patch, `ccf9ac6`). `isLocalInstall`
+  now also reads the cwd `package.json` (deps/devDeps/optionalDeps), so a project
+  that *declares* ovellum is upgraded locally even via the global binary (the
+  notes.oinam.com footgun); the package manager for a local upgrade comes from the
+  lockfile (`detectManagerFromLockfile`), and the "Update available" line names
+  the target. Docs en+ja (install + cli ref).
+- **i18n translation-staleness check** (minor, `7325cc9`). `ovellum check` flags
+  `[i18n]` stale/missing/orphan translations via a `sourceHash` frontmatter
+  fingerprint of the default-locale source (matched by identical relative path);
+  `ovellum check --update-translations` stamps them (surgical 1-line upsert).
+  Stamped the website's 21 ja pages. `checkTranslations`/`stampTranslations`/
+  `hashBody`/`upsertFrontmatterField` in `commands/check.ts`. Docs en+ja.
+- **i18n chrome-string localization + RTL** (minor, `8d1bf35`). All template UI
+  strings resolve through a per-locale `UiStrings` table (`packages/site/src/
+  strings.ts`): `DEFAULT_STRINGS` (en) → `BUILTIN_STRINGS` (en+ja) →
+  `site.locales[].strings` override. `/ja/` now renders Japanese chrome; dates via
+  `Intl.DateTimeFormat`; RTL langs get `<html dir="rtl">`; copy-button labels via
+  `window.__OV_I18N__`. **Single-language output byte-for-byte identical.** Docs
+  en+ja. Re-stamped ja i18n/config after the en doc edits.
+
+**Standing notes / next i18n slice:**
+- **Translation drift is now caught** — `ovellum check` flags stale ja mirrors;
+  re-stamp with `ovellum check --update-translations` after syncing. **Every
+  English doc edit still needs its `content/ja/` mirror updated**, but now CI
+  catches it if you forget.
+- **Still English on `/ja/`:** config-driven text only — the landing hero copy and
+  `topbarNav`/`footerNav` LABELS written in `ovellum.config.ts` (the template
+  chrome itself is now localized). Per-locale RSS also deferred. These are the
+  remaining i18n slice.
+- **Pre-existing, separate bug:** `ovellum check` reports ~76 broken internal
+  links on the i18n website — its link validator builds a single nav over
+  `content/` (with `en-US/`+`ja/` subtrees) and doesn't understand locale-prefixed
+  URLs. Not caused by the staleness work (link logic untouched). Worth a dedicated
+  fix: make `check` validate links per-locale like the build does.
 - **"The Editor" theme continues** — drafts were slice 1; natural follow-ons:
   publish/scheduling workflow, in-place preview (both build on the draft plumbing).
 - Pick next work from [`ROADMAP.md`](./ROADMAP.md) — v0.8.0 (B7 i18n) and v0.9.0
