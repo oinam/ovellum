@@ -14,13 +14,12 @@ export default {
     title: 'Ovellum',
     logo: '/ovellum-logo.svg',
     favicon: '/ovellum-logo.svg',
-    version: 'v0.7.0',
+    version: 'v0.8.0',
     description:
       'Markdown documentation for TypeScript and JavaScript projects. A merge engine that lets auto-generated API docs and hand-written prose coexist in the same files, plus a Jekyll-style static-site builder for purely manual docs.',
     baseUrl: 'https://ovellum.oss.oinam.com',
-    // Languages (BCP 47). en-US is canonical (served at root); ja is a demo
-    // translation of a few pages — the picker falls back to the ja home for
-    // untranslated pages. Content lives in content/<code>/.
+    // Languages (BCP 47). en-US is canonical (served at root); ja is a full
+    // 1:1 translation. Content lives in content/<code>/.
     defaultLocale: 'en-US',
     locales: [
       { code: 'en-US', label: 'English' },
