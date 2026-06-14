@@ -206,6 +206,41 @@ A1 unlocks A2–A4.
       manual/hybrid guides; reframe hybrid-mode limits as "what's stable".
 - [ ] **U7 (M)** **"Why hybrid" comparison section** in the hybrid guide —
       before/after regeneration story vs TypeDoc and vs hand-written prose.
+- [ ] **U8 (M)** **Drafts — the v0.9.0 focus ("the Editor").** Design locked
+      2026-06-14 (planning session). Model: a draft is **dev-visible, never
+      published** — WIP you preview locally (and the team sees in source), then
+      decide whether to publish.
+  - **Declared by frontmatter `draft: true`** (primary, per page) +
+        **`_meta.json "draft": true`** (whole folder, cascades — parallels the
+        existing `hidden`). **NOT** a Jekyll-style `_drafts/` folder (clunky,
+        breaks co-location, move-to-publish). Co-located frontmatter beats
+        Jekyll.
+  - **Repurpose the existing `draft: true`** (today it's excluded *everywhere*,
+        nav.ts:242 + build.ts:447 return null) → **excluded in production
+        `build`, INCLUDED in `dev`/`watch`/`serve`** with a ribbon + sidebar
+        badge. Standard meaning (Hugo `buildDrafts`). **Behavior change** —
+        note in the changeset. `draft` ≠ `ignoreFiles`: **`ignoreFiles` is full
+        exclusion — never parsed or rendered, in any environment** (the user's
+        explicit framing); `draft` is parsed + rendered in dev only.
+  - **Automatic by command** (no `--drafts` flag to remember, unlike Jekyll):
+        dev/watch/serve include drafts, `build` excludes. Overrides:
+        `build --drafts` (preview prod w/ drafts), `dev --no-drafts` (simulate
+        prod). Plumb an `includeDrafts` flag into `BuildSiteOptions` (today it's
+        just `{config,cwd,now}` — build has no dev/prod signal).
+  - **Ribbon** — a sticky top band on every draft page: *"Draft — visible
+        locally only, never published."* Only ever renders in dev (drafts don't
+        exist in prod), so the message is self-true.
+  - **Sidebar badge** — a small "Draft" tag next to draft pages in the nav
+        (user confirmed they want this).
+  - **Build transparency** — `ovellum build` prints *"N draft pages excluded"*
+        so a draft never silently vanishes from production.
+  - Drafts stay out of **sitemap / RSS / hreflang** always, and out of the i18n
+        picker's "translated" set.
+  - **Caveat to document:** drafts are *unpublished, not secret* — they live in
+        source, so anyone with repo access sees them (that's the point: backed
+        up, PR-reviewable, team-visible). True secrecy = gitignore the file.
+  - Fits the broader v0.9.0 "Editor" theme (authoring/preview experience);
+        drafts are the first slice.
 
 ---
 
@@ -227,6 +262,12 @@ A1 unlocks A2–A4.
 > "custom fonts via config" is largely delivered** by 0.7.0's bundled font
 > picker (revisit only for arbitrary userland fonts). **v0.8.0 focus = B7
 > (i18n)** — design locked above; English-canonical + a Japanese demo.
+>
+> **Update 2026-06-14 (later): v0.8.0 SHIPPED** (i18n + full English/Japanese
+> site + locale-aware nav + breadcrumb fix). **v0.9.0 focus = U8 (Drafts / "the
+> Editor")** — design locked above: `draft: true` repurposed to dev-visible/
+> prod-excluded, `_meta.json "draft"` for folders, automatic by command, ribbon
+> + sidebar badge + build warning.
 
 ---
 
