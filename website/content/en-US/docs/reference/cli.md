@@ -383,6 +383,14 @@ command detects how Ovellum was installed (global vs. a local
 devDependency, and which package manager) and runs the matching install
 command.
 
+It **prefers the project's local dependency**: when the current directory's
+`package.json` declares `ovellum` (or it's already in `node_modules`), the
+upgrade targets the project (`… add -D ovellum@latest`) even when invoked as the
+global binary — and the package manager is read from the project's lockfile.
+Only outside such a project does it fall back to a global install. The printed
+line names the target, e.g. `Update available: 0.10.0 → 0.10.1 (this project's
+local dependency).`
+
 ### Synopsis
 
 ```

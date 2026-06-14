@@ -1,5 +1,15 @@
+import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import path from 'node:path';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { detectManager, upgradeCommand } from '../update/install.js';
+import {
+  declaresLocalDependency,
+  detectInstall,
+  detectManager,
+  detectManagerFromLockfile,
+  isLocalInstall,
+  upgradeCommand,
+} from '../update/install.js';
 import { compareSemver, isNewer, parseSemver } from '../update/semver.js';
 
 describe('parseSemver', () => {
@@ -100,5 +110,98 @@ describe('upgradeCommand', () => {
     expect(upgradeCommand('pnpm', true)).toBe('pnpm add -D ovellum@latest');
     expect(upgradeCommand('yarn', true)).toBe('yarn add -D ovellum@latest');
     expect(upgradeCommand('bun', true)).toBe('bun add -d ovellum@latest');
+  });
+});
+
+describe('local-dependency detection', () => {
+  let dir: string;
+  afterEach(() => {
+    if (dir) rmSync(dir, { recursive: true, force: true });
+  });
+  const seed = (files: Record<string, string>): string => {
+    dir = mkdtempSync(path.join(tmpdir(), 'ovellum-install-'));
+    for (const [name, body] of Object.entries(files)) {
+      writeFileSync(path.join(dir, name), body);
+    }
+    return dir;
+  };
+
+  it('treats a project that declares ovellum as a local install', () => {
+    const cwd = seed({
+      'package.json': JSON.stringify({ devDependencies: { ovellum: '^0.10.0' } }),
+    });
+    expect(declaresLocalDependency(cwd)).toBe(true);
+    expect(isLocalInstall(cwd)).toBe(true);
+  });
+
+  it('detects ovellum in any dependency field', () => {
+    expect(declaresLocalDependency(seed({ 'package.json': '{"dependencies":{"ovellum":"*"}}' }))).toBe(
+      true,
+    );
+    expect(
+      declaresLocalDependency(seed({ 'package.json': '{"optionalDependencies":{"ovellum":"*"}}' })),
+    ).toBe(true);
+  });
+
+  it('is not local when package.json is absent, unparseable, or omits ovellum', () => {
+    expect(declaresLocalDependency(seed({}))).toBe(false);
+    expect(declaresLocalDependency(seed({ 'package.json': 'not json' }))).toBe(false);
+    expect(
+      declaresLocalDependency(seed({ 'package.json': '{"devDependencies":{"other":"1.0.0"}}' })),
+    ).toBe(false);
+  });
+});
+
+describe('detectManagerFromLockfile', () => {
+  let dir: string;
+  afterEach(() => {
+    if (dir) rmSync(dir, { recursive: true, force: true });
+  });
+  const seedLock = (name: string): string => {
+    dir = mkdtempSync(path.join(tmpdir(), 'ovellum-lock-'));
+    writeFileSync(path.join(dir, name), '');
+    return dir;
+  };
+
+  it('maps each lockfile to its manager', () => {
+    expect(detectManagerFromLockfile(seedLock('pnpm-lock.yaml'))).toBe('pnpm');
+    expect(detectManagerFromLockfile(seedLock('yarn.lock'))).toBe('yarn');
+    expect(detectManagerFromLockfile(seedLock('bun.lockb'))).toBe('bun');
+    expect(detectManagerFromLockfile(seedLock('package-lock.json'))).toBe('npm');
+  });
+
+  it('returns null with no lockfile', () => {
+    dir = mkdtempSync(path.join(tmpdir(), 'ovellum-lock-'));
+    expect(detectManagerFromLockfile(dir)).toBeNull();
+  });
+});
+
+describe('detectInstall', () => {
+  let dir: string;
+  afterEach(() => {
+    vi.unstubAllEnvs();
+    if (dir) rmSync(dir, { recursive: true, force: true });
+  });
+
+  it('prefers the local dependency + the project lockfile manager over the ambient agent', () => {
+    // Simulates the real footgun: a global binary (ambient agent says npm, or
+    // nothing) invoked inside a pnpm project that declares ovellum locally.
+    vi.stubEnv('npm_config_user_agent', '');
+    dir = mkdtempSync(path.join(tmpdir(), 'ovellum-detect-'));
+    writeFileSync(path.join(dir, 'package.json'), '{"devDependencies":{"ovellum":"^0.10.0"}}');
+    writeFileSync(path.join(dir, 'pnpm-lock.yaml'), '');
+    const info = detectInstall(dir);
+    expect(info.local).toBe(true);
+    expect(info.manager).toBe('pnpm');
+    expect(info.command).toBe('pnpm add -D ovellum@latest');
+  });
+
+  it('falls back to a global install when the project has no ovellum', () => {
+    vi.stubEnv('npm_config_user_agent', 'npm/10.0.0 node/v20');
+    dir = mkdtempSync(path.join(tmpdir(), 'ovellum-detect-'));
+    writeFileSync(path.join(dir, 'package.json'), '{"devDependencies":{"other":"1.0.0"}}');
+    const info = detectInstall(dir);
+    expect(info.local).toBe(false);
+    expect(info.command).toBe('npm install -g ovellum@latest');
   });
 });

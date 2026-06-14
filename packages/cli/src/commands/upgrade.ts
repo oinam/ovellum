@@ -38,8 +38,9 @@ export const upgradeCommand = defineCommand({
       return;
     }
 
-    const { command } = detectInstall();
-    process.stdout.write(`Update available: ${current} → ${latest}\n`);
+    const { command, local } = detectInstall();
+    const target = local ? "this project's local dependency" : 'the global install';
+    process.stdout.write(`Update available: ${current} → ${latest} (${target}).\n`);
 
     if (args['dry-run']) {
       process.stdout.write(`Run to upgrade: ${command}\n`);

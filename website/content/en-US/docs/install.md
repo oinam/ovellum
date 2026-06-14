@@ -99,17 +99,26 @@ The built-in command checks npm for the latest release and reinstalls it with
 your package manager:
 
 ```bash
-npx ovellum upgrade        # upgrade THIS project's Ovellum
-ovellum upgrade            # upgrade the GLOBAL Ovellum (see the gotcha below)
+ovellum upgrade            # from inside a project → upgrades the project's local copy
 ```
 
-It upgrades **whichever Ovellum you invoke**, so from inside a project run
-`npx ovellum upgrade` (or an npm script) — that targets the project's local copy.
-A bare `ovellum` runs the global one. Preview with `--dry-run`, or skip the
-confirmation with `--yes`. (See the [`upgrade` reference](/docs/reference/cli/#ovellum-upgrade).)
-Ovellum also prints a one-line *"update available"* notice after commands when a
-newer version exists (cached; disable it with `update: { check: false }` in your
-config).
+`upgrade` **targets the project's local dependency whenever it finds one** — if
+the current directory's `package.json` declares `ovellum` (or it's already in
+`node_modules`), it runs `… add -D ovellum@latest` against the project, even when
+you invoke the global binary. Only outside such a project does it fall back to a
+global install. It tells you which one it's about to touch:
+
+```text
+Update available: 0.10.0 → 0.10.1 (this project's local dependency).
+Run `pnpm add -D ovellum@latest`?
+```
+
+The package manager is taken from the project's lockfile (`pnpm-lock.yaml`,
+`yarn.lock`, …), so a `pnpm` project upgrades with `pnpm` even from a bare global
+binary. Preview with `--dry-run`, or skip the confirmation with `--yes`. (See the
+[`upgrade` reference](/docs/reference/cli/#ovellum-upgrade).) Ovellum also prints a
+one-line *"update available"* notice after commands when a newer version exists
+(cached; disable it with `update: { check: false }` in your config).
 
 ### Upgrading by hand
 
@@ -131,36 +140,29 @@ pnpm add -D ovellum@latest
 For a **global** install, upgrade it the same way you installed it:
 `npm install -g ovellum@latest` (swap in your package manager).
 
-### Global vs. project-local — a common gotcha
+### Global vs. project-local
 
-If you can have **both** a global Ovellum and a project devDependency, it's easy
-to upgrade the wrong one. The tell-tale sign:
+Because `ovellum upgrade` prefers a declared local dependency, the old footgun —
+a bare `ovellum upgrade` silently bumping the *global* install while the project
+stayed pinned — no longer bites inside a normal project. The check it makes is
+simply "does this directory's `package.json` mention `ovellum`?"; if so, the
+project wins.
 
-> `ovellum --version` shows the new version, but the project's `package.json`
-> still pins the old one (e.g. `"ovellum": "^0.5.1"`).
+Two edge cases to know:
 
-That means you upgraded a **global** Ovellum, not the project. A bare `ovellum`
-in a shell runs the global binary (a plain shell doesn't put `node_modules/.bin`
-on `PATH`), so `ovellum upgrade` bumped the global and left the project untouched.
+- **A project with no declared dependency.** If `ovellum` isn't in the
+  directory's `package.json` and isn't in `node_modules`, `upgrade` treats it as
+  a global install. Add it to the project first (`npm install -D ovellum`) and
+  re-run.
+- **You genuinely want to bump the global.** Run `upgrade` from a directory that
+  isn't an Ovellum project, or install by hand: `npm install -g ovellum@latest`.
 
-The reliable fix is to install into the project directly — this rewrites both
-`package.json` and the lockfile:
-
-```bash
-cd your-project
-npm install -D ovellum@latest      # or pnpm/yarn/bun equivalent
-```
-
-Then confirm you fixed the project (not the global):
+To sanity-check which copy you're on:
 
 ```bash
-grep ovellum package.json          # → "ovellum": "^0.10.0"
-npx ovellum --version              # `npx` runs the LOCAL copy → the new version
+grep ovellum package.json          # the project's pinned range
+npx ovellum --version              # `npx` runs the LOCAL copy
 ```
-
-To avoid the mix-up entirely: inside a project always invoke Ovellum as
-**`npx ovellum …`** (or via an npm script) so you're using the local install,
-and consider not keeping a global one at all (`npm rm -g ovellum`).
 
 > **Pushing to CI?** Commit the updated `package.json` **and** the lockfile
 > (`package-lock.json` / `pnpm-lock.yaml` / `yarn.lock` / `bun.lock`). A CI step

@@ -97,14 +97,24 @@ npx ovellum build --help   # project-local; for a global install, drop `npx`
 再インストールします:
 
 ```bash
-npx ovellum upgrade        # upgrade THIS project's Ovellum
-ovellum upgrade            # upgrade the GLOBAL Ovellum (see the gotcha below)
+ovellum upgrade            # プロジェクト内から → プロジェクトのローカルコピーをアップグレード
 ```
 
-これは**呼び出した側の Ovellum**をアップグレードします。そのため、プロジェクト内からは
-`npx ovellum upgrade`（または npm スクリプト）を実行してください — これはプロジェクトの
-ローカルコピーを対象にします。素の `ovellum` はグローバルのものを実行します。`--dry-run`
-でプレビューしたり、`--yes` で確認をスキップしたりできます。（[`upgrade` リファレンス](/ja/docs/reference/cli/#ovellum-upgrade)を参照してください。）
+`upgrade` は、**ローカル依存を見つけたら必ずそちらを対象にします** — カレントディレクトリの
+`package.json` が `ovellum` を宣言していれば（あるいは既に `node_modules` にあれば）、
+グローバルバイナリで呼び出した場合でも、プロジェクトに対して `… add -D ovellum@latest` を
+実行します。そうしたプロジェクトの外にいるときだけ、グローバルインストールにフォールバック
+します。どちらを更新しようとしているかは表示されます:
+
+```text
+Update available: 0.10.0 → 0.10.1 (this project's local dependency).
+Run `pnpm add -D ovellum@latest`?
+```
+
+パッケージマネージャーはプロジェクトのロックファイル（`pnpm-lock.yaml`、`yarn.lock` など）
+から判定されるので、`pnpm` プロジェクトは素のグローバルバイナリからでも `pnpm` で
+アップグレードされます。`--dry-run` でプレビューしたり、`--yes` で確認をスキップしたり
+できます。（[`upgrade` リファレンス](/ja/docs/reference/cli/#ovellum-upgrade)を参照してください。）
 また Ovellum は、より新しいバージョンが存在するとき、コマンドの実行後に
 *「update available」* の通知を一行で表示します（キャッシュされます。設定で
 `update: { check: false }` を指定すると無効化できます）。
@@ -129,37 +139,28 @@ pnpm add -D ovellum@latest
 **グローバル**インストールの場合は、インストールしたときと同じ方法でアップグレードします:
 `npm install -g ovellum@latest`（自分のパッケージマネージャーに置き換えてください）。
 
-### グローバル vs. プロジェクトローカル — よくある落とし穴
+### グローバル vs. プロジェクトローカル
 
-グローバルの Ovellum とプロジェクトの devDependency を**両方**持っている場合、間違った方を
-アップグレードしてしまいがちです。その兆候は次のとおりです:
+`ovellum upgrade` は宣言されたローカル依存を優先するため、かつての落とし穴 — 素の
+`ovellum upgrade` がプロジェクトを固定したまま**グローバル**インストールだけをこっそり
+更新してしまう — は、通常のプロジェクト内ではもう起きません。判定は単純で、「このディレクトリの
+`package.json` は `ovellum` に言及しているか？」だけです。言及していれば、プロジェクトが
+優先されます。
 
-> `ovellum --version` は新しいバージョンを表示するのに、プロジェクトの `package.json` は
-> 依然として古いバージョンを固定している（例: `"ovellum": "^0.5.1"`）。
+知っておくべきエッジケースが 2 つあります:
 
-これは、プロジェクトではなく**グローバル**の Ovellum をアップグレードしてしまったということです。
-シェルで素の `ovellum` を実行するとグローバルのバイナリが動く（素のシェルは
-`node_modules/.bin` を `PATH` に追加しません）ため、`ovellum upgrade` はグローバルを
-更新し、プロジェクトはそのまま残されたのです。
+- **依存が宣言されていないプロジェクト。** ディレクトリの `package.json` に `ovellum` が
+  なく、`node_modules` にもない場合、`upgrade` はグローバルインストールとして扱います。
+  先にプロジェクトへ追加（`npm install -D ovellum`）してから再実行してください。
+- **本当にグローバルを更新したい場合。** Ovellum プロジェクトではないディレクトリから
+  `upgrade` を実行するか、手動でインストールしてください: `npm install -g ovellum@latest`。
 
-確実な解決策は、プロジェクトに直接インストールすることです — これにより `package.json` と
-ロックファイルの両方が書き換えられます:
-
-```bash
-cd your-project
-npm install -D ovellum@latest      # or pnpm/yarn/bun equivalent
-```
-
-そのうえで、（グローバルではなく）プロジェクトを修正できたことを確認します:
+どちらのコピーを使っているか確認するには:
 
 ```bash
-grep ovellum package.json          # → "ovellum": "^0.10.0"
-npx ovellum --version              # `npx` runs the LOCAL copy → the new version
+grep ovellum package.json          # プロジェクトが固定している範囲
+npx ovellum --version              # `npx` はローカルコピーを実行
 ```
-
-この混同を完全に避けるには、プロジェクト内では常に Ovellum を **`npx ovellum …`**
-（または npm スクリプト経由）で呼び出してローカルインストールを使うようにし、いっそ
-グローバルのものは持たない（`npm rm -g ovellum`）ことも検討してください。
 
 > **CI へプッシュする？** 更新した `package.json` **と**ロックファイル
 > （`package-lock.json` / `pnpm-lock.yaml` / `yarn.lock` / `bun.lock`）の両方をコミット

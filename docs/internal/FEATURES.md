@@ -148,7 +148,7 @@ See the [CLI reference](https://ovellum.oss.oinam.com/docs/reference/cli/) for f
 | `ovellum watch`   | done     | manual / hybrid / auto |
 | `ovellum serve`   | done     |
 | `ovellum check`   | done     | manual / hybrid / auto |
-| `ovellum upgrade` | done     | npm dist-tag check; detects mgr + global/local; `--dry-run`, `--yes` |
+| `ovellum upgrade` | done     | npm dist-tag check; detects mgr + global/local; `--dry-run`, `--yes`. **Prefers the project's local dependency** (2026-06-14): `isLocalInstall` now also reads the cwd `package.json` (`dependencies`/`devDependencies`/`optionalDependencies`), so a project that *declares* `ovellum` is upgraded locally even when invoked via the global binary (the notes.oinam.com footgun); for a local upgrade the package manager is read from the project's lockfile (`detectManagerFromLockfile`) rather than the absent ambient user-agent, and the "Update available" line names the target (local vs global). |
 | `ovellum orphans` | deferred |
 | `ovellum clean`   | deferred |
 
