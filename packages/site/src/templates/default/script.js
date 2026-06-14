@@ -344,6 +344,13 @@
   var CHECK_ICON =
     '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M20 6 9 17l-5-5"/></svg>';
 
+  // Copy-button labels. Localized chrome injects window.__OV_I18N__ in the page
+  // head; default (English) sites omit it, so we fall back to the literals.
+  var I18N = window.__OV_I18N__ || {};
+  var L_COPY = I18N.copy || 'Copy';
+  var L_COPIED = I18N.copied || 'Copied';
+  var L_COPY_CODE = I18N.copyCode || 'Copy code';
+
   var blocks = document.querySelectorAll('.ov-prose pre');
   blocks.forEach(function (pre) {
     if (pre.querySelector('.ov-copy-btn')) return;
@@ -356,10 +363,10 @@
     btn.className = 'ov-copy-btn';
     if (isInstall) {
       btn.innerHTML = COPY_ICON;
-      btn.setAttribute('aria-label', 'Copy code');
-      btn.title = 'Copy';
+      btn.setAttribute('aria-label', L_COPY_CODE);
+      btn.title = L_COPY;
     } else {
-      btn.textContent = 'Copy';
+      btn.textContent = L_COPY;
     }
     btn.addEventListener('click', function () {
       var override = pre.getAttribute('data-copy-text');
@@ -369,17 +376,17 @@
       navigator.clipboard.writeText(text).then(function () {
         if (isInstall) {
           btn.innerHTML = CHECK_ICON;
-          btn.setAttribute('aria-label', 'Copied');
+          btn.setAttribute('aria-label', L_COPIED);
         } else {
-          btn.textContent = 'Copied';
+          btn.textContent = L_COPIED;
         }
         btn.classList.add('is-copied');
         setTimeout(function () {
           if (isInstall) {
             btn.innerHTML = COPY_ICON;
-            btn.setAttribute('aria-label', 'Copy code');
+            btn.setAttribute('aria-label', L_COPY_CODE);
           } else {
-            btn.textContent = 'Copy';
+            btn.textContent = L_COPY;
           }
           btn.classList.remove('is-copied');
         }, 1500);

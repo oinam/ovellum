@@ -26,6 +26,7 @@ import { indexSite } from './search.js';
 import { generateRss } from './rss.js';
 import { generateSitemap } from './sitemap.js';
 import { renderLanding, renderPage, type LocaleAlternate } from './template.js';
+import { isRtl, resolveStrings, type UiStrings } from './strings.js';
 import { normaliseBasePath, siteUrl } from './url.js';
 
 export interface BuildSiteOptions {
@@ -71,6 +72,15 @@ const LANDING_BODY_FILE = '_landing.md';
  * Escape a string for safe interpolation into a double-quoted HTML attribute.
  * Newlines may stay literal — they are valid inside a quoted attribute value.
  */
+/**
+ * Escape a string for safe element *text content* (the synthesized 404 body).
+ * Only `&` and `<` are significant in text; apostrophes/quotes are left as-is so
+ * the rendered characters match the source string exactly.
+ */
+function escapeText(s: string): string {
+  return s.replace(/&/g, '&amp;').replace(/</g, '&lt;');
+}
+
 function escapeCopyAttr(s: string): string {
   return s
     .replace(/&/g, '&amp;')
@@ -258,6 +268,8 @@ export async function buildSite(options: BuildSiteOptions): Promise<BuildSiteRes
         lang: spec.lang,
         localeAlternates: alternates('/'),
         localePrefix: spec.urlPrefix,
+        strings: spec.strings,
+        dir: spec.dir,
       });
       const landingOut = path.join(outputAbs, urlToOutputPath(homeUrl));
       await mkdir(path.dirname(landingOut), { recursive: true });
@@ -320,6 +332,8 @@ export async function buildSite(options: BuildSiteOptions): Promise<BuildSiteRes
           localePrefix: spec.urlPrefix,
           includeDrafts,
           draft: spec.draftBySource.has(sourceRelFromCwd),
+          strings: spec.strings,
+          dir: spec.dir,
         });
         if (!result) continue; // draft page excluded in production — skip
         const pageHtml = finalizeHtml(result.html);
@@ -359,15 +373,16 @@ export async function buildSite(options: BuildSiteOptions): Promise<BuildSiteRes
     if (!notFoundRendered) {
       const notFoundUrl = spec.urlPrefix + '/404/';
       const homeHref = siteUrl(homeUrl, normaliseBasePath(site.basePath));
+      const s = spec.strings;
       const bodyHtml =
-        `<h1>Page not found</h1>\n` +
-        `<p>The page you’re looking for doesn’t exist or may have moved.</p>\n` +
-        `<p><a href="${homeHref}">Go to the homepage</a></p>`;
+        `<h1>${escapeText(s.pageNotFoundTitle)}</h1>\n` +
+        `<p>${escapeText(s.pageNotFoundBody)}</p>\n` +
+        `<p><a href="${homeHref}">${escapeText(s.goHome)}</a></p>`;
       const html = renderPage({
         site,
         nav: spec.sidebarNav,
         url: notFoundUrl,
-        title: 'Page not found',
+        title: s.pageNotFoundTitle,
         bodyHtml,
         headings: [],
         generatedAt: now.toISOString(),
@@ -376,6 +391,8 @@ export async function buildSite(options: BuildSiteOptions): Promise<BuildSiteRes
         lang: spec.lang,
         localeAlternates: alternates('/404/'),
         localePrefix: spec.urlPrefix,
+        strings: spec.strings,
+        dir: spec.dir,
       });
       const html404 = finalizeHtml(html);
       const out404 = path.join(outputAbs, urlToOutputPath(notFoundUrl));
@@ -479,6 +496,10 @@ interface RenderOneInput {
   includeDrafts?: boolean;
   /** Whether this page is a draft (renders the ribbon; only ever in dev). */
   draft?: boolean;
+  /** Resolved UI-chrome strings for this locale. */
+  strings: UiStrings;
+  /** Text direction for `<html dir>`. */
+  dir: 'ltr' | 'rtl';
 }
 
 interface RenderOneResult {
@@ -561,6 +582,8 @@ async function renderOne(input: RenderOneInput): Promise<RenderOneResult | null>
     localeAlternates: input.localeAlternates,
     localePrefix: input.localePrefix,
     draft: input.draft,
+    strings: input.strings,
+    dir: input.dir,
   });
   return {
     html,
@@ -655,6 +678,10 @@ interface LocaleSpec {
   /** Translation key (prefix-stripped URL) → full URL in this locale. */
   keys: Map<string, string>;
   docsHref?: string;
+  /** Resolved UI-chrome strings for this locale (English + built-in + config override). */
+  strings: UiStrings;
+  /** Text direction for this locale's `<html dir>`. */
+  dir: 'ltr' | 'rtl';
 }
 
 function resolveLocaleSpecs(site: OvellumSiteConfig, inputAbs: string): LocaleSpec[] {
@@ -666,6 +693,8 @@ function resolveLocaleSpecs(site: OvellumSiteConfig, inputAbs: string): LocaleSp
     keys: new Map<string, string>(),
   };
   // No i18n → one unprefixed spec rooted at the content dir (legacy behavior).
+  // `resolveStrings(undefined)` is exactly DEFAULT_STRINGS, so the rendered
+  // output stays byte-for-byte identical to the pre-i18n template.
   if (!site.locales || site.locales.length === 0) {
     return [
       {
@@ -679,6 +708,8 @@ function resolveLocaleSpecs(site: OvellumSiteConfig, inputAbs: string): LocaleSp
         urlBySource: new Map(),
         draftBySource: new Set(),
         keys: new Map(),
+        strings: resolveStrings(undefined),
+        dir: 'ltr',
       },
     ];
   }
@@ -694,6 +725,10 @@ function resolveLocaleSpecs(site: OvellumSiteConfig, inputAbs: string): LocaleSp
     urlBySource: new Map(),
     draftBySource: new Set(),
     keys: new Map(),
+    // English fills any gap a built-in translation leaves; a per-locale config
+    // `strings` override wins. RTL languages get `<html dir="rtl">`.
+    strings: resolveStrings(l.code, l.strings as Partial<UiStrings> | undefined),
+    dir: isRtl(l.code) ? 'rtl' : 'ltr',
   }));
 }
 

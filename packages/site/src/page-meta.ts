@@ -76,37 +76,39 @@ export async function lastModifiedISO(input: LastModifiedInput): Promise<string 
   }
 }
 
-const MONTHS_SHORT = [
-  'Jan',
-  'Feb',
-  'Mar',
-  'Apr',
-  'May',
-  'Jun',
-  'Jul',
-  'Aug',
-  'Sep',
-  'Oct',
-  'Nov',
-  'Dec',
-] as const;
+/** The relative ("today"/"yesterday") words `formatEditedDate` needs — a slice
+ *  of the resolved UI string table, so callers can pass either the whole table
+ *  or just these two. */
+export interface EditedDateStrings {
+  today: string;
+  yesterday: string;
+}
+
+const DEFAULT_EDITED_STRINGS: EditedDateStrings = { today: 'today', yesterday: 'yesterday' };
 
 /**
  * Format a last-modified timestamp for the page "Edited" line.
  *
  * - `'iso'`       → the raw calendar date, `2026-06-14`.
  * - `'humanized'` → `today` / `yesterday` (relative to `nowISO`, the build
- *   time) for very recent edits, otherwise a friendly `Jun 14, 2026`.
+ *   time) for very recent edits, otherwise a friendly `Jun 14, 2026` — the
+ *   absolute date is formatted with `Intl.DateTimeFormat` in `localeCode`'s
+ *   language (so `/ja/` shows `2026年6月12日`); English (`'en'` / unset) yields
+ *   `Jun 12, 2026`, matching the previous hardcoded month names exactly.
  *
- * Both inputs are ISO-8601 strings; only their date portions matter, and the
- * day difference is computed in UTC so a machine's local timezone can't nudge
- * an edit across the today/yesterday boundary. Anything unparseable falls back
- * to the raw `YYYY-MM-DD`, so the line is always *something* sensible.
+ * The relative words come from `strings` (defaulting to English), so a locale
+ * can translate them. Both timestamps are ISO-8601; only their date portions
+ * matter, and the day difference is computed in UTC so a machine's local
+ * timezone can't nudge an edit across the today/yesterday boundary. Anything
+ * unparseable falls back to the raw `YYYY-MM-DD`, so the line is always
+ * *something* sensible.
  */
 export function formatEditedDate(
   lastModifiedISO: string,
   nowISO: string,
   format: OvellumDateFormat = 'humanized',
+  localeCode?: string,
+  strings: EditedDateStrings = DEFAULT_EDITED_STRINGS,
 ): string {
   const iso = lastModifiedISO.slice(0, 10);
   if (format === 'iso') return iso;
@@ -115,13 +117,21 @@ export function formatEditedDate(
   const now = Date.parse(`${nowISO.slice(0, 10)}T00:00:00Z`);
   if (!Number.isNaN(then) && !Number.isNaN(now)) {
     const days = Math.round((now - then) / 86_400_000);
-    if (days === 0) return 'today';
-    if (days === 1) return 'yesterday';
+    if (days === 0) return strings.today;
+    if (days === 1) return strings.yesterday;
   }
 
   const [y, m, d] = iso.split('-').map(Number);
   if (y && m && d && m >= 1 && m <= 12) {
-    return `${MONTHS_SHORT[m - 1]} ${d}, ${y}`;
+    // Format the absolute date in the locale's language. The day diff above is
+    // computed in UTC, so format the same UTC calendar day in UTC to keep them
+    // consistent (and avoid a local-timezone shift).
+    return new Intl.DateTimeFormat(localeCode || 'en', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      timeZone: 'UTC',
+    }).format(new Date(Date.UTC(y, m - 1, d)));
   }
   return iso;
 }

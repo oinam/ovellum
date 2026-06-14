@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { renderPage } from '../template.js';
+import { resolveStrings } from '../strings.js';
 import type { NavNode } from '../nav.js';
 
 const NAV: NavNode = {
@@ -676,6 +677,45 @@ describe('renderPage', () => {
       generatedAt: '2026-05-15T00:00:00.000Z',
     });
     expect(withoutHead).not.toContain(snippet);
+  });
+
+  it('localizes UI chrome from a resolved string table (ja)', () => {
+    const html = renderPage({
+      site: { title: 'X', defaultTheme: 'auto', footer: '' },
+      nav: NAV,
+      url: '/',
+      title: 'X',
+      bodyHtml: '',
+      headings: [{ depth: 2, text: 'Intro', id: 'intro' }],
+      lastModified: '2026-06-12T09:00:00.000Z',
+      generatedAt: '2026-06-14T00:00:00.000Z',
+      lang: 'ja',
+      strings: resolveStrings('ja'),
+    });
+    // ToC title + "Edited" label come from the ja table.
+    expect(html).toContain('このページの内容');
+    expect(html).toContain('最終更新');
+    // English chrome is gone.
+    expect(html).not.toContain('On this page');
+    expect(html).not.toContain('>Edited ');
+  });
+
+  it('adds dir="rtl" only when dir:rtl is passed', () => {
+    const base = {
+      site: { title: 'X', defaultTheme: 'auto', footer: '' },
+      nav: NAV,
+      url: '/',
+      title: 'X',
+      bodyHtml: '',
+      headings: [],
+      generatedAt: '2026-06-14T00:00:00.000Z',
+    } as const;
+    const rtl = renderPage({ ...base, strings: resolveStrings('ar'), dir: 'rtl' });
+    expect(rtl).toContain('dir="rtl"');
+    const ltr = renderPage({ ...base, dir: 'ltr' });
+    expect(ltr).not.toContain('dir="rtl"');
+    // Default (no dir) emits nothing extra.
+    expect(renderPage(base)).not.toContain(' dir=');
   });
 
   it('renders the ToC when headings are present, and omits it when empty', () => {

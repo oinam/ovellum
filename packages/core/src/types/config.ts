@@ -51,6 +51,8 @@ export interface OvellumLocale {
   code: string;
   /** Display name in the picker — ideally the language's own autonym. */
   label: string;
+  /** Override built-in UI-chrome strings for this locale. */
+  strings?: Record<string, string>;
 }
 
 /**

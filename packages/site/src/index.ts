@@ -23,3 +23,12 @@ export { indexSite } from './search.js';
 export type { IndexSiteInput, IndexSiteResult } from './search.js';
 export { renderPage, renderLanding } from './template.js';
 export type { PrevNextPage, RenderPageInput, RenderLandingInput } from './template.js';
+export {
+  DEFAULT_STRINGS,
+  BUILTIN_STRINGS,
+  RTL_LANGS,
+  baseLang,
+  isRtl,
+  resolveStrings,
+} from './strings.js';
+export type { UiStrings } from './strings.js';

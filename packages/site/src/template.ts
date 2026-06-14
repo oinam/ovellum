@@ -3,6 +3,7 @@ import { ICONS, renderIcon, type IconName } from './icons.js';
 import type { Heading } from './markdown.js';
 import type { NavNode } from './nav.js';
 import { formatEditedDate } from './page-meta.js';
+import { DEFAULT_STRINGS, type UiStrings } from './strings.js';
 import { assetsPrefix as assetsPrefixFor, normaliseBasePath, siteUrl } from './url.js';
 
 export interface ShellOptions {
@@ -33,6 +34,10 @@ export interface ShellOptions {
   localePrefix?: string;
   /** Render the draft ribbon (dev builds only — drafts never reach production). */
   draft?: boolean;
+  /** Resolved UI-chrome strings for this locale. */
+  strings: UiStrings;
+  /** Text direction. `'rtl'` adds `dir="rtl"` to `<html>`; ltr/undefined emit nothing. */
+  dir?: 'ltr' | 'rtl';
 }
 
 /** One entry in the topbar language picker, and the per-page hreflang set. */
@@ -53,6 +58,7 @@ export interface LocaleAlternate {
 }
 
 function renderShell(opts: ShellOptions): string {
+  const strings = opts.strings;
   const basePath = normaliseBasePath(opts.site.basePath);
   const assets = opts.assetsPrefix ?? assetsPrefixFor(basePath);
   const desc = opts.description ?? opts.site.description ?? '';
@@ -85,7 +91,7 @@ function renderShell(opts: ShellOptions): string {
   const backToTop =
     bt?.enabled === false
       ? ''
-      : `<div class="ov-to-top-anchor"><button class="ov-to-top" type="button" aria-label="Back to top" data-ov-to-top="${bt?.threshold ?? 360}">${renderIcon('arrow-up', { size: 18 })}</button></div>`;
+      : `<div class="ov-to-top-anchor"><button class="ov-to-top" type="button" aria-label="${escapeAttr(strings.backToTop)}" data-ov-to-top="${bt?.threshold ?? 360}">${renderIcon('arrow-up', { size: 18 })}</button></div>`;
   // hreflang alternates for i18n pages — one per locale that actually has this
   // page, plus x-default → the default locale's version. Absolute URLs, so only
   // emitted when `site.baseUrl` is set.
@@ -107,8 +113,9 @@ function renderShell(opts: ShellOptions): string {
           )
           .join('\n  ')
       : '';
+  const dirAttr = opts.dir === 'rtl' ? ' dir="rtl"' : '';
   return `<!doctype html>
-<html lang="${escapeAttr(opts.lang ?? 'en')}" data-theme="${escapeAttr(opts.site.defaultTheme)}" data-palette="${escapeAttr(palette)}" data-font="${escapeAttr(opts.site.font ?? 'sans')}"${accentAttrs}>
+<html lang="${escapeAttr(opts.lang ?? 'en')}"${dirAttr} data-theme="${escapeAttr(opts.site.defaultTheme)}" data-palette="${escapeAttr(palette)}" data-font="${escapeAttr(opts.site.font ?? 'sans')}"${accentAttrs}>
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -191,14 +198,14 @@ function renderShell(opts: ShellOptions): string {
       } catch (_) {}
     })();
   </script>
-</head>
+${i18nScript(strings)}</head>
 <body${opts.bodyClass ? ` class="${escapeAttr(opts.bodyClass)}${opts.draft ? ' ov-has-draft' : ''}"` : opts.draft ? ' class="ov-has-draft"' : ''}>
-  ${opts.draft ? `<div class="ov-draft-ribbon" role="status"><strong>Draft</strong> — visible locally only, never published.</div>` : ''}
+  ${opts.draft ? `<div class="ov-draft-ribbon" role="status"><strong>${escapeHtml(strings.draftLabel)}</strong> — ${escapeHtml(strings.draftRibbonNote)}.</div>` : ''}
   ${renderFrame()}
-  ${renderTopbar(opts.site, assets, opts.docsHref ? siteUrl(opts.docsHref, basePath) : undefined, searchEnabled, basePath, opts.localeAlternates, opts.localePrefix ?? '')}
+  ${renderTopbar(opts.site, assets, opts.docsHref ? siteUrl(opts.docsHref, basePath) : undefined, searchEnabled, basePath, strings, opts.localeAlternates, opts.localePrefix ?? '')}
   ${opts.body}
   ${backToTop}
-  ${renderFooter(opts.site, opts.generatedAt, basePath, opts.localePrefix ?? '')}
+  ${renderFooter(opts.site, opts.generatedAt, basePath, strings, opts.localePrefix ?? '')}
   ${searchScripts}
   <script src="${escapeAttr(assets)}assets/ovellum.js" defer></script>
 </body>
@@ -214,6 +221,24 @@ function renderShell(opts: ShellOptions): string {
  */
 function renderFrame(): string {
   return `<div class="ov-frame" aria-hidden="true"><div class="ov-frame-inner"><span class="ov-frame-node ov-frame-node--tl"></span><span class="ov-frame-node ov-frame-node--tr"></span></div></div>`;
+}
+
+/**
+ * Inline the runtime copy-button labels script.js reads back. Emitted only when
+ * a label differs from the English default, so the default single-language
+ * output stays byte-for-byte identical (script.js falls back to English).
+ */
+function i18nScript(strings: UiStrings): string {
+  const runtime = { copy: strings.copy, copied: strings.copied, copyCode: strings.copyCode };
+  if (
+    runtime.copy === DEFAULT_STRINGS.copy &&
+    runtime.copied === DEFAULT_STRINGS.copied &&
+    runtime.copyCode === DEFAULT_STRINGS.copyCode
+  ) {
+    return '';
+  }
+  return `  <script>window.__OV_I18N__=${JSON.stringify(runtime)};</script>
+  `;
 }
 
 interface ResolvedTopbarItem {
@@ -262,6 +287,7 @@ function renderTopbarLinks(
   items: ResolvedTopbarItem[],
   docsHref: string | undefined,
   compact: boolean,
+  docsLabel: string,
   only?: 'text' | 'icon',
 ): string {
   const subset =
@@ -285,7 +311,7 @@ function renderTopbarLinks(
   // The implicit Docs link is a text link — skip it for the icon-only group.
   if (only !== 'icon' && docsHref && !items.some((it) => it.href === docsHref)) {
     links.push(
-      `<a class="ov-topbar-link ov-topbar-link--docs" href="${escapeAttr(docsHref)}">Docs</a>`,
+      `<a class="ov-topbar-link ov-topbar-link--docs" href="${escapeAttr(docsHref)}">${escapeHtml(docsLabel)}</a>`,
     );
   }
   return links.join('\n        ');
@@ -296,11 +322,11 @@ function renderTopbarLinks(
  * swatches. Pure markup — script.js wires the behavior, CSS carries the
  * pressed/active states off aria attributes so every instance stays in sync.
  */
-function renderAppearancePanel(): string {
+function renderAppearancePanel(strings: UiStrings): string {
   const modes = [
-    { id: 'auto', label: 'Auto', icon: 'monitor' as IconName },
-    { id: 'light', label: 'Light', icon: 'sun' as IconName },
-    { id: 'dark', label: 'Dark', icon: 'moon' as IconName },
+    { id: 'auto', label: strings.modeAuto, icon: 'monitor' as IconName },
+    { id: 'light', label: strings.modeLight, icon: 'sun' as IconName },
+    { id: 'dark', label: strings.modeDark, icon: 'moon' as IconName },
   ];
   // Ovellum (the monochrome base, id 'default') pinned first; the rest
   // alphabetical. Each carries a crisp monochrome line glyph that quietly
@@ -320,93 +346,93 @@ function renderAppearancePanel(): string {
   // swatch clears the override back to the theme's own primary (monochrome for
   // Ovellum); the trailing custom swatch wraps a native color input.
   const accents = [
-    { value: 'oklch(57% 0.16 255)', label: 'Blue' },
-    { value: 'oklch(56% 0.18 295)', label: 'Violet' },
-    { value: 'oklch(56% 0.14 150)', label: 'Green' },
-    { value: 'oklch(66% 0.13 65)', label: 'Amber' },
-    { value: 'oklch(60% 0.17 15)', label: 'Rose' },
-    { value: 'oklch(60% 0.11 200)', label: 'Teal' },
+    { value: 'oklch(57% 0.16 255)', label: strings.accentBlue },
+    { value: 'oklch(56% 0.18 295)', label: strings.accentViolet },
+    { value: 'oklch(56% 0.14 150)', label: strings.accentGreen },
+    { value: 'oklch(66% 0.13 65)', label: strings.accentAmber },
+    { value: 'oklch(60% 0.17 15)', label: strings.accentRose },
+    { value: 'oklch(60% 0.11 200)', label: strings.accentTeal },
   ];
   // Reader text-size steps — default in the middle, two smaller, two larger.
   // Rendered as a graduated "A" ramp (no text labels), like Kindle / Safari
   // Reader. Drives --ov-text-scale, scaling the whole type scale.
   const textSizes = [
-    { id: 'xs', label: 'Smallest' },
-    { id: 's', label: 'Small' },
-    { id: 'm', label: 'Default' },
-    { id: 'l', label: 'Large' },
-    { id: 'xl', label: 'Largest' },
+    { id: 'xs', label: strings.textSmallest },
+    { id: 's', label: strings.textSmall },
+    { id: 'm', label: strings.textDefault },
+    { id: 'l', label: strings.textLarge },
+    { id: 'xl', label: strings.textLargest },
   ];
   // Body font family. 'sans'/'serif' are system stacks (no webfont); 'inter'/
   // 'geist' are bundled webfonts that load only when picked (the preview text
   // in this panel is what pulls them, and only once the panel is opened).
   const fonts = [
-    { id: 'sans', label: 'Sans-Serif (Default)' },
-    { id: 'serif', label: 'Serif' },
+    { id: 'sans', label: strings.fontSans },
+    { id: 'serif', label: strings.fontSerif },
     { id: 'inter', label: 'Inter' },
     { id: 'geist', label: 'Geist' },
   ];
   const modeButtons = modes
     .map(
       (m) => `<button type="button" class="ov-appearance-mode" data-ov-mode="${m.id}"
-            aria-pressed="false" aria-label="${m.label}" title="${m.label}">${renderIcon(m.icon, { size: 14 })}<span>${m.label}</span></button>`,
+            aria-pressed="false" aria-label="${escapeAttr(m.label)}" title="${escapeAttr(m.label)}">${renderIcon(m.icon, { size: 14 })}<span>${escapeHtml(m.label)}</span></button>`,
     )
     .join('\n          ');
   const paletteButtons = palettes
     .map(
       (p) => `<button type="button" class="ov-appearance-palette" data-ov-palette="${p.id}"
-            aria-pressed="false">${renderIcon(p.icon, { size: 16, class: 'ov-appearance-glyph' })}<span class="ov-appearance-palette-name">${p.label}</span>${renderIcon('check', { size: 14, class: 'ov-appearance-check' })}</button>`,
+            aria-pressed="false">${renderIcon(p.icon, { size: 16, class: 'ov-appearance-glyph' })}<span class="ov-appearance-palette-name">${escapeHtml(p.label)}</span>${renderIcon('check', { size: 14, class: 'ov-appearance-check' })}</button>`,
     )
     .join('\n          ');
   const accentButtons = accents
     .map(
       (a) => `<button type="button" class="ov-appearance-accent" data-ov-accent="${escapeAttr(a.value)}"
-            style="--swatch: ${escapeAttr(a.value)}" aria-pressed="false" aria-label="${a.label}" title="${a.label}"></button>`,
+            style="--swatch: ${escapeAttr(a.value)}" aria-pressed="false" aria-label="${escapeAttr(a.label)}" title="${escapeAttr(a.label)}"></button>`,
     )
     .join('\n          ');
   const sizeButtons = textSizes
     .map(
       (s) => `<button type="button" class="ov-appearance-size" data-ov-text-size="${s.id}"
-            aria-pressed="false" aria-label="${s.label}" title="${s.label}"><span class="ov-appearance-size-a" aria-hidden="true">A</span></button>`,
+            aria-pressed="false" aria-label="${escapeAttr(s.label)}" title="${escapeAttr(s.label)}"><span class="ov-appearance-size-a" aria-hidden="true">A</span></button>`,
     )
     .join('\n          ');
   const fontButtons = fonts
     .map(
       (f) => `<button type="button" class="ov-appearance-font" data-ov-font="${f.id}"
-            aria-pressed="false"><span class="ov-appearance-font-name">${f.label}</span>${renderIcon('check', { size: 14, class: 'ov-appearance-check' })}</button>`,
+            aria-pressed="false"><span class="ov-appearance-font-name">${escapeHtml(f.label)}</span>${renderIcon('check', { size: 14, class: 'ov-appearance-check' })}</button>`,
     )
     .join('\n          ');
   return `<div class="ov-appearance-panel" data-ov-appearance-panel hidden>
         <div class="ov-appearance-group">
-          <span class="ov-appearance-label">Mode</span>
-          <div class="ov-appearance-modes" role="group" aria-label="Color mode">
+          <span class="ov-appearance-label">${escapeHtml(strings.modeLabel)}</span>
+          <div class="ov-appearance-modes" role="group" aria-label="${escapeAttr(strings.modeGroup)}">
           ${modeButtons}
           </div>
         </div>
         <div class="ov-appearance-group">
-          <span class="ov-appearance-label">Theme</span>
-          <div class="ov-appearance-palettes" role="group" aria-label="Theme">
+          <span class="ov-appearance-label">${escapeHtml(strings.themeLabel)}</span>
+          <div class="ov-appearance-palettes" role="group" aria-label="${escapeAttr(strings.themeGroup)}">
           ${paletteButtons}
           </div>
         </div>
         <div class="ov-appearance-group">
-          <span class="ov-appearance-label">Color</span>
-          <div class="ov-appearance-accents" role="group" aria-label="Primary color">
+          <span class="ov-appearance-label">${escapeHtml(strings.colorLabel)}</span>
+          <div class="ov-appearance-accents" role="group" aria-label="${escapeAttr(strings.colorGroup)}">
           <button type="button" class="ov-appearance-accent ov-appearance-accent--default" data-ov-accent=""
-            aria-pressed="false" aria-label="Default" title="Default"></button>
+            aria-pressed="false" aria-label="${escapeAttr(strings.accentDefault)}" title="${escapeAttr(strings.accentDefault)}"></button>
           ${accentButtons}
-          <span class="ov-appearance-accent ov-appearance-accent--custom" title="Custom color"><input type="color" data-ov-accent-custom aria-label="Custom color" value="#3b82f6"></span>
+          <span class="ov-appearance-accent ov-appearance-accent--custom" title="${escapeAttr(strings.accentCustom)}"><input type="color" data-ov-accent-custom aria-label="${escapeAttr(strings.accentCustom)}" value="#3b82f6"></span>
           </div>
         </div>
         <div class="ov-appearance-group">
-          <span class="ov-appearance-label">Text size</span>
-          <div class="ov-appearance-sizes" role="group" aria-label="Text size">
+          <span class="ov-appearance-label">${escapeHtml(strings.textSizeLabel)}</span>
+          <div class="ov-appearance-sizes" role="group" aria-label="${escapeAttr(strings.textSizeGroup)}">
           ${sizeButtons}
           </div>
         </div>
         <div class="ov-appearance-group">
-          <span class="ov-appearance-label">Font</span>
-          <div class="ov-appearance-fonts" role="group" aria-label="Font family">
+          <span class="ov-appearance-label">${escapeHtml(strings.fontLabel)}</span>
+          <div class="ov-appearance-fonts" role="group" aria-label="${escapeAttr(strings.fontGroup)}">
           ${fontButtons}
           </div>
         </div>
@@ -419,7 +445,11 @@ function renderAppearancePanel(): string {
  * that locale's home when it isn't translated. Returns '' for single-language
  * sites (fewer than two locales).
  */
-function renderLangPicker(alternates: LocaleAlternate[] | undefined, basePath: string): string {
+function renderLangPicker(
+  alternates: LocaleAlternate[] | undefined,
+  basePath: string,
+  languageLabel: string,
+): string {
   if (!alternates || alternates.length < 2) return '';
   const current = alternates.find((a) => a.current) ?? alternates[0]!;
   const options = alternates
@@ -431,7 +461,7 @@ function renderLangPicker(alternates: LocaleAlternate[] | undefined, basePath: s
     })
     .join('\n          ');
   return `<details class="ov-lang">
-        <summary class="ov-lang-toggle" aria-label="Language" title="Language">${renderIcon('globe', { size: 16 })}<span class="ov-lang-current">${escapeHtml(current.label)}</span>${renderIcon('chevron-down', { size: 14, class: 'ov-lang-caret' })}</summary>
+        <summary class="ov-lang-toggle" aria-label="${escapeAttr(languageLabel)}" title="${escapeAttr(languageLabel)}">${renderIcon('globe', { size: 16 })}<span class="ov-lang-current">${escapeHtml(current.label)}</span>${renderIcon('chevron-down', { size: 14, class: 'ov-lang-caret' })}</summary>
         <div class="ov-lang-menu" role="menu">
           ${options}
         </div>
@@ -444,20 +474,21 @@ function renderTopbar(
   docsHref: string | undefined,
   searchEnabled: boolean,
   basePath: string,
+  strings: UiStrings,
   localeAlternates?: LocaleAlternate[],
   localePrefix = '',
 ): string {
   const items = resolveTopbarItems(site, basePath, localePrefix);
-  const langPicker = renderLangPicker(localeAlternates, basePath);
+  const langPicker = renderLangPicker(localeAlternates, basePath, strings.languageLabel);
   // Desktop splits text links from icon links so a divider can sit between
   // them; the mobile sheet keeps them in one labeled list.
-  const desktopTextLinks = renderTopbarLinks(items, docsHref, true, 'text');
-  const desktopIconLinks = renderTopbarLinks(items, docsHref, true, 'icon');
-  const mobileLinks = renderTopbarLinks(items, docsHref, false);
+  const desktopTextLinks = renderTopbarLinks(items, docsHref, true, strings.docsLink, 'text');
+  const desktopIconLinks = renderTopbarLinks(items, docsHref, true, strings.docsLink, 'icon');
+  const mobileLinks = renderTopbarLinks(items, docsHref, false, strings.docsLink);
   const search = searchEnabled ? `<div id="ov-search" class="ov-search"></div>` : '';
   // The hamburger only appears below the responsive breakpoint via CSS.
   const menuButton = `<button class="ov-topbar-menu" type="button"
-      aria-label="Open menu" aria-expanded="false" aria-controls="ov-mobile-nav"
+      aria-label="${escapeAttr(strings.openMenu)}" aria-expanded="false" aria-controls="ov-mobile-nav"
       data-ov-menu-toggle>
       <span class="ov-topbar-menu-open">${renderIcon('menu', { size: 22 })}</span>
       <span class="ov-topbar-menu-close">${renderIcon('close', { size: 22 })}</span>
@@ -469,11 +500,11 @@ function renderTopbar(
   // their pressed states in sync, so duplicates can't drift.
   const appearancePopover = `<div class="ov-appearance" data-ov-appearance>
       <button class="ov-theme-toggle" type="button"
-        aria-label="Appearance" title="Appearance"
+        aria-label="${escapeAttr(strings.appearance)}" title="${escapeAttr(strings.appearance)}"
         aria-haspopup="true" aria-expanded="false" data-ov-appearance-toggle>
         ${renderIcon('palette', { size: 18 })}
       </button>
-      ${renderAppearancePanel()}
+      ${renderAppearancePanel(strings)}
     </div>`;
   const versionBadge = site.version
     ? `<span class="ov-brand-version" aria-label="Stable version ${escapeAttr(site.version)}">${escapeHtml(site.version)}</span>`
@@ -498,7 +529,7 @@ function renderTopbar(
       </div>
       <div class="ov-topbar-search">${search}</div>
       <div class="ov-topbar-right">
-        <nav class="ov-topbar-nav" aria-label="Primary">${desktopTextLinks}</nav>
+        <nav class="ov-topbar-nav" aria-label="${escapeAttr(strings.primaryNav)}">${desktopTextLinks}</nav>
         ${langPicker}
         ${desktopTextLinks || langPicker ? '<span class="ov-topbar-divider" aria-hidden="true"></span>' : ''}
         ${desktopIconLinks ? `<div class="ov-topbar-icons">
@@ -508,11 +539,11 @@ function renderTopbar(
         ${appearancePopover}
         ${menuButton}
       </div>
-      <nav id="ov-mobile-nav" class="ov-mobile-nav" aria-label="Mobile">
+      <nav id="ov-mobile-nav" class="ov-mobile-nav" aria-label="${escapeAttr(strings.mobileNav)}">
         ${mobileLinks}
         ${langPicker ? `<div class="ov-mobile-lang">${langPicker}</div>` : ''}
         <div class="ov-mobile-theme" data-ov-appearance>
-          ${renderAppearancePanel()}
+          ${renderAppearancePanel(strings)}
         </div>
       </nav>
     </div>
@@ -523,6 +554,7 @@ function renderFooter(
   site: OvellumSiteConfig & { title: string },
   generatedAt: string,
   basePath: string,
+  strings: UiStrings,
   localePrefix = '',
 ): string {
   const items = site.footerNav ?? [];
@@ -540,13 +572,13 @@ function renderFooter(
   }
   if (showCredit) {
     bits.push(
-      `<a class="ov-footer-credit" href="https://ovellum.oss.oinam.com" rel="noopener" target="_blank">Built with Ovellum</a>`,
+      `<a class="ov-footer-credit" href="https://ovellum.oss.oinam.com" rel="noopener" target="_blank">${escapeHtml(strings.builtWith)}</a>`,
     );
   }
   const left = `<div class="ov-footer-left">${bits.join('<span class="ov-footer-sep">·</span>')}</div>`;
 
   const right = hasItems
-    ? `<nav class="ov-footer-right" aria-label="Site links">${items.map((item) => renderFooterNavItem(item, basePath, localePrefix)).join('')}</nav>`
+    ? `<nav class="ov-footer-right" aria-label="${escapeAttr(strings.footerNav)}">${items.map((item) => renderFooterNavItem(item, basePath, localePrefix)).join('')}</nav>`
     : '';
 
   return `<footer class="ov-footer"><div class="ov-footer-inner">${left}${right}</div></footer>`;
@@ -618,12 +650,17 @@ export interface RenderPageInput {
   localePrefix?: string;
   /** Draft page — renders the ribbon (dev only). */
   draft?: boolean;
+  /** Resolved UI-chrome strings. Defaults to English when omitted. */
+  strings?: UiStrings;
+  /** Text direction; `'rtl'` adds `dir="rtl"` to `<html>`. */
+  dir?: 'ltr' | 'rtl';
 }
 
 /**
  * Render a full HTML document for one doc page (sidebar + content + ToC).
  */
 export function renderPage(input: RenderPageInput): string {
+  const strings = input.strings ?? DEFAULT_STRINGS;
   const fullTitle =
     input.title && input.title !== input.site.title
       ? `${input.title} · ${input.site.title}`
@@ -633,22 +670,24 @@ export function renderPage(input: RenderPageInput): string {
   // Collapse folders unless the site opts out (`site.sidebar.collapse: false`).
   // Optional-chained: partial site fixtures (tests/landing) may omit `sidebar`.
   const collapseSidebar = input.site.sidebar?.collapse !== false;
-  const sidebar = renderSidebar(input.nav, input.url, basePath, collapseSidebar);
-  const toc = renderToc(input.headings);
-  const prevNext = renderPrevNext(input.prev, input.next, basePath);
-  const breadcrumbs = renderBreadcrumbs(input.breadcrumbs, basePath);
+  const sidebar = renderSidebar(input.nav, input.url, basePath, collapseSidebar, strings);
+  const toc = renderToc(input.headings, strings);
+  const prevNext = renderPrevNext(input.prev, input.next, basePath, strings);
+  const breadcrumbs = renderBreadcrumbs(input.breadcrumbs, basePath, strings);
   const pageMeta = renderPageMeta(
     input.readingMinutes,
     input.lastModified,
     input.generatedAt,
     input.site.dateFormat ?? 'humanized',
+    strings,
+    input.lang,
   );
   const editLink = input.editUrl
-    ? `<p class="ov-edit-page"><a class="ov-edit-link" href="${escapeAttr(input.editUrl)}" rel="noopener" target="_blank">Edit this page</a></p>`
+    ? `<p class="ov-edit-page"><a class="ov-edit-link" href="${escapeAttr(input.editUrl)}" rel="noopener" target="_blank">${escapeHtml(strings.editThisPage)}</a></p>`
     : '';
 
   const body = `<div class="ov-layout">
-    <aside class="ov-sidebar" aria-label="Site navigation">${sidebar}</aside>
+    <aside class="ov-sidebar" aria-label="${escapeAttr(strings.siteNav)}">${sidebar}</aside>
     <main class="ov-content">
       <div class="ov-content-card">
         ${breadcrumbs}
@@ -658,7 +697,7 @@ export function renderPage(input: RenderPageInput): string {
       </div>
       ${prevNext}
     </main>
-    <aside class="ov-toc" aria-label="On this page">${toc}</aside>
+    <aside class="ov-toc" aria-label="${escapeAttr(strings.tocTitle)}">${toc}</aside>
   </div>`;
 
   return renderShell({
@@ -676,6 +715,8 @@ export function renderPage(input: RenderPageInput): string {
     localeAlternates: input.localeAlternates,
     localePrefix: input.localePrefix,
     draft: input.draft,
+    strings,
+    dir: input.dir,
   });
 }
 
@@ -706,6 +747,10 @@ export interface RenderLandingInput {
   localeAlternates?: LocaleAlternate[];
   /** Current locale's URL prefix (`'/ja'`, or `''`) — localizes config nav links. */
   localePrefix?: string;
+  /** Resolved UI-chrome strings. Defaults to English when omitted. */
+  strings?: UiStrings;
+  /** Text direction; `'rtl'` adds `dir="rtl"` to `<html>`. */
+  dir?: 'ltr' | 'rtl';
 }
 
 /**
@@ -714,6 +759,7 @@ export interface RenderLandingInput {
  * trust strip.
  */
 export function renderLanding(input: RenderLandingInput): string {
+  const strings = input.strings ?? DEFAULT_STRINGS;
   const heroTitle = input.landing.hero.title ?? input.site.title;
   const fullTitle = input.site.title;
   const basePath = normaliseBasePath(input.site.basePath);
@@ -765,6 +811,8 @@ export function renderLanding(input: RenderLandingInput): string {
     lang: input.lang,
     localeAlternates: input.localeAlternates,
     localePrefix: input.localePrefix,
+    strings,
+    dir: input.dir,
   });
 }
 
@@ -885,8 +933,9 @@ function renderSidebar(
   activeUrl: string,
   basePath: string,
   collapse: boolean,
+  strings: UiStrings,
 ): string {
-  return `<nav class="ov-sidebar-nav"><ul>${navList(nav.children, activeUrl, basePath, collapse)}</ul></nav>`;
+  return `<nav class="ov-sidebar-nav"><ul>${navList(nav.children, activeUrl, basePath, collapse, strings)}</ul></nav>`;
 }
 
 /** True when this node, or any descendant, is the active page. */
@@ -900,6 +949,7 @@ function navList(
   activeUrl: string,
   basePath: string,
   collapse: boolean,
+  strings: UiStrings,
 ): string {
   if (nodes.length === 0) return '';
   return nodes
@@ -908,7 +958,7 @@ function navList(
       const hasChildren = node.children.length > 0;
       const href = node.sourcePath ? escapeAttr(siteUrl(node.url, basePath)) : undefined;
       // Draft badge (dev builds only — drafts are absent in production).
-      const badge = node.draft ? '<span class="ov-nav-draft">Draft</span>' : '';
+      const badge = node.draft ? `<span class="ov-nav-draft">${escapeHtml(strings.draftLabel)}</span>` : '';
       // Leaf page → a plain link (normal weight).
       if (!hasChildren) {
         const link = href
@@ -929,7 +979,7 @@ function navList(
       // navigates (full reload), so the toggle/link overlap is harmless.
       const effectiveCollapse = node.collapse ?? collapse;
       const open = !effectiveCollapse || subtreeHasActive(node, activeUrl);
-      const children = `<ul class="ov-nav-children">${navList(node.children, activeUrl, basePath, collapse)}</ul>`;
+      const children = `<ul class="ov-nav-children">${navList(node.children, activeUrl, basePath, collapse, strings)}</ul>`;
       return `<li><details class="ov-nav-section"${open ? ' open' : ''}><summary class="ov-nav-summary">${heading}${renderIcon('chevron-down', { class: 'ov-nav-chevron', size: 14 })}</summary>${children}</details></li>`;
     })
     .join('');
@@ -938,6 +988,7 @@ function navList(
 function renderBreadcrumbs(
   trail: Array<{ title: string; url: string; page?: boolean }> | undefined,
   basePath: string,
+  strings: UiStrings,
 ): string {
   // The trail includes the synthetic root node, so a top-level page like
   // /getting-started/ has length 2. Only render when there's at least one
@@ -956,7 +1007,7 @@ function renderBreadcrumbs(
       return `<li class="ov-crumb"><a href="${escapeAttr(siteUrl(node.url, basePath))}">${escapeHtml(node.title)}</a></li>`;
     })
     .join('\n      ');
-  return `<nav class="ov-breadcrumbs" aria-label="Breadcrumb">
+  return `<nav class="ov-breadcrumbs" aria-label="${escapeAttr(strings.breadcrumb)}">
     <ol>
       ${items}
     </ol>
@@ -968,15 +1019,17 @@ function renderPageMeta(
   lastModifiedISO: string | undefined,
   generatedAt: string,
   dateFormat: OvellumDateFormat,
+  strings: UiStrings,
+  localeCode?: string,
 ): string {
   const parts: string[] = [];
   if (typeof readingMin === 'number' && readingMin > 0) {
-    parts.push(`<span class="ov-page-meta-read">${readingMin} min read</span>`);
+    parts.push(`<span class="ov-page-meta-read">${readingMin} ${escapeHtml(strings.minRead)}</span>`);
   }
   if (lastModifiedISO) {
-    const label = formatEditedDate(lastModifiedISO, generatedAt, dateFormat);
+    const label = formatEditedDate(lastModifiedISO, generatedAt, dateFormat, localeCode, strings);
     parts.push(
-      `<span class="ov-page-meta-edited">Edited <time datetime="${escapeAttr(lastModifiedISO)}">${escapeHtml(label)}</time></span>`,
+      `<span class="ov-page-meta-edited">${escapeHtml(strings.editedLabel)} <time datetime="${escapeAttr(lastModifiedISO)}">${escapeHtml(label)}</time></span>`,
     );
   }
   if (parts.length === 0) return '';
@@ -987,27 +1040,28 @@ function renderPrevNext(
   prev: PrevNextPage | undefined,
   next: PrevNextPage | undefined,
   basePath: string,
+  strings: UiStrings,
 ): string {
   if (!prev && !next) return '';
   const prevHtml = prev
     ? `<a class="ov-prevnext-link ov-prevnext-prev" href="${escapeAttr(siteUrl(prev.url, basePath))}">
-         <span class="ov-prevnext-label">Previous</span>
+         <span class="ov-prevnext-label">${escapeHtml(strings.previous)}</span>
          <span class="ov-prevnext-title">${escapeHtml(prev.title)}</span>
        </a>`
     : '<span class="ov-prevnext-spacer" aria-hidden="true"></span>';
   const nextHtml = next
     ? `<a class="ov-prevnext-link ov-prevnext-next" href="${escapeAttr(siteUrl(next.url, basePath))}">
-         <span class="ov-prevnext-label">Next</span>
+         <span class="ov-prevnext-label">${escapeHtml(strings.next)}</span>
          <span class="ov-prevnext-title">${escapeHtml(next.title)}</span>
        </a>`
     : '<span class="ov-prevnext-spacer" aria-hidden="true"></span>';
-  return `<nav class="ov-prevnext" aria-label="Page navigation">
+  return `<nav class="ov-prevnext" aria-label="${escapeAttr(strings.pageNav)}">
     ${prevHtml}
     ${nextHtml}
   </nav>`;
 }
 
-function renderToc(headings: Heading[]): string {
+function renderToc(headings: Heading[], strings: UiStrings): string {
   if (headings.length === 0) return '';
   const items = headings
     .map(
@@ -1015,7 +1069,7 @@ function renderToc(headings: Heading[]): string {
         `<li class="ov-toc-h${h.depth}"><a href="#${escapeAttr(h.id)}">${escapeHtml(h.text)}</a></li>`,
     )
     .join('');
-  return `<div class="ov-toc-inner"><p class="ov-toc-title">On this page</p><ul>${items}</ul></div>`;
+  return `<div class="ov-toc-inner"><p class="ov-toc-title">${escapeHtml(strings.tocTitle)}</p><ul>${items}</ul></div>`;
 }
 
 function join(base: string, path: string): string {
