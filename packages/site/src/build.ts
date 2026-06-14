@@ -234,6 +234,7 @@ export async function buildSite(options: BuildSiteOptions): Promise<BuildSiteRes
         url: homeUrl,
         lang: spec.lang,
         localeAlternates: alternates('/'),
+        localePrefix: spec.urlPrefix,
       });
       const landingOut = path.join(outputAbs, urlToOutputPath(homeUrl));
       await mkdir(path.dirname(landingOut), { recursive: true });
@@ -292,6 +293,7 @@ export async function buildSite(options: BuildSiteOptions): Promise<BuildSiteRes
           sourceRelFromCwd,
           lang: spec.lang,
           localeAlternates: alternates(stripLocalePrefix(url, spec.urlPrefix)),
+          localePrefix: spec.urlPrefix,
         });
         if (!result) continue; // draft page (frontmatter draft: true) — skip
         const pageHtml = finalizeHtml(result.html);
@@ -346,6 +348,7 @@ export async function buildSite(options: BuildSiteOptions): Promise<BuildSiteRes
         bodyClass: 'ov-body-404',
         lang: spec.lang,
         localeAlternates: alternates('/404/'),
+        localePrefix: spec.urlPrefix,
       });
       const html404 = finalizeHtml(html);
       const out404 = path.join(outputAbs, urlToOutputPath(notFoundUrl));
@@ -419,6 +422,8 @@ interface RenderOneInput {
   lang?: string;
   /** Language-picker entries (i18n sites); empty for single-language sites. */
   localeAlternates?: LocaleAlternate[];
+  /** Current locale's URL prefix (`'/ja'`, or `''`) — localizes config nav links. */
+  localePrefix?: string;
 }
 
 interface RenderOneResult {
@@ -486,6 +491,7 @@ async function renderOne(input: RenderOneInput): Promise<RenderOneResult | null>
     bodyClass: input.url === '/404/' ? 'ov-body-404' : undefined,
     lang: input.lang,
     localeAlternates: input.localeAlternates,
+    localePrefix: input.localePrefix,
   });
   return {
     html,

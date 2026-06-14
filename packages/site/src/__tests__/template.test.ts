@@ -400,6 +400,39 @@ describe('renderPage', () => {
     expect(html).toContain('>Guides</li>');
   });
 
+  it('localizes config nav links and de-dupes the auto-Docs link on i18n pages', () => {
+    const html = renderPage({
+      site: {
+        title: 'X',
+        defaultTheme: 'auto',
+        footer: '',
+        topbarNav: [{ label: 'Docs', href: '/docs/' }],
+        footerNav: [
+          { label: 'Security', href: '/docs/reference/security/' },
+          { label: 'RSS', href: '/feed.xml', icon: 'rss' },
+        ],
+      },
+      nav: NAV,
+      url: '/ja/docs/install/',
+      title: 'Install',
+      bodyHtml: '',
+      headings: [],
+      generatedAt: '2026-06-14T00:00:00.000Z',
+      docsHref: '/ja/docs/', // build resolves landing.docsHref + locale prefix
+      localePrefix: '/ja',
+    });
+    // The config "Docs" link is locale-prefixed → /ja/docs/ (NOT the English /docs/).
+    expect(html).toContain('href="/ja/docs/"');
+    expect(html).not.toContain('href="/docs/"');
+    // And it de-dupes against the auto-Docs link: exactly one "Docs" text link
+    // per topbar instance (desktop + mobile sheet = 2), not four.
+    expect((html.match(/>Docs</g) ?? []).length).toBe(2);
+    // Footer page links are localized; asset links (feed.xml) stay root-served.
+    expect(html).toContain('href="/ja/docs/reference/security/"');
+    expect(html).toContain('href="/feed.xml"');
+    expect(html).not.toContain('href="/ja/feed.xml"');
+  });
+
   it('renders NO language picker for a single-language site', () => {
     const html = renderPage({
       site: { title: 'X', defaultTheme: 'auto', footer: '' },

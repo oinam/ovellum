@@ -29,6 +29,8 @@ export interface ShellOptions {
   lang?: string;
   /** Language-picker entries (i18n sites); empty/undefined = no picker. */
   localeAlternates?: LocaleAlternate[];
+  /** Current locale's URL prefix (`'/ja'`, or `''`) — localizes config nav links. */
+  localePrefix?: string;
 }
 
 /** One entry in the topbar language picker, and the per-page hreflang set. */
@@ -190,10 +192,10 @@ function renderShell(opts: ShellOptions): string {
 </head>
 <body${opts.bodyClass ? ` class="${escapeAttr(opts.bodyClass)}"` : ''}>
   ${renderFrame()}
-  ${renderTopbar(opts.site, assets, opts.docsHref ? siteUrl(opts.docsHref, basePath) : undefined, searchEnabled, basePath, opts.localeAlternates)}
+  ${renderTopbar(opts.site, assets, opts.docsHref ? siteUrl(opts.docsHref, basePath) : undefined, searchEnabled, basePath, opts.localeAlternates, opts.localePrefix ?? '')}
   ${opts.body}
   ${backToTop}
-  ${renderFooter(opts.site, opts.generatedAt, basePath)}
+  ${renderFooter(opts.site, opts.generatedAt, basePath, opts.localePrefix ?? '')}
   ${searchScripts}
   <script src="${escapeAttr(assets)}assets/ovellum.js" defer></script>
 </body>
@@ -218,17 +220,30 @@ interface ResolvedTopbarItem {
   icon?: IconName;
 }
 
+/**
+ * Prefix a config-authored internal nav href with the current locale path so
+ * topbar/footer links stay in-language (`/docs/` → `/ja/docs/` on a ja page).
+ * External, anchor, mailto, and asset (file-extension) hrefs are left alone —
+ * assets are shared/root-served, and only same-site page routes are localized.
+ */
+function localizeHref(href: string, localePrefix: string): string {
+  if (!localePrefix || !href.startsWith('/')) return href;
+  if (/\.[a-zA-Z0-9]+$/.test(href)) return href; // asset (e.g. /feed.xml) — root-served
+  return localePrefix + href;
+}
+
 /** Resolve each configured item's href once so the auto-Docs link can dedupe. */
 function resolveTopbarItems(
   site: OvellumSiteConfig & { title: string },
   basePath: string,
+  localePrefix: string,
 ): ResolvedTopbarItem[] {
   return (site.topbarNav ?? []).map((item) => {
     const external = item.external === true || /^https?:\/\//i.test(item.href);
     const icon = item.icon && item.icon in ICONS ? (item.icon as IconName) : undefined;
     return {
       label: item.label,
-      href: external ? item.href : siteUrl(item.href, basePath),
+      href: external ? item.href : siteUrl(localizeHref(item.href, localePrefix), basePath),
       external,
       icon,
     };
@@ -427,8 +442,9 @@ function renderTopbar(
   searchEnabled: boolean,
   basePath: string,
   localeAlternates?: LocaleAlternate[],
+  localePrefix = '',
 ): string {
-  const items = resolveTopbarItems(site, basePath);
+  const items = resolveTopbarItems(site, basePath, localePrefix);
   const langPicker = renderLangPicker(localeAlternates, basePath);
   // Desktop splits text links from icon links so a divider can sit between
   // them; the mobile sheet keeps them in one labeled list.
@@ -504,6 +520,7 @@ function renderFooter(
   site: OvellumSiteConfig & { title: string },
   generatedAt: string,
   basePath: string,
+  localePrefix = '',
 ): string {
   const items = site.footerNav ?? [];
   const hasItems = items.length > 0;
@@ -526,7 +543,7 @@ function renderFooter(
   const left = `<div class="ov-footer-left">${bits.join('<span class="ov-footer-sep">·</span>')}</div>`;
 
   const right = hasItems
-    ? `<nav class="ov-footer-right" aria-label="Site links">${items.map((item) => renderFooterNavItem(item, basePath)).join('')}</nav>`
+    ? `<nav class="ov-footer-right" aria-label="Site links">${items.map((item) => renderFooterNavItem(item, basePath, localePrefix)).join('')}</nav>`
     : '';
 
   return `<footer class="ov-footer"><div class="ov-footer-inner">${left}${right}</div></footer>`;
@@ -535,9 +552,10 @@ function renderFooter(
 function renderFooterNavItem(
   item: { label: string; href: string; icon?: string; external?: boolean },
   basePath: string,
+  localePrefix = '',
 ): string {
   const external = item.external === true || /^https?:\/\//i.test(item.href);
-  const href = external ? item.href : siteUrl(item.href, basePath);
+  const href = external ? item.href : siteUrl(localizeHref(item.href, localePrefix), basePath);
   const rel = external ? ' rel="noopener" target="_blank"' : '';
   const iconName = item.icon as IconName | undefined;
   if (iconName && iconName in ICONS) {
@@ -593,6 +611,8 @@ export interface RenderPageInput {
   lang?: string;
   /** Language-picker entries (i18n sites); empty/undefined = no picker. */
   localeAlternates?: LocaleAlternate[];
+  /** Current locale's URL prefix (`'/ja'`, or `''`) — localizes config nav links. */
+  localePrefix?: string;
 }
 
 /**
@@ -649,6 +669,7 @@ export function renderPage(input: RenderPageInput): string {
     bodyClass: input.bodyClass,
     lang: input.lang,
     localeAlternates: input.localeAlternates,
+    localePrefix: input.localePrefix,
   });
 }
 
@@ -677,6 +698,8 @@ export interface RenderLandingInput {
   lang?: string;
   /** Language-picker entries (i18n sites); empty/undefined = no picker. */
   localeAlternates?: LocaleAlternate[];
+  /** Current locale's URL prefix (`'/ja'`, or `''`) — localizes config nav links. */
+  localePrefix?: string;
 }
 
 /**
@@ -735,6 +758,7 @@ export function renderLanding(input: RenderLandingInput): string {
     bodyClass: 'ov-body-landing',
     lang: input.lang,
     localeAlternates: input.localeAlternates,
+    localePrefix: input.localePrefix,
   });
 }
 
