@@ -582,7 +582,7 @@ export interface RenderPageInput {
   /** Resolved "Edit this page" URL (already had `{path}` substituted), if set. */
   editUrl?: string;
   /** Breadcrumb trail, root-first. The current page is the last entry. */
-  breadcrumbs?: Array<{ title: string; url: string }>;
+  breadcrumbs?: Array<{ title: string; url: string; page?: boolean }>;
   /** Reading-time estimate in whole minutes (already computed and rounded). */
   readingMinutes?: number;
   /** ISO-8601 timestamp of the source file's last modification. */
@@ -904,7 +904,7 @@ function navList(
 }
 
 function renderBreadcrumbs(
-  trail: Array<{ title: string; url: string }> | undefined,
+  trail: Array<{ title: string; url: string; page?: boolean }> | undefined,
   basePath: string,
 ): string {
   // The trail includes the synthetic root node, so a top-level page like
@@ -915,8 +915,11 @@ function renderBreadcrumbs(
   const items = visible
     .map((node, i) => {
       const isLast = i === visible.length - 1;
-      if (isLast) {
-        return `<li class="ov-crumb is-current" aria-current="page">${escapeHtml(node.title)}</li>`;
+      // A crumb that isn't a real route (a section folder with no index page,
+      // `page === false`) renders as plain text instead of a dead link.
+      if (isLast || node.page === false) {
+        const attr = isLast ? ' is-current" aria-current="page"' : '"';
+        return `<li class="ov-crumb${attr}>${escapeHtml(node.title)}</li>`;
       }
       return `<li class="ov-crumb"><a href="${escapeAttr(siteUrl(node.url, basePath))}">${escapeHtml(node.title)}</a></li>`;
     })

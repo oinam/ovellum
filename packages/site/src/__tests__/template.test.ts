@@ -377,6 +377,29 @@ describe('renderPage', () => {
     expect(html).toContain('hreflang="x-default" href="https://x.test/guides/install/"');
   });
 
+  it('renders a section breadcrumb with no index page as text, not a dead link', () => {
+    const html = renderPage({
+      site: { title: 'X', defaultTheme: 'auto', footer: '' },
+      nav: NAV,
+      url: '/docs/guides/themes/',
+      title: 'Themes',
+      bodyHtml: '',
+      headings: [],
+      generatedAt: '2026-06-14T00:00:00.000Z',
+      breadcrumbs: [
+        { title: 'Home', url: '/', page: true },
+        { title: 'Docs', url: '/docs/', page: true }, // has an index page → link
+        { title: 'Guides', url: '/docs/guides/', page: false }, // no index → text
+        { title: 'Themes', url: '/docs/guides/themes/', page: true }, // current → text
+      ],
+    });
+    // The linkable section ("Docs") is an anchor…
+    expect(html).toContain('<a href="/docs/">Docs</a>');
+    // …but the page-less "Guides" crumb is plain text, NOT a link to /docs/guides/.
+    expect(html).not.toContain('href="/docs/guides/"');
+    expect(html).toContain('>Guides</li>');
+  });
+
   it('renders NO language picker for a single-language site', () => {
     const html = renderPage({
       site: { title: 'X', defaultTheme: 'auto', footer: '' },

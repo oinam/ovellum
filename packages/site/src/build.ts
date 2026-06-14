@@ -274,6 +274,9 @@ export async function buildSite(options: BuildSiteOptions): Promise<BuildSiteRes
         const breadcrumbs = findBreadcrumbs(spec.nav, url).map((n) => ({
           title: n.title,
           url: n.url,
+          // A section folder with no index page (no sourcePath) isn't a real
+          // route — render it as plain text, not a dead link.
+          page: n.sourcePath !== undefined,
         }));
         const result = await renderOne({
           absInput: file,
