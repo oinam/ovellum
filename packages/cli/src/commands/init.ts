@@ -67,7 +67,7 @@ export const initCommand = defineCommand({
       } catch (err) {
         // @inquirer throws ExitPromptError on Ctrl-C; treat as a clean abort.
         if (err instanceof Error && err.name === 'ExitPromptError') {
-          process.stderr.write('Cancelled.\n');
+          process.stderr.write('Canceled.\n');
           process.exit(130);
         }
         throw err;
@@ -93,7 +93,7 @@ export const initCommand = defineCommand({
     if (gitignoreUpdated) writes.push('.gitignore');
 
     const lines = [
-      `ovellum project initialised in ${cwd === process.cwd() ? '.' : cwd}/`,
+      `ovellum project initialized in ${cwd === process.cwd() ? '.' : cwd}/`,
       `  mode:      ${answers.mode}`,
       `  written:`,
       ...writes.map((w) => `    + ${w}`),
@@ -285,7 +285,7 @@ ${descLine}
     // basePath: '/docs',        // serve under a subpath (e.g. GitHub project pages)
     defaultTheme: ${q(a.defaultTheme)}, // 'auto' | 'light' | 'dark'
     // palette: 'default',       // 'default' | 'nord' | 'flexoki' | 'solarized' | 'eink'
-    // accent: 'oklch(57% 0.16 255)', // primary colour (CTA buttons, links, focus); any CSS colour
+    // accent: 'oklch(57% 0.16 255)', // primary color (CTA buttons, links, focus); any CSS color
     // font: 'sans',             // 'sans' | 'serif' (system) | 'inter' | 'geist' (bundled webfonts, lazy)
     // dateFormat: 'humanized',  // 'humanized' (today / Jun 14, 2026) | 'iso' (2026-06-14)
     // footer: 'Your Name',      // footer text / copyright line

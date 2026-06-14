@@ -93,7 +93,7 @@ Open issues at <https://github.com/oinam/ovellum/issues>. Before filing:
   workaround.
 - Include the Ovellum version (`npx ovellum --version` will work once
   there's a `--version` flag), Node version, and a minimal reproduction.
-- For bugs: state expected vs actual behaviour.
+- For bugs: state expected vs actual behavior.
 - For features: describe the use case before the proposed shape; we'd
   rather understand what you're trying to do than debate API surface in
   isolation.
@@ -107,7 +107,7 @@ We follow Conventional Commits loosely:
 - `docs(scope): …` for documentation
 - `chore(scope): …` for tooling / cleanup
 - `build(scope): …` for build pipeline changes
-- `refactor(scope): …` for behaviour-preserving internal changes
+- `refactor(scope): …` for behavior-preserving internal changes
 
 The "scope" is usually a package name (`core`, `parser`, `site`, …)
 or a high-level area (`cli`, `docs`, `examples`).

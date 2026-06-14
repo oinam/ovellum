@@ -100,16 +100,16 @@ describe('renderMarkdown', () => {
     expect(html).toContain('--shiki-light');
     expect(html).toContain('--shiki-dark');
     expect(html).toContain('const');
-    // github-light's keyword colour is a deep red (#d73a49 / #cf222e).
+    // github-light's keyword color is a deep red (#d73a49 / #cf222e).
     expect(html.toLowerCase()).toMatch(/--shiki-light:#(d73a49|cf222e)/);
   });
 
-  it('switches code-block colours when codeTheme is solarized', async () => {
+  it('switches code-block colors when codeTheme is solarized', async () => {
     const { html } = await renderMarkdown(
       ['```typescript', 'const x = 42;', '```'].join('\n'),
       { codeTheme: 'solarized' },
     );
-    // solarized-light's keyword colour is the well-known cyan #859900 (green
+    // solarized-light's keyword color is the well-known cyan #859900 (green
     // in solarized's palette). Different from github-light.
     expect(html).toContain('class="shiki');
     expect(html.toLowerCase()).not.toMatch(/--shiki-light:#(d73a49|cf222e)/);

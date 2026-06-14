@@ -14,7 +14,7 @@ export interface UpdateCache {
   latest: string;
 }
 
-/** Platform cache directory, honouring XDG on Linux. */
+/** Platform cache directory, honoring XDG on Linux. */
 function cacheDir(): string {
   const home = os.homedir();
   if (process.platform === 'win32') {

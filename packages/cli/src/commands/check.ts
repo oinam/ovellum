@@ -114,13 +114,13 @@ interface CheckInput {
 
 /**
  * Manual mode: walk `input/`, validate every internal link against the
- * sidebar nav. This is the original behaviour.
+ * sidebar nav. This is the original behavior.
  */
 async function checkManual({ config, cwd }: CheckInput): Promise<CheckRun> {
   const inputAbs = path.resolve(cwd, config.input);
   const outputAbs = path.resolve(cwd, config.output);
   const publicAbs = path.join(inputAbs, config.site.publicDir);
-  // Honour the same exclusions as `build` (ignoreFolders / ignoreFiles, the
+  // Honor the same exclusions as `build` (ignoreFolders / ignoreFiles, the
   // structural auto-excludes, and the output dir) so `check` lints only real
   // content — never `node_modules`, dotfiles, dependency READMEs, or a nested
   // output dir under `input: '.'`.

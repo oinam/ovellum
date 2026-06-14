@@ -15,14 +15,14 @@
   aren't rewritten — reference those by their final CDN URL.) The "Assets &
   downloads" guide and config reference document it.
 - 380fe10: Humanize the page meta date and tidy two appearance details.
-  - The last-modified line is relabelled **"Edited"** (from "Updated"), and its
+  - The last-modified line is relabeled **"Edited"** (from "Updated"), and its
     date is now humanized by default: `today` / `yesterday` for recent edits,
     otherwise a friendly `Jun 14, 2026`. A new **`site.dateFormat`** config
     controls this — `'humanized'` (default) or `'iso'` for the raw `2026-06-14`.
     The machine-readable ISO date always stays in the `<time datetime>` attribute.
   - The **search box** gets a subtle background fill so it reads as a distinct
     field against the page/topbar background, in both light and dark.
-  - The font picker's system option is now labelled **"Sans-Serif (Default)"**
+  - The font picker's system option is now labeled **"Sans-Serif (Default)"**
     instead of just "Default", so it's clear what the default is.
 
 - fe8cb6c: Allow `<video>` / `<audio>` embeds in Markdown. The HTML sanitizer now permits
@@ -48,7 +48,7 @@
 
   `site.font` now accepts `'inter'` and `'geist'` (in addition to `'sans'` /
   `'serif'`) to set the initial font. Both new controls persist in `localStorage`
-  and apply before paint. Existing mode / theme / colour controls are unchanged.
+  and apply before paint. Existing mode / theme / color controls are unchanged.
 
 - 0954436: Allow scoped `<iframe>` video embeds in Markdown. Paste the embed code straight
   from YouTube or Vimeo ("Share → Embed", verbatim — fixed `width`/`height`,
@@ -61,7 +61,7 @@
   snippet's pixel dimensions. Native `<video>` / `<audio>` embeds are unchanged.
   The new **Styleguide** reference page
   (`/docs/reference/styleguide/`) documents the type scale, vertical rhythm, and
-  colour system and renders every content element — headings, prose, lists,
+  color system and renders every content element — headings, prose, lists,
   callouts, code, tables, images, and a live video embed — as a working showcase.
 
 ## 0.6.0
@@ -77,7 +77,7 @@ threshold: 360 }` (was a hardcoded 600px). Lower the threshold so the button
     rest are commented with their defaults and allowed values — so you can tinker
     entirely in that file without opening the docs. It uses
     `import type { OvellumUserConfig } from 'ovellum'` + `satisfies` (erased at
-    load, so no runtime dependency). The existing-config guard now recognises any
+    load, so no runtime dependency). The existing-config guard now recognizes any
     `ovellum.config.{ts,js,mjs,cjs,json}`.
 
 - fb520e3: Footer "Built with Ovellum" credit link, controlled by `site.credit` (default
@@ -90,7 +90,7 @@ threshold: 360 }` (was a hardcoded 600px). Lower the threshold so the button
     resolves its page to `index.*` first, then `README.md` — the GitHub norm. To
     keep this consistent, `build` now derives page URLs from the nav, so the
     emitted files always match the sidebar/links.
-  - **Frontmatter `permalink`** overrides a page's URL (normalised to a
+  - **Frontmatter `permalink`** overrides a page's URL (normalized to a
     root-absolute, trailing-slash path); **`tags`** become `<meta name="keywords">`.
     (`title` and `description` were already respected.)
   - **`site.publicDir`** (default `'public'`) — a **reserved** static-assets folder
@@ -103,7 +103,7 @@ threshold: 360 }` (was a hardcoded 600px). Lower the threshold so the button
     **Breaking:** previously `content/public/` was copied to `dist/public/`; it now
     copies to the output **root**. Drop the `/public` prefix from any references
     (e.g. `/public/logo.svg` → `/logo.svg`), or set `site.publicDir` to a different
-    folder name to keep path-preserving passthrough behaviour for that folder.
+    folder name to keep path-preserving passthrough behavior for that folder.
 
 ### Patch Changes
 
@@ -151,7 +151,7 @@ threshold: 360 }` (was a hardcoded 600px). Lower the threshold so the button
 
 - 662f770: Manual-mode fixes from dogfooding an `input: "."` site: consistent file/folder
   exclusion across `build` and `check`, and a theme-persistence fix.
-  - **`check` now honours the same exclusions as `build`.** Previously `ovellum
+  - **`check` now honors the same exclusions as `build`.** Previously `ovellum
 check` walked `node_modules` and reported bogus "broken links" inside
     dependency READMEs. Exclusion logic is now centralised (`content-filter.ts`)
     and shared by `build`, the nav builder, and `check`.
@@ -192,15 +192,15 @@ check` walked `node_modules` and reported bogus "broken links" inside
   - **Theme** — five bundled palettes, each with light + dark variants and a
     crisp monochrome line glyph: Ovellum (the monochrome base), E-ink (warm
     paper + ink black), Flexoki, Nord, Solarized (`<html data-palette>`).
-  - **Color** — the primary colour the CTA buttons, links, focus rings, and the
-    ToC indicator all derive from; six presets, a native colour picker, and a
+  - **Color** — the primary color the CTA buttons, links, focus rings, and the
+    ToC indicator all derive from; six presets, a native color picker, and a
     leading "Default" swatch that returns to the theme's own primary (hover
     states mixed automatically).
 
   All selections persist in `localStorage` and apply before paint (no flash;
   Safari's `theme-color` tracks the active palette). New config defaults:
   `site.palette` ('default' | 'nord' | 'flexoki' | 'solarized' | 'eink') and
-  `site.accent` (any CSS colour value).
+  `site.accent` (any CSS color value).
 
 ## 0.3.0
 
@@ -222,7 +222,7 @@ of it is in the bundled site builder / core:
 - **Default theme — monochrome editorial redesign.** Bordered content card,
   borderless sidebar with a full-length active highlight, rounded search with
   full-width clickable results, a distinct code-block surface, refined topbar.
-  Rebuilt on a single grey ramp + role-token color system (light/dark from one
+  Rebuilt on a single gray ramp + role-token color system (light/dark from one
   source) and a ratio-driven type scale; theme CSS/JS now ship minified.
 - **Content exclusion** — `site.ignoreFolders` (by folder name, any depth),
   `_meta.json` `"hidden": true`, and frontmatter `draft: true`. Asset-only
@@ -260,7 +260,7 @@ of it is in the bundled site builder / core:
 ### Patch Changes
 
 - 82cdb1f: Add `publishConfig.access: public` and `sideEffects: false` to the package
-  manifest — release-hygiene only, no behavioural change.
+  manifest — release-hygiene only, no behavioral change.
 
 ### Also in this release
 

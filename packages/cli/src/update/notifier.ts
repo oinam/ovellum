@@ -64,7 +64,7 @@ function shouldSkip(): boolean {
 }
 
 /** Resolve `update.check` / `update.intervalHours` from the project config,
- *  honouring the same `--cwd` / `--config` the command used. Best-effort:
+ *  honoring the same `--cwd` / `--config` the command used. Best-effort:
  *  falls back to defaults if config can't be loaded. */
 async function resolveSettings(): Promise<{ check: boolean; intervalHours: number }> {
   try {

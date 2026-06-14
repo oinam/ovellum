@@ -160,7 +160,7 @@ describe('validateUserConfig', () => {
     expect(() => validateUserConfig({ site: { favicon: 42 } })).toThrow(/site\.favicon/);
   });
 
-  it('accepts every named site.palette and a CSS-colour accent', () => {
+  it('accepts every named site.palette and a CSS-color accent', () => {
     for (const palette of ['default', 'nord', 'flexoki', 'solarized', 'eink']) {
       expect(validateUserConfig({ site: { palette } })).toEqual({ site: { palette } });
     }

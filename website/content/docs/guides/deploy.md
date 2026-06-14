@@ -184,7 +184,7 @@ most common, and it has one non-obvious gotcha worth calling out.
      (e.g. `docs` for `docs.example.com`, or `ovellum.oss` for
      `ovellum.oss.oinam.com`)
    - **Target**: `<your-user>.github.io` (no protocol, no path, no trailing dot)
-   - **Proxy status**: **DNS only (grey cloud).** This is the gotcha.
+   - **Proxy status**: **DNS only (gray cloud).** This is the gotcha.
 
 2. In your GitHub repo, **Settings → Pages**, confirm:
    - **Source** is "GitHub Actions" (Route A) or the `gh-pages` branch (Route B).
@@ -197,12 +197,12 @@ most common, and it has one non-obvious gotcha worth calling out.
 
 That's it — `https://docs.example.com/` now serves your site over HTTPS.
 
-#### Why grey cloud (DNS-only)?
+#### Why gray cloud (DNS-only)?
 
 When Cloudflare's proxy is on (orange cloud), Cloudflare terminates SSL itself
 and answers the HTTP-01 challenge that Let's Encrypt sends to issue GitHub
 Pages' certificate. The challenge never reaches GitHub, the cert never issues,
-and Pages serves the bare github.io URL instead. Grey cloud (DNS-only) bypasses
+and Pages serves the bare github.io URL instead. Gray cloud (DNS-only) bypasses
 Cloudflare's proxy so the challenge reaches GitHub directly.
 
 You **can** flip to orange-cloud (proxy on) later, once the cert is issued. If
@@ -213,7 +213,7 @@ you do:
 - Don't disable the GitHub-issued cert. GitHub Pages keeps re-issuing it;
   Cloudflare's edge cert is what's served to visitors.
 
-For most documentation sites, grey-cloud is enough: GitHub Pages is already on a
+For most documentation sites, gray-cloud is enough: GitHub Pages is already on a
 CDN, and Cloudflare's proxy features are usually overkill for a docs subdomain.
 
 #### DNS via other providers

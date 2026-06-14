@@ -119,7 +119,7 @@ describe('buildNav', () => {
     expect(byUrl['/both/']!.sourcePath).toContain('index.md');
   });
 
-  it('honours a frontmatter permalink as the page URL', async () => {
+  it('honors a frontmatter permalink as the page URL', async () => {
     const content = path.join(tmp, 'content');
     mkdirSync(content);
     writeFileSync(path.join(content, 'index.md'), '# Root\n');
@@ -129,7 +129,7 @@ describe('buildNav', () => {
     const nav = await buildNav('./content', tmp);
     const urls = nav.children.map((c) => c.url).sort();
     expect(urls).toContain('/custom/'); // not /deep-slug/
-    expect(urls).toContain('/bare-path/'); // normalised: leading + trailing slash
+    expect(urls).toContain('/bare-path/'); // normalized: leading + trailing slash
     expect(urls).not.toContain('/deep-slug/');
   });
 
@@ -192,7 +192,7 @@ describe('buildNav', () => {
     expect(findAdjacent(NAV, '/nowhere/')).toEqual({});
   });
 
-  it('findAdjacent skips the 404 page so it never becomes a neighbour', () => {
+  it('findAdjacent skips the 404 page so it never becomes a neighbor', () => {
     // The 404 sorts ahead of real content, so without the exclusion it would
     // land as the "Previous" of the first page.
     const navWith404: NavNode = {

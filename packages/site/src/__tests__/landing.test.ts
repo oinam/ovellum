@@ -178,7 +178,7 @@ describe('renderLanding', () => {
     expect(html).not.toContain('ov-topbar-link--docs');
   });
 
-  it('renders icon topbar items icon-only on desktop and labelled in the mobile sheet', () => {
+  it('renders icon topbar items icon-only on desktop and labeled in the mobile sheet', () => {
     const html = renderLanding({
       site: {
         ...SITE,

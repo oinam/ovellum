@@ -235,7 +235,7 @@ repo.
 
 - [Deploy guide](/docs/guides/deploy/) — GitHub Pages, Netlify, Vercel,
   Cloudflare, Nginx, S3, anywhere.
-- [Themes](/docs/guides/themes/) — what's bundled, what to customise, and
+- [Themes](/docs/guides/themes/) — what's bundled, what to customize, and
   how the icon registry works.
 - [Configuration reference](/docs/reference/config/) — every field, every
   default.

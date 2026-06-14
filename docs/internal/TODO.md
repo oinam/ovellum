@@ -44,7 +44,7 @@ version` + `npm publish`; signed tags + GitHub releases done). Tree clean on
 - **0.4.0** — topbar **appearance control**: light/dark/auto mode + five
   page-wide OKLCH palettes (Default/Ovellum, E-ink, Flexoki, Nord, Solarized;
   macOS trialled then dropped) + accent/Color picker; all persisted in
-  localStorage, applied pre-paint. All theme colours converted to OKLCH (CSS
+  localStorage, applied pre-paint. All theme colors converted to OKLCH (CSS
   minify drops `minifySyntax` so esbuild can't rewrite oklch→hex). Ovellum
   theme glyph = pen-nib.
 - **0.5.0** — optional `site.logo` (theme-flipping mask; removed the hardcoded
@@ -84,8 +84,8 @@ as the first PR-sized unit.
 light/dark cycle toggle is now a
 palette-icon **popover** (inlined into the mobile sheet): Mode (auto/light/
 dark) + Theme (five palettes: Ovellum, E-ink, Flexoki, Nord, Solarized — line glyphs; macOS dropped 2026-06-13) + Color (drives primary CTA + accent) +
-Accent (six presets, native colour input, clear swatch). Architecture notes:
-each palette re-skins the grey ramp (`:root[data-palette='…']` placed BEFORE
+Accent (six presets, native color input, clear swatch). Architecture notes:
+each palette re-skins the gray ramp (`:root[data-palette='…']` placed BEFORE
 the dark blocks so the reversed-ramp dark remap still wins; per-palette dark
 accents after, at (0,3,0); the user-accent override block uses a repeated
 `[data-accent]` specificity bump to (0,4,0)). Accent = inline `--ov-accent`
@@ -103,9 +103,9 @@ config accent returns on next page load (server attr + empty localStorage).
 - **coss.com/ui-inspired redesign** of the default theme + website: bordered
   content box w/ drop-shadow, borderless bold-heading sidebar w/ full-length
   active highlight, rounded search, editorial frame rails + `+` intersection
-  marks. **Token architecture** refactored to one grey ramp
+  marks. **Token architecture** refactored to one gray ramp
   (`--color-gray-50…950`) + role triples (primary/secondary/accent
-  ×value/-fg/-hover) + Tier-2 semantics; dark = reversed-ramp remap; colours no
+  ×value/-fg/-hover) + Tier-2 semantics; dark = reversed-ramp remap; colors no
   longer synced from STYLES.md (only fonts/space/radii are). Modular type scale
   via named-ratio CSS vars (`--ratio: var(--major-third)`).
 - **`site.font: 'sans' | 'serif'`** body-font toggle (system stacks) via the
@@ -154,7 +154,7 @@ config accent returns on next page load (server attr + empty localStorage).
   there with priorities). The bullets below are kept for their detail.
 - **Light-mode secondary CTA contrast.** "View on GitHub" is gray-100 (`oklch 96.7%`) on a near-identical body (`oklch 97%`) — separated only by the `--color-zinc-300` hairline border. Reads via the border but the fill is near-invisible in light mode. If it looks weak on the live site, bump `--color-cta-secondary-bg` a step (zinc-200) or strengthen the border. Tokens in `style.css` `:root`.
 - **MDX in manual mode** is queued (Phase 4.5): tier 1 = widen the `.mdx` discovery regexes in `nav.ts`/`build.ts` (near-trivial); tier 2 = full `remark-mdx`.
-- **Process gotcha:** the tool-output channel glitched repeatedly this session (empty/delayed Bash + Read; one bad parallel call cancelled a whole batch). Subagents were the reliable path — their final message returns intact. See `CLAUDE.local.md`.
+- **Process gotcha:** the tool-output channel glitched repeatedly this session (empty/delayed Bash + Read; one bad parallel call canceled a whole batch). Subagents were the reliable path — their final message returns intact. See `CLAUDE.local.md`.
 - Docs site live with TLS — <https://ovellum.oss.oinam.com> (version badge now `v0.2.2`)
 - All seven CLI commands working: `init`, `build`, `dev`, `watch`, `serve`, `check`, `upgrade`
 - Manual-mode static site builder is feature-complete for a real docs site
@@ -423,7 +423,7 @@ New phase introduced 2026-05-15. Design lives in [`SITE.md`](./SITE.md).
 - [x] `site.codeTheme: 'github' | 'nord' | 'solarized'`
 - [x] HTML sanitization (rehype-raw + rehype-sanitize before shiki)
 - [x] Body type tightened to 15→16 px (Option A)
-- [x] Page-level Nord + Solarized themes — shipped 2026-06-12 via the appearance control (plus Flexoki + E-ink; macOS dropped 2026-06-13). Implemented as grey-ramp re-skins (`:root[data-palette='…']` in `style.css`), not the STYLES.md §7 per-token blocks; dark variants come free from the reversed-ramp remap.
+- [x] Page-level Nord + Solarized themes — shipped 2026-06-12 via the appearance control (plus Flexoki + E-ink; macOS dropped 2026-06-13). Implemented as gray-ramp re-skins (`:root[data-palette='…']` in `style.css`), not the STYLES.md §7 per-token blocks; dark variants come free from the reversed-ramp remap.
 - [x] Token-extraction script: pull current `STYLES.md` values into `style.css` automatically — shipped 2026-05-18
 - [x] `_meta.json` title fallback for directories without their own `index.md` — already implemented in `buildNav`'s title resolution chain (`meta.title > indexNode.title > kebab segment > 'Untitled'`); the live website (no index.md in any of `concepts/`, `guides/`, `reference/`) relies on it. Behavior pinned by two explicit tests in `packages/site/src/__tests__/nav.test.ts`.
 - [x] RSS feed auto-emit
@@ -468,7 +468,7 @@ landing's visuals are in scope).
 **Decisions taken (2026-05-19):**
 
 - Imagery source: abstract code-generated SVG (hand-authored, no AI/CDN).
-- Hero shape: full-bleed visual, title/subtitle/CTA stack centred over it.
+- Hero shape: full-bleed visual, title/subtitle/CTA stack centered over it.
 - Motion budget: looped animation lives inside the SVG (CSS `@keyframes` +
   `prefers-reduced-motion` no-op fallback). Zero JS, ~2.4KB per asset.
 - Asset delivery: `website/content/hero-{light,dark}.svg` via Ovellum's
@@ -483,7 +483,7 @@ landing's visuals are in scope).
       wrapper for the text stack
 - [x] CSS variant in `packages/site/src/templates/default/style.css`:
       suppresses dotted-noise pseudo-elements, gives the section min-
-      block-size + flex centring, bottom mask-image fade so the visual
+      block-size + flex centering, bottom mask-image fade so the visual
       recedes into the feature grid below
 - [x] Two SVG assets — topographic contour bands, 12 stacked sinusoidal
       waves drifting at varied rates (24-42s loops). Theme-respecting
@@ -550,7 +550,7 @@ deploy design in [`DEPLOY.md`](./DEPLOY.md).
 - [x] Pagefind search wired into the website (`site.search.enabled: true` in `website/ovellum.config.json`)
 - [x] Sitemap.xml auto-emit (basePath-aware)
 - [x] DNS + cert verified live at <https://ovellum.oss.oinam.com>
-- [x] Cloudflare grey-cloud DNS setup documented in `guides/deploy.md`
+- [x] Cloudflare gray-cloud DNS setup documented in `guides/deploy.md`
 - [x] `reference/security.md` public page (HTML sanitization, command-injection resistance, URL allowlist)
 - [x] `guides/development.md` (init → dev → check → build workflow)
 - [x] RSS auto-emit
@@ -560,7 +560,7 @@ deploy design in [`DEPLOY.md`](./DEPLOY.md).
 > with 15 pages and zero warnings. Deploy workflow committed.
 >
 > Phase 4.6 v1 (2026-05-17): live at <https://ovellum.oss.oinam.com> via
-> GH Pages + Cloudflare DNS (grey cloud, Let's Encrypt cert from GH).
+> GH Pages + Cloudflare DNS (gray cloud, Let's Encrypt cert from GH).
 > 16 published pages. `ovellum check` on the rebuilt site reports 0 broken
 > links, 0 unsafe schemes.
 
@@ -626,7 +626,7 @@ deploy design in [`DEPLOY.md`](./DEPLOY.md).
 - [ ] Add `--strict` global flag
 - [x] `--config` + `--cwd` available on `build`, `check`, `watch`, `dev`, `serve`
 - [ ] Add `--verbose` global flag (debug output)
-- [ ] Write unit tests for citty argument parsing (smoke tests cover the end-to-end behaviour)
+- [ ] Write unit tests for citty argument parsing (smoke tests cover the end-to-end behavior)
 
 > Phase 6 v0 (2026-05-13): only `ovellum build` was wired.
 >
@@ -691,7 +691,7 @@ announcements are in [`TODO-Human.md`](./TODO-Human.md).
 - [ ] **`site.minify` — minify USER-supplied assets at `ovellum build` (default on).** Today (2026-06-06) only the *default theme's* `style.css` / `script.js` ship minified — done at our package-build via `scripts/build-templates.mjs` (esbuild, dev-only), so no minifier ships to users and `ovellum build` stays a plain copy. That covers the common case (most users never touch the theme code; source is on GitHub for those who do). **Gap:** user-supplied assets aren't minified — forked templates, `.css`/`.js` dropped in `content/**` (passthrough), `site.headExtra` HTML, and the generated HTML pages. A future `site.minify` (default `true`) would minify the emitted CSS/JS (and optionally HTML) during the build. Implementation note: lazy-`import('esbuild')` so the lean-install promise survives — minify if esbuild is present, else copy verbatim with a one-line warning; or gate the esbuild dep behind the flag. Seam: `writeStaticAssets()` + the `content/**` passthrough branch in `build.ts`.
 - [ ] **More customizable Home / Landing page.** Today the landing is config-driven but **fixed-shape**: `site.landing` renders hero → install snippets → feature grid → `_landing.md` pitch → trust strip in a hard-coded order, with scenes interleaved between them (see `renderLanding()` in `packages/site/src/template.ts`). Most people building a custom landing will want control over *where things go* — reorder/omit sections, repeat a section, add custom/free-form sections, choose per-section layout (e.g. feature grid columns, hero alignment, full-bleed vs contained), and drop in arbitrary markdown/HTML blocks. Likely direction: a `site.landing.sections: [...]` array (ordered, typed blocks: `hero` | `features` | `install` | `prose` | `trust` | `custom-html` | `scene` | …) that replaces the implicit order, with the current flat config kept as a shorthand/back-compat. Open questions: how composable to make it before it becomes a page-builder (scope creep), how it interacts with the planned plugin/template-override API, and whether `_landing.md` grows section markers vs staying a single pitch body. **Not scheduled** — flagged because the current fixed order is the first thing a custom-landing author hits.
 - [ ] **i18n / multi-language docs (human languages — distinct from the source-language parsing below).** Make a site easy to author and ship in multiple languages, and localize the theme chrome. Two layers: **(1) Content i18n** — a per-locale content convention (`content/<locale>/…` vs a frontmatter `lang:`), locale-aware nav + routing, a language switcher in the topbar, `hreflang`/`<link rel="alternate">` between locale variants, per-locale `sitemap.xml` + RSS, and a fallback policy for untranslated pages. Pagefind already does **multilingual indexing** (it shards the index by the page's `lang`), so search mostly comes for free once pages carry the right `lang`. **(2) Chrome i18n** — the theme's UI strings are currently hard-coded English in `template.ts` ("On this page", "Previous"/"Next", "Edit this page", "N min read", "Updated", breadcrumb/aria labels, the default 404, etc.); extract them into a translatable strings table (per-locale, overridable). Plus `renderShell` hard-codes `lang="en"` — drive `<html lang>` (and `dir="rtl"` for Arabic/Hebrew) per locale. Likely config shape: `site.locales` + `site.defaultLocale`. Open questions: content layout convention, default-locale URL handling (`/` vs `/en/`), translation fallback, and scope (full i18n is large — could land content-i18n and chrome-i18n in separate passes). Seams: `renderShell` (`lang`/`dir`), the inline UI strings in `template.ts`, `nav.ts` (single-tree today), and the sitemap/RSS generators.
-- [ ] **Back-to-top: JS-driven custom easing (optional polish).** Shipped 2026-06-07 as a pure-CSS solution: the button floats while scrolling and parks above the footer via a zero-height `position: sticky` anchor (`.ov-to-top-anchor` in the default theme), and the scroll-to-top uses `html { scroll-behavior: smooth }` gated by `@media (prefers-reduced-motion: reduce)` — the JS click handler is just `scrollTo({ top: 0 })`. **Gap:** `scroll-behavior` exposes no easing control, so the curve is the browser default (and on very long pages the smooth scroll can feel fast). A future enhancement could swap in a tiny (~15-line, no-framework) `requestAnimationFrame` loop with a real ease-out curve and a duration clamp, still honouring `prefers-reduced-motion` (instant jump) — opt-in so the CSS path stays the lean default. Seam: the `backToTop()` IIFE in `packages/site/src/templates/default/script.js`.
+- [ ] **Back-to-top: JS-driven custom easing (optional polish).** Shipped 2026-06-07 as a pure-CSS solution: the button floats while scrolling and parks above the footer via a zero-height `position: sticky` anchor (`.ov-to-top-anchor` in the default theme), and the scroll-to-top uses `html { scroll-behavior: smooth }` gated by `@media (prefers-reduced-motion: reduce)` — the JS click handler is just `scrollTo({ top: 0 })`. **Gap:** `scroll-behavior` exposes no easing control, so the curve is the browser default (and on very long pages the smooth scroll can feel fast). A future enhancement could swap in a tiny (~15-line, no-framework) `requestAnimationFrame` loop with a real ease-out curve and a duration clamp, still honoring `prefers-reduced-motion` (instant jump) — opt-in so the CSS path stays the lean default. Seam: the `backToTop()` IIFE in `packages/site/src/templates/default/script.js`.
 - [ ] Plugin API for custom IR transforms and output formats
 - [ ] Static site renderer (the hosting platform)
 - [ ] Python language support

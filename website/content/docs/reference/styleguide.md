@@ -1,6 +1,6 @@
 ---
 title: Styleguide
-description: The typography, scale, rhythm, colour, and content elements Ovellum renders — what every Markdown page looks like, and how the system is built.
+description: The typography, scale, rhythm, color, and content elements Ovellum renders — what every Markdown page looks like, and how the system is built.
 tags: [styleguide, typography, design, theme]
 ---
 
@@ -8,11 +8,11 @@ tags: [styleguide, typography, design, theme]
 
 This page is both the **reference and the proof** — every element below is real
 Markdown rendered by Ovellum's default template, so what you see is exactly what
-your own pages get. It documents the type scale, the vertical rhythm, the colour
+your own pages get. It documents the type scale, the vertical rhythm, the color
 system, and each content element you can write.
 
 Try the **appearance control** in the top bar while you read: switch mode
-(auto / light / dark), pick a theme, set a colour, bump the **text size**, or
+(auto / light / dark), pick a theme, set a color, bump the **text size**, or
 change the **font** (Default / Serif / Inter / Geist). Everything on this page
 re-tints and re-flows live, because it's all driven by the same design tokens.
 
@@ -22,7 +22,7 @@ Text and headings use the **system sans-serif** stack by default — instant fir
 paint, no webfont hop. Readers can switch to **Serif**, **Inter**, or **Geist**
 from the appearance control's **Font** picker (Inter and Geist ship with the
 template and load only when chosen), and step the **Text size** up or down. The
-typeface and size are the *reader's* choice; the scale, rhythm, and colour below
+typeface and size are the *reader's* choice; the scale, rhythm, and color below
 are Ovellum's shipped defaults and apply to any template.
 
 Body text runs at a **`1.55` line-height** inside a **`76ch` measure** — the
@@ -80,7 +80,7 @@ A paragraph sets the baseline. This sentence shows **bold for emphasis**,
 *italic for stress*, and `inline code` for identifiers — code gets a faint tint
 and a monospace face so a symbol like `OvellumUserConfig` never gets mistaken
 for prose. Links such as [the configuration reference](/docs/reference/config/)
-carry an accent colour and a thin underline offset from the baseline; they
+carry an accent color and a thin underline offset from the baseline; they
 [change tint on hover](/docs/reference/config/). You can also strike text with
 ~~strikethrough~~ for retractions.
 
@@ -109,7 +109,7 @@ GitHub-style alert blockquotes become tinted callout panels:
 
 ## Lists
 
-Unordered lists use a quiet marker in a subdued colour, and nest with reduced
+Unordered lists use a quiet marker in a subdued color, and nest with reduced
 spacing so depth reads as hierarchy:
 
 - A first item, kept to a line or two.
@@ -128,13 +128,13 @@ Ordered lists carry the same rhythm:
 Task lists render their checkboxes:
 
 - [x] Typography scale
-- [x] Colour system
+- [x] Color system
 - [ ] Your next page
 
 ## Code
 
 Inline code reads as `const x = 1`. Fenced blocks are highlighted by Shiki using
-a dual light/dark theme emitted through CSS variables — so the colours flip with
+a dual light/dark theme emitted through CSS variables — so the colors flip with
 the appearance mode at zero runtime cost — with a language eyebrow and a copy
 button:
 
@@ -221,18 +221,18 @@ A thematic break sets a quiet divider between passages:
 That rule, like everything above, is the default template doing its job — no
 custom CSS on this page.
 
-## Colour system
+## Color system
 
 Five palettes ship, each authored in **OKLCH** (perceptually uniform, so a ramp
 steps in even visual increments rather than the uneven jumps sRGB hex gives):
 
-- **Ovellum** — neutral greys, the default.
-- **Nord** — cool, frosty blue-greys.
+- **Ovellum** — neutral grays, the default.
+- **Nord** — cool, frosty blue-grays.
 - **Flexoki** — warm, inky paper.
 - **Solarized** — Ethan Schoonover's measured base tones.
 - **E-ink** — high-contrast warm paper and ink, monochrome.
 
-Each palette is one grey ramp plus an accent; **dark mode reuses the same ramp
+Each palette is one gray ramp plus an accent; **dark mode reuses the same ramp
 with reversed indices**, so there's no second set of values to maintain. The
 appearance control's **Color** picker overrides just the accent, live. All of it
 flows through semantic tokens (surface, border, foreground, link), which is why

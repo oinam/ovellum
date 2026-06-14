@@ -7,7 +7,7 @@ description: How the default theme is structured, where to override, and what th
 
 The default site template ships with a small, opinionated design system:
 OKLCH palette, fluid Utopia type and space scales, system fonts,
-auto/light/dark themes, an icon set, and a centred hero with subtle
+auto/light/dark themes, an icon set, and a centered hero with subtle
 background imagery. Out of the box, you get something that looks
 finished without writing a single line of CSS.
 
@@ -16,32 +16,32 @@ parts you'll most often want to.
 
 ## Token model
 
-Every colour is a CSS custom property at one of three layers, each built on the
+Every color is a CSS custom property at one of three layers, each built on the
 one above:
 
 - **Primitives — one neutral ramp.** `--color-gray-50` through
   `--color-gray-950`, plus `--color-white` / `--color-black`. This is the *only*
-  place raw colour values live. The default theme uses a pure-neutral grey ramp;
-  change these eleven values and every surface and text colour follows — no
+  place raw color values live. The default theme uses a pure-neutral gray ramp;
+  change these eleven values and every surface and text color follows — no
   other file to touch.
 - **Roles — the "brand".** `--color-primary`, `--color-secondary`,
   `--color-accent`, each with a `-fg` (text on it) and `-hover` variant. The
-  default maps them to greys; point a role at a colour ramp (say a red) and
-  every button, link, and focus ring re-skins. Non-grey roles can differ
+  default maps them to grays; point a role at a color ramp (say a red) and
+  every button, link, and focus ring re-skins. Non-gray roles can differ
   between light and dark.
 - **Semantic — surfaces + text.** `--color-bg`, `--color-surface`,
   `--color-fg`, `--color-border`, the callout tokens, etc., mapped onto the
   ramp. Components reference roles and semantics — never the ramp directly.
 
 Dark mode is the **same ramp remapped to reversed steps**: no separate dark
-colour *values*, just a small block pointing the roles and surfaces at the
-opposite end of the grey ramp (`--color-bg` → a dark grey, `--color-fg` → a
-light grey; elevation inverts, so "lifted" surfaces get *lighter*). Change the
+color *values*, just a small block pointing the roles and surfaces at the
+opposite end of the gray ramp (`--color-bg` → a dark gray, `--color-fg` → a
+light gray; elevation inverts, so "lifted" surfaces get *lighter*). Change the
 ramp once and both themes update together.
 
 The token *architecture* (names, layering, scales) lives in the project's
 [`docs/internal/STYLES.md`](https://github.com/oinam/ovellum/blob/main/docs/internal/STYLES.md);
-the per-theme colour *values* live in the theme's stylesheet
+the per-theme color *values* live in the theme's stylesheet
 ([`templates/default/style.css`](https://github.com/oinam/ovellum/blob/main/packages/site/src/templates/default/style.css)).
 
 ## Available themes
@@ -52,14 +52,14 @@ default; the rest are listed alphabetically, as in the picker:
 
 | Theme         | Notes                                                                      |
 | ------------- | --------------------------------------------------------------------------- |
-| **Ovellum**   | Monochrome, pure-neutral grey ramp (`palette: 'default'`). The theme this site uses. |
-| **E-ink**     | Warm paper + ink black, max-contrast monochrome — like an e-reader. No coloured accent; pairs especially well with `site.font: 'serif'`. |
+| **Ovellum**   | Monochrome, pure-neutral gray ramp (`palette: 'default'`). The theme this site uses. |
+| **E-ink**     | Warm paper + ink black, max-contrast monochrome — like an e-reader. No colored accent; pairs especially well with `site.font: 'serif'`. |
 | **Flexoki**   | Warm inky paper tones, after [Flexoki](https://stephango.com/flexoki).      |
-| **Nord**      | Arctic blue-greys — Snow Storm lights, Polar Night darks, Frost accent.     |
+| **Nord**      | Arctic blue-grays — Snow Storm lights, Polar Night darks, Frost accent.     |
 | **Solarized** | Ethan Schoonover's base tones; cream light, deep-teal dark.                 |
 
 Each palette is implemented exactly the way the token model above promises: it
-re-skins the same eleven-step grey ramp the roles point at, so the dark variant
+re-skins the same eleven-step gray ramp the roles point at, so the dark variant
 comes free from the reversed-ramp remap. Set the server-rendered default with
 [`site.palette`](/docs/reference/config/); visitors switch at runtime from the
 topbar appearance control (persisted in `localStorage`, applied before paint).
@@ -106,8 +106,8 @@ it avoids the third-party connection and the privacy/GDPR concern of sending
 visitor IPs to a font CDN, and the old "shared browser cache" argument no longer
 holds (browsers partition their cache per-site).
 
-> **Check the licence first.** Self-hosting means *you* serve the font file, so
-> only use one whose licence permits web embedding. Open-font-licensed (OFL)
+> **Check the license first.** Self-hosting means *you* serve the font file, so
+> only use one whose license permits web embedding. Open-font-licensed (OFL)
 > families — like the bundled Inter and Geist — are always safe. Some "free"
 > fonts are free to embed on your own site but **may not be redistributed**;
 > those are fine to self-host yourself, the responsibility is just yours.
@@ -161,9 +161,9 @@ five controls (inlined into the menu sheet on mobile):
   or `dark`, written to `<html data-theme>`.
 - **Theme** — one of the five bundled palettes (each with its own line
   glyph), written to `<html data-palette>`.
-- **Color** — the primary colour that drives the **CTA buttons** as well as
+- **Color** — the primary color that drives the **CTA buttons** as well as
   links, focus rings, and the "On this page" indicator; hover states are
-  mixed from it automatically. Six presets, a native custom-colour picker,
+  mixed from it automatically. Six presets, a native custom-color picker,
   and a leading **Default** swatch that returns to the theme's own primary
   (the dark charcoal in Ovellum).
 - **Text size** — a five-step "A" ramp that scales the reading type, written
@@ -172,7 +172,7 @@ five controls (inlined into the menu sheet on mobile):
   `<html data-font>`; Inter and Geist load on demand (see [Fonts](#fonts) above).
 
 Every choice is saved in `localStorage` and applied before paint, so
-revisits never flash the wrong colours, and a visitor's selections follow
+revisits never flash the wrong colors, and a visitor's selections follow
 them across pages and sessions.
 
 Set the first-visit defaults in config:
@@ -187,7 +187,7 @@ Set the first-visit defaults in config:
 }
 ```
 
-`accent` takes any CSS colour value and drives the primary + accent roles
+`accent` takes any CSS color value and drives the primary + accent roles
 until the visitor picks their own. Unset, each theme uses its own primary
 (Ovellum's is the monochrome charcoal).
 
@@ -198,7 +198,7 @@ right-aligned nav, and a controls cluster (search slot + appearance
 control + mobile menu button).
 
 The brand is the **site title** by default. Add an optional mark before it
-with [`site.logo`](/docs/reference/config/) (a path to a single-colour
+with [`site.logo`](/docs/reference/config/) (a path to a single-color
 SVG/PNG — it renders as a theme-flipping monochrome silhouette); leave it
 unset and the title stands alone. The favicon defaults to a root
 `/favicon.ico`, overridable with `site.favicon`.
@@ -225,7 +225,7 @@ anchored under the topbar — no extra config required.
 ## Hero
 
 The landing-page hero (when `site.landing.enabled` is `true`) is
-centred and gets two stacked background layers, applied via
+centered and gets two stacked background layers, applied via
 pseudo-elements so no images ship with the site:
 
 - A 24 px dotted SVG pattern (theme-aware fill, masked to fade at the
@@ -255,7 +255,7 @@ Lucide away, so each icon adds roughly 100 bytes to the bundle.
 > you need more brand logos, [simple-icons](https://simpleicons.org/)
 > is the standard companion.
 
-## Customising the default theme
+## Customizing the default theme
 
 Today, the simplest override is a follow-up stylesheet. Drop a CSS file
 in `content/` (it passes through as a static asset), then reference it
@@ -263,7 +263,7 @@ from your pages or — better — extend the template later via a plugin
 system (planned, not built yet).
 
 Re-skin a **role** — links and accents follow it everywhere (light + dark
-differ because this is a non-grey colour):
+differ because this is a non-gray color):
 
 ```css
 :root {
@@ -279,8 +279,8 @@ differ because this is a non-grey colour):
 }
 ```
 
-Or re-tone the whole UI by overriding the **grey ramp** — every surface, text,
-and (grey) role shifts at once, no per-component edits:
+Or re-tone the whole UI by overriding the **gray ramp** — every surface, text,
+and (gray) role shifts at once, no per-component edits:
 
 ```css
 :root {
@@ -295,7 +295,7 @@ Save as `content/css/override.css` and reference it from each page's
 frontmatter via a future `extraStyles` field (planned).
 
 > The override pattern is still being formalised — for now, expect to
-> fork the default template if you want anything more than colour
+> fork the default template if you want anything more than color
 > tweaks. Plugin / template-override APIs are on the roadmap.
 
 ## Theming the landing page
@@ -310,7 +310,7 @@ the accent re-skins the hero atmosphere for free.
 
 Code blocks are rendered with [shiki](https://shiki.style/) at build
 time. Each theme is a `{ light, dark }` pair emitted through CSS
-variables — the same HTML serves both colour schemes; switching
+variables — the same HTML serves both color schemes; switching
 `[data-theme]` on `<html>` swaps the palette with zero runtime cost.
 
 Pick one via `site.codeTheme`:
@@ -338,7 +338,7 @@ Pick one via `site.codeTheme`:
 - Pre-paint theme script (no flash).
 - Lucide-backed icon registry with a `renderIcon(name)` helper.
 - Right-aligned topbar nav with mobile sheet (hamburger below 720 px).
-- Centred hero with dotted-noise + accent spotlight background.
+- Centered hero with dotted-noise + accent spotlight background.
 - Breadcrumbs above the article on nested pages.
 - Per-page meta line (reading time + last-modified) above the article.
 - Print stylesheet that strips chrome and widens the article.
@@ -348,18 +348,18 @@ Pick one via `site.codeTheme`:
 **Roadmap:**
 
 - A `site.theme` config to switch the **page** theme by name (Nord, Dracula,
-  …). Each theme ships its own grey ramp + role values plus a reversed-ramp
+  …). Each theme ships its own gray ramp + role values plus a reversed-ramp
   dark block, per the [token model](#token-model). Today only the default
   page theme ships; `site.codeTheme` already switches the syntax palette.
 - A plugin API for fully custom templates.
 - Per-page `extraStyles` for one-off page-specific CSS.
 
-Until those land, the recommended path for serious customisation is:
+Until those land, the recommended path for serious customization is:
 
 1. Fork the [`templates/default/`](https://github.com/oinam/ovellum/tree/main/packages/site/src/templates/default)
    directory.
 2. Run your own `ovellum.config.ts` that points at your fork.
 3. Re-rebase when Ovellum updates its template.
 
-This is a deliberate constraint for v1 — once the customisation surface
+This is a deliberate constraint for v1 — once the customization surface
 is stable, an API is easier to commit to.

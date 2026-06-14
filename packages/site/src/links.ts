@@ -18,7 +18,7 @@ export interface MarkdownLink {
  * approach this replaces would match them too).
  *
  * Returned URLs are exactly what the author wrote — no resolution, no
- * normalisation. Caller decides what's internal vs external.
+ * normalization. Caller decides what's internal vs external.
  */
 export function extractMarkdownLinks(content: string): MarkdownLink[] {
   const tree = unified().use(remarkParse).parse(content) as Root;

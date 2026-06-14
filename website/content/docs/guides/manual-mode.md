@@ -156,7 +156,7 @@ Four ways to keep content out of the published site, from broad to narrow:
   ```
 
 All four drop the content from the sidebar **and** the build, and both
-`build` and `check` honour them (so `check` never lints excluded files).
+`build` and `check` honor them (so `check` never lints excluded files).
 Asset-only folders with no Markdown are kept out of the sidebar automatically,
 while their files still pass through to `dist/`. The reserved
 [`public/`](#static-assets) folder is special — it's copied to the output root
@@ -169,7 +169,7 @@ into the build. Use `ignoreFiles` for anything else (like a repo `README.md`).
 
 ## Callouts
 
-Five labelled callout types — `[!NOTE]`, `[!TIP]`, `[!IMPORTANT]`,
+Five labeled callout types — `[!NOTE]`, `[!TIP]`, `[!IMPORTANT]`,
 `[!WARNING]`, `[!CAUTION]` — render by writing GitHub-flavored alert
 blockquotes:
 
@@ -190,7 +190,7 @@ blockquotes:
 > Footgun. Action causes severe damage. Data loss, broken state, etc.
 ```
 
-Each renders as a panel with a coloured left rule, a small uppercase
+Each renders as a panel with a colored left rule, a small uppercase
 label, and the body content. Mix any inline Markdown inside —
 links, code spans, even nested lists.
 
@@ -321,7 +321,7 @@ Full landing reference: [config → site.landing](/docs/reference/config/#sitela
 
 **Every build ships a 404 page** — you don't have to write one. If you
 don't, Ovellum generates a default "Page not found" that matches your
-theme (with a link home). To customise it, add a `content/404.md` file —
+theme (with a link home). To customize it, add a `content/404.md` file —
 an ordinary Markdown page, write whatever you like (a short apology, a
 link back home, a search prompt):
 
@@ -337,12 +337,12 @@ That page doesn't exist. Head back to the [documentation](/).
 
 It's treated as a **special page**, not a normal doc:
 
-- It renders on a centred, narrower column with a larger heading, and the
+- It renders on a centered, narrower column with a larger heading, and the
   sidebar, on-this-page ToC, breadcrumbs, prev/next, and edit-this-page
   links are all hidden — it's a dead end, so it drops the navigation
   chrome.
 - It's kept out of the **reading flow**: it never appears in the sidebar,
-  the `sitemap.xml`, the RSS feed, or as a prev/next neighbour (so the
+  the `sitemap.xml`, the RSS feed, or as a prev/next neighbor (so the
   first real page's "Previous" is empty, not the 404).
 
 The build emits it as **both** `dist/404/index.html` (the pretty URL) and a
@@ -382,4 +382,4 @@ matter:
   `<aside>` with `aria-label`s), and proper heading levels.
 
 Everything is generated; nothing here is configurable for now. The
-[theming guide](/docs/guides/themes/) covers what's customisable today.
+[theming guide](/docs/guides/themes/) covers what's customizable today.

@@ -1,5 +1,5 @@
 /**
- * Normalise a `site.basePath` config value. Returns the empty string for
+ * Normalize a `site.basePath` config value. Returns the empty string for
  * root-hosted sites, otherwise a string that starts with `/` and has no
  * trailing slash (`/ovellum`, `/docs`, `/foo/bar`).
  *

@@ -164,7 +164,7 @@ export function validateUserConfig(input: unknown): OvellumUserConfig {
       throw new ConfigError(`\`site.palette\` must be one of: ${PALETTES.join(', ')}.`);
     }
     if (s.accent !== undefined && (typeof s.accent !== 'string' || s.accent.trim() === '')) {
-      throw new ConfigError('`site.accent` must be a non-empty CSS colour string.');
+      throw new ConfigError('`site.accent` must be a non-empty CSS color string.');
     }
     if (s.font !== undefined && !FONTS.includes(s.font as (typeof FONTS)[number])) {
       throw new ConfigError(`\`site.font\` must be one of: ${FONTS.join(', ')}.`);

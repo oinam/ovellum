@@ -121,7 +121,7 @@ Allowed attributes are presentational/playback only — `controls`, `width`,
 `height`, `poster`, `preload`, `loop`, `muted`, `autoplay`, `playsinline`, plus
 `<source>`/`<track>`. `src`/`poster` URLs are scheme-checked (`http(s)` or
 relative), and event handlers (`onerror`, …) are stripped, so an embed can't
-carry script. Prefer a small, web-optimised `.mp4`/`.webm`/`.mp3`.
+carry script. Prefer a small, web-optimized `.mp4`/`.webm`/`.mp3`.
 
 ### YouTube and Vimeo
 

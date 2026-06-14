@@ -14,9 +14,9 @@
 
 :root {
   /* ── Tier 0: primitives ────────────────────────────────────────────────
-     The only place raw colour values live. Re-skin every neutral surface and
+     The only place raw color values live. Re-skin every neutral surface and
      text role by editing these grays in one place; nothing else hard-codes a
-     colour. Default theme = Tailwind "neutral" (pure grey, chroma 0). A future
+     color. Default theme = Tailwind "neutral" (pure gray, chroma 0). A future
      theme (nord, dracula, …) ships its own ramp + role values right here. */
   --color-white: oklch(100% 0 0);
   --color-black: oklch(0% 0 0);
@@ -69,7 +69,7 @@
      below (a modular scale with a single ratio, rather than baked-in per-step
      clamps). The base (step 0) stays a fluid clamp, so the scale still grows
      gently with the viewport. Default theme: --major-third (1.25), calm and
-     docs-friendly. (A coloured/marketing theme could pick a punchier ratio.) */
+     docs-friendly. (A colored/marketing theme could pick a punchier ratio.) */
   --double-octave: 4;
   --pi: 3.14159265359;
   --major-twelfth: 3;
@@ -108,11 +108,11 @@
   --font-size-4: calc(var(--font-size-3) * var(--ratio));
   --font-size-5: calc(var(--font-size-4) * var(--ratio));
 
-  /* ── Tier 1: role colours (the "brand") ────────────────────────────────
+  /* ── Tier 1: role colors (the "brand") ────────────────────────────────
      Components reference these, never the ramp directly. The default theme
-     maps them to greys; point a role at a colour ramp (e.g. a red) and every
+     maps them to grays; point a role at a color ramp (e.g. a red) and every
      button / link / focus ring follows. Dark mode remaps them to reversed ramp
-     steps below — no separate colour values, just different steps. */
+     steps below — no separate color values, just different steps. */
   --color-primary: var(--color-gray-900);
   --color-primary-fg: var(--color-gray-50);
   --color-primary-hover: var(--color-gray-800);
@@ -124,7 +124,7 @@
   --color-accent-hover: var(--color-gray-700);
 
   /* ── Tier 2: semantic surfaces + text (mapped to the ramp) ──────────────
-     Body + chrome are pure-neutral greys; a future blended background image
+     Body + chrome are pure-neutral grays; a future blended background image
      may replace the body surface. */
   --color-bg: var(--color-gray-100);
   --color-surface: var(--color-white); /* cards lift off the body */
@@ -150,7 +150,7 @@
      to both themes. */
   --color-inline-code-bg: color-mix(in oklch, var(--color-fg) 8%, transparent);
 
-  /* Callouts are monochrome (only code syntax stays colourful) — a foreground
+  /* Callouts are monochrome (only code syntax stays colorful) — a foreground
      rule + label on a subtle tint; each type keeps its uppercase label for
      meaning. fg-derived, so they auto-adapt across themes. */
   --callout-note-fg: var(--color-fg);
@@ -213,9 +213,9 @@ body.ov-body-landing {
 }
 
 /* ── Palettes ─────────────────────────────────────────────────────────────
-   Named page-wide colour themes: `<html data-palette="…">`, chosen from the
+   Named page-wide color themes: `<html data-palette="…">`, chosen from the
    topbar appearance control (persisted in localStorage; `site.palette` sets
-   the server-rendered default). Each palette re-skins the SAME grey ramp the
+   the server-rendered default). Each palette re-skins the SAME gray ramp the
    role tokens point at, so the light AND dark variants come free — light
    mode reads the low steps, dark mode the reversed high steps via the
    generic dark blocks below. Canonical palette hexes are used directly;
@@ -289,7 +289,7 @@ body.ov-body-landing {
 /* E-ink — warm paper + ink black, max-contrast and monochrome (like an
    e-reader). A faint warm tint separates it from the neutral Default; the
    ramp is pulled toward the extremes for the crisp paper/ink legibility
-   e-ink is known for. No coloured accent — links/focus are ink, so the only
+   e-ink is known for. No colored accent — links/focus are ink, so the only
    thing that reads on the page is the text itself. Like Default, it carries
    no per-palette dark accent: the generic dark block flips ink↔paper for a
    proper dark-reader variant. Pairs especially well with `site.font: serif`. */
@@ -312,7 +312,7 @@ body.ov-body-landing {
 }
 
 /* Dark theme — auto + explicit */
-/* Dark = the SAME ramp, remapped to reversed steps. No new colour values —
+/* Dark = the SAME ramp, remapped to reversed steps. No new color values —
    only different gray indices — so editing the ramp re-skins both themes.
    (Elevation inverts: "lifted" surfaces are LIGHTER in dark.) border / link /
    focus-ring / callouts are fg-derived or fixed mid-grays and auto-adapt, so
@@ -363,7 +363,7 @@ body.ov-body-landing {
 }
 
 /* Palette dark accents — the generic dark blocks above reset the accent to
-   the mono ramp, so each coloured palette restates its dark-variant accent
+   the mono ramp, so each colored palette restates its dark-variant accent
    at higher specificity (0,3,0). Same pair of blocks per palette: explicit
    dark + auto-under-OS-dark. */
 :root[data-palette='nord'][data-theme='dark'] {
@@ -399,14 +399,14 @@ body.ov-body-landing {
   }
 }
 
-/* User colour override — `--ov-accent` is set inline on <html> (by the boot
+/* User color override — `--ov-accent` is set inline on <html> (by the boot
    script / appearance control / `site.accent`) together with `data-accent`.
    The repeated attribute selector is a deliberate specificity bump to
    (0,4,0) so one block beats every palette+mode combination above. It drives
    BOTH the accent role (links, focus, ToC strip) AND the primary role (CTA
-   buttons) so a chosen colour shows up everywhere it should. Hover is mixed
+   buttons) so a chosen color shows up everywhere it should. Hover is mixed
    toward the foreground, so it darkens in light mode and lightens in dark
-   automatically; the presets are mid-tone, so the near-white on-colour text
+   automatically; the presets are mid-tone, so the near-white on-color text
    holds its contrast. */
 :root[data-accent][data-accent][data-accent] {
   --color-accent: var(--ov-accent);
@@ -443,7 +443,7 @@ html {
      stop, no JS easing library. Disabled below for reduced-motion. */
   scroll-behavior: smooth;
 }
-/* Honour the OS "Reduce motion" setting: scroll instantly, no animation. */
+/* Honor the OS "Reduce motion" setting: scroll instantly, no animation. */
 @media (prefers-reduced-motion: reduce) {
   html {
     scroll-behavior: auto;
@@ -582,7 +582,7 @@ a:hover {
 }
 /* Optional brand mark (site.logo). Drawn as a currentColor silhouette via a
    CSS mask — the logo image supplies the shape (mask-image set inline per
-   site), the foreground colour fills it, so it flips with light/dark like the
+   site), the foreground color fills it, so it flips with light/dark like the
    rest of the monochrome chrome. No logo configured → this element isn't
    emitted and the title stands alone. */
 .ov-brand-mark {
@@ -642,7 +642,7 @@ a:hover {
   background: var(--color-bg-subtle);
 }
 /* Icon links (GitHub, npm) and the theme toggle: plain clickable icons — no
-   border, no fill — sitting close together. Hover just deepens the colour. */
+   border, no fill — sitting close together. Hover just deepens the color. */
 .ov-topbar-link--icon,
 .ov-theme-toggle {
   display: inline-flex;
@@ -695,7 +695,7 @@ a:hover {
    a header. We:
    1. Pin the input compactly inside the topbar.
    2. Float the drawer absolutely under it, with shadow/scroll, like a
-      popover. Standard Mintlify-style behaviour.
+      popover. Standard Mintlify-style behavior.
    3. Decorate the input with a small `kbd` hint (added by script.js).
 */
 .ov-search {
@@ -949,7 +949,7 @@ a:hover {
   color: var(--color-fg);
 }
 /* Color — swatch row; the leading "Default" swatch clears the override (back
-   to the theme's own primary), the trailing native colour input picks any. */
+   to the theme's own primary), the trailing native color input picks any. */
 .ov-appearance-accents {
   display: flex;
   align-items: center;
@@ -970,15 +970,15 @@ a:hover {
     0 0 0 2px var(--color-surface),
     0 0 0 3.5px var(--color-fg-subtle);
 }
-/* "Default" — the first swatch shows the theme's own primary colour (the dark
+/* "Default" — the first swatch shows the theme's own primary color (the dark
    charcoal in the Ovellum light theme) and clears the override when picked.
    Filled with --color-fg, which tracks the default primary in both modes and
    is NOT touched by the override block above, so it always shows the true
-   default even while a custom colour is active. */
+   default even while a custom color is active. */
 .ov-appearance-accent--default {
   background: var(--color-fg);
 }
-/* Custom — the native colour input is the swatch itself. */
+/* Custom — the native color input is the swatch itself. */
 .ov-appearance-accent--custom {
   flex: none;
   line-height: 0;
@@ -1501,7 +1501,7 @@ a.ov-nav-group--link.is-active::before {
 }
 
 /* Callouts (GitHub alert syntax: > [!NOTE] / [!TIP] / [!IMPORTANT] /
-   [!WARNING] / [!CAUTION]). Rendered as a labelled panel with a 3px
+   [!WARNING] / [!CAUTION]). Rendered as a labeled panel with a 3px
    left rule in the type color, a faint type-color background, and an
    uppercase eyebrow label. Editorial-calm: thin rule, restrained tint,
    no icon — the label carries the meaning. */
@@ -1720,9 +1720,9 @@ a.ov-nav-group--link.is-active::before {
 }
 .ov-prose pre.shiki {
   /* Background comes from our token (one step off the content card), NOT the
-     shiki theme's bg — only the syntax token colours come from shiki. Since
+     shiki theme's bg — only the syntax token colors come from shiki. Since
      --color-code-bg already flips per theme, the dark blocks below override
-     token colours only, not the background. */
+     token colors only, not the background. */
   background: var(--color-code-bg);
   color: var(--shiki-light);
 }
@@ -2228,7 +2228,7 @@ a.ov-nav-group--link.is-active::before {
 /* 404                                                                     */
 /* ====================================================================== */
 
-/* On the not-found page, drop the sidebar and ToC, centre the article. */
+/* On the not-found page, drop the sidebar and ToC, center the article. */
 body.ov-body-404 .ov-layout {
   grid-template-columns: minmax(0, 1fr);
   max-inline-size: 60ch;
@@ -2246,7 +2246,7 @@ body.ov-body-404 .ov-prose h1 {
   font-size: var(--font-size-4);
   letter-spacing: -0.03em;
 }
-/* The 404 is a centred, minimal page — drop the card chrome so the message
+/* The 404 is a centered, minimal page — drop the card chrome so the message
    floats on the body rather than sitting in a box. */
 body.ov-body-404 .ov-content-card {
   max-inline-size: none;
@@ -2422,7 +2422,7 @@ body.ov-body-landing {
 
 /* Hero
    ===
-   Centred prose (title / subtitle / CTAs) on a flat background. The earlier
+   Centered prose (title / subtitle / CTAs) on a flat background. The earlier
    dotted-noise + accent-spotlight pseudo-layers were removed — a blended
    background image is planned to take this surface later. The vertical
    padding alone gives the hero its presence and the breathing room between

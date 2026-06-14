@@ -54,7 +54,7 @@ export const upgradeCommand = defineCommand({
         go = await confirm({ message: `Run \`${command}\`?`, default: true });
       } catch (err) {
         if (err instanceof Error && err.name === 'ExitPromptError') {
-          process.stderr.write('Cancelled.\n');
+          process.stderr.write('Canceled.\n');
           process.exit(130);
         }
         throw err;

@@ -4,12 +4,12 @@ Design tokens and rendering conventions for any UI surface Ovellum produces or s
 
 This document is the source of truth for the token **architecture** (naming,
 layering, conventions) and the **theme-agnostic scales** — type, spacing,
-rhythm, radii. It is **not** where per-theme colour values live: as of
-2026-06-06 each theme owns its colour ramp + role values in its own stylesheet
+rhythm, radii. It is **not** where per-theme color values live: as of
+2026-06-06 each theme owns its color ramp + role values in its own stylesheet
 (the default theme is `packages/site/src/templates/default/style.css`), and the
 list of available themes is documented for users in the
 [Theming guide](https://ovellum.oss.oinam.com/docs/guides/themes/). We don't
-enumerate every future theme's greys here.
+enumerate every future theme's grays here.
 
 ---
 
@@ -26,7 +26,7 @@ document by `scripts/extract-style-tokens.mjs`.
   if you want a hard gate.
 
 Scope (since 2026-06-06): only **font stacks, the space scale, and radii** are
-synced. **Colours are no longer synced** — the grey ramp, role colours, and
+synced. **Colors are no longer synced** — the gray ramp, role colors, and
 semantic mappings live and are hand-edited in the theme's stylesheet (outside
 the markers), so a theme can own its palette without round-tripping through this
 file. **The type scale is no longer synced either** — it's a single-ratio
@@ -48,14 +48,14 @@ modular scale (`--ratio`) defined in the stylesheet (see §3.2). Tier 2 remappin
 
 ## 2. Variable Architecture
 
-Colour flows through three layers, each built on the one above:
+Color flows through three layers, each built on the one above:
 
 ```
 ┌──────────────────────────────────────────────────────────┐
 │  Primitives — ONE neutral ramp                            │
 │  --color-gray-{50…950}, --color-white, --color-black      │
-│  The only place raw OKLCH colour values live. Edit the    │
-│  ramp to re-tone the whole UI. (A coloured theme may add  │
+│  The only place raw OKLCH color values live. Edit the    │
+│  ramp to re-tone the whole UI. (A colored theme may add  │
 │  a hue ramp, e.g. --color-red-*.)                         │
 └──────────────────────────────────────────────────────────┘
                           │
@@ -77,9 +77,9 @@ Colour flows through three layers, each built on the one above:
 ```
 
 **Dark mode = the same ramp, remapped to reversed steps.** No separate dark
-colour *values* — a single `[data-theme='dark']` (and OS-auto) block re-points
-roles + surfaces to the opposite end of the ramp (`--color-bg` → a dark grey,
-`--color-fg` → a light grey; elevation inverts, so "lifted" surfaces get
+color *values* — a single `[data-theme='dark']` (and OS-auto) block re-points
+roles + surfaces to the opposite end of the ramp (`--color-bg` → a dark gray,
+`--color-fg` → a light gray; elevation inverts, so "lifted" surfaces get
 lighter). Editing the ramp updates both themes at once.
 
 A component references roles + semantics. A new **theme** ships: (1) its ramp
@@ -337,8 +337,8 @@ Modern Safari, Chrome, Firefox all support OKLCH. No fallback is provided - if t
 
 ### 6.2 Primitives — the neutral ramp
 
-> **Note (2026-06-06):** Per-theme colour *values* now live in the theme's
-> stylesheet, not here. The default theme ships a single pure-neutral grey ramp
+> **Note (2026-06-06):** Per-theme color *values* now live in the theme's
+> stylesheet, not here. The default theme ships a single pure-neutral gray ramp
 > (`--color-gray-50…950` + `--color-white`/`--color-black`, Tailwind-"neutral"
 > values) in `packages/site/src/templates/default/style.css`. The ramps listed
 > below are a **historical/illustrative reference**, not the source of truth and
@@ -580,7 +580,7 @@ These are what components consume. Every theme redefines this set.
      and dark (do NOT re-bind these per theme). Primary = charcoal (gray-900)
      surface with gray-100 text; secondary = gray-100 surface with charcoal
      text + a zinc-300 hairline. As of 2026-06-04 the whole UI is monochrome —
-     chrome (accent = fg) AND callouts (neutral, fg-derived). The only colour
+     chrome (accent = fg) AND callouts (neutral, fg-derived). The only color
      left on a page is code syntax highlighting. The blue/green/amber/etc. ramps
      stay defined for possible future use but drive nothing in the shipped UI. */
   --color-cta-primary-bg: <gray-900>;

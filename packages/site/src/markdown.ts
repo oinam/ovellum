@@ -31,7 +31,7 @@ export interface RenderMarkdownOptions {
 /**
  * Each `OvellumCodeTheme` maps to a `{ light, dark }` shiki pair. Both halves
  * are emitted into the HTML through CSS variables; switching `[data-theme]`
- * on `<html>` swaps the colours with zero runtime cost.
+ * on `<html>` swaps the colors with zero runtime cost.
  *
  * Nord ships dark-only in shiki, so we pair it with `min-light` — a clean
  * low-saturation light theme that doesn't clash with Nord's frosty palette.
@@ -189,7 +189,7 @@ function getHighlighter(): Promise<Highlighter> {
  *   clicking the heading copies its URL.
  * - Code fences are rendered with shiki, using the theme pair chosen via
  *   `opts.codeTheme` (defaults to `github`) and emitted through CSS
- *   variables — switching `[data-theme]` on `<html>` swaps the colours
+ *   variables — switching `[data-theme]` on `<html>` swaps the colors
  *   with no runtime cost.
  */
 export async function renderMarkdown(

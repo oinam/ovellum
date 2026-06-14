@@ -89,7 +89,7 @@ describe('renderPage', () => {
     expect(html).toContain('<meta name="keywords" content="howto, setup">');
   });
 
-  it('renders the back-to-top button with the default threshold, and honours config', () => {
+  it('renders the back-to-top button with the default threshold, and honors config', () => {
     const def = renderPage({
       site: { title: 'X', defaultTheme: 'auto', footer: '' },
       nav: NAV,
@@ -328,7 +328,7 @@ describe('renderPage', () => {
     for (const size of ['xs', 's', 'm', 'l', 'xl']) {
       expect(html).toContain(`data-ov-text-size="${size}"`);
     }
-    // Font picker: the four families, with the system option labelled clearly.
+    // Font picker: the four families, with the system option labeled clearly.
     for (const font of ['sans', 'serif', 'inter', 'geist']) {
       expect(html).toContain(`data-ov-font="${font}"`);
     }
@@ -358,7 +358,7 @@ describe('renderPage', () => {
     expect(html).toContain('datetime="2026-06-12T09:00:00.000Z"');
   });
 
-  it('honours site.dateFormat: iso for the Edited line', () => {
+  it('honors site.dateFormat: iso for the Edited line', () => {
     const html = renderPage({
       site: { title: 'X', defaultTheme: 'auto', footer: '', dateFormat: 'iso' },
       nav: NAV,

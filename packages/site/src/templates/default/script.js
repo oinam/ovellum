@@ -138,7 +138,7 @@
     document.querySelectorAll('[data-ov-font]').forEach(function (btn) {
       btn.setAttribute('aria-pressed', btn.getAttribute('data-ov-font') === font ? 'true' : 'false');
     });
-    // The custom input doubles as the "current custom colour" swatch when the
+    // The custom input doubles as the "current custom color" swatch when the
     // stored accent is a hex value (presets are oklch strings, skipped).
     if (/^#[0-9a-f]{6}$/i.test(accent)) {
       document.querySelectorAll('[data-ov-accent-custom]').forEach(function (input) {

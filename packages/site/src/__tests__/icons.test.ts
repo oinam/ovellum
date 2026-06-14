@@ -13,7 +13,7 @@ describe('ICONS registry', () => {
     for (const [name, body] of Object.entries(ICONS)) {
       expect(
         body.toLowerCase(),
-        `icon ${name} must not hard-code a colour`,
+        `icon ${name} must not hard-code a color`,
       ).not.toMatch(/(fill|stroke)\s*=\s*"#/);
     }
   });
@@ -31,7 +31,7 @@ describe('renderIcon', () => {
     expect(svg).toContain('height="20"');
   });
 
-  it('honours the size option', () => {
+  it('honors the size option', () => {
     const svg = renderIcon('menu', { size: 32 });
     expect(svg).toContain('width="32"');
     expect(svg).toContain('height="32"');
@@ -48,7 +48,7 @@ describe('renderIcon', () => {
     expect(svg).toContain('focusable="false"');
   });
 
-  it('promotes to role="img" with an aria-label when labelled', () => {
+  it('promotes to role="img" with an aria-label when labeled', () => {
     const svg = renderIcon('github', { label: 'GitHub' });
     expect(svg).toContain('role="img"');
     expect(svg).toContain('aria-label="GitHub"');

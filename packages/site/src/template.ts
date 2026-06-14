@@ -231,8 +231,8 @@ function renderTopbarLinks(
 }
 
 /**
- * Appearance panel body: mode segmented control, theme list, colour
- * swatches. Pure markup — script.js wires the behaviour, CSS carries the
+ * Appearance panel body: mode segmented control, theme list, color
+ * swatches. Pure markup — script.js wires the behavior, CSS carries the
  * pressed/active states off aria attributes so every instance stays in sync.
  */
 function renderAppearancePanel(): string {
@@ -257,7 +257,7 @@ function renderAppearancePanel(): string {
   // as a legible button fill with near-white text. Selecting one drives the
   // PRIMARY role (CTA buttons) and links/focus together. The leading "Default"
   // swatch clears the override back to the theme's own primary (monochrome for
-  // Ovellum); the trailing custom swatch wraps a native colour input.
+  // Ovellum); the trailing custom swatch wraps a native color input.
   const accents = [
     { value: 'oklch(57% 0.16 255)', label: 'Blue' },
     { value: 'oklch(56% 0.18 295)', label: 'Violet' },
@@ -318,7 +318,7 @@ function renderAppearancePanel(): string {
   return `<div class="ov-appearance-panel" data-ov-appearance-panel hidden>
         <div class="ov-appearance-group">
           <span class="ov-appearance-label">Mode</span>
-          <div class="ov-appearance-modes" role="group" aria-label="Colour mode">
+          <div class="ov-appearance-modes" role="group" aria-label="Color mode">
           ${modeButtons}
           </div>
         </div>
@@ -330,11 +330,11 @@ function renderAppearancePanel(): string {
         </div>
         <div class="ov-appearance-group">
           <span class="ov-appearance-label">Color</span>
-          <div class="ov-appearance-accents" role="group" aria-label="Primary colour">
+          <div class="ov-appearance-accents" role="group" aria-label="Primary color">
           <button type="button" class="ov-appearance-accent ov-appearance-accent--default" data-ov-accent=""
             aria-pressed="false" aria-label="Default" title="Default"></button>
           ${accentButtons}
-          <span class="ov-appearance-accent ov-appearance-accent--custom" title="Custom colour"><input type="color" data-ov-accent-custom aria-label="Custom colour" value="#3b82f6"></span>
+          <span class="ov-appearance-accent ov-appearance-accent--custom" title="Custom color"><input type="color" data-ov-accent-custom aria-label="Custom color" value="#3b82f6"></span>
           </div>
         </div>
         <div class="ov-appearance-group">
@@ -361,7 +361,7 @@ function renderTopbar(
 ): string {
   const items = resolveTopbarItems(site, basePath);
   // Desktop splits text links from icon links so a divider can sit between
-  // them; the mobile sheet keeps them in one labelled list.
+  // them; the mobile sheet keeps them in one labeled list.
   const desktopTextLinks = renderTopbarLinks(items, docsHref, true, 'text');
   const desktopIconLinks = renderTopbarLinks(items, docsHref, true, 'icon');
   const mobileLinks = renderTopbarLinks(items, docsHref, false);
@@ -390,7 +390,7 @@ function renderTopbar(
     ? `<span class="ov-brand-version" aria-label="Stable version ${escapeAttr(site.version)}">${escapeHtml(site.version)}</span>`
     : '';
   // Optional brand mark. Rendered as a CSS-masked element so it inherits the
-  // foreground colour and flips with the theme (a monochrome silhouette,
+  // foreground color and flips with the theme (a monochrome silhouette,
   // on-brand with the editorial palette). Decorative — the title text carries
   // the accessible name. Unset = no mark; the title stands alone. The logo URL
   // is validated to exclude characters that could break out of the url('…').

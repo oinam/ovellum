@@ -67,9 +67,9 @@ Prints a numbered next-steps list keyed to the chosen mode.
 
 | Code  | Meaning                                                                |
 | ----- | ---------------------------------------------------------------------- |
-| `0`   | Project initialised.                                                   |
+| `0`   | Project initialized.                                                   |
 | `2`   | `ovellum.config.json` already exists; re-run with `--force` to replace. |
-| `130` | User cancelled the prompts (Ctrl-C).                                   |
+| `130` | User canceled the prompts (Ctrl-C).                                   |
 
 ## `ovellum build`
 
@@ -89,7 +89,7 @@ ovellum build [--cwd <dir>] [--config <path>]
 | `--cwd <dir>`     | path | `process.cwd()` | Project root. All paths in the config resolve relative to this. |
 | `--config <path>` | path | auto-discovered | Skip discovery and load this file directly.                     |
 
-### Behaviour by mode
+### Behavior by mode
 
 #### `auto`
 
@@ -108,7 +108,7 @@ Same as `auto`, then for each generated file:
 #### `manual`
 
 1. Walk `input/` for `.md` files.
-2. Render each to HTML (Markdown is sanitised — see [Security](/docs/reference/security/)).
+2. Render each to HTML (Markdown is sanitized — see [Security](/docs/reference/security/)).
 3. Build a sidebar nav and breadcrumb trail.
 4. Wrap each page in the default template (topbar, sidebar, ToC, prev/next, page meta).
 5. Write pretty URLs to `output/`.
@@ -195,7 +195,7 @@ ovellum dev [--cwd <dir>] [--config <path>] [--port <n>] [--host <addr>]
 | `--port <n>`      | integer | `3000`      | Starting port. If busy, auto-bumps up to 19 ports forward before giving up.          |
 | `--host <addr>`   | string  | `127.0.0.1` | Bind address. Pass `0.0.0.0` to expose on the local network.                         |
 
-### Behaviour
+### Behavior
 
 1. Loads the config and resolves `config.output` (the build's `dist/` dir).
 2. Starts an HTTP server bound to `--host:--port`.
@@ -329,7 +329,7 @@ ovellum check complete in 87ms
 - `1` one or more issues found
 - `3` config invalid
 
-### Behaviour by mode
+### Behavior by mode
 
 **Manual mode** — walks `input/` for `.md` files and validates every
 internal link against the sidebar nav.
@@ -364,7 +364,7 @@ live-reload, just regenerated Markdown).
 ovellum watch [--cwd <dir>] [--config <path>]
 ```
 
-### Behaviour
+### Behavior
 
 - An initial build runs once on start.
 - Changes to any file under `input/` re-trigger the same pipeline.
@@ -394,7 +394,7 @@ ovellum upgrade [--dry-run] [--yes]
 | `--dry-run` | boolean | `false` | Print the upgrade command without running it.                  |
 | `--yes, -y` | boolean | `false` | Skip the confirmation prompt and run immediately.              |
 
-### Behaviour
+### Behavior
 
 - If you're already on the latest version, it says so and exits `0`.
 - Otherwise it prints `current → latest` and the exact install command.

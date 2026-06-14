@@ -101,7 +101,7 @@ a shell.
 The practical consequence: a path containing `$(...)`, backticks,
 `;cmd`, or any other shell metacharacters is treated as a literal
 filename argument to `git`, never interpreted by sh/zsh. Tests in
-`@ovellum/site` pin this behaviour by writing fixture files named
+`@ovellum/site` pin this behavior by writing fixture files named
 `inject;touch PWNED;x.md` and `$(touch PWNED).md` and asserting the
 canary never appears.
 
@@ -114,7 +114,7 @@ them. This is defense in depth: the sanitizer keeps the rendered HTML
 safe regardless, but flagging them at lint time means they don't ship
 silently stripped.
 
-Detection normalises HTML-numeric entities (`&#x09;` → tab) and
+Detection normalizes HTML-numeric entities (`&#x09;` → tab) and
 zero-width / BiDi / whitespace characters before matching, so attempts
 like `javas&#x09;cript:` or `\tjavascript:` are caught.
 
@@ -134,7 +134,7 @@ output format and exit codes.
 - **Prototype pollution from config files.** A malicious config with
   `"__proto__": {…}` could in theory pollute prototypes, but the
   `Object.keys`-based merge in strict mode doesn't write to
-  `Object.prototype`. We rely on this behaviour rather than explicitly
+  `Object.prototype`. We rely on this behavior rather than explicitly
   filtering keys.
 - **Resource exhaustion from giant Markdown files.** No size limits on
   `.md` inputs. A multi-GB Markdown file would slow the build but not

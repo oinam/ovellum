@@ -115,14 +115,14 @@ toggle without inline-injecting markup or running JS.
 `<style>` block with `@keyframes` and a
 `@media (prefers-reduced-motion: reduce)` no-op fallback. The editor
 focuses on one file to change motion or palette; no parent CSS, no JS.
-Trade-off: animation doesn't synchronise with anything on the page
+Trade-off: animation doesn't synchronize with anything on the page
 (which is fine — by design it's ambient).
 
 **Where the CSS lives.** `.ov-hero[data-media]` overrides in
 `packages/site/src/templates/default/style.css` (search for "Imagery
 hero variant"). The variant suppresses the `::before` / `::after`
 pseudo-layers, gives the section a min-block-size + flex column so the
-content centres, applies a bottom mask-image fade so the visual recedes
+content centers, applies a bottom mask-image fade so the visual recedes
 into the feature grid below.
 
 ## 2c. Section scenes (added 2026-05-22)
@@ -169,7 +169,7 @@ pattern (§2b). Each SVG embeds its own `<style>` block with
 `@keyframes` and a `@media (prefers-reduced-motion: reduce)` no-op
 fallback. The editor focuses on one file to change motion or
 palette; no parent CSS, no JS. Trade-off: animation doesn't
-synchronise across scenes (which is fine — by design they're
+synchronize across scenes (which is fine — by design they're
 ambient and each has its own personality).
 
 **Why `aria-hidden` by default.** Scenes are atmospheric, not
@@ -180,7 +180,7 @@ that want a scene announced set `alt: "..."` and the section's
 **Where the CSS lives.** `.ov-scene*` rules in
 `packages/site/src/templates/default/style.css` (search for
 "Ambient \"scenes\""). Scenes inherit the landing's `--page-max`
-(1100px on `body.ov-body-landing`) for width and centre themselves
+(1100px on `body.ov-body-landing`) for width and center themselves
 via `.ov-landing`'s existing `margin-inline: auto`. The figure uses
 `object-fit: contain` + `aspect-ratio: 16 / 9` so the SVG keeps its
 intrinsic proportions. Top/bottom mask-image fades soften the
@@ -383,18 +383,18 @@ A neutral, "framed page" treatment applied site-wide (docs **and** landing).
 Three moving parts:
 
 - **Fully monochrome (incl. dark mode).** Chrome AND callouts are neutral in
-  both themes — the only colour on a page is code syntax highlighting. Callout
+  both themes — the only color on a page is code syntax highlighting. Callout
   type tokens (`--callout-*-fg/-bg`) are fg-derived (`--color-fg` rule/label on
   a `--color-bg-subtle` tint), defined once in `:root` so they auto-adapt to
   dark; the dark blocks no longer redeclare them. Each callout still carries its
   uppercase label for meaning. The active sidebar item and other "current/
   selected" states use `--color-fg` (high-contrast monochrome), never a hue.
-- **Monochrome chrome.** The `--color-accent` role resolves to a dark grey
+- **Monochrome chrome.** The `--color-accent` role resolves to a dark gray
   (`--color-gray-900`, the foreground neutral) and `--color-link` follows it;
-  `--color-border-focus` is a mid grey. Chrome carries no hue — the default
-  theme ships only the grey ramp (no colour ramps at all); callouts are
+  `--color-border-focus` is a mid gray. Chrome carries no hue — the default
+  theme ships only the gray ramp (no color ramps at all); callouts are
   monochrome too. Links are set apart from body text by their underline, not a
-  colour. See the token architecture in STYLES.md §2 (primitives → roles →
+  color. See the token architecture in STYLES.md §2 (primitives → roles →
   semantic).
 - **Translucent hairlines.** `--color-border` / `--color-border-strong` are
   now `color-mix` tints of `--color-fg` (~10% / ~18%), defined **once** in
@@ -423,7 +423,7 @@ Three moving parts:
   sidebar touches the single left line. Group headings and links (including
   nested children) share one flush-left edge with only a minimal `--space-2xs`
   inset (no indent hierarchy — children indent via nothing). The active link is
-  marked by darker colour (`--color-fg`, not bold) plus a 2px `--color-fg`
+  marked by darker color (`--color-fg`, not bold) plus a 2px `--color-fg`
   `::before` strip that lands on the rail; section group headings stay bold
   `--color-fg`.
 - **Content card.** On doc pages the reading column (breadcrumbs + page-meta +
@@ -434,7 +434,7 @@ Three moving parts:
   so the box hugs the reading measure rather than filling the whole track. The
   **prev/next** pair sits *outside* (below) the card — capped to the same width
   so its edges align — and lost its old top rule (the card's border separates
-  it now). The card is neutralised on the centred 404 and in print. Landing
+  it now). The card is neutralized on the centered 404 and in print. Landing
   pages keep their own (un-carded) section layout.
 - **Consistent clearance.** Two tokens carry the geometry: `--frame-inset`
   (`--space-m`) positions the rules + corner nodes, and `--frame-gutter`
@@ -452,10 +452,10 @@ top, and the frame's corner-node baseline.
 
 ## 9. Theme integration
 
-Colour tokens (the grey ramp, role colours, semantic mappings, and the
+Color tokens (the gray ramp, role colors, semantic mappings, and the
 reversed-ramp dark block) live and are hand-edited directly in
 `packages/site/src/templates/default/style.css` — `STYLES.md` documents the
-architecture, not per-theme colour values. The theme-agnostic scales (fonts,
+architecture, not per-theme color values. The theme-agnostic scales (fonts,
 type, space, radii) are still sourced from `STYLES.md` via `pnpm extract-tokens`.
 (Historical note: a small token-extraction script
 could automate this, but a hand-port is fine for v1 — the palette doesn't move
@@ -485,7 +485,7 @@ packages/site/
 │   └── templates/
 │       └── default/                         ← one bundled template, named `default`
 │           ├── style.css                    ← visual design
-│           └── script.js                    ← client behaviour
+│           └── script.js                    ← client behavior
 └── dist/
     └── templates/default/                   ← shipped to npm; produced at build time
         ├── style.css
@@ -497,8 +497,8 @@ packages/site/
 | Concern | File | Format | Why |
 |---|---|---|---|
 | HTML structure | `src/template.ts` | TypeScript template literals | No template engine, no extra dep. Escape helpers (`escapeHtml`, `escapeAttr`) are real TS functions the type-checker watches; IDE autocomplete and import navigation work. |
-| Visual design | `src/templates/default/style.css` | Vanilla CSS with custom properties | One file, no preprocessor, no PostCSS, no bundler. Colour lives here: a grey ramp → role colours → semantic tokens, with dark as a reversed-ramp remap. The theme-agnostic scales (fonts/type/space/radii) sync from `STYLES.md`. Themes swap at runtime via `[data-theme]`. **Shipped minified** — `scripts/build-templates.mjs` (esbuild, dev-only) uglifies CSS/JS when copying `src/templates → dist/templates`; source stays readable, `ovellum build` just copies the minified asset. |
-| Client behaviour | `src/templates/default/script.js` | Vanilla browser JS | Zero framework cost. Two responsibilities: theme cycle + icon copy buttons on code blocks (copy glyph → check; the old language eyebrow is gone). Ships under 2 KB. |
+| Visual design | `src/templates/default/style.css` | Vanilla CSS with custom properties | One file, no preprocessor, no PostCSS, no bundler. Color lives here: a gray ramp → role colors → semantic tokens, with dark as a reversed-ramp remap. The theme-agnostic scales (fonts/type/space/radii) sync from `STYLES.md`. Themes swap at runtime via `[data-theme]`. **Shipped minified** — `scripts/build-templates.mjs` (esbuild, dev-only) uglifies CSS/JS when copying `src/templates → dist/templates`; source stays readable, `ovellum build` just copies the minified asset. |
+| Client behavior | `src/templates/default/script.js` | Vanilla browser JS | Zero framework cost. Two responsibilities: theme cycle + icon copy buttons on code blocks (copy glyph → check; the old language eyebrow is gone). Ships under 2 KB. |
 
 `template.ts` exports three render functions:
 
@@ -537,14 +537,14 @@ In increasing order of friction:
 
 | You want to… | Do this |
 |---|---|
-| Tweak colours / spacing / type | Override the grey ramp (`--color-gray-*`) to re-tone everything, a role (`--color-primary/-accent`, etc.) to re-skin buttons/links, or semantic/scale tokens (`--color-bg`, `--space-m`) in a follow-up stylesheet. The override path for end users is documented in `website/content/docs/guides/themes.md`. |
+| Tweak colors / spacing / type | Override the gray ramp (`--color-gray-*`) to re-tone everything, a role (`--color-primary/-accent`, etc.) to re-skin buttons/links, or semantic/scale tokens (`--color-bg`, `--space-m`) in a follow-up stylesheet. The override path for end users is documented in `website/content/docs/guides/themes.md`. |
 | Tweak the markup / layout | Edit `packages/site/src/template.ts`. Add a `data-…` attribute, rearrange the topbar, change the heading rendering, etc. Run `pnpm --filter @ovellum/site test` to keep the template tests green, then `pnpm --filter @ovellum/site build` and `pnpm -w run build:website` to verify. |
 | Add a new section (e.g., right-side action buttons, breadcrumbs) | Edit `template.ts` to render the new markup, then add the corresponding selectors to `templates/default/style.css`. Tests in `__tests__/template.test.ts` cover that the active link still works, ToC renders, etc.; add a test for any new section. |
 | Replace the template wholesale | Fork `packages/site/src/templates/default/` (plus the `template.ts` render functions if you need different markup), maintain your own version, point your build at the fork. The plugin / template-override API for cleanly swapping templates is on the roadmap and tracked in TODO.md Phase 4.5 follow-ups. |
 
 ### What's intentionally not in v1
 
-- **A plugin / template-override API.** Adding it before the customisation
+- **A plugin / template-override API.** Adding it before the customization
   surface stabilises locks us into bad shapes. Deferred until external
   demand says otherwise.
 - **Multiple bundled templates / hero variants.** Same reasoning. The

@@ -39,7 +39,7 @@ export type OvellumFont = 'sans' | 'serif' | 'inter' | 'geist';
 export type OvellumDateFormat = 'humanized' | 'iso';
 
 /**
- * Named colour palette for the whole site (page chrome, surfaces, text —
+ * Named color palette for the whole site (page chrome, surfaces, text —
  * not just code blocks). Every palette ships a light and a dark variant;
  * the light/dark/auto mode choice stays independent (`defaultTheme`).
  * Visitors can switch palettes at runtime from the topbar appearance
@@ -49,7 +49,7 @@ export type OvellumPalette = 'default' | 'nord' | 'flexoki' | 'solarized' | 'ein
 
 /**
  * Code-block theme pair (passed to shiki). Each option resolves to a
- * `{ light, dark }` pair so a single build serves both colour schemes
+ * `{ light, dark }` pair so a single build serves both color schemes
  * via CSS variables. Defaults to `'github'`.
  */
 export type OvellumCodeTheme = 'github' | 'nord' | 'solarized';
@@ -89,7 +89,7 @@ export interface OvellumLandingHero {
   /**
    * Full-bleed visual rendered behind the title/subtitle/CTA stack. When
    * set, the default dotted-noise + radial-spotlight pseudo-layers are
-   * suppressed in favour of the supplied asset(s).
+   * suppressed in favor of the supplied asset(s).
    */
   media?: OvellumLandingHeroMedia;
 }
@@ -243,8 +243,8 @@ export interface OvellumSiteConfig {
   /**
    * Optional brand logo shown before the title in the top bar — a path or URL
    * to an image (e.g. `'/public/logo.svg'`). It renders as a **monochrome mark
-   * that adapts to the active theme** (drawn in the foreground colour via a CSS
-   * mask), matching the editorial design; provide a single-colour silhouette
+   * that adapts to the active theme** (drawn in the foreground color via a CSS
+   * mask), matching the editorial design; provide a single-color silhouette
    * SVG/PNG. **Unset = no mark; the title text stands alone** — the logo is never
    * mandatory. The title always carries the accessible brand name, so the mark
    * is decorative.
@@ -261,7 +261,7 @@ export interface OvellumSiteConfig {
    * relative to `input` (e.g. `'overview.md'`). When unset, the home resolves
    * automatically: `index.md`, else a root **`README.md`** — so a repo's
    * README becomes the docs home with no config. Don't want that? Add `README.md`
-   * to `ignoreFiles`, or point `home` elsewhere. Honoured by `build` and the nav.
+   * to `ignoreFiles`, or point `home` elsewhere. Honored by `build` and the nav.
    */
   home?: string;
   /**
@@ -289,13 +289,13 @@ export interface OvellumSiteConfig {
   /** Initial theme before user preference loads. */
   defaultTheme: OvellumDefaultTheme;
   /**
-   * Initial colour palette before user preference loads. Defaults to
+   * Initial color palette before user preference loads. Defaults to
    * `'default'` (the monochrome editorial theme). Visitors can override it
    * from the topbar appearance control (persisted in `localStorage`).
    */
   palette: OvellumPalette;
   /**
-   * Default accent colour — any CSS colour value (`'#3b82f6'`,
+   * Default accent color — any CSS color value (`'#3b82f6'`,
    * `'oklch(57% 0.16 255)'`, …). Links, focus rings, and the ToC strip
    * derive from it; hover states are mixed from it automatically. Unset =
    * each palette's own accent. Visitors can override it from the topbar
@@ -336,7 +336,7 @@ export interface OvellumSiteConfig {
   search: OvellumSiteSearchConfig;
   /** Per-page meta line (reading time + last-modified) above the article. */
   pageMeta: OvellumSitePageMetaConfig;
-  /** Sidebar folder behaviour (collapsed by default; the active branch stays open). */
+  /** Sidebar folder behavior (collapsed by default; the active branch stays open). */
   sidebar: OvellumSidebarConfig;
   /** Floating "back to top" button (shown after scrolling past `threshold`). */
   backToTop: OvellumBackToTopConfig;
@@ -370,7 +370,7 @@ export interface OvellumSiteConfig {
   assetBaseUrl?: string;
   /**
    * File globs to exclude from the manual-mode site — both Markdown pages and
-   * passthrough assets, honoured by `build` **and** `check`. A pattern without
+   * passthrough assets, honored by `build` **and** `check`. A pattern without
    * `/` matches the basename at any depth (`README.md`, `*.draft.md`); a
    * pattern with `/` matches the path relative to `input` (`drafts/**`).
    * Supports `*`, `**`, and `?`. Empty by default.
@@ -405,7 +405,7 @@ export interface OvellumSiteConfig {
 }
 
 /**
- * Update-check behaviour for the `ovellum` CLI. This is a courtesy notice
+ * Update-check behavior for the `ovellum` CLI. This is a courtesy notice
  * only — the CLI never installs anything on its own; `ovellum upgrade` is the
  * explicit action. The check is additionally auto-disabled in CI, in
  * non-interactive shells, and when `NO_UPDATE_NOTIFIER` is set, regardless of
@@ -438,7 +438,7 @@ export interface OvellumConfig {
   protect: ProtectConfig;
   /** Site-builder settings used by `manual` mode. */
   site: OvellumSiteConfig;
-  /** CLI update-check behaviour (notice only; never auto-installs). */
+  /** CLI update-check behavior (notice only; never auto-installs). */
   update: OvellumUpdateConfig;
 }
 

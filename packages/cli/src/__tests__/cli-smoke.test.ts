@@ -63,7 +63,7 @@ describe('ovellum init', () => {
   it('--yes scaffolds config + starter content + .gitignore', async () => {
     const { code, stdout } = await runCli(['init', '--yes'], { cwd: dir });
     expect(code).toBe(0);
-    expect(stdout).toContain('ovellum project initialised');
+    expect(stdout).toContain('ovellum project initialized');
     expect(existsSync(path.join(dir, 'ovellum.config.ts'))).toBe(true);
     expect(existsSync(path.join(dir, 'content', 'index.md'))).toBe(true);
     expect(existsSync(path.join(dir, '.gitignore'))).toBe(true);

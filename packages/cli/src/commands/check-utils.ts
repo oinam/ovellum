@@ -42,7 +42,7 @@ const STRIP_CONTROLS = new RegExp(
 /**
  * Return the lowercased scheme name if `target` uses one we consider unsafe;
  * otherwise `undefined`. Leading whitespace and HTML-numeric-entity-decoded
- * characters are normalised first so attempts like `\tjavascript:` or
+ * characters are normalized first so attempts like `\tjavascript:` or
  * `javas&#x09;cript:` don't slip through.
  */
 export function detectUnsafeScheme(target: string): string | undefined {

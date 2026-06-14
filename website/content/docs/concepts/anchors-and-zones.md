@@ -129,6 +129,6 @@ something else in your project:
 }
 ```
 
-Customise sparingly — the defaults are documented everywhere, and changing
-them means future Ovellum updates may bring new behaviours tied to the
+Customize sparingly — the defaults are documented everywhere, and changing
+them means future Ovellum updates may bring new behaviors tied to the
 default tag names.

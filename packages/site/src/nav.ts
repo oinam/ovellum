@@ -67,11 +67,11 @@ export interface AdjacentPages {
 /**
  * Find the prev / next page for `url` in the flattened nav order.
  * Returns `{}` when `url` is not in the nav (e.g. the root landing page) or
- * when there's no neighbour on a given side.
+ * when there's no neighbor on a given side.
  */
 export function findAdjacent(root: NavNode, url: string): AdjacentPages {
   // The 404 page carries a sourcePath (so it renders) but isn't part of the
-  // linear reading flow — drop it so it never becomes a prev/next neighbour
+  // linear reading flow — drop it so it never becomes a prev/next neighbor
   // (otherwise it lands as the "Previous" of the first real page, since
   // `/404/` sorts ahead of the content URLs).
   const flat = flattenNav(root).filter((p) => p.url !== '/404/');
@@ -205,7 +205,7 @@ async function walk(
       );
       if (child) children.push(child);
     } else if (isMarkdown(item.name)) {
-      // Honour the same file excludes as the build walk — auto-excluded files
+      // Honor the same file excludes as the build walk — auto-excluded files
       // (`_meta`, dotfiles, manifests, the config) and `site.ignoreFiles` globs
       // so an emitted page never appears in the sidebar.
       const relForMatch = path.posix.relative(absRoot, item.abs).replace(/\\/g, '/');
@@ -243,7 +243,7 @@ async function pageNode(abs: string, url: string, cwd: string): Promise<NavNode 
   const fmTitle = typeof data.title === 'string' ? data.title : undefined;
   const h1 = firstH1(content);
   const title = fmTitle ?? h1 ?? titleFromSegment(stem(path.basename(abs))) ?? 'Untitled';
-  // Frontmatter `permalink` overrides the computed URL (leaf pages). Normalised
+  // Frontmatter `permalink` overrides the computed URL (leaf pages). Normalized
   // to a root-absolute, trailing-slash path: `custom` / `/custom` → `/custom/`.
   const permalink =
     typeof data.permalink === 'string' && data.permalink.trim()

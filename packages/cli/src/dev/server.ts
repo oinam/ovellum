@@ -167,7 +167,7 @@ export async function startDevServer(opts: DevServerOptions): Promise<DevServer>
  * that escapes the root.
  */
 function resolveFilePath(rootDir: string, urlPath: string): string | undefined {
-  // Strip query/hash and normalise.
+  // Strip query/hash and normalize.
   let p = decodeURIComponent(urlPath);
   if (!p.startsWith('/')) p = '/' + p;
   const candidate = path.normalize(path.join(rootDir, p));
@@ -218,7 +218,7 @@ async function serveFile(
 
 async function serve404(opts: DevServerOptions, res: ServerResponse): Promise<void> {
   // Prefer the site's own 404.html / 404/index.html so the dev experience
-  // matches production behaviour.
+  // matches production behavior.
   const candidates = [
     path.join(opts.rootDir, '404.html'),
     path.join(opts.rootDir, '404', 'index.html'),
