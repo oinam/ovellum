@@ -1,5 +1,69 @@
 # ovellum
 
+## 0.7.0
+
+### Minor Changes
+
+- a4aee0f: Add `site.assetBaseUrl` — serve the reserved `publicDir` from a CDN. When set
+  (e.g. `'https://cdn.example.com/site'`), Ovellum stops copying `publicDir` into
+  the build and rewrites every reference to a `public/` file in the rendered HTML
+  to that base, so `/report.pdf` resolves to
+  `https://cdn.example.com/site/report.pdf`. You keep authoring the same
+  root-absolute paths — the same idea as Vite's `base` / Next's `assetPrefix`.
+  Assets co-located with your content are part of the HTML site and are left
+  untouched; only `publicDir` moves to the CDN. (Query-stringed and `srcset` refs
+  aren't rewritten — reference those by their final CDN URL.) The "Assets &
+  downloads" guide and config reference document it.
+- 380fe10: Humanize the page meta date and tidy two appearance details.
+  - The last-modified line is relabelled **"Edited"** (from "Updated"), and its
+    date is now humanized by default: `today` / `yesterday` for recent edits,
+    otherwise a friendly `Jun 14, 2026`. A new **`site.dateFormat`** config
+    controls this — `'humanized'` (default) or `'iso'` for the raw `2026-06-14`.
+    The machine-readable ISO date always stays in the `<time datetime>` attribute.
+  - The **search box** gets a subtle background fill so it reads as a distinct
+    field against the page/topbar background, in both light and dark.
+  - The font picker's system option is now labelled **"Sans-Serif (Default)"**
+    instead of just "Default", so it's clear what the default is.
+
+- fe8cb6c: Allow `<video>` / `<audio>` embeds in Markdown. The HTML sanitizer now permits
+  `<video>`, `<audio>`, and their `<source>`/`<track>` children with
+  presentational/playback attributes (`controls`, `poster`, `width`, `loop`,
+  `muted`, `autoplay`, `playsinline`, …) — so you can embed a native media player
+  inline, not just link to the file. `src`/`poster` are still scheme-checked
+  (`http(s)`/relative) and event handlers are stripped, so an embed can't carry
+  script. New **"Assets & downloads"** guide documents where to put images,
+  video/audio, PDFs, and other downloads (co-located vs the `public/` root) and
+  how to reference, embed, or link them.
+- ed241c9: Add reader **Text size** and **Font** controls to the appearance panel — and
+  they ship in the bundled template, so every Ovellum site gets them, not just the
+  docs.
+  - **Text size** — a five-step scale (two smaller, default in the middle, two
+    larger) shown as a graduated "A" ramp, like a Kindle / Safari Reader stepper.
+    It scales the whole modular type scale (body + every heading) proportionally.
+  - **Font** — Default (system sans) / Serif / Inter / Geist. Inter and Geist are
+    variable webfonts **bundled with the template** and served from
+    `/assets/fonts/`; their `@font-face` rules are lazy, so a font downloads only
+    when a page actually uses it. The default site stays zero-webfont and fast,
+    and a custom font costs only on opt-in — no reload, no CDN, no extra config.
+
+  `site.font` now accepts `'inter'` and `'geist'` (in addition to `'sans'` /
+  `'serif'`) to set the initial font. Both new controls persist in `localStorage`
+  and apply before paint. Existing mode / theme / colour controls are unchanged.
+
+- 0954436: Allow scoped `<iframe>` video embeds in Markdown. Paste the embed code straight
+  from YouTube or Vimeo ("Share → Embed", verbatim — fixed `width`/`height`,
+  `frameborder`, `?si=` and all) and it just works. Ovellum permits `<iframe>`
+  **only** from known video hosts (`youtube.com`, `youtube-nocookie.com`,
+  `vimeo.com`) and strips any iframe pointing elsewhere (or at a
+  relative/`javascript:` src). Survivors are hardened automatically —
+  `loading="lazy"`, `referrerpolicy="strict-origin-when-cross-origin"`,
+  `allowfullscreen` — and wrapped in a responsive 16:9 frame that overrides the
+  snippet's pixel dimensions. Native `<video>` / `<audio>` embeds are unchanged.
+  The new **Styleguide** reference page
+  (`/docs/reference/styleguide/`) documents the type scale, vertical rhythm, and
+  colour system and renders every content element — headings, prose, lists,
+  callouts, code, tables, images, and a live video embed — as a working showcase.
+
 ## 0.6.0
 
 ### Minor Changes

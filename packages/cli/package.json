@@ -1,6 +1,6 @@
 {
   "name": "ovellum",
-  "version": "0.6.0",
+  "version": "0.7.0",
   "description": "An open-source documentation tool for TypeScript and JavaScript — auto-generated API docs and hand-written prose, in the same files, without conflict.",
   "keywords": [
     "documentation",
