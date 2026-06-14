@@ -122,7 +122,7 @@ A wider, marketing-style page rendered at `/` when
 ### Last modified
 
 The "Edited" half of the [page meta](#page-meta) line. Read from
-`git log -1 --format=%cI -- <path>` when the file is tracked, otherwise
+`git log --follow --diff-filter=AM` (last content change, ignoring pure renames) when the file is tracked, otherwise
 from the filesystem mtime. Falls back to omitting the line if neither
 resolves. Controlled by `site.pageMeta.lastModified` (default `true`); the
 date's wording (`today` / `Jun 14, 2026` / `2026-06-14`) follows

@@ -152,4 +152,29 @@ describe('lastModifiedISO — command-injection resistance', () => {
     const iso = await lastModifiedISO({ absPath: file, cwd: workDir });
     expect(iso).toMatch(/^2026-01-15T/);
   });
+
+  it('follows renames — a `git mv` does not reset the date to the move commit', async () => {
+    const env = { ...process.env, GIT_COMMITTER_DATE: '' };
+    await execFileAsync('git', ['init', '-q', '-b', 'main'], { cwd: workDir });
+    await execFileAsync('git', ['config', 'user.email', 'test@example.com'], { cwd: workDir });
+    await execFileAsync('git', ['config', 'user.name', 'Test'], { cwd: workDir });
+    await execFileAsync('git', ['config', 'commit.gpgsign', 'false'], { cwd: workDir });
+
+    // Create + commit at an old date, then move it (no content change) at a new one.
+    writeFileSync(path.join(workDir, 'old.md'), '# hello\n');
+    await execFileAsync('git', ['add', 'old.md'], { cwd: workDir });
+    await execFileAsync('git', ['commit', '-q', '-m', 'create'], {
+      cwd: workDir,
+      env: { ...env, GIT_COMMITTER_DATE: '2026-01-15T10:00:00Z' },
+    });
+    await execFileAsync('git', ['mv', 'old.md', 'new.md'], { cwd: workDir });
+    await execFileAsync('git', ['commit', '-q', '-m', 'rename'], {
+      cwd: workDir,
+      env: { ...env, GIT_COMMITTER_DATE: '2026-06-14T10:00:00Z' },
+    });
+
+    // The date is the original content commit, NOT the rename.
+    const iso = await lastModifiedISO({ absPath: path.join(workDir, 'new.md'), cwd: workDir });
+    expect(iso).toMatch(/^2026-01-15T/);
+  });
 });

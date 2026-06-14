@@ -142,7 +142,7 @@ interface OvellumSiteConfig {
 | `editUrlPattern` | `string?`                           | `undefined`                   | `{path}` プレースホルダーを含む URL パターン。`{path}` はページのソースパスで、**ビルドの cwd（`--cwd`）を基準**とします。リポジトリのプレフィックスは自分で含めてください（例: `'https://github.com/owner/repo/edit/main/website/{path}'`）。未設定の場合、「Edit this page」リンクはレンダリングされません。 |
 | `headExtra`      | `string?`                           | `undefined`                   | 全ページの `<head>` に、検索関連の要素の直後・インラインのテーマ初期化スクリプトの直前に、そのまま注入される生の HTML。**エスケープもサニタイズもされません** — 自分で管理しているマークアップのみを設定してください。デフォルトは未設定。主な用途は分析スニペットです（例: `'<script defer src="https://analytics.example.com/script.js" data-website-id="…"></script>'`）。 |
 | `search`         | `{ enabled: boolean }`              | `{ enabled: false }`          | `true` のとき、`ovellum build` は出力ディレクトリに対して Pagefind を実行し、トップバーに検索ボックスが追加されます。ビルドに `dist/pagefind/` が加わります。                                                                                       |
-| `pageMeta`       | `{ readingTime, lastModified }`     | 両方 `true`                   | 記事の上のページごとのメタ行: `N min read · Edited Jun 14, 2026`。`readingTime` はコード／HTML を除いた上で約 200 wpm で推定します。`lastModified` はまず `git log -1 --format=%cI` を優先し、なければファイルシステムの mtime にフォールバックします。どちらも解決できなければ行は省略されます。いずれかを `false` にするとその半分が非表示になります。日付の表記は [`dateFormat`](#dateformat) に従います。 |
+| `pageMeta`       | `{ readingTime, lastModified }`     | 両方 `true`                   | 記事の上のページごとのメタ行: `N min read · Edited Jun 14, 2026`。`readingTime` はコード／HTML を除いた上で約 200 wpm で推定します。`lastModified` はまず git（`git log --follow --diff-filter=AM` — リネームを追跡し純粋な移動を無視するため、最後に内容を編集した日付を反映）を優先し、なければファイルシステムの mtime にフォールバックします。どちらも解決できなければ行は省略されます。いずれかを `false` にするとその半分が非表示になります。日付の表記は [`dateFormat`](#dateformat) に従います。 |
 | `sidebar`        | `{ collapse: boolean }`             | `{ collapse: true }`          | サイドバーのフォルダの挙動。`collapse: true`（デフォルト）は各フォルダを折りたたみ可能な開閉要素として、初期状態は閉じてレンダリングします。現在のページを含む枝は常に開いたままなので、自分の現在地が分かります。`collapse: false` にするとツリー全体を自動展開してレンダリングします。フォルダの `_meta.json` で `"collapse": false`（常に開く）または `"collapse": true`（常に閉じる）として、フォルダごとに上書きできます。 |
 | `backToTop`      | `{ enabled, threshold }`            | `{ enabled: true, threshold: 360 }` | フローティングの「back to top」ボタン。`enabled: false` で削除します。`threshold` はフェードインするまでのスクロール距離（px）です。短いページのサイトでは早く現れるよう下げ、もっと下までスクロールするまで隠したいなら上げます。 |
 | `assetBaseUrl`   | `string?`                           | `undefined`                   | `publicDir` のアセット用の CDN／ベース URL（例: `'https://cdn.example.com/site'`）。**設定すると**、Ovellum は `publicDir` のローカルコピーをやめ（その内容は CDN でホストします）、レンダリング済み HTML 内のそれらのファイルへの参照を CDN に書き換えます: `/img/logo.svg` → `https://cdn.example.com/site/img/logo.svg`。どちらの場合も、作者は同じルート絶対パスを書きます。Vite の `base` / Next の `assetPrefix` のようなものです。`publicDir` の*外*のアセットはそのままです。（クエリ文字列付きや `srcset` の参照は書き換えられません。） |
@@ -180,8 +180,10 @@ interface OvellumSiteConfig {
 - **`readingTime`** — 可視の文章の語数を数え（コードブロック、インラインコード、
   リンク URL、HTML、見出しの記号を除去）、約 200 wpm で割り、切り上げます。
   常に最低 `1 min read` です。
-- **`lastModified`** — まずそのファイルに対して
-  `git log -1 --format=%cI -- <path>` を試します。ファイルが追跡されていない、
+- **`lastModified`** — まず git
+  （`git log --follow --diff-filter=AM -1 --format=%cI -- <path>`）を試します。
+  リネームを追跡し、**内容**を変更したコミットだけを数えるため、ファイルの移動
+  （`git mv`）で日付がリセットされません。ファイルが追跡されていない、
   または git が使えない場合はファイルシステムの mtime にフォールバックします。
   どちらも解決できなければ省略されます。行の **Edited** の半分としてレンダリングされ、
   表記は [`dateFormat`](#dateformat) に従います（`Edited today` / `Edited Jun 14, 2026`

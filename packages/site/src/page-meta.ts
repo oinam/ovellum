@@ -128,9 +128,15 @@ export function formatEditedDate(
 
 async function tryGitLog(input: LastModifiedInput): Promise<string | undefined> {
   try {
+    // `--follow` tracks the file across renames, and `--diff-filter=AM` keeps
+    // only commits that Added or Modified its *content* — pure renames (R, e.g.
+    // a `git mv` into a new folder) are skipped. So moving a file doesn't reset
+    // its "Edited" date; it reflects the last real content change. (The first
+    // arg after `log` is `--follow`, which requires exactly one pathspec — we
+    // always pass one.)
     const { stdout } = await execFileAsync(
       'git',
-      ['log', '-1', '--format=%cI', '--', input.absPath],
+      ['log', '--follow', '--diff-filter=AM', '-1', '--format=%cI', '--', input.absPath],
       { cwd: input.cwd, timeout: 2000 },
     );
     const value = stdout.trim();

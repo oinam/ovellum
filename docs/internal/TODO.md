@@ -1,7 +1,7 @@
 # TODO
 
 Living checklist for code / automation work. Update in place as work progresses.
-Last updated: 2026-06-12 (full audit → [`ROADMAP.md`](./ROADMAP.md); 0.3.0 live on npm). Previous: 2026-05-24 (Chrome split — width unified via `--chrome-max` (topbar + footer never jump width between landing and docs), but **only the footer is chrome-tinted**; topbar reverted to body color with a 1px border-bottom after two passes proving a tinted topbar fights Safari URL-bar sampling and reads noisy against the body. Meta `theme-color` now tracks `--color-bg`, not `--color-bg-chrome`. Also (2026-05-25): auto-theme toggle icon reverted eclipse → monitor (eclipse read weird; monitor is the least-bad option so far). Landing hero imagery removed — `hero.media` dropped from the site config; feature code kept dormant for a later, better imagery pass. Then (2026-05-25, follow-up): **fixed a latent rhythm bug** — `--space-2xl` / `--space-3xl` were referenced by the hero padding + feature-grid margin + 6 other rules but never defined in `style.css` (only in STYLES.md), so those `clamp(var(--space-2xl)…)` declarations were invalid and collapsed to 0. With imagery gone (which had given the hero height via `min-block-size`) the no-media hero went cramped against the topbar — defining the two tokens restores the intended hero top/bottom padding and the hero→body gap. Also **removed the hero's dotted-noise + accent-spotlight pseudo-layers** entirely and **neutralized the background hue site-wide**: `--color-bg` + `--color-bg-chrome` are now pure-neutral grays (chroma 0) in both themes, dropping the faint bluish tint ahead of a planned blended background image. `theme-color` meta hex neutralized to match (#f4f4f4 / #101010).)
+Last updated: 2026-06-14 (0.7.0 → 0.9.0 shipped — see Current state). Previous: 2026-06-12 (full audit → [`ROADMAP.md`](./ROADMAP.md); 0.3.0 live). Older: 2026-05-24 (Chrome split — width unified via `--chrome-max` (topbar + footer never jump width between landing and docs), but **only the footer is chrome-tinted**; topbar reverted to body color with a 1px border-bottom after two passes proving a tinted topbar fights Safari URL-bar sampling and reads noisy against the body. Meta `theme-color` now tracks `--color-bg`, not `--color-bg-chrome`. Also (2026-05-25): auto-theme toggle icon reverted eclipse → monitor (eclipse read weird; monitor is the least-bad option so far). Landing hero imagery removed — `hero.media` dropped from the site config; feature code kept dormant for a later, better imagery pass. Then (2026-05-25, follow-up): **fixed a latent rhythm bug** — `--space-2xl` / `--space-3xl` were referenced by the hero padding + feature-grid margin + 6 other rules but never defined in `style.css` (only in STYLES.md), so those `clamp(var(--space-2xl)…)` declarations were invalid and collapsed to 0. With imagery gone (which had given the hero height via `min-block-size`) the no-media hero went cramped against the topbar — defining the two tokens restores the intended hero top/bottom padding and the hero→body gap. Also **removed the hero's dotted-noise + accent-spotlight pseudo-layers** entirely and **neutralized the background hue site-wide**: `--color-bg` + `--color-bg-chrome` are now pure-neutral grays (chroma 0) in both themes, dropping the faint bluish tint ahead of a planned blended background image. `theme-color` meta hex neutralized to match (#f4f4f4 / #101010).)
 
 > Manual items — prose, decisions, releases, things only a human can do —
 > live in [`TODO-Human.md`](./TODO-Human.md). When in doubt: if the work
@@ -30,17 +30,55 @@ Legend: `[ ]` not started · `[~]` in progress · `[x]` done · `[!]` blocked
 
 ---
 
-## Current state (2026-06-13)
+## Current state (2026-06-14)
 
-**Publish state (read this first):** **`ovellum@0.6.0` is live on npm** and
-matches local. A fast run of releases on 2026-06-13: 0.4.0 → 0.5.0 → 0.5.1 →
-0.6.0, all via the [`RELEASE.md`](./RELEASE.md) flow (local `pnpm changeset
-version` + `npm publish`; signed tags + GitHub releases done). Tree clean on
-`main`, fully pushed. No pending changesets. The release runbook lives in
-`RELEASE.md` — run it top to bottom; the maintainer does `npm publish`
-(session + OTP) and the signed `git tag` (GPG); everything else is scripted.
+**Publish state (read this first):** **`ovellum@0.9.0` is live on npm** and
+matches local. Tree clean on `main`, fully pushed, no pending changesets; tags
+`ovellum@0.7.0`…`0.9.0` pushed + GitHub releases published. Release flow
+unchanged ([`RELEASE.md`](./RELEASE.md), top to bottom): an agent preps
+everything (changeset version, badge bump in `website/ovellum.config.ts`
+`site.version`, build, tests), the **maintainer runs the two human-only steps**
+— `npm publish` from `packages/cli/` (npm session + OTP) and the signed
+`git tag -s` (GPG pinentry) — then the agent cuts the GitHub release.
 
-**What shipped 0.4.0–0.6.0 (this session):**
+**What shipped 0.7.0 → 0.9.0 (2026-06-14, this session):**
+- **0.7.0** — scoped `<iframe>` video embeds (YouTube/Vimeo allowlist) + native
+  `<video>`/`<audio>`; **bundled font picker** (System/Serif/**Inter**/**Geist**,
+  webfonts shipped in the package at `templates/default/fonts/`, lazy
+  `@font-face`) + 5-step **text-size** scale; **Styleguide** reference page;
+  **`site.assetBaseUrl`** (serve `publicDir` from a CDN); **`site.dateFormat`** +
+  the "Edited" humanized last-modified line; repo-wide **American-English
+  spelling**. Package jumped to ~950 kB (the two webfonts).
+- **0.8.0 — i18n / multiple languages.** Opt-in `site.locales` + `site.defaultLocale`
+  (BCP 47); content moves to `content/<code>/` subtrees, default at root, others
+  `/<code>/`; topbar **language picker** (autonyms), `<html lang>` + hreflang,
+  locale-aware config nav links. The Ovellum site ships a **full English +
+  Japanese (1:1)** translation. (Engine = two-phase per-locale pass in
+  `build.ts`.) Also fixed: breadcrumb dead-links (page-less section crumbs →
+  text) and a "Docs shown twice on /ja/" bug (config nav links now locale-prefixed).
+- **0.9.0 — drafts ("the Editor" focus).** `draft: true` (frontmatter) /
+  `_meta.json "draft"` (folder, cascades) = **dev-visible, production-excluded**
+  WIP pages: ribbon + sidebar badge in `dev`/`watch`, dropped from `build` (with
+  a count), out of sitemap/RSS. Automatic by command; `build --drafts` /
+  `dev|watch --no-drafts` overrides. `BuildSiteOptions.includeDrafts` →
+  `buildNav(includeDrafts, stats)`. **Behavior change** from the old
+  excluded-everywhere `draft`. New Drafts guide en + ja. 298 tests.
+
+**Gotchas / standing notes for next session:**
+- **Translation drift** — the site is now full English↔Japanese 1:1, maintained
+  **by hand**. Any English doc edit needs its `content/ja/` mirror updated or it
+  drifts. The fix is **ROADMAP B7's translation-staleness check** (store source
+  hash in each translation's frontmatter; `ovellum check` flags stale ones) — a
+  strong, on-brand next i18n slice.
+- **i18n chrome strings still English** — landing hero, `topbarNav` LABELS
+  ("Docs"), "Edited", appearance-panel labels are English on `/ja/` (only page
+  *content* is translated). The next i18n slice is UI-string localization.
+- **"The Editor" theme continues** — drafts were slice 1; natural follow-ons:
+  publish/scheduling workflow, in-place preview (both build on the draft plumbing).
+- Pick next work from [`ROADMAP.md`](./ROADMAP.md) — v0.8.0 (B7 i18n) and v0.9.0
+  (U8 drafts) are now **done**; their design blocks there are historical record.
+
+**What shipped 0.4.0–0.6.0 (prior session, 2026-06-13 — history):**
 - **0.4.0** — topbar **appearance control**: light/dark/auto mode + five
   page-wide OKLCH palettes (Default/Ovellum, E-ink, Flexoki, Nord, Solarized;
   macOS trialled then dropped) + accent/Color picker; all persisted in
