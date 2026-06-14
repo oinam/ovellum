@@ -60,6 +60,33 @@ turned into a page. Rename it with `site.publicDir` if you like.
 shared asset that wants a tidy permanent URL (or a root-required file like
 `favicon.ico` / `robots.txt`) → `public/`.
 
+## Serving `public/` from a CDN
+
+By default `public/` ships *with* your site. To serve it from a CDN or object
+store instead, set [`site.assetBaseUrl`](/docs/reference/config/) — the same
+idea as Vite's `base` or Next's `assetPrefix`:
+
+```ts
+export default {
+  site: {
+    assetBaseUrl: 'https://cdn.example.com/site',
+  },
+} satisfies OvellumUserConfig;
+```
+
+You keep authoring the **same root-absolute paths** (`/report.pdf`,
+`/media/intro.mp4`). At build time Ovellum:
+
+- **stops copying `public/` locally** — you upload its contents to the CDN
+  yourself (one-time, or in your deploy step), and
+- **rewrites every reference to a `public/` file** in the rendered HTML to the
+  CDN, so `/report.pdf` becomes `https://cdn.example.com/site/report.pdf`.
+
+Assets that live *next to your content* (section 1) are part of the HTML site
+and are **left untouched** — only `public/` moves to the CDN. URLs that already
+carry a query string or live in a `srcset` aren't rewritten; reference those
+files by their final CDN URL directly.
+
 ## By file type
 
 ### Images

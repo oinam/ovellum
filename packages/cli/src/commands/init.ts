@@ -296,6 +296,7 @@ ${descLine}
     // sidebar: { collapse: true }, // collapse folders by default (a folder's _meta.json can override per-folder)
     // backToTop: { enabled: true, threshold: 360 }, // floating button after THRESHOLD px of scroll
     // publicDir: 'public',      // RESERVED static-assets dir → copied to the output ROOT (public/favicon.ico → /favicon.ico); never processed
+    // assetBaseUrl: 'https://cdn.example.com/site', // serve publicDir from a CDN: skip the local copy + rewrite /asset refs to this base (like Vite base / Next assetPrefix)
     // ignoreFolders: [],        // folder names to exclude at any depth
     // ignoreFiles: [],          // file globs to exclude, e.g. ['README.md', 'drafts/**']
     // topbarNav: [              // right-aligned top-bar links (title + URL)

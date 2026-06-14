@@ -78,6 +78,16 @@ describe('validateUserConfig', () => {
     );
   });
 
+  it('accepts a site.assetBaseUrl and rejects empty / whitespace', () => {
+    expect(validateUserConfig({ site: { assetBaseUrl: 'https://cdn.example.com/x' } })).toEqual({
+      site: { assetBaseUrl: 'https://cdn.example.com/x' },
+    });
+    expect(() => validateUserConfig({ site: { assetBaseUrl: '' } })).toThrow(/assetBaseUrl/);
+    expect(() => validateUserConfig({ site: { assetBaseUrl: 'has space' } })).toThrow(
+      /assetBaseUrl/,
+    );
+  });
+
   it('accepts a plain site.publicDir and rejects slashes / traversal', () => {
     expect(validateUserConfig({ site: { publicDir: 'static' } })).toEqual({
       site: { publicDir: 'static' },

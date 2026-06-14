@@ -342,6 +342,17 @@ export interface OvellumSiteConfig {
    */
   publicDir: string;
   /**
+   * Optional CDN/base URL for `publicDir` assets (e.g.
+   * `'https://cdn.example.com/site'`). **When set**, Ovellum does **not** copy
+   * `publicDir` into the output — you host its contents on the CDN — and
+   * rewrites references to those files in the rendered HTML to the CDN
+   * (`/img/logo.svg` → `https://cdn.example.com/site/img/logo.svg`). You author
+   * the same root-absolute paths either way; this just flips where they
+   * resolve. Like Vite's `base` / Next's `assetPrefix`. Assets *outside*
+   * `publicDir` are unaffected. Unset = assets served locally from the site.
+   */
+  assetBaseUrl?: string;
+  /**
    * File globs to exclude from the manual-mode site — both Markdown pages and
    * passthrough assets, honoured by `build` **and** `check`. A pattern without
    * `/` matches the basename at any depth (`README.md`, `*.draft.md`); a

@@ -268,6 +268,14 @@ export function validateUserConfig(input: unknown): OvellumUserConfig {
     if (s.ignoreFiles !== undefined && !isStringArray(s.ignoreFiles)) {
       throw new ConfigError('`site.ignoreFiles` must be an array of glob-pattern strings.');
     }
+    if (s.assetBaseUrl !== undefined) {
+      if (typeof s.assetBaseUrl !== 'string' || s.assetBaseUrl.trim() === '') {
+        throw new ConfigError('`site.assetBaseUrl` must be a non-empty URL string.');
+      }
+      if (/\s/.test(s.assetBaseUrl)) {
+        throw new ConfigError('`site.assetBaseUrl` must not contain whitespace.');
+      }
+    }
     if (s.publicDir !== undefined) {
       if (typeof s.publicDir !== 'string' || s.publicDir.trim() === '') {
         throw new ConfigError('`site.publicDir` must be a non-empty folder name.');

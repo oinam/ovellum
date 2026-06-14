@@ -147,21 +147,28 @@ export async function buildSite(options: BuildSiteOptions): Promise<BuildSiteRes
   await mkdir(assetsAbs, { recursive: true });
   await writeStaticAssets(assetsAbs);
 
-  // Copy the reserved publicDir's contents to the output ROOT — the SSG norm
-  // (Next/Astro/Vite/VitePress/Hugo `static`): `public/favicon.ico` →
-  // `/favicon.ico`, so root-required files (favicon, robots.txt, CNAME, …) land
-  // where browsers/crawlers look. Each top-level entry is copied by name so it
-  // lands at the root, not nested under the folder name. Files are copied
-  // verbatim (a `.md` here is an asset, never rendered). Runs before page
-  // rendering, so a generated route wins over a same-named public file.
+  // publicDir → output ROOT (the SSG norm: `public/favicon.ico` → `/favicon.ico`),
+  // copied verbatim, before page render (so a generated route wins a same-name
+  // collision). BUT if `assetBaseUrl` is set, those assets live on a CDN — skip
+  // the copy and instead collect their root-served paths so references to them
+  // can be rewritten to the CDN below.
+  const assetBase = site.assetBaseUrl ? site.assetBaseUrl.replace(/\/+$/, '') : undefined;
+  let publicPaths: string[] = [];
   if (existsSync(publicAbs) && publicAbs !== outputAbs) {
-    for (const name of await readdir(publicAbs)) {
-      await cp(path.join(publicAbs, name), path.join(outputAbs, name), {
-        recursive: true,
-        force: true,
-      });
+    if (assetBase) {
+      publicPaths = await collectPublicPaths(publicAbs, publicAbs);
+    } else {
+      for (const name of await readdir(publicAbs)) {
+        await cp(path.join(publicAbs, name), path.join(outputAbs, name), {
+          recursive: true,
+          force: true,
+        });
+      }
     }
   }
+  // Rewrite references to publicDir assets → the CDN, in every page's HTML.
+  const finalizeHtml = (h: string): string =>
+    assetBase && publicPaths.length ? rewriteAssetUrls(h, assetBase, publicPaths) : h;
 
   const landingEnabled = site.landing.enabled === true;
   const docsHref = landingEnabled ? (site.landing.docsHref ?? firstNavUrl(nav)) : undefined;
@@ -210,7 +217,7 @@ export async function buildSite(options: BuildSiteOptions): Promise<BuildSiteRes
       generatedAt: now.toISOString(),
       docsHref,
     });
-    await writeFile(path.join(outputAbs, 'index.html'), html, 'utf8');
+    await writeFile(path.join(outputAbs, 'index.html'), finalizeHtml(html), 'utf8');
     pages.push({
       sourcePath: landingBody?.sourcePath ?? '(landing config)',
       outputPath: path.relative(cwd, path.join(outputAbs, 'index.html')).replace(/\\/g, '/'),
@@ -260,15 +267,16 @@ export async function buildSite(options: BuildSiteOptions): Promise<BuildSiteRes
         sourceRelFromCwd,
       });
       if (!result) continue; // draft page (frontmatter draft: true) — skip
+      const pageHtml = finalizeHtml(result.html);
       await mkdir(path.dirname(outputPath), { recursive: true });
-      await writeFile(outputPath, result.html, 'utf8');
+      await writeFile(outputPath, pageHtml, 'utf8');
       // Mirror the not-found page to a top-level `404.html`. The pretty-URL
       // output is `404/index.html`, but most static hosts (GitHub Pages,
       // Netlify, Cloudflare, …) serve a root-level `404.html` for missing
       // paths and never look inside `404/index.html`. Emitting both makes a
       // custom 404 actually trigger in production with no extra build step.
       if (url === '/404/') {
-        await writeFile(path.join(outputAbs, '404.html'), result.html, 'utf8');
+        await writeFile(path.join(outputAbs, '404.html'), pageHtml, 'utf8');
         notFoundRendered = true;
       }
       pages.push({
@@ -310,9 +318,10 @@ export async function buildSite(options: BuildSiteOptions): Promise<BuildSiteRes
       docsHref,
       bodyClass: 'ov-body-404',
     });
+    const html404 = finalizeHtml(html);
     await mkdir(path.join(outputAbs, '404'), { recursive: true });
-    await writeFile(path.join(outputAbs, '404', 'index.html'), html, 'utf8');
-    await writeFile(path.join(outputAbs, '404.html'), html, 'utf8');
+    await writeFile(path.join(outputAbs, '404', 'index.html'), html404, 'utf8');
+    await writeFile(path.join(outputAbs, '404.html'), html404, 'utf8');
     // Intentionally NOT pushed to `pages`: the default 404 is infrastructure,
     // not authored content, so it shouldn't inflate the build's page count
     // (nor appear in sitemap/RSS, which already exclude /404/).
@@ -588,6 +597,41 @@ export function resolveHomeRel(inputAbs: string, site: OvellumSiteConfig): strin
     consider('README.md') ??
     consider('readme.md')
   );
+}
+
+/** Collect every file under the publicDir as its root-served path (`public/img/x.jpg`
+ *  → `/img/x.jpg`) — the paths an author would reference and that get rewritten
+ *  to the CDN when `assetBaseUrl` is set. */
+async function collectPublicPaths(dirAbs: string, rootAbs: string): Promise<string[]> {
+  const out: string[] = [];
+  for (const name of await readdir(dirAbs)) {
+    const abs = path.join(dirAbs, name);
+    const st = await stat(abs);
+    if (st.isDirectory()) out.push(...(await collectPublicPaths(abs, rootAbs)));
+    else out.push('/' + path.relative(rootAbs, abs).replace(/\\/g, '/'));
+  }
+  return out;
+}
+
+/**
+ * Rewrite references to publicDir assets to the CDN base. Matches each path as a
+ * full quoted attribute value (`src`/`href`/`poster`) or a CSS `url(...)`, so a
+ * path can't partial-match a longer one. Query-stringed/`srcset` refs are left
+ * as-is (documented). Pure + exported for testing.
+ */
+export function rewriteAssetUrls(html: string, base: string, paths: string[]): string {
+  let out = html;
+  for (const p of paths) {
+    const cdn = base + p;
+    out = out
+      .split('"' + p + '"')
+      .join('"' + cdn + '"')
+      .split("'" + p + "'")
+      .join("'" + cdn + "'")
+      .split('(' + p + ')')
+      .join('(' + cdn + ')');
+  }
+  return out;
 }
 
 function urlFor(relFromInput: string): string {
