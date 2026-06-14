@@ -180,7 +180,9 @@ interface OvellumSiteConfig {
 - **`readingTime`** — 可視の文章の語数を数え（コードブロック、インラインコード、
   リンク URL、HTML、見出しの記号を除去）、約 200 wpm で割り、切り上げます。
   常に最低 `1 min read` です。
-- **`lastModified`** — まず git
+- **`lastModified`** — ページのフロントマターの **`updated:`** が設定されていれば
+  それが優先されます（例: `updated: 2026-05-20` — 日付を明示的に固定します。
+  解析できない値は警告を出してフォールバックします）。なければ git
   （`git log --follow --diff-filter=AM -1 --format=%cI -- <path>`）を試します。
   リネームを追跡し、**内容**を変更したコミットだけを数えるため、ファイルの移動
   （`git mv`）で日付がリセットされません。ファイルが追跡されていない、

@@ -121,10 +121,11 @@ A wider, marketing-style page rendered at `/` when
 
 ### Last modified
 
-The "Edited" half of the [page meta](#page-meta) line. Read from
+The "Edited" half of the [page meta](#page-meta) line. A page's frontmatter
+`updated:` pins it explicitly; otherwise read from
 `git log --follow --diff-filter=AM` (last content change, ignoring pure renames) when the file is tracked, otherwise
-from the filesystem mtime. Falls back to omitting the line if neither
-resolves. Controlled by `site.pageMeta.lastModified` (default `true`); the
+from the filesystem mtime. Falls back to omitting the line if none
+resolve. Controlled by `site.pageMeta.lastModified` (default `true`); the
 date's wording (`today` / `Jun 14, 2026` / `2026-06-14`) follows
 `site.dateFormat`.
 

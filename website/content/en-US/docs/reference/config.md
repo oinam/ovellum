@@ -181,12 +181,14 @@ shipped with the site, so it works on any static host with no server.
 - **`readingTime`** — counts visible-prose words (code blocks, inline
   code, link URLs, HTML, and heading punctuation stripped) and divides
   by ~200 wpm, rounded up. Always at least `1 min read`.
-- **`lastModified`** — first tries git
+- **`lastModified`** — a page's frontmatter **`updated:`** wins if set (e.g.
+  `updated: 2026-05-20` — pin the date explicitly; an unparseable value warns and
+  falls back). Otherwise tries git
   (`git log --follow --diff-filter=AM -1 --format=%cI -- <path>`): it follows
   the file across renames and counts only commits that changed its **content**,
   so moving a file (a `git mv`) doesn't reset its date. Falls back to the
   filesystem mtime if the file isn't tracked or git is unavailable.
-  Omitted if neither resolves. Renders as the **Edited** half of the line,
+  Omitted if none resolve. Renders as the **Edited** half of the line,
   worded per [`dateFormat`](#dateformat) (`Edited today` / `Edited Jun 14, 2026`
   / `Edited 2026-06-14`).
 

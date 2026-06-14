@@ -126,6 +126,24 @@ export function formatEditedDate(
   return iso;
 }
 
+/**
+ * Normalize a frontmatter date override (`updated:`) to an ISO string, or
+ * `undefined` when absent/unparseable. YAML parses a bare `2026-05-20` into a
+ * `Date`; a quoted string is parsed leniently. This lets an author pin the
+ * "Edited" date explicitly, overriding the git/fs lookup — useful when a move,
+ * a bulk reformat, or a fresh checkout would otherwise misreport it.
+ */
+export function normalizeFrontmatterDate(value: unknown): string | undefined {
+  if (value instanceof Date) {
+    return Number.isNaN(value.getTime()) ? undefined : value.toISOString();
+  }
+  if (typeof value === 'string' && value.trim()) {
+    const t = Date.parse(value.trim());
+    if (!Number.isNaN(t)) return new Date(t).toISOString();
+  }
+  return undefined;
+}
+
 async function tryGitLog(input: LastModifiedInput): Promise<string | undefined> {
   try {
     // `--follow` tracks the file across renames, and `--diff-filter=AM` keeps

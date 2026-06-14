@@ -16,7 +16,12 @@ import {
   type NavDraftStats,
   type NavNode,
 } from './nav.js';
-import { countWords, lastModifiedISO, readingMinutes } from './page-meta.js';
+import {
+  countWords,
+  lastModifiedISO,
+  normalizeFrontmatterDate,
+  readingMinutes,
+} from './page-meta.js';
 import { indexSite } from './search.js';
 import { generateRss } from './rss.js';
 import { generateSitemap } from './sitemap.js';
@@ -492,6 +497,7 @@ async function renderOne(input: RenderOneInput): Promise<RenderOneResult | null>
     description?: string;
     draft?: boolean;
     tags?: unknown;
+    updated?: unknown;
   };
   // A frontmatter draft is excluded from production (dev renders it with a
   // ribbon). walkContent still yields the file (it doesn't read frontmatter), so
@@ -520,8 +526,17 @@ async function renderOne(input: RenderOneInput): Promise<RenderOneResult | null>
   const readingMin = pageMetaCfg.readingTime
     ? readingMinutes(countWords(parsed.content))
     : undefined;
+  // A frontmatter `updated:` pins the "Edited" date explicitly, overriding the
+  // git/fs lookup. Unparseable → warn and fall back to git.
+  const warnings: string[] = [];
+  const pinnedDate = normalizeFrontmatterDate(frontmatter.updated);
+  if (frontmatter.updated !== undefined && pinnedDate === undefined) {
+    warnings.push(
+      `${input.sourceRelFromCwd}: frontmatter \`updated\` is not a valid date — using git/filesystem instead.`,
+    );
+  }
   const lastModified = pageMetaCfg.lastModified
-    ? await lastModifiedISO({ absPath: input.absInput, cwd: input.cwd })
+    ? (pinnedDate ?? (await lastModifiedISO({ absPath: input.absInput, cwd: input.cwd })))
     : undefined;
 
   const html = renderPage({
@@ -552,7 +567,7 @@ async function renderOne(input: RenderOneInput): Promise<RenderOneResult | null>
     title,
     description: frontmatter.description,
     lastModified,
-    warnings: [],
+    warnings,
   };
 }
 

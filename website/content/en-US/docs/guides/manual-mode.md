@@ -85,8 +85,17 @@ Page titles resolve, in order:
 
 So **frontmatter is optional** — a page can be just a `# Heading` followed by
 its content. That heading becomes the on-page title, the sidebar label, *and*
-the `<title>` tag. Add frontmatter only when you want to override the title or
-set a `description`.
+the `<title>` tag. Add frontmatter only when you want to override something:
+
+- **`title`** — overrides the H1/filename for the title, sidebar, and `<title>`.
+- **`description`** — sets `<meta name="description">`.
+- **`tags`** — a list → `<meta name="keywords">`.
+- **`permalink`** — a custom URL for the page (e.g. `permalink: /faq/`).
+- **`draft: true`** — a [draft](/docs/guides/drafts/) (shown in `dev`, excluded
+  from `build`).
+- **`updated`** — pins the **Edited** date (e.g. `updated: 2026-05-20`),
+  overriding the git/filesystem lookup. Use it when you want the displayed date
+  to reflect a meaningful edit rather than git mechanics.
 
 ### Taking control with `_meta.json` (optional)
 

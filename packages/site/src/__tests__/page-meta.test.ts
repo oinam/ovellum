@@ -9,8 +9,27 @@ import {
   countWords,
   formatEditedDate,
   lastModifiedISO,
+  normalizeFrontmatterDate,
   readingMinutes,
 } from '../page-meta.js';
+
+describe('normalizeFrontmatterDate', () => {
+  it('accepts a YAML Date, an ISO string, and a date-only string', () => {
+    expect(normalizeFrontmatterDate(new Date('2026-05-20T00:00:00Z'))).toBe(
+      '2026-05-20T00:00:00.000Z',
+    );
+    expect(normalizeFrontmatterDate('2026-05-20')?.slice(0, 10)).toBe('2026-05-20');
+    expect(normalizeFrontmatterDate('2026-05-20T09:30:00Z')?.slice(0, 10)).toBe('2026-05-20');
+  });
+
+  it('returns undefined for absent / blank / unparseable values', () => {
+    expect(normalizeFrontmatterDate(undefined)).toBeUndefined();
+    expect(normalizeFrontmatterDate('')).toBeUndefined();
+    expect(normalizeFrontmatterDate('not a date')).toBeUndefined();
+    expect(normalizeFrontmatterDate(new Date('nope'))).toBeUndefined();
+    expect(normalizeFrontmatterDate(42)).toBeUndefined();
+  });
+});
 
 const execFileAsync = promisify(execFile);
 
