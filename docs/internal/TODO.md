@@ -151,6 +151,19 @@ everything (changeset version, badge bump in `website/ovellum.config.ts`
   publish/scheduling workflow, in-place preview (both build on the draft plumbing).
 - Pick next work from [`ROADMAP.md`](./ROADMAP.md) — v0.8.0 (B7 i18n) and v0.9.0
   (U8 drafts) are now **done**; their design blocks there are historical record.
+- **NEXT BIGGEST RELEASE (prepared, not started): Tier D "Embed & deploy
+  anywhere"** in `ROADMAP.md` — make Ovellum a portable, embeddable *build step*
+  any external tool / CI can drive and **deploy itself**, no GitHub dependency.
+  Principle: *Ovellum builds; the host deploys.* **D1** `--out`/`--base` CLI
+  overrides + `--json`; **D2** programmatic `build()`/`check()` API from the
+  `ovellum` package (flips the parked `@ovellum/*` bundled-private decision —
+  Parked #2; also fixes that importing `ovellum` runs the CLI as a side effect);
+  **D3** lifecycle hooks (`onBuildComplete({outDir,manifest})` = the deploy
+  hook; co-design with B1 plugin API); **D4** `<output>/.ovellum/manifest.json`
+  for atomic/incremental CDN deploys; **D5** "deploy anywhere" recipes.
+  `config.output` (default `./docs`) ALREADY gives GitHub-Pages-from-`/docs`
+  with zero Actions — D fills the tool-driven gap. Maintainer flagged this the
+  next big release 2026-06-14; design NOT locked.
 - **Task prepared (not started): Tier C "AI-Ready"** in `ROADMAP.md` — make
   Ovellum AI-Native across three surfaces: **C1** AI-friendly docs *output*
   (`llms.txt` + `llms-full.txt` + per-page `.md` mirror), **C2** MCP server
@@ -158,7 +171,8 @@ everything (changeset version, badge bump in `website/ovellum.config.ts`
   protected zones that survive regeneration; needs A1 IR persistence first),
   **C3** machine-readable CLI (`--json`, folds in U4), **C4** Claude Skill +
   `AGENTS.md`, **C5** positioning. Design NOT locked; C1 is the cheap standalone
-  first slice. Maintainer asked to queue it 2026-06-14, not build yet.
+  first slice. **C3 ≈ D1** — share the machine-readable-CLI work. Maintainer
+  asked to queue it 2026-06-14, not build yet.
 
 **What shipped 0.4.0–0.6.0 (prior session, 2026-06-13 — history):**
 - **0.4.0** — topbar **appearance control**: light/dark/auto mode + five

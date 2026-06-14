@@ -294,6 +294,84 @@ differentiator no other docs tool can make.
       surface the maintainer cares about (no stale facts) — write it only after
       the feature is real.
 
+### Tier D — Embed & deploy anywhere ("the portable build" — NEXT BIGGEST RELEASE)
+
+**Theme (maintainer-requested 2026-06-14, flagged "the next biggest
+release"; design NOT yet locked).** Make Ovellum a clean, embeddable **build
+step** that any external tool / CI / framework can drive and then **deploy on
+its own terms** — never dependent on GitHub (or any specific host). The
+driving principle, and the message to lead with:
+
+> **Ovellum builds; the host deploys. Deploy is not Ovellum's job.** Ovellum's
+> one guarantee is a *portable, deterministic static folder*. What happens to
+> that folder — GitHub Pages from `/docs`, Netlify, Vercel, Cloudflare Pages,
+> S3/CDN sync, or a host tool's own pipeline — is the host's choice. Our repo's
+> GitHub Actions is *our site's* wiring, not a product requirement.
+
+This matters most for **hybrid builds embedded in someone else's system**: the
+host project runs Ovellum as a step (merging generated API docs + hand prose),
+gets a static `dist`/`docs` folder, and its existing deploy takes over. The
+"hook to let their tool deploy" is really three layered contracts below.
+
+**Where we already are (verified 2026-06-14):** `config.output` exists (default
+`./docs`) — so *GitHub Pages from a repo's `/docs/` folder already works with
+**zero** Actions* (`ovellum build` → static files → Pages serves them). The gap
+is everything that lets a *non-human tool* drive it cleanly + know what came
+out.
+
+- [ ] **D1 (S) — Scriptable CLI build contract (table stakes).** Add
+      `ovellum build --out <dir>` and `--base <path>` overrides (output is
+      config-only today — no `.option()` on `build`). Pair with **C3's
+      `--json`** so a host pipeline parses the result instead of scraping
+      stdout. Guarantee **idempotent output** — clean-or-reconcile the target
+      dir so repeated builds are diffable and deploys atomic (today the build
+      `mkdir`s but doesn't clean — confirm + document the semantics).
+- [ ] **D2 (M) — Programmatic build API (the real "hook").** Export a public
+      `build()` / `check()` from the **`ovellum`** package returning a
+      structured `BuildResult { outDir, pages[], assets[], warnings[], locales }`
+      — `import { build } from 'ovellum'` (or subpath `ovellum/api`). **This
+      flips the parked decision** (TODO "Parked" #2: `@ovellum/*` bundled-private
+      — "if anyone asks for direct imports, the bundling decision needs to
+      flip"). Expose a **curated facade from `ovellum`**, NOT raw `@ovellum/*`
+      imports (keep internals private; we control the surface). **Concrete
+      prerequisite/bug:** today `ovellum`'s `exports["."]` runs the CLI as a
+      *side effect* (`runMain` in `index.ts`) — importing it executes the CLI.
+      Split the entry: `bin` stays the CLI runner; `main`/`exports["."]` (or
+      `exports["./api"]`) becomes the side-effect-free library. `buildSite()`
+      (in `@ovellum/site`) already returns `BuildSiteResult{ outputDir, … }` —
+      this is mostly surfacing it through a stable public type.
+- [ ] **D3 (M–L) — Build lifecycle hooks (the literal deploy hook; shares B1's
+      seam).** `onResolveConfig`, `onBuildStart`, `transformPage` (per-page
+      HTML/MD), `onBuildComplete({ outDir, manifest })`. **A host tool's deploy
+      logic lives in `onBuildComplete`.** This is the same plugin seam as **B1**
+      (plugin/extension API) — design them together; the deploy hook is the
+      first concrete consumer that justifies B1. Keep it a thin, typed lifecycle
+      (config-supplied functions) before any component system.
+- [ ] **D4 (S–M) — Deploy manifest.** Emit `<output>/.ovellum/manifest.json`:
+      every written file (path, route, content hash, byte size) + build
+      metadata (version, locales, draft-excluded count). Lets a deploy tool do
+      **incremental / atomic** uploads (S3/CDN sync, cache-bust, completeness
+      verify) instead of blind-copying. Pairs with D1 `--json` and the C-tier
+      machine-readable theme.
+- [ ] **D5 (S) — "Deploy anywhere" recipes + positioning (docs, not code).** A
+      `/docs/guides/deploying/` page: GitHub Pages from `/docs` (no Actions),
+      Netlify / Vercel / Cloudflare Pages (build command + publish dir),
+      S3/CDN sync via the D4 manifest, and **embedding the build in a host
+      pipeline** (monorepo / Vite / turbo / another SSG's `/docs`). Lead with
+      "Ovellum never deploys; it builds a portable folder." Write after D1–D4
+      are real (no stale facts in a public surface).
+
+**Sequencing within D:** D1 (cheap, unblocks scripted use immediately) → D4
+(manifest, cheap, high leverage) → D2 (API, flips the bundling decision) → D3
+(hooks, co-designed with B1) → D5 (docs/positioning). D1+D4 alone deliver "any
+tool can build + deploy Ovellum output" — D2/D3 make it *embeddable in-process*.
+
+**Cross-references:** overlaps **C3** (`--json`, machine-readable CLI — D1
+depends on it), **B1** (plugin API — D3 is its first real consumer), and the
+parked **`@ovellum/*` bundled-private** decision (D2 flips it). Decide whether
+Tier C (AI-Ready) or Tier D ships first when picked up — they share the
+machine-readable-CLI groundwork (C3 ≈ D1).
+
 ## 3. Usability
 
 - [ ] **U1 (M)** **Troubleshooting page** (`/docs/guides/troubleshooting/`):
@@ -381,12 +459,20 @@ differentiator no other docs tool can make.
 > + sidebar badge + build warning.
 >
 > **Update 2026-06-14 (later still): v0.9.0–v0.11.0 SHIPPED** (drafts; smarter
-> "Edited" dates; footnotes; i18n completed end-to-end). **Next theme prepared,
-> not started: Tier C "AI-Ready"** — fleshed out above (C1 `llms.txt`/`.md`
-> mirror output, C2 MCP server, C3 machine-readable CLI, C4 Skill/`AGENTS.md`,
-> C5 positioning) at the maintainer's "prepare a task for later" request. Design
-> NOT locked — C1 is the cheap standalone starting slice; C2 waits on A1 (IR
-> persistence). Pick when the maintainer wants it.
+> "Edited" dates; footnotes; i18n completed end-to-end). **Two themes prepared,
+> not started:**
+> - **Tier D "Embed & deploy anywhere" — flagged THE NEXT BIGGEST RELEASE**
+>   (maintainer, 2026-06-14): a portable, embeddable build any tool can drive +
+>   deploy without GitHub. D1 `--out`/`--base` + `--json`, D2 programmatic
+>   `build()` API (flips the parked `@ovellum/*` bundled-private decision), D3
+>   lifecycle hooks (the literal deploy hook; co-design with B1), D4 deploy
+>   manifest, D5 recipes. `config.output` (default `./docs`) already gives
+>   Pages-from-`/docs` with zero Actions — D fills the tool-driven gap. Design
+>   NOT locked.
+> - **Tier C "AI-Ready"** — C1 `llms.txt`/`.md` mirror output, C2 MCP server,
+>   C3 machine-readable CLI, C4 Skill/`AGENTS.md`, C5 positioning. Prepared at
+>   the maintainer's "prepare for later" request. **C3 ≈ D1** (shared
+>   machine-readable-CLI groundwork) — sequence the two together when picked up.
 
 ---
 
