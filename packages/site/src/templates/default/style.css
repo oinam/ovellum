@@ -728,6 +728,9 @@ a:hover {
 .ov-search .pagefind-ui__search-input {
   font-weight: 500;
   color: var(--color-fg);
+  /* Subtle fill so the search box reads as a distinct field, a step off the
+     page/topbar background in both light and dark. */
+  background: var(--color-bg-muted);
 }
 .ov-search .pagefind-ui__search-input::placeholder {
   color: var(--color-fg-muted);

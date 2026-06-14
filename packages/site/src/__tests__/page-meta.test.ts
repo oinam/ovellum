@@ -5,9 +5,44 @@ import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { promisify } from 'node:util';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-import { countWords, lastModifiedISO, readingMinutes } from '../page-meta.js';
+import {
+  countWords,
+  formatEditedDate,
+  lastModifiedISO,
+  readingMinutes,
+} from '../page-meta.js';
 
 const execFileAsync = promisify(execFile);
+
+describe('formatEditedDate', () => {
+  const now = '2026-06-14T10:00:00.000Z';
+
+  it("'iso' returns the raw calendar date, no relative words", () => {
+    expect(formatEditedDate('2026-06-14T09:00:00Z', now, 'iso')).toBe('2026-06-14');
+    expect(formatEditedDate('2026-01-02T00:00:00Z', now, 'iso')).toBe('2026-01-02');
+  });
+
+  it("'humanized' says today / yesterday for recent edits", () => {
+    expect(formatEditedDate('2026-06-14T01:00:00Z', now, 'humanized')).toBe('today');
+    expect(formatEditedDate('2026-06-13T23:00:00Z', now, 'humanized')).toBe('yesterday');
+  });
+
+  it("'humanized' falls back to a friendly 'Jun 14, 2026' for older edits", () => {
+    expect(formatEditedDate('2026-06-12T00:00:00Z', now, 'humanized')).toBe('Jun 12, 2026');
+    expect(formatEditedDate('2025-12-01T00:00:00Z', now, 'humanized')).toBe('Dec 1, 2025');
+  });
+
+  it('defaults to humanized when no format is given', () => {
+    expect(formatEditedDate('2026-06-14T00:00:00Z', now)).toBe('today');
+  });
+
+  it('computes the day boundary in UTC, independent of clock time', () => {
+    // Same calendar day, very different times → still "today".
+    expect(formatEditedDate('2026-06-14T23:59:00Z', '2026-06-14T00:01:00Z', 'humanized')).toBe(
+      'today',
+    );
+  });
+});
 
 describe('countWords', () => {
   it('counts plain prose', () => {

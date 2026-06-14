@@ -286,13 +286,14 @@ ${descLine}
     defaultTheme: ${q(a.defaultTheme)}, // 'auto' | 'light' | 'dark'
     // palette: 'default',       // 'default' | 'nord' | 'flexoki' | 'solarized' | 'eink'
     // accent: 'oklch(57% 0.16 255)', // primary colour (CTA buttons, links, focus); any CSS colour
-    // font: 'sans',             // 'sans' | 'serif' (system stacks; no webfonts)
+    // font: 'sans',             // 'sans' | 'serif' (system) | 'inter' | 'geist' (bundled webfonts, lazy)
+    // dateFormat: 'humanized',  // 'humanized' (today / Jun 14, 2026) | 'iso' (2026-06-14)
     // footer: 'Your Name',      // footer text / copyright line
     // credit: true,             // 'Built with Ovellum' footer link; set false to remove
     // codeTheme: 'github',      // 'github' | 'nord' | 'solarized'
     // editUrlPattern: 'https://github.com/you/repo/edit/main/{path}',
     // search: { enabled: false }, // true → Pagefind search box + Cmd/K (adds a build pass + client payload)
-    // pageMeta: { readingTime: true, lastModified: true },
+    // pageMeta: { readingTime: true, lastModified: true }, // 'N min read · Edited …' line above each article
     // sidebar: { collapse: true }, // collapse folders by default (a folder's _meta.json can override per-folder)
     // backToTop: { enabled: true, threshold: 360 }, // floating button after THRESHOLD px of scroll
     // publicDir: 'public',      // RESERVED static-assets dir → copied to the output ROOT (public/favicon.ico → /favicon.ico); never processed

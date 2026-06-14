@@ -188,11 +188,28 @@ video hosts, hardens it, and wraps it in a responsive 16:9 frame:
 
 <iframe width="560" height="315" src="https://www.youtube.com/embed/1Jpjw2w_0l8" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
 
-That's the exact snippet YouTube hands you — fixed `width`/`height` and all. The
-responsive wrapper overrides the pixel dimensions, and `loading="lazy"` plus a
-strict referrer policy are applied automatically. For self-hosted clips, the
-native `<video>` / `<audio>` players work too. Both are covered in
-[Assets & downloads](/docs/guides/assets/).
+For the YouTube video embed above, here is the code — the exact snippet YouTube
+hands you under **Share → Embed**, dropped straight into the Markdown:
+
+```html
+<iframe
+  width="560"
+  height="315"
+  src="https://www.youtube.com/embed/1Jpjw2w_0l8"
+  title="YouTube video player"
+  frameborder="0"
+  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+  referrerpolicy="strict-origin-when-cross-origin"
+  allowfullscreen
+></iframe>
+```
+
+Nothing else to do — the fixed `width`/`height` and `frameborder` come along
+harmlessly. Ovellum's responsive wrapper overrides the pixel dimensions, and
+`loading="lazy"` plus a strict referrer policy are applied automatically. (Swap
+in `https://www.youtube-nocookie.com/embed/…` for YouTube's privacy-preserving
+host.) For self-hosted clips, the native `<video>` / `<audio>` players work too.
+Both are covered in [Assets & downloads](/docs/guides/assets/).
 
 ## Horizontal rule
 

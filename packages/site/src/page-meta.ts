@@ -1,6 +1,7 @@
 import { execFile } from 'node:child_process';
 import { stat } from 'node:fs/promises';
 import { promisify } from 'node:util';
+import type { OvellumDateFormat } from '@ovellum/core';
 
 // `execFile` does NOT spawn a shell — args are passed verbatim. This is the
 // security-critical difference vs. `exec`: a path containing `$(...)`, `;`,
@@ -73,6 +74,56 @@ export async function lastModifiedISO(input: LastModifiedInput): Promise<string 
   } catch {
     return undefined;
   }
+}
+
+const MONTHS_SHORT = [
+  'Jan',
+  'Feb',
+  'Mar',
+  'Apr',
+  'May',
+  'Jun',
+  'Jul',
+  'Aug',
+  'Sep',
+  'Oct',
+  'Nov',
+  'Dec',
+] as const;
+
+/**
+ * Format a last-modified timestamp for the page "Edited" line.
+ *
+ * - `'iso'`       → the raw calendar date, `2026-06-14`.
+ * - `'humanized'` → `today` / `yesterday` (relative to `nowISO`, the build
+ *   time) for very recent edits, otherwise a friendly `Jun 14, 2026`.
+ *
+ * Both inputs are ISO-8601 strings; only their date portions matter, and the
+ * day difference is computed in UTC so a machine's local timezone can't nudge
+ * an edit across the today/yesterday boundary. Anything unparseable falls back
+ * to the raw `YYYY-MM-DD`, so the line is always *something* sensible.
+ */
+export function formatEditedDate(
+  lastModifiedISO: string,
+  nowISO: string,
+  format: OvellumDateFormat = 'humanized',
+): string {
+  const iso = lastModifiedISO.slice(0, 10);
+  if (format === 'iso') return iso;
+
+  const then = Date.parse(`${iso}T00:00:00Z`);
+  const now = Date.parse(`${nowISO.slice(0, 10)}T00:00:00Z`);
+  if (!Number.isNaN(then) && !Number.isNaN(now)) {
+    const days = Math.round((now - then) / 86_400_000);
+    if (days === 0) return 'today';
+    if (days === 1) return 'yesterday';
+  }
+
+  const [y, m, d] = iso.split('-').map(Number);
+  if (y && m && d && m >= 1 && m <= 12) {
+    return `${MONTHS_SHORT[m - 1]} ${d}, ${y}`;
+  }
+  return iso;
 }
 
 async function tryGitLog(input: LastModifiedInput): Promise<string | undefined> {

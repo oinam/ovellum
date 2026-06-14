@@ -100,6 +100,7 @@ interface OvellumSiteConfig {
   palette: 'default' | 'nord' | 'flexoki' | 'solarized' | 'eink';
   accent?: string;
   font: 'sans' | 'serif' | 'inter' | 'geist';
+  dateFormat: 'humanized' | 'iso';
   codeTheme: 'github' | 'nord' | 'solarized';
   footer: string;
   credit: boolean;
@@ -131,13 +132,14 @@ interface OvellumSiteConfig {
 | `palette`        | `'default' \| 'nord' \| 'flexoki' \| 'solarized' \| 'eink'` | `'default'`  | Initial page-wide colour palette before user preference loads (`'default'` displays as "Ovellum" in the picker). Every palette ships light **and** dark variants; the mode choice stays independent. Visitors can switch palettes from the topbar appearance control.            |
 | `accent`         | `string?`                           | `undefined`                   | Default primary colour — any CSS colour value (`'#3b82f6'`, `'oklch(57% 0.16 255)'`, …). Drives the CTA buttons plus links, focus rings, and the ToC indicator; hover states are mixed automatically. Unset = each palette's own primary. Visitors can override it from the appearance control ("Color"). |
 | `font`           | `'sans' \| 'serif' \| 'inter' \| 'geist'` | `'sans'`                | Initial body font, and the default for the in-page **Font** picker. `'sans'` / `'serif'` are system-font stacks (no webfont — instant first paint). `'inter'` / `'geist'` are webfonts **bundled with the template** (served from `/assets/fonts/`) that load only when a page actually uses them. Code always stays monospace. Visitors can change the font live from the appearance control; they can also bump the reading **Text size** (a five-step scale). Both persist in `localStorage`. |
+| `dateFormat`     | `'humanized' \| 'iso'`              | `'humanized'`                 | How the page **Edited** line renders its date. `'humanized'` → `today` / `yesterday` (relative to build time) for recent edits, otherwise a friendly `Jun 14, 2026`. `'iso'` → the raw `2026-06-14`. The machine-readable date is always in the `<time datetime>` attribute regardless. |
 | `codeTheme`      | `'github' \| 'nord' \| 'solarized'` | `'github'`                    | Shiki theme pair for fenced code blocks. Both halves of the pair are emitted via CSS variables so a single build serves both light and dark. `github` → github-light + github-dark; `nord` → min-light + nord (nord ships dark-only); `solarized` → solarized-light + solarized-dark. |
 | `footer`         | `string`                            | `''`                          | Footer text, e.g. a copyright line (rendered with the build date). Empty string shows no footer text. |
 | `credit`         | `boolean`                           | `true`                        | Show a small "Built with Ovellum" credit link in the footer (→ <https://ovellum.oss.oinam.com>). Set `false` to remove it — crediting is appreciated but never required. |
 | `editUrlPattern` | `string?`                           | `undefined`                   | URL pattern with a `{path}` placeholder. `{path}` is the page's source path **relative to the build cwd** (`--cwd`). Include any repo prefix yourself, e.g. `'https://github.com/owner/repo/edit/main/website/{path}'`. When unset, the "Edit this page" link is not rendered. |
 | `headExtra`      | `string?`                           | `undefined`                   | Raw HTML injected verbatim into `<head>` on every page, just after the search bits and before the inline theme-boot script. **Not escaped or sanitised** — only set markup you control. Unset by default. Primary use: analytics snippets, e.g. `'<script defer src="https://analytics.example.com/script.js" data-website-id="…"></script>'`. |
 | `search`         | `{ enabled: boolean }`              | `{ enabled: false }`          | When `true`, `ovellum build` runs Pagefind against the output dir and the topbar gains a search box. Adds `dist/pagefind/` to the build.                                                                                       |
-| `pageMeta`       | `{ readingTime, lastModified }`     | both `true`                   | Per-page meta line above the article: `N min read · Updated YYYY-MM-DD`. `readingTime` estimates at ~200 wpm after stripping code/HTML. `lastModified` prefers `git log -1 --format=%cI` then falls back to filesystem mtime; the line is omitted if neither resolves. Set either to `false` to hide that half. |
+| `pageMeta`       | `{ readingTime, lastModified }`     | both `true`                   | Per-page meta line above the article: `N min read · Edited Jun 14, 2026`. `readingTime` estimates at ~200 wpm after stripping code/HTML. `lastModified` prefers `git log -1 --format=%cI` then falls back to filesystem mtime; the line is omitted if neither resolves. Set either to `false` to hide that half. The date's wording follows [`dateFormat`](#dateformat). |
 | `sidebar`        | `{ collapse: boolean }`             | `{ collapse: true }`          | Sidebar folder behaviour. `collapse: true` (default) renders each folder as a collapsible disclosure, closed by default — the branch containing the current page always stays open, so you can see where you are. Set `collapse: false` to render the whole tree auto-expanded. A folder's `_meta.json` may override this per-folder with `"collapse": false` (always open) or `"collapse": true` (always closed). |
 | `backToTop`      | `{ enabled, threshold }`            | `{ enabled: true, threshold: 360 }` | Floating "back to top" button. `enabled: false` removes it. `threshold` is the scroll distance (px) before it fades in — lower it for short-page sites so it appears sooner, raise it to hide it until further down. |
 | `assetBaseUrl`   | `string?`                           | `undefined`                   | CDN/base URL for `publicDir` assets (e.g. `'https://cdn.example.com/site'`). **When set**, Ovellum stops copying `publicDir` locally (you host its contents on the CDN) and rewrites references to those files in the rendered HTML to the CDN: `/img/logo.svg` → `https://cdn.example.com/site/img/logo.svg`. You author the same root-absolute paths regardless. Like Vite's `base` / Next's `assetPrefix`. Assets *outside* `publicDir` are untouched. (Query-stringed and `srcset` refs aren't rewritten.) |
@@ -178,7 +180,9 @@ shipped with the site, so it works on any static host with no server.
 - **`lastModified`** — first tries
   `git log -1 --format=%cI -- <path>` for the file. Falls back to the
   filesystem mtime if the file isn't tracked or git is unavailable.
-  Omitted if neither resolves.
+  Omitted if neither resolves. Renders as the **Edited** half of the line,
+  worded per [`dateFormat`](#dateformat) (`Edited today` / `Edited Jun 14, 2026`
+  / `Edited 2026-06-14`).
 
 Set either to `false` to hide that half of the line. Set both to `false`
 to hide the meta line entirely.

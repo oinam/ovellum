@@ -94,6 +94,10 @@ fetched only when a page actually renders in that family — i.e. when `site.fon
 is set to it, or a visitor picks it. So the default site stays zero-webfont and
 fast; the cost is paid only on opt-in. (Code stays monospace either way.)
 
+Both bundled families are under the **SIL Open Font License 1.1**, which permits
+redistributing them inside software — so Ovellum can carry them and your build
+can serve them with no licensing concern.
+
 #### Bringing your own font
 
 For a family beyond the bundled two, override the token — it's just a
@@ -101,6 +105,12 @@ CSS-variable change. **Self-hosting is recommended** over a Google Fonts link:
 it avoids the third-party connection and the privacy/GDPR concern of sending
 visitor IPs to a font CDN, and the old "shared browser cache" argument no longer
 holds (browsers partition their cache per-site).
+
+> **Check the licence first.** Self-hosting means *you* serve the font file, so
+> only use one whose licence permits web embedding. Open-font-licensed (OFL)
+> families — like the bundled Inter and Geist — are always safe. Some "free"
+> fonts are free to embed on your own site but **may not be redistributed**;
+> those are fine to self-host yourself, the responsibility is just yours.
 
 1. Drop the font (and a small stylesheet) into the
    [`publicDir`](/docs/reference/config/) — `content/public/` is copied to the
@@ -158,8 +168,8 @@ five controls (inlined into the menu sheet on mobile):
   (the dark charcoal in Ovellum).
 - **Text size** — a five-step "A" ramp that scales the reading type, written
   to `<html data-text-size>`.
-- **Font** — Default / Serif / Inter / Geist, written to `<html data-font>`;
-  Inter and Geist load on demand (see [Fonts](#fonts) above).
+- **Font** — Sans-Serif (Default) / Serif / Inter / Geist, written to
+  `<html data-font>`; Inter and Geist load on demand (see [Fonts](#fonts) above).
 
 Every choice is saved in `localStorage` and applied before paint, so
 revisits never flash the wrong colours, and a visitor's selections follow

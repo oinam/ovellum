@@ -85,6 +85,15 @@ describe('validateUserConfig', () => {
     expect(() => validateUserConfig({ site: { font: 'comic-sans' } })).toThrow(/site\.font/);
   });
 
+  it('accepts site.dateFormat humanized/iso and rejects an unknown one', () => {
+    for (const dateFormat of ['humanized', 'iso']) {
+      expect(validateUserConfig({ site: { dateFormat } })).toEqual({ site: { dateFormat } });
+    }
+    expect(() => validateUserConfig({ site: { dateFormat: 'relative' } })).toThrow(
+      /site\.dateFormat/,
+    );
+  });
+
   it('accepts a site.assetBaseUrl and rejects empty / whitespace', () => {
     expect(validateUserConfig({ site: { assetBaseUrl: 'https://cdn.example.com/x' } })).toEqual({
       site: { assetBaseUrl: 'https://cdn.example.com/x' },

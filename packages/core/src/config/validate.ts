@@ -8,6 +8,7 @@ const THEMES = ['auto', 'light', 'dark'] as const;
 const PALETTES = ['default', 'nord', 'flexoki', 'solarized', 'eink'] as const;
 const CODE_THEMES = ['github', 'nord', 'solarized'] as const;
 const FONTS = ['sans', 'serif', 'inter', 'geist'] as const;
+const DATE_FORMATS = ['humanized', 'iso'] as const;
 const CTA_STYLES = ['primary', 'secondary'] as const;
 
 function isPlainObject(value: unknown): value is Record<string, unknown> {
@@ -167,6 +168,12 @@ export function validateUserConfig(input: unknown): OvellumUserConfig {
     }
     if (s.font !== undefined && !FONTS.includes(s.font as (typeof FONTS)[number])) {
       throw new ConfigError(`\`site.font\` must be one of: ${FONTS.join(', ')}.`);
+    }
+    if (
+      s.dateFormat !== undefined &&
+      !DATE_FORMATS.includes(s.dateFormat as (typeof DATE_FORMATS)[number])
+    ) {
+      throw new ConfigError(`\`site.dateFormat\` must be one of: ${DATE_FORMATS.join(', ')}.`);
     }
     if (
       s.codeTheme !== undefined &&

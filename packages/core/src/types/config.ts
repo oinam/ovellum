@@ -31,6 +31,14 @@ export type OvellumDefaultTheme = 'auto' | 'light' | 'dark';
 export type OvellumFont = 'sans' | 'serif' | 'inter' | 'geist';
 
 /**
+ * How dates render (today, the page "Edited" line). `'humanized'` (default)
+ * shows `today` / `yesterday` / `Jun 14, 2026`; `'iso'` shows the raw
+ * `2026-06-14`. The relative words (`today`/`yesterday`) are computed against
+ * the build time, so they reflect when the site was last built.
+ */
+export type OvellumDateFormat = 'humanized' | 'iso';
+
+/**
  * Named colour palette for the whole site (page chrome, surfaces, text —
  * not just code blocks). Every palette ships a light and a dark variant;
  * the light/dark/auto mode choice stays independent (`defaultTheme`).
@@ -296,6 +304,11 @@ export interface OvellumSiteConfig {
   accent?: string;
   /** Body font family for the whole site. Defaults to `'sans'`. */
   font: OvellumFont;
+  /**
+   * Date display style — drives the page "Edited" line. `'humanized'`
+   * (default) → `today` / `yesterday` / `Jun 14, 2026`; `'iso'` → `2026-06-14`.
+   */
+  dateFormat: OvellumDateFormat;
   /** Footer text (e.g. a copyright line). Empty string shows no footer text. */
   footer: string;
   /**
@@ -457,6 +470,7 @@ export const DEFAULT_CONFIG: OvellumConfig = {
     defaultTheme: 'auto',
     palette: 'default',
     font: 'sans',
+    dateFormat: 'humanized',
     codeTheme: 'github',
     footer: '',
     credit: true,

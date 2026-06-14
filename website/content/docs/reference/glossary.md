@@ -112,11 +112,12 @@ A wider, marketing-style page rendered at `/` when
 
 ### Last modified
 
-The "Updated YYYY-MM-DD" half of the [page meta](#page-meta) line. Read
-from `git log -1 --format=%cI -- <path>` when the file is tracked,
-otherwise from the filesystem mtime. Falls back to omitting the line if
-neither resolves. Controlled by `site.pageMeta.lastModified` (default
-`true`).
+The "Edited" half of the [page meta](#page-meta) line. Read from
+`git log -1 --format=%cI -- <path>` when the file is tracked, otherwise
+from the filesystem mtime. Falls back to omitting the line if neither
+resolves. Controlled by `site.pageMeta.lastModified` (default `true`); the
+date's wording (`today` / `Jun 14, 2026` / `2026-06-14`) follows
+`site.dateFormat`.
 
 ### Manual mode
 
@@ -142,7 +143,7 @@ dropped. See [Concepts → Orphans](/docs/concepts/orphans/).
 ### Page meta
 
 The small line above each article showing reading time and last-modified
-date: `2 min read · Updated 2026-05-17`. Configured via `site.pageMeta`;
+date: `2 min read · Edited May 17, 2026`. Configured via `site.pageMeta`;
 either half can be toggled off, or you can hide the whole line by
 disabling both.
 

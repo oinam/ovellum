@@ -1,7 +1,8 @@
-import type { OvellumLandingConfig, OvellumSiteConfig } from '@ovellum/core';
+import type { OvellumDateFormat, OvellumLandingConfig, OvellumSiteConfig } from '@ovellum/core';
 import { ICONS, renderIcon, type IconName } from './icons.js';
 import type { Heading } from './markdown.js';
 import type { NavNode } from './nav.js';
+import { formatEditedDate } from './page-meta.js';
 import { assetsPrefix as assetsPrefixFor, normaliseBasePath, siteUrl } from './url.js';
 
 export interface ShellOptions {
@@ -279,7 +280,7 @@ function renderAppearancePanel(): string {
   // 'geist' are bundled webfonts that load only when picked (the preview text
   // in this panel is what pulls them, and only once the panel is opened).
   const fonts = [
-    { id: 'sans', label: 'Default' },
+    { id: 'sans', label: 'Sans-Serif (Default)' },
     { id: 'serif', label: 'Serif' },
     { id: 'inter', label: 'Inter' },
     { id: 'geist', label: 'Geist' },
@@ -535,7 +536,12 @@ export function renderPage(input: RenderPageInput): string {
   const toc = renderToc(input.headings);
   const prevNext = renderPrevNext(input.prev, input.next, basePath);
   const breadcrumbs = renderBreadcrumbs(input.breadcrumbs, basePath);
-  const pageMeta = renderPageMeta(input.readingMinutes, input.lastModified);
+  const pageMeta = renderPageMeta(
+    input.readingMinutes,
+    input.lastModified,
+    input.generatedAt,
+    input.site.dateFormat ?? 'humanized',
+  );
   const editLink = input.editUrl
     ? `<p class="ov-edit-page"><a class="ov-edit-link" href="${escapeAttr(input.editUrl)}" rel="noopener" target="_blank">Edit this page</a></p>`
     : '';
@@ -839,15 +845,17 @@ function renderBreadcrumbs(
 function renderPageMeta(
   readingMin: number | undefined,
   lastModifiedISO: string | undefined,
+  generatedAt: string,
+  dateFormat: OvellumDateFormat,
 ): string {
   const parts: string[] = [];
   if (typeof readingMin === 'number' && readingMin > 0) {
     parts.push(`<span class="ov-page-meta-read">${readingMin} min read</span>`);
   }
   if (lastModifiedISO) {
-    const date = lastModifiedISO.slice(0, 10);
+    const label = formatEditedDate(lastModifiedISO, generatedAt, dateFormat);
     parts.push(
-      `<span class="ov-page-meta-updated">Updated <time datetime="${escapeAttr(lastModifiedISO)}">${escapeHtml(date)}</time></span>`,
+      `<span class="ov-page-meta-edited">Edited <time datetime="${escapeAttr(lastModifiedISO)}">${escapeHtml(label)}</time></span>`,
     );
   }
   if (parts.length === 0) return '';
