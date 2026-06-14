@@ -99,7 +99,7 @@ interface OvellumSiteConfig {
   defaultTheme: 'auto' | 'light' | 'dark';
   palette: 'default' | 'nord' | 'flexoki' | 'solarized' | 'eink';
   accent?: string;
-  font: 'sans' | 'serif';
+  font: 'sans' | 'serif' | 'inter' | 'geist';
   codeTheme: 'github' | 'nord' | 'solarized';
   footer: string;
   credit: boolean;
@@ -130,7 +130,7 @@ interface OvellumSiteConfig {
 | `defaultTheme`   | `'auto' \| 'light' \| 'dark'`       | `'auto'`                      | Initial light/dark mode before user preference loads. Visitors can change it from the topbar appearance control (persisted in `localStorage`).                                                                                  |
 | `palette`        | `'default' \| 'nord' \| 'flexoki' \| 'solarized' \| 'eink'` | `'default'`  | Initial page-wide colour palette before user preference loads (`'default'` displays as "Ovellum" in the picker). Every palette ships light **and** dark variants; the mode choice stays independent. Visitors can switch palettes from the topbar appearance control.            |
 | `accent`         | `string?`                           | `undefined`                   | Default primary colour — any CSS colour value (`'#3b82f6'`, `'oklch(57% 0.16 255)'`, …). Drives the CTA buttons plus links, focus rings, and the ToC indicator; hover states are mixed automatically. Unset = each palette's own primary. Visitors can override it from the appearance control ("Color"). |
-| `font`           | `'sans' \| 'serif'`                 | `'sans'`                      | Body font family for the whole site. `'sans'` uses the system sans-serif stack; `'serif'` switches body, headings, and prose to the system serif stack. Code blocks always stay monospace. Both are system-font stacks — no webfonts.                                       |
+| `font`           | `'sans' \| 'serif' \| 'inter' \| 'geist'` | `'sans'`                | Initial body font, and the default for the in-page **Font** picker. `'sans'` / `'serif'` are system-font stacks (no webfont — instant first paint). `'inter'` / `'geist'` are webfonts **bundled with the template** (served from `/assets/fonts/`) that load only when a page actually uses them. Code always stays monospace. Visitors can change the font live from the appearance control; they can also bump the reading **Text size** (a five-step scale). Both persist in `localStorage`. |
 | `codeTheme`      | `'github' \| 'nord' \| 'solarized'` | `'github'`                    | Shiki theme pair for fenced code blocks. Both halves of the pair are emitted via CSS variables so a single build serves both light and dark. `github` → github-light + github-dark; `nord` → min-light + nord (nord ships dark-only); `solarized` → solarized-light + solarized-dark. |
 | `footer`         | `string`                            | `''`                          | Footer text, e.g. a copyright line (rendered with the build date). Empty string shows no footer text. |
 | `credit`         | `boolean`                           | `true`                        | Show a small "Built with Ovellum" credit link in the footer (→ <https://ovellum.oss.oinam.com>). Set `false` to remove it — crediting is appreciated but never required. |

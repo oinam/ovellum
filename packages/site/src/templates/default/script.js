@@ -1,6 +1,7 @@
 // Ovellum default template — client-side enhancements.
-// 1) Appearance control: mode (auto/light/dark), palette, accent — wired to
-//    <html data-theme / data-palette / --ov-accent>, persisted in localStorage.
+// 1) Appearance control: mode (auto/light/dark), palette, accent, text size,
+//    and body font — wired to <html data-theme / data-palette / --ov-accent /
+//    data-text-size / data-font>, persisted in localStorage.
 // 2) Copy button on every <pre> code block.
 // 3) Mobile menu toggle (hamburger ↔ sheet).
 // 4) Cmd/Ctrl+K → focus the search input; small kbd hint chip in the box.
@@ -9,6 +10,8 @@
   var MODE_KEY = 'ovellum-theme'; // legacy key name, kept for continuity
   var PALETTE_KEY = 'ovellum-palette';
   var ACCENT_KEY = 'ovellum-accent';
+  var TEXT_SIZE_KEY = 'ovellum-text-size';
+  var FONT_KEY = 'ovellum-font';
   var MODES = ['auto', 'light', 'dark'];
 
   function readMode() {
@@ -85,6 +88,23 @@
     refreshAppearance();
   }
 
+  // Reader text size — sets data-text-size (xs|s|m|l|xl); CSS scales the whole
+  // type scale via --ov-text-scale. 'm' is the untouched default.
+  function setTextSize(size) {
+    root.setAttribute('data-text-size', size);
+    store(TEXT_SIZE_KEY, size);
+    refreshAppearance();
+  }
+
+  // Body font — sets data-font (sans|serif|inter|geist). For inter/geist the
+  // bundled webfont loads here, the moment the family is applied (font-display:
+  // swap keeps it flash-free); sans/serif are system stacks, nothing loads.
+  function setFont(font) {
+    root.setAttribute('data-font', font);
+    store(FONT_KEY, font);
+    refreshAppearance();
+  }
+
   // Mirror <html> state into every control instance (desktop popover +
   // mobile sheet) — aria-pressed drives the visual state in CSS, so the
   // copies can't drift.
@@ -106,6 +126,17 @@
         'aria-pressed',
         btn.getAttribute('data-ov-accent') === accent ? 'true' : 'false',
       );
+    });
+    var textSize = root.getAttribute('data-text-size') || 'm';
+    var font = root.getAttribute('data-font') || 'sans';
+    document.querySelectorAll('[data-ov-text-size]').forEach(function (btn) {
+      btn.setAttribute(
+        'aria-pressed',
+        btn.getAttribute('data-ov-text-size') === textSize ? 'true' : 'false',
+      );
+    });
+    document.querySelectorAll('[data-ov-font]').forEach(function (btn) {
+      btn.setAttribute('aria-pressed', btn.getAttribute('data-ov-font') === font ? 'true' : 'false');
     });
     // The custom input doubles as the "current custom colour" swatch when the
     // stored accent is a hex value (presets are oklch strings, skipped).
@@ -169,6 +200,16 @@
   document.querySelectorAll('[data-ov-accent-custom]').forEach(function (input) {
     input.addEventListener('input', function () {
       setAccent(input.value);
+    });
+  });
+  document.querySelectorAll('[data-ov-text-size]').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      setTextSize(btn.getAttribute('data-ov-text-size'));
+    });
+  });
+  document.querySelectorAll('[data-ov-font]').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      setFont(btn.getAttribute('data-ov-font'));
     });
   });
 

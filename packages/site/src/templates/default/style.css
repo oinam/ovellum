@@ -92,8 +92,16 @@
 
   --ratio: var(--major-third);
 
-  /* Base (step 0) — fluid body size; every other step derives from it. */
-  --font-size-0: clamp(0.9375rem, 0.9158rem + 0.1087vw, 1rem);
+  /* Reader text-size control. The appearance panel sets `data-text-size` on
+     <html> (xs|s|m|l|xl, default m); each maps to a multiplier below that
+     scales the base step — and therefore the WHOLE modular scale (body +
+     every heading + prose) proportionally, like a Kindle / Safari-Reader size
+     stepper. Default 1 = untouched. */
+  --ov-text-scale: 1;
+
+  /* Base (step 0) — fluid body size × the reader scale; every other step
+     derives from it. */
+  --font-size-0: calc(clamp(0.9375rem, 0.9158rem + 0.1087vw, 1rem) * var(--ov-text-scale));
   --font-size-1: calc(var(--font-size-0) * var(--ratio));
   --font-size-2: calc(var(--font-size-1) * var(--ratio));
   --font-size-3: calc(var(--font-size-2) * var(--ratio));
@@ -441,10 +449,57 @@ html {
     scroll-behavior: auto;
   }
 }
-/* Serif opt-in (site.font: 'serif'). Swaps the body-font role for the whole
-   document — body, headings, and prose follow; code stays monospace. */
+/* Reader text-size steps — see --ov-text-scale above. Default (m) is the
+   untouched 1×; two steps smaller, two larger. Modest range so the fixed
+   chrome (header height) never breaks. */
+:root[data-text-size='xs'] {
+  --ov-text-scale: 0.875;
+}
+:root[data-text-size='s'] {
+  --ov-text-scale: 0.9375;
+}
+:root[data-text-size='m'] {
+  --ov-text-scale: 1;
+}
+:root[data-text-size='l'] {
+  --ov-text-scale: 1.0625;
+}
+:root[data-text-size='xl'] {
+  --ov-text-scale: 1.125;
+}
+
+/* ── Bundled webfonts (font picker) ─────────────────────────────────────────
+   Inter and Geist ship inside the template and are served from /assets/fonts/.
+   These @font-face rules are LAZY by spec: declaring them costs nothing — the
+   browser fetches a file only when text actually renders in that family, i.e.
+   when `data-font` is 'inter'/'geist' (set by site.font or the panel). So the
+   default site stays zero-webfont and fast. URLs are relative to this
+   stylesheet (/assets/ovellum.css → /assets/fonts/…). */
+@font-face {
+  font-family: 'Inter var';
+  src: url('fonts/inter/InterVariable.woff2') format('woff2');
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Geist var';
+  src: url('fonts/geist/Geist-Variable.ttf') format('truetype');
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* Body-font role. `site.font` renders the initial `data-font`; the appearance
+   panel can override it live. Code always stays monospace. */
 :root[data-font='serif'] {
   --font-body: var(--font-serif);
+}
+:root[data-font='inter'] {
+  --font-body: 'Inter var', var(--font-sans);
+}
+:root[data-font='geist'] {
+  --font-body: 'Geist var', var(--font-sans);
 }
 
 body {
@@ -944,6 +999,106 @@ a:hover {
 .ov-appearance-accent--custom input::-moz-color-swatch {
   border: 0;
   border-radius: 50%;
+}
+/* Text size — segmented "A" ramp (no text labels): two steps smaller, the
+   default in the middle, two larger. The glyph grows across the cells so the
+   control reads as a size scale on its own. */
+.ov-appearance-sizes {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
+.ov-appearance-size {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-3xs) 0;
+  border: 0;
+  background: transparent;
+  font: inherit;
+  line-height: 1;
+  color: var(--color-fg-muted);
+  cursor: pointer;
+}
+.ov-appearance-size + .ov-appearance-size {
+  border-inline-start: 1px solid var(--color-border);
+}
+.ov-appearance-size:hover {
+  color: var(--color-fg);
+}
+.ov-appearance-size[aria-pressed='true'] {
+  background: var(--color-bg-muted);
+  color: var(--color-fg);
+}
+.ov-appearance-size-a {
+  font-weight: 600;
+}
+.ov-appearance-size[data-ov-text-size='xs'] .ov-appearance-size-a {
+  font-size: 0.66rem;
+}
+.ov-appearance-size[data-ov-text-size='s'] .ov-appearance-size-a {
+  font-size: 0.8rem;
+}
+.ov-appearance-size[data-ov-text-size='m'] .ov-appearance-size-a {
+  font-size: 0.95rem;
+}
+.ov-appearance-size[data-ov-text-size='l'] .ov-appearance-size-a {
+  font-size: 1.12rem;
+}
+.ov-appearance-size[data-ov-text-size='xl'] .ov-appearance-size-a {
+  font-size: 1.3rem;
+}
+/* Font family — the quiet Theme rows, reused; each label previews its own face. */
+.ov-appearance-fonts {
+  display: grid;
+}
+.ov-appearance-font {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2xs);
+  padding: var(--space-3xs) var(--space-2xs);
+  border: 0;
+  border-radius: var(--radius-md);
+  background: transparent;
+  font: inherit;
+  font-size: 0.9rem;
+  color: var(--color-fg-muted);
+  text-align: start;
+  cursor: pointer;
+}
+.ov-appearance-font:hover {
+  background: var(--color-inline-code-bg);
+  color: var(--color-fg);
+}
+.ov-appearance-font[aria-pressed='true'] {
+  color: var(--color-fg);
+}
+.ov-appearance-font-name {
+  flex: 1;
+}
+/* Preview each option in its own face. These font-family declarations are what
+   pull the webfont — and only when the panel is open (it's display:none until
+   then), so Inter/Geist never load on a normal page view. */
+.ov-appearance-font[data-ov-font='sans'] .ov-appearance-font-name {
+  font-family: var(--font-sans);
+}
+.ov-appearance-font[data-ov-font='serif'] .ov-appearance-font-name {
+  font-family: var(--font-serif);
+}
+.ov-appearance-font[data-ov-font='inter'] .ov-appearance-font-name {
+  font-family: 'Inter var', var(--font-sans);
+}
+.ov-appearance-font[data-ov-font='geist'] .ov-appearance-font-name {
+  font-family: 'Geist var', var(--font-sans);
+}
+.ov-appearance-font .ov-appearance-check {
+  visibility: hidden;
+  color: var(--color-fg-subtle);
+}
+.ov-appearance-font[aria-pressed='true'] .ov-appearance-check {
+  visibility: visible;
 }
 
 /* Mobile menu button — hidden on desktop, shown below the breakpoint. */

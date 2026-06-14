@@ -324,6 +324,29 @@ describe('renderPage', () => {
     expect(html).toContain('data-ov-accent-custom');
     // No accent configured → no server-rendered override on <html>.
     expect(html).not.toContain('data-accent="custom"');
+    // Text-size scale: five steps, default in the middle.
+    for (const size of ['xs', 's', 'm', 'l', 'xl']) {
+      expect(html).toContain(`data-ov-text-size="${size}"`);
+    }
+    // Font picker: the four families.
+    for (const font of ['sans', 'serif', 'inter', 'geist']) {
+      expect(html).toContain(`data-ov-font="${font}"`);
+    }
+    // Unconfigured font falls back to system sans on <html>.
+    expect(html).toContain('data-font="sans"');
+  });
+
+  it('renders site.font as the initial data-font (e.g. a bundled webfont)', () => {
+    const html = renderPage({
+      site: { title: 'X', defaultTheme: 'auto', footer: '', font: 'geist' },
+      nav: NAV,
+      url: '/',
+      title: 'X',
+      bodyHtml: '',
+      headings: [],
+      generatedAt: '2026-06-12T00:00:00.000Z',
+    });
+    expect(html).toContain('data-font="geist"');
   });
 
   it('server-renders site.palette and site.accent onto <html>', () => {

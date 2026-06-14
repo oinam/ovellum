@@ -19,13 +19,16 @@ export interface ProtectConfig {
 export type OvellumDefaultTheme = 'auto' | 'light' | 'dark';
 
 /**
- * Body font family for the whole site (docs + landing). `'sans'` uses the
- * system sans-serif stack (default); `'serif'` switches body, headings, and
- * prose to the system serif stack. Code always stays monospace. Both are
- * system-font stacks — no webfonts. Custom font families are a planned future
- * extension (see `docs/internal/TODO.md`).
+ * Body font family for the whole site (docs + landing), and the default for the
+ * in-page font picker. `'sans'` (default) and `'serif'` are system-font stacks —
+ * no webfont loads. `'inter'` and `'geist'` are webfonts **bundled with the
+ * template** and served from `/assets/fonts/`: a build sets `data-font` from
+ * this value, and the font downloads only when a page actually uses it (so the
+ * default stays zero-webfont and fast). Visitors can override the choice live
+ * via the appearance panel regardless of this default. Code always stays
+ * monospace.
  */
-export type OvellumFont = 'sans' | 'serif';
+export type OvellumFont = 'sans' | 'serif' | 'inter' | 'geist';
 
 /**
  * Named colour palette for the whole site (page chrome, surfaces, text —

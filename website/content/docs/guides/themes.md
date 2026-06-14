@@ -70,21 +70,37 @@ Code-block syntax themes are independent and selectable via
 
 ### Fonts
 
-Three font roles, all CSS variables:
+Font roles are CSS variables: `--font-sans` (body + headings), `--font-mono`
+(code), `--font-serif` (the serif option). The active body font is
+`--font-body`, set from `site.font` and overridable live by the visitor.
 
-- `--font-sans` — body and headings.
-- `--font-mono` — code blocks and inline code.
-- `--font-serif` — used when `site.font: 'serif'`.
+The default ships **system-font only** — instant first paint, no webfont hop.
 
-The active body font is `--font-body`, which points at `--font-sans` or
-`--font-serif` depending on `site.font`. The shipped default theme is
-**system-font only** — instant first paint, no webfont hop.
+#### The built-in font picker
 
-To use a **custom font**, override the token; it's just a CSS-variable change.
-**Self-hosting is recommended** over a Google Fonts link — it avoids the
-third-party connection (better performance) and the privacy/GDPR concern of
-sending visitor IPs to a font CDN, and the old "shared browser cache" argument
-no longer holds (browsers partition their cache per-site).
+[`site.font`](/docs/reference/config/) takes **four** values, and the appearance
+control exposes the same set as a live **Font** picker:
+
+| Value     | Font                              | Loads a webfont?                 |
+| --------- | --------------------------------- | -------------------------------- |
+| `'sans'`  | System sans-serif stack (default) | No                               |
+| `'serif'` | System serif (Georgia, …)         | No                               |
+| `'inter'` | Inter                             | Yes — **bundled**, on demand     |
+| `'geist'` | Geist                             | Yes — **bundled**, on demand     |
+
+Inter and Geist ship **inside the template** (served from `/assets/fonts/`), so
+there's nothing to host. Their `@font-face` rules are lazy by spec: a file is
+fetched only when a page actually renders in that family — i.e. when `site.font`
+is set to it, or a visitor picks it. So the default site stays zero-webfont and
+fast; the cost is paid only on opt-in. (Code stays monospace either way.)
+
+#### Bringing your own font
+
+For a family beyond the bundled two, override the token — it's just a
+CSS-variable change. **Self-hosting is recommended** over a Google Fonts link:
+it avoids the third-party connection and the privacy/GDPR concern of sending
+visitor IPs to a font CDN, and the old "shared browser cache" argument no longer
+holds (browsers partition their cache per-site).
 
 1. Drop the font (and a small stylesheet) into the
    [`publicDir`](/docs/reference/config/) — `content/public/` is copied to the
@@ -97,38 +113,39 @@ no longer holds (browsers partition their cache per-site).
 ```css
 /* content/public/site.css → served at /site.css */
 @font-face {
-  font-family: 'Geist';
-  src: url('/fonts/geist/Geist%5Bwght%5D.ttf') format('truetype');
+  font-family: 'My Font';
+  src: url('/fonts/my-font.woff2') format('woff2');
   font-weight: 100 900; /* variable weight axis */
   font-display: swap;
 }
-@font-face {
-  font-family: 'Geist Mono';
-  src: url('/fonts/geist/GeistMono%5Bwght%5D.ttf') format('truetype');
-  font-weight: 100 900;
-  font-display: swap;
-}
 :root {
-  --font-sans: 'Geist', ui-sans-serif, system-ui, sans-serif;
-  --font-mono: 'Geist Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+  --font-sans: 'My Font', ui-sans-serif, system-ui, sans-serif;
 }
 ```
 
 ```html
 <!-- site.headExtra (ovellum.config.*) -->
-<link rel="preload" href="/fonts/geist/Geist%5Bwght%5D.ttf" as="font" type="font/ttf" crossorigin>
+<link rel="preload" href="/fonts/my-font.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="/site.css">
 ```
 
-Body, headings, and prose pick up `--font-sans` automatically; code follows
-`--font-mono`. The `headExtra` stylesheet loads after the theme's CSS, so its
-`:root` override wins; the `preload` warms the font fetch. This site itself
-runs on self-hosted Geist (with Geist Mono for code) exactly this way.
+Body, headings, and prose pick up `--font-sans` automatically. The `headExtra`
+stylesheet loads after the theme's CSS, so its `:root` override wins; the
+`preload` warms the fetch. (A token override like this overrides the picker
+default — your font, not the system stack, becomes the baseline.)
+
+### Reading text size
+
+The appearance control also carries a five-step **Text size** scale (two steps
+smaller, the default in the middle, two larger), rendered as a graduated "A"
+ramp — like a Kindle or Safari Reader size stepper. It scales the whole modular
+type scale (body and every heading) proportionally via `--ov-text-scale`,
+written to `<html data-text-size>` and remembered per visitor.
 
 ## The appearance control
 
 The palette icon at the right end of the topbar opens a small panel with
-three controls (inlined into the menu sheet on mobile):
+five controls (inlined into the menu sheet on mobile):
 
 - **Mode** — `auto` (follow the OS via `prefers-color-scheme`), `light`,
   or `dark`, written to `<html data-theme>`.
@@ -139,6 +156,10 @@ three controls (inlined into the menu sheet on mobile):
   mixed from it automatically. Six presets, a native custom-colour picker,
   and a leading **Default** swatch that returns to the theme's own primary
   (the dark charcoal in Ovellum).
+- **Text size** — a five-step "A" ramp that scales the reading type, written
+  to `<html data-text-size>`.
+- **Font** — Default / Serif / Inter / Geist, written to `<html data-font>`;
+  Inter and Geist load on demand (see [Fonts](#fonts) above).
 
 Every choice is saved in `localStorage` and applied before paint, so
 revisits never flash the wrong colours, and a visitor's selections follow

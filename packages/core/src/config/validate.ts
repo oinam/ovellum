@@ -7,7 +7,7 @@ const ORPHAN_STRATEGIES = ['quarantine', 'warn'] as const;
 const THEMES = ['auto', 'light', 'dark'] as const;
 const PALETTES = ['default', 'nord', 'flexoki', 'solarized', 'eink'] as const;
 const CODE_THEMES = ['github', 'nord', 'solarized'] as const;
-const FONTS = ['sans', 'serif'] as const;
+const FONTS = ['sans', 'serif', 'inter', 'geist'] as const;
 const CTA_STYLES = ['primary', 'secondary'] as const;
 
 function isPlainObject(value: unknown): value is Record<string, unknown> {

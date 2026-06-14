@@ -118,6 +118,19 @@ function renderShell(opts: ShellOptions): string {
           d.style.setProperty('--ov-accent', a);
           d.setAttribute('data-accent', 'custom');
         }
+        // Reader text size (xs|s|m|l|xl) — set pre-paint so the type scale is
+        // right on first paint. 'm' is the default (no attribute needed).
+        var ts = localStorage.getItem('ovellum-text-size');
+        if (ts === 'xs' || ts === 's' || ts === 'l' || ts === 'xl') {
+          d.setAttribute('data-text-size', ts);
+        }
+        // Body font. The server already set data-font from site.font; a stored
+        // choice overrides it. 'inter'/'geist' pull a bundled webfont (only
+        // here, when actually applied), so the swap is flash-free.
+        var f = localStorage.getItem('ovellum-font');
+        if (f === 'sans' || f === 'serif' || f === 'inter' || f === 'geist') {
+          d.setAttribute('data-font', f);
+        }
         var effective = t;
         if (t === 'auto') {
           effective = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
@@ -252,6 +265,25 @@ function renderAppearancePanel(): string {
     { value: 'oklch(60% 0.17 15)', label: 'Rose' },
     { value: 'oklch(60% 0.11 200)', label: 'Teal' },
   ];
+  // Reader text-size steps — default in the middle, two smaller, two larger.
+  // Rendered as a graduated "A" ramp (no text labels), like Kindle / Safari
+  // Reader. Drives --ov-text-scale, scaling the whole type scale.
+  const textSizes = [
+    { id: 'xs', label: 'Smallest' },
+    { id: 's', label: 'Small' },
+    { id: 'm', label: 'Default' },
+    { id: 'l', label: 'Large' },
+    { id: 'xl', label: 'Largest' },
+  ];
+  // Body font family. 'sans'/'serif' are system stacks (no webfont); 'inter'/
+  // 'geist' are bundled webfonts that load only when picked (the preview text
+  // in this panel is what pulls them, and only once the panel is opened).
+  const fonts = [
+    { id: 'sans', label: 'Default' },
+    { id: 'serif', label: 'Serif' },
+    { id: 'inter', label: 'Inter' },
+    { id: 'geist', label: 'Geist' },
+  ];
   const modeButtons = modes
     .map(
       (m) => `<button type="button" class="ov-appearance-mode" data-ov-mode="${m.id}"
@@ -268,6 +300,18 @@ function renderAppearancePanel(): string {
     .map(
       (a) => `<button type="button" class="ov-appearance-accent" data-ov-accent="${escapeAttr(a.value)}"
             style="--swatch: ${escapeAttr(a.value)}" aria-pressed="false" aria-label="${a.label}" title="${a.label}"></button>`,
+    )
+    .join('\n          ');
+  const sizeButtons = textSizes
+    .map(
+      (s) => `<button type="button" class="ov-appearance-size" data-ov-text-size="${s.id}"
+            aria-pressed="false" aria-label="${s.label}" title="${s.label}"><span class="ov-appearance-size-a" aria-hidden="true">A</span></button>`,
+    )
+    .join('\n          ');
+  const fontButtons = fonts
+    .map(
+      (f) => `<button type="button" class="ov-appearance-font" data-ov-font="${f.id}"
+            aria-pressed="false"><span class="ov-appearance-font-name">${f.label}</span>${renderIcon('check', { size: 14, class: 'ov-appearance-check' })}</button>`,
     )
     .join('\n          ');
   return `<div class="ov-appearance-panel" data-ov-appearance-panel hidden>
@@ -290,6 +334,18 @@ function renderAppearancePanel(): string {
             aria-pressed="false" aria-label="Default" title="Default"></button>
           ${accentButtons}
           <span class="ov-appearance-accent ov-appearance-accent--custom" title="Custom colour"><input type="color" data-ov-accent-custom aria-label="Custom colour" value="#3b82f6"></span>
+          </div>
+        </div>
+        <div class="ov-appearance-group">
+          <span class="ov-appearance-label">Text size</span>
+          <div class="ov-appearance-sizes" role="group" aria-label="Text size">
+          ${sizeButtons}
+          </div>
+        </div>
+        <div class="ov-appearance-group">
+          <span class="ov-appearance-label">Font</span>
+          <div class="ov-appearance-fonts" role="group" aria-label="Font family">
+          ${fontButtons}
           </div>
         </div>
       </div>`;

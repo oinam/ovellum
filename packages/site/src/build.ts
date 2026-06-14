@@ -662,6 +662,14 @@ async function writeStaticAssets(assetsAbs: string): Promise<void> {
   const templateDir = resolveTemplateDir();
   await copyFile(path.join(templateDir, 'style.css'), path.join(assetsAbs, 'ovellum.css'));
   await copyFile(path.join(templateDir, 'script.js'), path.join(assetsAbs, 'ovellum.js'));
+  // Bundled webfonts (Inter, Geist) for the font picker. The @font-face rules
+  // in ovellum.css reference them at fonts/… relative to the stylesheet, so
+  // they must land in assets/fonts/. Lazy by spec — the browser only fetches a
+  // file when a page actually renders in that family (data-font=inter|geist).
+  const fontsDir = path.join(templateDir, 'fonts');
+  if (existsSync(fontsDir)) {
+    await cp(fontsDir, path.join(assetsAbs, 'fonts'), { recursive: true });
+  }
 }
 
 function resolveTemplateDir(): string {

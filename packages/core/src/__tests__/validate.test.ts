@@ -78,6 +78,13 @@ describe('validateUserConfig', () => {
     );
   });
 
+  it('accepts every named site.font and rejects an unknown one', () => {
+    for (const font of ['sans', 'serif', 'inter', 'geist']) {
+      expect(validateUserConfig({ site: { font } })).toEqual({ site: { font } });
+    }
+    expect(() => validateUserConfig({ site: { font: 'comic-sans' } })).toThrow(/site\.font/);
+  });
+
   it('accepts a site.assetBaseUrl and rejects empty / whitespace', () => {
     expect(validateUserConfig({ site: { assetBaseUrl: 'https://cdn.example.com/x' } })).toEqual({
       site: { assetBaseUrl: 'https://cdn.example.com/x' },

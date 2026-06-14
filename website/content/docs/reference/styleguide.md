@@ -12,16 +12,18 @@ your own pages get. It documents the type scale, the vertical rhythm, the colour
 system, and each content element you can write.
 
 Try the **appearance control** in the top bar while you read: switch mode
-(auto / light / dark), pick a theme, or set a colour. Everything on this page
-re-tints live, because it's all driven by the same design tokens.
+(auto / light / dark), pick a theme, set a colour, bump the **text size**, or
+change the **font** (Default / Serif / Inter / Geist). Everything on this page
+re-tints and re-flows live, because it's all driven by the same design tokens.
 
 ## Typography
 
-Text and headings are set in **Geist**; code is set in **Geist Mono** — both
-self-hosted variable fonts, loaded with `font-display: swap` so text paints
-immediately in a fallback and swaps when the face arrives. The typeface is the
-*site's* choice (set once, in config); the scale, rhythm, and colour below are
-Ovellum's shipped defaults and apply to any template.
+Text and headings use the **system sans-serif** stack by default — instant first
+paint, no webfont hop. Readers can switch to **Serif**, **Inter**, or **Geist**
+from the appearance control's **Font** picker (Inter and Geist ship with the
+template and load only when chosen), and step the **Text size** up or down. The
+typeface and size are the *reader's* choice; the scale, rhythm, and colour below
+are Ovellum's shipped defaults and apply to any template.
 
 Body text runs at a **`1.55` line-height** inside a **`76ch` measure** — the
 reading column is capped at roughly 76 characters per line, the band where long
