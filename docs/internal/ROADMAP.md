@@ -171,17 +171,128 @@ A1 unlocks A2–A4.
       the planned `site.minify` esbuild gating) and, later, OG-image
       generation per page.
 
-### Tier C — the AI age
+### Tier C — the AI age ("AI-Ready" theme)
 
-- [ ] **C1 (S)** **`llms.txt` + Markdown mirror emission** — emit `llms.txt`
-      and per-page `.md` alongside HTML at build. Cheap (we *have* the
-      Markdown), high adoption signal, and no other small builder does it
-      well. Do this before C2.
-- [ ] **C2 (L)** **MCP server / Claude Skill** — tools like `ovellum_build`,
-      `ovellum_check`, `ovellum_query_symbol`, exposing the IR so agents
-      write prose into protected zones that survives regeneration (the same
-      contract humans get). Needs a design pass; backlog already sketches it.
-      A1 (IR persistence) is the natural prerequisite.
+**Theme (proposed, design NOT yet locked — task prepared 2026-06-14 on
+maintainer request; "we won't do now, but prepare").** Make Ovellum
+**AI-Ready / AI-Native** along three independent surfaces — the docs it
+*emits*, the tool an agent *drives*, and the packaging that tells an agent
+*how*. They ship as separate slices; C1 (output) is cheap and standalone, C3
+(CLI) overlaps U4, C2 (MCP) is the headline and needs IR persistence (A1)
+first. Sequence: **C1 → C3 → C2 → C4/C5**.
+
+The framing to hold: Ovellum's identity is the anti-drift hybrid contract —
+hand prose and generated docs co-exist and survive regeneration. The
+AI-Ready story is *the same contract extended to agents*: an agent reads the
+docs as clean Markdown (C1), drives builds/checks with machine-readable I/O
+(C3), and writes prose into protected zones over MCP that survives the next
+regeneration exactly as a human's does (C2). That last point is the
+differentiator no other docs tool can make.
+
+#### C1 — AI-friendly documentation output (the `llms.txt` standard)
+
+- [ ] **C1 (S–M)** Emit AI-consumable docs alongside the HTML at build. We
+      already hold the rendered Markdown, so most of this is plumbing + a
+      config gate. Three artifacts, per the emerging
+      [llmstxt.org](https://llmstxt.org) convention:
+  - **`/llms.txt`** (site root) — a curated, link-first **index**: site title
+        + one-line description, then a flat or sectioned list of every page as
+        `[Title](url): one-line summary`. Summary comes from frontmatter
+        `description` → first paragraph fallback. This is the map an agent
+        fetches first.
+  - **`/llms-full.txt`** — the **entire docs corpus concatenated** as one
+        Markdown stream (front-matter-stripped, H1-delimited per page, in
+        sidebar order). One fetch, whole-site context. Gate behind a size note
+        — warn if it gets large.
+  - **Per-page `.md` mirror** — the raw Markdown for each page at a
+        predictable URL. Convention to settle in the design pass: **append
+        `.md` to the page URL** (`/guide/intro/` → `/guide/intro.md` or
+        `/guide/intro/index.md`). Lets an agent (or a human `curl`) get clean
+        source for any single page without HTML-stripping.
+  - **Config:** opt-in `site.ai` block — at minimum `{ llmsTxt?: boolean,
+        fullText?: boolean, mdMirror?: boolean }` (bikeshed names in design).
+        Decide default-on vs default-off: leaning **default-on for `llms.txt`
+        + `.md` mirror** (cheap, pure upside, strong adoption signal) and
+        **default-off for `llms-full.txt`** (can be heavy). Single-language
+        output must stay byte-identical when the block is unset.
+  - **i18n:** per-locale variants — `/llms.txt` for the default locale,
+        `/ja/llms.txt` for others (reuses the locale-subtree plumbing). Drafts
+        excluded always (same rule as sitemap/RSS/hreflang).
+  - **Discoverability:** optional `<link rel="alternate" type="text/markdown">`
+        per page pointing at its `.md` mirror; mention `llms.txt` in
+        `robots.txt`/head if cheap.
+  - **Hybrid/auto mode bonus:** when docs are generated from source, the `.md`
+        mirror is *already* the merger's canonical Markdown — the AI mirror and
+        the human source are the same artifact. Worth calling out as the
+        natural fit.
+
+#### C2 — MCP server (the headline; needs A1 first)
+
+- [ ] **C2 (L)** Ship Ovellum as an **MCP server** so agents drive it as a
+      first-class tool. Form: a new `ovellum mcp` subcommand launching a
+      **stdio MCP server** (preferred over a separate package — one install,
+      one binary; revisit if it bloats the CLI). Needs its own design pass.
+      **A1 (IR persistence) is the hard prerequisite** for the query/write
+      tools — they read `.ovellum/ir.json`.
+  - **Read tools (ship first, low risk):** `ovellum_build`, `ovellum_check`
+        (returns structured findings — reuse C3's JSON), `ovellum_query_symbol`
+        (look up a symbol in the persisted IR — signature, anchor, source loc),
+        `ovellum_search_docs` (over the site's Markdown/Pagefind index),
+        `ovellum_get_page` (the C1 `.md` mirror for one page),
+        `ovellum_list_orphans` (once A4 lands).
+  - **The write tool (the differentiator):** `ovellum_write_zone` — an agent
+        writes prose into a **protected zone** addressed by anchor id; the
+        merge engine guarantees it survives the next regeneration, exactly the
+        contract a human editing between `@manual:start/end` gets. This is the
+        single feature no other docs MCP can offer — it's the hybrid moat
+        exposed to agents. Design must cover: addressing (anchor id vs
+        symbol), conflict/orphan behavior on write, and a dry-run/preview.
+  - **Packaging overlap with C4** (Claude Skill) — decide whether the Skill
+        wraps the MCP server or stands alone.
+  - Backlog already sketches this; keep the tool surface small and
+        IR-backed rather than shelling out per call where avoidable.
+
+#### C3 — AI-usable CLI (machine-readable I/O — folds in U4)
+
+- [ ] **C3 (M)** An agent shouldn't *need* MCP to drive Ovellum — a clean CLI
+      contract is the floor. **Largely the same work as U4** (`--json` +
+      `--verbose`); pull it forward under the AI-Ready theme and treat the
+      machine-readable surface as a first-class deliverable, not a CI
+      afterthought.
+  - **`--json` on `build` / `check` / `diff`** — structured results (counts,
+        warnings with severity per B8, broken links, stale translations, draft
+        exclusions, orphan list) as a stable schema an agent parses. No
+        decorative output on the JSON path.
+  - **Stable exit codes + structured errors** — distinct codes for
+        config-invalid / build-failed / check-found-issues so an agent
+        branches without scraping stderr.
+  - **Quiet/non-TTY hygiene** — already good (update notifier suppresses in
+        CI); confirm every command degrades cleanly when piped.
+  - **Document the contract** — a `/docs/guides/automation/` (or
+        `…/ai-agents/`) page: the JSON schemas, exit codes, and "drive Ovellum
+        from a script/agent" recipes. This is also where C1/C2 get
+        cross-referenced.
+
+#### C4 — agent packaging (Claude Skill / `AGENTS.md`)
+
+- [ ] **C4 (S–M)** Tell agents *how* to use Ovellum, in the formats agents
+      look for. Two cheap, high-signal artifacts:
+  - **A Claude Skill** (`SKILL.md` + the MCP wiring or CLI recipes) — "set up
+        and maintain Ovellum docs" — so it's one-step adoptable in Claude Code.
+  - **An `AGENTS.md`** at the repo root (and/or scaffolded by `ovellum init`)
+        describing the hybrid contract, protected-zone rules, and the commands
+        an agent should run. This is the convention coalescing across tools for
+        "instructions to coding agents." Cheap to write, meets agents where
+        they look.
+
+#### C5 — positioning (do alongside C1, not as code)
+
+- [ ] **C5 (S)** Once C1 ships, say so where adopters read: a short
+      **"Ovellum for AI / agents"** landing or docs section — "your docs are
+      `llms.txt`-ready out of the box; agents can read and *safely edit* them."
+      Editorial-calm, no hype. This is the close-circle-announcement-grade
+      surface the maintainer cares about (no stale facts) — write it only after
+      the feature is real.
 
 ## 3. Usability
 
@@ -268,6 +379,14 @@ A1 unlocks A2–A4.
 > Editor")** — design locked above: `draft: true` repurposed to dev-visible/
 > prod-excluded, `_meta.json "draft"` for folders, automatic by command, ribbon
 > + sidebar badge + build warning.
+>
+> **Update 2026-06-14 (later still): v0.9.0–v0.11.0 SHIPPED** (drafts; smarter
+> "Edited" dates; footnotes; i18n completed end-to-end). **Next theme prepared,
+> not started: Tier C "AI-Ready"** — fleshed out above (C1 `llms.txt`/`.md`
+> mirror output, C2 MCP server, C3 machine-readable CLI, C4 Skill/`AGENTS.md`,
+> C5 positioning) at the maintainer's "prepare a task for later" request. Design
+> NOT locked — C1 is the cheap standalone starting slice; C2 waits on A1 (IR
+> persistence). Pick when the maintainer wants it.
 
 ---
 

@@ -151,6 +151,14 @@ everything (changeset version, badge bump in `website/ovellum.config.ts`
   publish/scheduling workflow, in-place preview (both build on the draft plumbing).
 - Pick next work from [`ROADMAP.md`](./ROADMAP.md) — v0.8.0 (B7 i18n) and v0.9.0
   (U8 drafts) are now **done**; their design blocks there are historical record.
+- **Task prepared (not started): Tier C "AI-Ready"** in `ROADMAP.md` — make
+  Ovellum AI-Native across three surfaces: **C1** AI-friendly docs *output*
+  (`llms.txt` + `llms-full.txt` + per-page `.md` mirror), **C2** MCP server
+  (`ovellum mcp`; the headline write tool is `ovellum_write_zone` — agents edit
+  protected zones that survive regeneration; needs A1 IR persistence first),
+  **C3** machine-readable CLI (`--json`, folds in U4), **C4** Claude Skill +
+  `AGENTS.md`, **C5** positioning. Design NOT locked; C1 is the cheap standalone
+  first slice. Maintainer asked to queue it 2026-06-14, not build yet.
 
 **What shipped 0.4.0–0.6.0 (prior session, 2026-06-13 — history):**
 - **0.4.0** — topbar **appearance control**: light/dark/auto mode + five
