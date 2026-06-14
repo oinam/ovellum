@@ -79,7 +79,7 @@ writes output to disk, prints a summary.
 ### Synopsis
 
 ```
-ovellum build [--cwd <dir>] [--config <path>] [--drafts]
+ovellum build [--cwd <dir>] [--config <path>] [--drafts] [--out <dir>] [--base <path>] [--manifest]
 ```
 
 ### Flags
@@ -89,6 +89,9 @@ ovellum build [--cwd <dir>] [--config <path>] [--drafts]
 | `--cwd <dir>`     | path | `process.cwd()` | Project root. All paths in the config resolve relative to this. |
 | `--config <path>` | path | auto-discovered | Skip discovery and load this file directly.                     |
 | `--drafts`        | flag | off             | Include [draft](/docs/guides/drafts/) pages (normally excluded from a production build). |
+| `--out <dir>`     | path | `output` config | **Override the output directory** for this build, without editing the config — point a CI/deploy pipeline at any folder (e.g. a repo's `/docs`). |
+| `--base <path>`   | path | `site.basePath` | **Override the base path** the site is served from (e.g. `/docs`). Same effect as `site.basePath`, per-invocation. |
+| `--manifest`      | flag | off             | Write `<output>/.ovellum/manifest.json` — a hashed inventory of every built file (path, bytes, sha256) so a deploy tool can push only what changed and verify completeness. |
 
 ### Behavior by mode
 
@@ -114,8 +117,9 @@ Same as `auto`, then for each generated file:
 4. Wrap each page in the default template (topbar, sidebar, ToC, prev/next, page meta).
 5. Write pretty URLs to `output/`.
 6. Copy `assets/ovellum.css` + `assets/ovellum.js` from the bundled template.
-7. When `site.baseUrl` is set, emit `sitemap.xml`.
+7. When `site.baseUrl` is set, emit `sitemap.xml` and `feed.xml`.
 8. When `site.search.enabled` is `true`, run Pagefind against the output and emit `dist/pagefind/`.
+9. Emit [AI-friendly output](/docs/reference/config/#ai) — `llms.txt`, per-page `.md` mirrors (and `llms-full.txt` if enabled). On by default; controlled by [`site.ai`](/docs/reference/config/#ai).
 
 ### Summary output
 
@@ -150,6 +154,7 @@ ovellum build complete in 207ms
     → /getting-started/       (dist/getting-started/index.html)
     → /guides/deploying/      (dist/guides/deploying/index.html)
     → /guides/theming/        (dist/guides/theming/index.html)
+  manifest:  dist/.ovellum/manifest.json   ← only with --manifest
 ```
 
 ### Exit codes
@@ -174,6 +179,9 @@ npx ovellum build --cwd ./website
 
 # Bypass config discovery
 npx ovellum build --config ./config/ovellum.prod.ts
+
+# Deploy-anywhere: build into a repo's /docs folder with a deploy manifest
+npx ovellum build --out ./docs --base /docs --manifest
 ```
 
 ## `ovellum dev`

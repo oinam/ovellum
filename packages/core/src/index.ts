@@ -13,6 +13,7 @@ export type {
   OvellumCtaStyle,
   ProtectConfig,
   OvellumSiteConfig,
+  OvellumAiConfig,
   OvellumSiteSearchConfig,
   OvellumLandingConfig,
   OvellumLandingHero,

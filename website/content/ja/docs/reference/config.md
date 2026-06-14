@@ -1,7 +1,7 @@
 ---
 title: 設定
 description: ovellum.config.{json,ts,js} のすべてのフィールドと、その型・デフォルト値・効果。
-sourceHash: '98c0542b809fc342'
+sourceHash: '7ddb7c0c4efd32c1'
 ---
 
 # 設定
@@ -98,6 +98,7 @@ interface OvellumSiteConfig {
   basePath?: string;
   locales?: { code: string; label: string; strings?: Record<string, string> }[];
   defaultLocale?: string;
+  ai?: { enabled?: boolean; llmsTxt?: boolean; fullText?: boolean; mdMirror?: boolean };
   defaultTheme: 'auto' | 'light' | 'dark';
   palette: 'default' | 'nord' | 'flexoki' | 'solarized' | 'eink';
   accent?: string;
@@ -132,6 +133,7 @@ interface OvellumSiteConfig {
 | `basePath`       | `string?`                           | `''`                          | Jekyll 風のサブパス。先頭にスラッシュ、末尾にスラッシュなし（例: `'/ovellum'`）。すべての内部 URL、アセットパス、canonical リンク、サイトマップエントリの前に付加されます。作者はルート相対リンクを書き続けられ、ビルドがプレフィックスを追加します。 |
 | `locales`        | `{ code, label, strings? }[]?`      | `undefined`                   | **オプトインの i18n。** 各エントリが 1 つの言語です。`code` は BCP 47 タグ（`'en-US'`、`'ja'`、`'zh-Hans'`）であり、同時に `content/<code>/` フォルダ名と `<html lang>` でもあります。`label` はピッカーに表示するテキストです（自称表記を使ってください。例: `'日本語'`）。任意の `strings` マップは、そのロケールについてテンプレート組み込みの UI クロムを上書きします（`tocTitle`、`editedLabel`、`backToTop` などのキー。組み込みの上にマージされ、不足分は英語が埋めます） — 組み込みクロムは英語と日本語で出荷され、RTL 言語には `<html dir="rtl">` が付きます。設定すると、コンテンツがロケールごとのサブツリーに移り、トップバーに言語ピッカーが現れ、各ページに `hreflang` が付きます。**config 由来のラベル／コピー**（`topbarNav`/`footerNav` のラベル、および `landing` のヒーロー／CTA／機能／install／トラストのテキスト）は、プレーンな文字列の代わりにロケールごとの `{ code: string }` マップを受け取り、現在のロケールに解決されます。未設定 = 単一言語（移行不要）。[i18n ガイド](/ja/docs/guides/i18n/)を参照。 |
 | `defaultLocale`  | `string?`                           | `locales` の最初の要素            | どの `locales[].code` を**ルート**（URL プレフィックスなし）で配信するか。残りは `/<code>/` 配下で配信されます。`locales` が未設定の場合は無視されます。                                                                                              |
+| `ai`             | `{ enabled?, llmsTxt?, fullText?, mdMirror? }` | [`ai`](#ai) を参照     | **AI フレンドリーな出力** — `llms.txt`・`llms-full.txt`・各ページの `.md` ミラーを HTML と並べて出力し、エージェントや LLM がドキュメントをクリーンに読めるようにします。`llmsTxt` と `mdMirror` はデフォルト**オン**、`fullText` は**オフ**。`enabled: false` で全体を無効化します。HTML 出力は変わりません。これらは追加されるファイルです（i18n サイトではロケールごと）。 |
 | `defaultTheme`   | `'auto' \| 'light' \| 'dark'`       | `'auto'`                      | ユーザーの設定が読み込まれる前の初期ライト／ダークモード。閲覧者はトップバーの外観コントロールから変更できます（`localStorage` に保存）。                                                                                  |
 | `palette`        | `'default' \| 'nord' \| 'flexoki' \| 'solarized' \| 'eink'` | `'default'`  | ユーザーの設定が読み込まれる前の初期のページ全体のカラーパレット（`'default'` はピッカーでは「Ovellum」と表示）。すべてのパレットはライト**と**ダークの両方のバリアントを備え、モードの選択とは独立しています。閲覧者はトップバーの外観コントロールからパレットを切り替えられます。            |
 | `accent`         | `string?`                           | `undefined`                   | デフォルトのプライマリカラー。任意の CSS カラー値（`'#3b82f6'`、`'oklch(57% 0.16 255)'` など）。CTA ボタンに加え、リンク、フォーカスリング、目次インジケーターを制御します。ホバー状態は自動的にブレンドされます。未設定 = 各パレット固有のプライマリ。閲覧者は外観コントロール（「Color」）から上書きできます。 |
@@ -194,6 +196,38 @@ interface OvellumSiteConfig {
 
 いずれかを `false` にするとその半分が非表示になります。両方を `false` にすると
 メタ行全体が非表示になります。
+
+### `ai`
+
+`{ enabled?: boolean, llmsTxt?: boolean, fullText?: boolean, mdMirror?: boolean }`。
+[llmstxt.org](https://llmstxt.org) の慣習に従った、HTML に対する AI フレンドリーな
+コンパニオン出力です — コーディングエージェントや LLM がドキュメントをクリーンな
+Markdown として読めるようにします。**HTML 出力は一切変更されません。** これらは
+HTML と並べて配信される追加ファイルです。
+
+| フィールド  | 型         | デフォルト | 出力するもの                                                                                                                                          |
+| ---------- | ---------- | -------- | --------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `enabled`  | `boolean?` | `true`   | マスタースイッチ。`false` にすると下記のフラグに関わらず**すべての** AI 出力をオフにします。                                                              |
+| `llmsTxt`  | `boolean?` | `true`   | `/llms.txt` — 全ページのリンク優先のインデックス（`- [Title](link): 概要`）をサイドバー順で出力します。概要は各ページのフロントマター `description` から取得します。 |
+| `fullText` | `boolean?` | `false`  | `/llms-full.txt` — ドキュメント**全体**を 1 つの Markdown ストリームとしてサイドバー順に連結します。1 回の取得でサイト全体のコンテキストが得られます。大きくなりうるためデフォルトはオフです。 |
+| `mdMirror` | `boolean?` | `true`   | 各ページの生の Markdown ミラーを `<page>.md` に出力します — `/guide/intro/` → `/guide/intro.md`、`/` → `/index.md`。HTML を剥がさずに 1 ページのクリーンなソースを取得できます。オンのとき `llms.txt` のリンクはこのミラーを指します。 |
+
+ドラフトと 404 ページはすべての AI 出力から除外されます（`sitemap.xml` /
+`feed.xml` と同じルール）。i18n サイトでは各ロケールがそのプレフィックスのルートに
+独自のセットを持ちます — デフォルトロケールは `/llms.txt`、その他は
+`/ja/llms.txt` と `/ja/**/*.md`。
+
+```typescript
+// 完全に無効化する:
+export default defineConfig({
+  site: { ai: { enabled: false } },
+});
+
+// または全文ファイルを追加する（デフォルトはオフ）:
+export default defineConfig({
+  site: { ai: { fullText: true } },
+});
+```
 
 ## `site.landing`
 

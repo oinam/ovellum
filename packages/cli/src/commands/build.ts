@@ -21,6 +21,18 @@ export const buildCommand = defineCommand({
       type: 'boolean',
       description: 'Include draft pages (default: drafts are excluded from a production build)',
     },
+    out: {
+      type: 'string',
+      description: 'Output directory for this build (overrides `output` in the config)',
+    },
+    base: {
+      type: 'string',
+      description: 'Base path the site is served from, e.g. /docs (overrides `site.basePath`)',
+    },
+    manifest: {
+      type: 'boolean',
+      description: 'Write <output>/.ovellum/manifest.json (a hashed inventory for deploy tools)',
+    },
   },
   async run({ args }) {
     const cwd = path.resolve(args.cwd ?? process.cwd());
@@ -43,7 +55,14 @@ export const buildCommand = defineCommand({
       process.exit(1);
     }
 
-    const summary = await runBuild({ config, cwd, includeDrafts: args.drafts === true });
+    const summary = await runBuild({
+      config,
+      cwd,
+      includeDrafts: args.drafts === true,
+      outDir: typeof args.out === 'string' ? args.out : undefined,
+      basePath: typeof args.base === 'string' ? args.base : undefined,
+      manifest: args.manifest === true,
+    });
     process.stdout.write(formatBuildSummary(summary, configFile) + '\n');
     for (const w of summary.warnings) process.stderr.write(`warning: ${w}\n`);
   },
@@ -84,5 +103,6 @@ export function formatBuildSummary(
       lines.push(...(summary.quarantined ?? []).map((p) => `    ↪ ${p}`));
     }
   }
+  if (summary.manifestPath) lines.push(`  manifest:  ${summary.manifestPath}`);
   return lines.join('\n');
 }

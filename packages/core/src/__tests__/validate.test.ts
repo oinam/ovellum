@@ -167,6 +167,17 @@ describe('validateUserConfig', () => {
     expect(() => validateUserConfig({ site: { credit: 'no' } })).toThrow(/site\.credit/);
   });
 
+  it('accepts a valid site.ai block and rejects bad shapes', () => {
+    const input = {
+      site: { ai: { enabled: true, llmsTxt: true, fullText: false, mdMirror: true } },
+    };
+    expect(validateUserConfig(input)).toEqual(input);
+    expect(() => validateUserConfig({ site: { ai: 'on' } })).toThrow(/site\.ai/);
+    expect(() => validateUserConfig({ site: { ai: { fullText: 'yes' } } })).toThrow(
+      /site\.ai\.fullText/,
+    );
+  });
+
   it('accepts site.home and rejects empty/non-string', () => {
     expect(validateUserConfig({ site: { home: 'overview.md' } })).toEqual({
       site: { home: 'overview.md' },

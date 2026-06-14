@@ -98,6 +98,7 @@ interface OvellumSiteConfig {
   basePath?: string;
   locales?: { code: string; label: string; strings?: Record<string, string> }[];
   defaultLocale?: string;
+  ai?: { enabled?: boolean; llmsTxt?: boolean; fullText?: boolean; mdMirror?: boolean };
   defaultTheme: 'auto' | 'light' | 'dark';
   palette: 'default' | 'nord' | 'flexoki' | 'solarized' | 'eink';
   accent?: string;
@@ -132,6 +133,7 @@ interface OvellumSiteConfig {
 | `basePath`       | `string?`                           | `''`                          | Jekyll-style subpath. Leading slash, no trailing slash (e.g. `'/ovellum'`). Prepended to every internal URL, asset path, canonical link, and sitemap entry. Authors keep writing root-relative links; the build adds the prefix. |
 | `locales`        | `{ code, label, strings? }[]?`      | `undefined`                   | **Opt-in i18n.** Each entry is a language: `code` is a BCP 47 tag (`'en-US'`, `'ja'`, `'zh-Hans'`) and also the `content/<code>/` folder name + `<html lang>`; `label` is the picker text (use the autonym, e.g. `'日本語'`). The optional `strings` map overrides the template's built-in UI chrome for that locale (keys like `tocTitle`, `editedLabel`, `backToTop`; merged over the built-ins, English fills any gap) — built-in chrome ships for English + Japanese, and RTL languages get `<html dir="rtl">`. When set, content moves into per-locale subtrees, a language picker appears in the topbar, and pages get `hreflang`. **Config-driven labels/copy** (`topbarNav`/`footerNav` labels, and the `landing` hero/CTA/feature/install/trust text) accept a per-locale `{ code: string }` map in place of a plain string, resolved to the current locale. Unset = single-language (no migration needed). See the [i18n guide](/docs/guides/i18n/). |
 | `defaultLocale`  | `string?`                           | first of `locales`            | Which `locales[].code` is served at the **root** (no URL prefix); the rest serve under `/<code>/`. Ignored when `locales` is unset.                                                                                              |
+| `ai`             | `{ enabled?, llmsTxt?, fullText?, mdMirror? }` | see [`ai`](#ai)    | **AI-friendly output** — `llms.txt`, `llms-full.txt`, and per-page `.md` mirrors emitted alongside the HTML so agents/LLMs read the docs cleanly. `llmsTxt` + `mdMirror` default **on**, `fullText` **off**. Set `enabled: false` to opt out entirely. The HTML is unchanged; these are additive files (per-locale on i18n sites). |
 | `defaultTheme`   | `'auto' \| 'light' \| 'dark'`       | `'auto'`                      | Initial light/dark mode before user preference loads. Visitors can change it from the topbar appearance control (persisted in `localStorage`).                                                                                  |
 | `palette`        | `'default' \| 'nord' \| 'flexoki' \| 'solarized' \| 'eink'` | `'default'`  | Initial page-wide color palette before user preference loads (`'default'` displays as "Ovellum" in the picker). Every palette ships light **and** dark variants; the mode choice stays independent. Visitors can switch palettes from the topbar appearance control.            |
 | `accent`         | `string?`                           | `undefined`                   | Default primary color — any CSS color value (`'#3b82f6'`, `'oklch(57% 0.16 255)'`, …). Drives the CTA buttons plus links, focus rings, and the ToC indicator; hover states are mixed automatically. Unset = each palette's own primary. Visitors can override it from the appearance control ("Color"). |
@@ -194,6 +196,38 @@ shipped with the site, so it works on any static host with no server.
 
 Set either to `false` to hide that half of the line. Set both to `false`
 to hide the meta line entirely.
+
+### `ai`
+
+`{ enabled?: boolean, llmsTxt?: boolean, fullText?: boolean, mdMirror?: boolean }`.
+AI-friendly companions to the HTML, following the
+[llmstxt.org](https://llmstxt.org) convention — so coding agents and LLMs can
+read your docs as clean Markdown. **The HTML output is untouched;** these are
+additive files served alongside it.
+
+| Field      | Type       | Default | Emits                                                                                                                                                  |
+| ---------- | ---------- | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `enabled`  | `boolean?` | `true`  | Master switch. `false` turns **all** AI output off, regardless of the flags below.                                                                       |
+| `llmsTxt`  | `boolean?` | `true`  | `/llms.txt` — a link-first index of every page (`- [Title](link): summary`), in sidebar order. The summary comes from each page's frontmatter `description`. |
+| `fullText` | `boolean?` | `false` | `/llms-full.txt` — the **entire** docs corpus concatenated as one Markdown stream, in sidebar order. One fetch, whole-site context. Off by default because it can get large. |
+| `mdMirror` | `boolean?` | `true`  | A raw-Markdown mirror of each page at `<page>.md` — `/guide/intro/` → `/guide/intro.md`, `/` → `/index.md`. Lets an agent fetch clean source for one page without stripping HTML. When on, the `llms.txt` links point at these mirrors. |
+
+Drafts and the 404 page are excluded from all AI output (the same rule as
+`sitemap.xml` / `feed.xml`). On an i18n site each locale gets its own set at
+its prefix root — `/llms.txt` for the default locale, `/ja/llms.txt` and
+`/ja/**/*.md` for the others.
+
+```typescript
+// Opt out entirely:
+export default defineConfig({
+  site: { ai: { enabled: false } },
+});
+
+// Or add the whole-corpus file (off by default):
+export default defineConfig({
+  site: { ai: { fullText: true } },
+});
+```
 
 ## `site.landing`
 

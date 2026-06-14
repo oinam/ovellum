@@ -1,7 +1,7 @@
 ---
 title: CLI リファレンス
 description: ovellum CLI のすべてのサブコマンドとフラグ。
-sourceHash: 'd63553dc923965bc'
+sourceHash: 'fac15d0e82c1359a'
 ---
 
 # CLI リファレンス
@@ -80,7 +80,7 @@ ovellum init [--cwd <dir>] [--yes] [--force]
 ### 構文
 
 ```
-ovellum build [--cwd <dir>] [--config <path>] [--drafts]
+ovellum build [--cwd <dir>] [--config <path>] [--drafts] [--out <dir>] [--base <path>] [--manifest]
 ```
 
 ### フラグ
@@ -90,6 +90,9 @@ ovellum build [--cwd <dir>] [--config <path>] [--drafts]
 | `--cwd <dir>`     | path | `process.cwd()` | プロジェクトのルート。設定内のすべてのパスはこれを基準に解決されます。 |
 | `--config <path>` | path | auto-discovered | 自動検出をスキップし、このファイルを直接読み込みます。                     |
 | `--drafts`        | flag | off             | [ドラフト](/ja/docs/guides/drafts/)ページを含めます（通常は本番ビルドから除外されます）。 |
+| `--out <dir>`     | path | `output` 設定   | このビルドの**出力ディレクトリを上書き**します。設定を編集せずに CI/デプロイのパイプラインを任意のフォルダ（例: リポジトリの `/docs`）に向けられます。 |
+| `--base <path>`   | path | `site.basePath` | サイトを配信する**ベースパスを上書き**します（例: `/docs`）。`site.basePath` と同じ効果を呼び出しごとに与えます。 |
+| `--manifest`      | flag | off             | `<output>/.ovellum/manifest.json` を書き出します — ビルドされた全ファイルのハッシュ付きインベントリ（パス・バイト数・sha256）。デプロイツールが変更分だけをプッシュし、完全性を検証できます。 |
 
 ### モードごとの挙動
 
@@ -115,8 +118,9 @@ ovellum build [--cwd <dir>] [--config <path>] [--drafts]
 4. 各ページをデフォルトテンプレートで囲みます（トップバー、サイドバー、目次、前後リンク、ページメタ）。
 5. プリティ URL を `output/` に書き込みます。
 6. バンドルされたテンプレートから `assets/ovellum.css` と `assets/ovellum.js` をコピーします。
-7. `site.baseUrl` が設定されている場合は `sitemap.xml` を出力します。
+7. `site.baseUrl` が設定されている場合は `sitemap.xml` と `feed.xml` を出力します。
 8. `site.search.enabled` が `true` の場合は、出力に対して Pagefind を実行し `dist/pagefind/` を出力します。
+9. [AI フレンドリーな出力](/ja/docs/reference/config/#ai)を出力します — `llms.txt`、各ページの `.md` ミラー（有効なら `llms-full.txt` も）。デフォルトでオン。[`site.ai`](/ja/docs/reference/config/#ai) で制御します。
 
 ### サマリー出力
 
@@ -151,6 +155,7 @@ ovellum build complete in 207ms
     → /getting-started/       (dist/getting-started/index.html)
     → /guides/deploying/      (dist/guides/deploying/index.html)
     → /guides/theming/        (dist/guides/theming/index.html)
+  manifest:  dist/.ovellum/manifest.json   ← --manifest 指定時のみ
 ```
 
 ### 終了コード
@@ -175,6 +180,9 @@ npx ovellum build --cwd ./website
 
 # Bypass config discovery
 npx ovellum build --config ./config/ovellum.prod.ts
+
+# Deploy-anywhere: build into a repo's /docs folder with a deploy manifest
+npx ovellum build --out ./docs --base /docs --manifest
 ```
 
 ## `ovellum dev`

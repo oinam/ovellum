@@ -151,7 +151,22 @@ everything (changeset version, badge bump in `website/ovellum.config.ts`
   publish/scheduling workflow, in-place preview (both build on the draft plumbing).
 - Pick next work from [`ROADMAP.md`](./ROADMAP.md) — v0.8.0 (B7 i18n) and v0.9.0
   (U8 drafts) are now **done**; their design blocks there are historical record.
-- **NEXT BIGGEST RELEASE (prepared, not started): Tier D "Embed & deploy
+- **AI-Ready slice SHIPPED (2026-06-14, "build out the two AI big features"):**
+  **C1** — `site.ai` config → `llms.txt` (default on) + `llms-full.txt` (default
+  off) + per-page `.md` mirrors (default on), per-locale, drafts/404 excluded,
+  HTML byte-identical (`packages/site/src/llms.ts` + `build.ts`). **D1** —
+  `ovellum build --out <dir>` / `--base <path>` per-invocation overrides
+  (`applyOverrides` in `run-build.ts`). **D4** — `--manifest` writes
+  `<output>/.ovellum/manifest.json` (sha256 inventory; `dev/manifest.ts`).
+  343 tests green; en+ja reference docs (`config.md` `site.ai`, `cli.md` flags) +
+  `FEATURES.md` updated; changeset `ai-ready-output-and-portable-build.md`
+  staged (minor). **Re-stamp ja `sourceHash` after the en doc edits** with
+  `ovellum check --update-translations` (the staleness check will otherwise flag
+  config.md + cli.md). **Deferred rest of Tier C/D:** C2 MCP (needs A1 IR
+  persistence), C3 `--json` (with U4), C4 Skill/`AGENTS.md`, C5 positioning; D2
+  programmatic `build()` API (flips `@ovellum/*` bundled-private), D3 lifecycle
+  hooks (with B1), D5 deploy recipes.
+- **NEXT BIGGEST RELEASE (rest prepared, not started): Tier D "Embed & deploy
   anywhere"** in `ROADMAP.md` — make Ovellum a portable, embeddable *build step*
   any external tool / CI can drive and **deploy itself**, no GitHub dependency.
   Principle: *Ovellum builds; the host deploys.* **D1** `--out`/`--base` CLI

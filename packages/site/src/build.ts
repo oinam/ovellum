@@ -23,6 +23,14 @@ import {
   readingMinutes,
 } from './page-meta.js';
 import { indexSite } from './search.js';
+import {
+  resolveAiConfig,
+  mdMirrorPath,
+  renderPageMarkdown,
+  generateLlmsTxt,
+  generateLlmsFullText,
+  type AiDoc,
+} from './llms.js';
 import { generateRss } from './rss.js';
 import { generateSitemap } from './sitemap.js';
 import { renderLanding, renderPage, type LocaleAlternate } from './template.js';
@@ -146,6 +154,9 @@ export async function buildSite(options: BuildSiteOptions): Promise<BuildSiteRes
   }
 
   const site = resolveSiteConfig(config);
+  // AI-friendly companion output (llms.txt / llms-full.txt / per-page `.md`).
+  const ai = resolveAiConfig(site.ai);
+  const basePrefix = normaliseBasePath(site.basePath);
   // The reserved static-assets dir (default `public`) is SHARED across locales:
   // it lives at the content root, is copied to the output root below, and is
   // skipped everywhere else (no pages, no nav, never under a locale subtree).
@@ -233,6 +244,8 @@ export async function buildSite(options: BuildSiteOptions): Promise<BuildSiteRes
     const alternates = (key: string) => buildLocaleAlternates(specs, spec, key);
     // Tracks whether this locale's content walk produced its /404/ page.
     let notFoundRendered = false;
+    // Non-draft, non-404 pages for this locale's llms.txt / llms-full.txt.
+    const localeDocs: AiDoc[] = [];
 
     // Render the landing page first (if enabled) so a locale `index.md`
     // can be detected as a conflict during the walk.
@@ -357,6 +370,31 @@ export async function buildSite(options: BuildSiteOptions): Promise<BuildSiteRes
           draft: spec.draftBySource.has(sourceRelFromCwd) || undefined,
         });
         warnings.push(...result.warnings);
+
+        // AI-friendly companions. Drafts and the 404 stay out of these (the
+        // same rule as sitemap/RSS) — they're publish artifacts.
+        const isDraft = spec.draftBySource.has(sourceRelFromCwd);
+        const mirrorRel = mdMirrorPath(url);
+        if (!isDraft && mirrorRel) {
+          if (ai.mdMirror) {
+            const mirrorOut = path.join(outputAbs, mirrorRel);
+            await mkdir(path.dirname(mirrorOut), { recursive: true });
+            await writeFile(
+              mirrorOut,
+              renderPageMarkdown(result.title, result.markdown),
+              'utf8',
+            );
+          }
+          if (ai.llmsTxt || ai.fullText) {
+            localeDocs.push({
+              url,
+              link: siteUrl(ai.mdMirror ? '/' + mirrorRel : url, basePrefix),
+              title: result.title,
+              description: result.description,
+              markdown: result.markdown,
+            });
+          }
+        }
       } else {
         // Passthrough static asset — served under the locale prefix so a
         // co-located `content/<code>/x.png` lands at `/<code>/x.png`.
@@ -401,6 +439,30 @@ export async function buildSite(options: BuildSiteOptions): Promise<BuildSiteRes
       await writeFile(out404, html404, 'utf8');
       if (spec.isDefault) {
         await writeFile(path.join(outputAbs, '404.html'), html404, 'utf8');
+      }
+    }
+
+    // Emit this locale's AI index/corpus at its prefix root (`/llms.txt`,
+    // `/ja/llms.txt`), with pages ordered by the sidebar nav.
+    if ((ai.llmsTxt || ai.fullText) && localeDocs.length > 0) {
+      const order = new Map<string, number>();
+      flattenNav(spec.nav).forEach((n, i) => order.set(n.url, i));
+      const ordered = [...localeDocs].sort(
+        (a, b) => (order.get(a.url) ?? Number.MAX_SAFE_INTEGER) - (order.get(b.url) ?? Number.MAX_SAFE_INTEGER),
+      );
+      const aiDirAbs = spec.urlPrefix ? path.join(outputAbs, spec.urlPrefix.slice(1)) : outputAbs;
+      await mkdir(aiDirAbs, { recursive: true });
+      if (ai.llmsTxt) {
+        const txt = generateLlmsTxt({
+          siteTitle: site.title,
+          siteDescription: site.description,
+          docs: ordered,
+        });
+        await writeFile(path.join(aiDirAbs, 'llms.txt'), txt, 'utf8');
+      }
+      if (ai.fullText) {
+        const full = generateLlmsFullText(site.title, ordered);
+        await writeFile(path.join(aiDirAbs, 'llms-full.txt'), full, 'utf8');
       }
     }
   }
@@ -508,6 +570,8 @@ interface RenderOneResult {
   title: string;
   description?: string;
   lastModified?: string;
+  /** Raw Markdown body (frontmatter stripped) — feeds the `.md` mirror + llms output. */
+  markdown: string;
   warnings: string[];
 }
 
@@ -591,6 +655,7 @@ async function renderOne(input: RenderOneInput): Promise<RenderOneResult | null>
     title,
     description: frontmatter.description,
     lastModified,
+    markdown: parsed.content,
     warnings,
   };
 }

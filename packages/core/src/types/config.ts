@@ -263,6 +263,38 @@ export interface OvellumLandingConfig {
   trustStrip?: OvellumLandingTrustStrip;
 }
 
+/**
+ * AI-friendly documentation output. When the docs build, Ovellum can emit
+ * machine-readable companions to the HTML so coding agents and LLMs can read
+ * the docs cleanly: an `llms.txt` index, an `llms-full.txt` corpus, and a
+ * per-page `.md` mirror at `<page>.md`. All three are **on by default**
+ * (except `fullText`, which can be large) — set `enabled: false` to opt out
+ * entirely, or toggle the individual artifacts. The HTML output is unchanged;
+ * these are additive files served alongside it (per-locale on i18n sites).
+ */
+export interface OvellumAiConfig {
+  /** Master switch for all AI-friendly output. Default `true`. */
+  enabled?: boolean;
+  /**
+   * Emit `/llms.txt` — a link-first index of every page (title + one-line
+   * summary + URL), following the llmstxt.org convention. Default `true`.
+   */
+  llmsTxt?: boolean;
+  /**
+   * Emit `/llms-full.txt` — the entire docs corpus concatenated as one
+   * Markdown stream, in sidebar order. One fetch, whole-site context.
+   * Default `false` (it can get large on big sites).
+   */
+  fullText?: boolean;
+  /**
+   * Emit a raw-Markdown mirror of each page at `<page>.md`
+   * (`/guide/intro/` → `/guide/intro.md`, `/` → `/index.md`). Lets an agent
+   * fetch clean source for any single page without stripping HTML.
+   * Default `true`.
+   */
+  mdMirror?: boolean;
+}
+
 export interface OvellumSiteConfig {
   /** Site title. Defaults to `OvellumConfig.name` or `'Ovellum site'`. */
   title?: string;
@@ -329,6 +361,8 @@ export interface OvellumSiteConfig {
    * the first entry of `locales`. Ignored when `locales` is unset.
    */
   defaultLocale?: string;
+  /** AI-friendly output (`llms.txt`, `llms-full.txt`, per-page `.md` mirrors). */
+  ai?: OvellumAiConfig;
   /** Initial theme before user preference loads. */
   defaultTheme: OvellumDefaultTheme;
   /**

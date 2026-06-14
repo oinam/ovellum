@@ -238,6 +238,16 @@ export function validateUserConfig(input: unknown): OvellumUserConfig {
         throw new ConfigError('`site.search.enabled` must be a boolean.');
       }
     }
+    if (s.ai !== undefined) {
+      if (!isPlainObject(s.ai)) {
+        throw new ConfigError('`site.ai` must be an object.');
+      }
+      for (const key of ['enabled', 'llmsTxt', 'fullText', 'mdMirror'] as const) {
+        if (s.ai[key] !== undefined && typeof s.ai[key] !== 'boolean') {
+          throw new ConfigError(`\`site.ai.${key}\` must be a boolean.`);
+        }
+      }
+    }
     if (s.topbarNav !== undefined) {
       if (!Array.isArray(s.topbarNav)) {
         throw new ConfigError('`site.topbarNav` must be an array.');

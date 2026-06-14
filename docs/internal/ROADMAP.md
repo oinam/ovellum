@@ -191,7 +191,13 @@ differentiator no other docs tool can make.
 
 #### C1 — AI-friendly documentation output (the `llms.txt` standard)
 
-- [ ] **C1 (S–M)** Emit AI-consumable docs alongside the HTML at build. We
+- [x] **C1 (S–M) — SHIPPED 2026-06-14.** `site.ai` block; `/llms.txt` (default
+      on), `/llms-full.txt` (default off), per-page `.md` mirrors (default on);
+      per-locale, drafts/404 excluded, HTML byte-identical. Code in
+      `packages/site/src/llms.ts` + `build.ts`; `llms.test.ts`. **Deferred
+      follow-up:** head `<link rel="alternate" type="text/markdown">` +
+      `robots.txt` mention. Original plan below. — Emit AI-consumable docs
+      alongside the HTML at build. We
       already hold the rendered Markdown, so most of this is plumbing + a
       config gate. Three artifacts, per the emerging
       [llmstxt.org](https://llmstxt.org) convention:
@@ -319,7 +325,11 @@ gets a static `dist`/`docs` folder, and its existing deploy takes over. The
 is everything that lets a *non-human tool* drive it cleanly + know what came
 out.
 
-- [ ] **D1 (S) — Scriptable CLI build contract (table stakes).** Add
+- [x] **D1 (S) — `--out`/`--base` SHIPPED 2026-06-14** (`applyOverrides` in
+      `run-build.ts`; flags on the build command). **Still in C3:** the
+      `--json` machine-readable output (deferred with U4) and the
+      idempotent-clean-output semantics (today the build `mkdir`s but doesn't
+      clean — left as-is, documented behavior). Original below. — Add
       `ovellum build --out <dir>` and `--base <path>` overrides (output is
       config-only today — no `.option()` on `build`). Pair with **C3's
       `--json`** so a host pipeline parses the result instead of scraping
@@ -347,7 +357,9 @@ out.
       (plugin/extension API) — design them together; the deploy hook is the
       first concrete consumer that justifies B1. Keep it a thin, typed lifecycle
       (config-supplied functions) before any component system.
-- [ ] **D4 (S–M) — Deploy manifest.** Emit `<output>/.ovellum/manifest.json`:
+- [x] **D4 (S–M) — SHIPPED 2026-06-14** via `ovellum build --manifest`
+      (`dev/manifest.ts` `writeDeployManifest`; sorted, sha256, OS-junk +
+      own-dir excluded; `manifest.test.ts`). Original below. — Emit `<output>/.ovellum/manifest.json`:
       every written file (path, route, content hash, byte size) + build
       metadata (version, locales, draft-excluded count). Lets a deploy tool do
       **incremental / atomic** uploads (S3/CDN sync, cache-bust, completeness
@@ -473,6 +485,17 @@ machine-readable-CLI groundwork (C3 ≈ D1).
 >   C3 machine-readable CLI, C4 Skill/`AGENTS.md`, C5 positioning. Prepared at
 >   the maintainer's "prepare for later" request. **C3 ≈ D1** (shared
 >   machine-readable-CLI groundwork) — sequence the two together when picked up.
+>
+> **Update 2026-06-14 (later still): C1 + D1 + D4 SHIPPED** as one AI-themed
+> slice (the "build out the two AI big features" request). **C1** = `site.ai`
+> → `llms.txt` / `llms-full.txt` / per-page `.md` mirrors (per-locale). **D1** =
+> `ovellum build --out`/`--base`. **D4** = `--manifest` → hashed deploy
+> inventory. All on `main`, 343 tests green, en+ja docs + FEATURES updated,
+> changeset staged. **Not yet built (the design-locked / prerequisite-bound
+> rest):** C2 MCP server (needs A1 IR persistence + design pass), C3 `--json`
+> (with U4), C4 Skill/`AGENTS.md`, C5 positioning page; D2 programmatic `build()`
+> API (flips `@ovellum/*` bundled-private), D3 lifecycle hooks (with B1), D5
+> deploy recipes.
 
 ---
 

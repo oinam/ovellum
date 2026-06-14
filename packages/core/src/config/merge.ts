@@ -55,6 +55,9 @@ function mergeSite(
   if (override.backToTop !== undefined) {
     out.backToTop = { ...base.backToTop, ...override.backToTop };
   }
+  if (override.ai !== undefined) {
+    out.ai = { ...base.ai, ...override.ai };
+  }
   return out;
 }
 

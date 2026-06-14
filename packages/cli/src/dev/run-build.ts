@@ -7,12 +7,29 @@ import { generateDocs } from '@ovellum/generator';
 import { readManualDoc } from '@ovellum/reader';
 import { merge, writeOrphan } from '@ovellum/merger';
 import { buildSite, type PageOutput } from '@ovellum/site';
+import { writeDeployManifest } from './manifest.js';
 
 export interface RunBuildInput {
   config: OvellumConfig;
   cwd: string;
   /** Include draft pages (dev/watch preview); production build excludes them. */
   includeDrafts?: boolean;
+  /** Override `config.output` for this build (CLI `--out`). */
+  outDir?: string;
+  /** Override `config.site.basePath` for this build (CLI `--base`). */
+  basePath?: string;
+  /** Write `<output>/.ovellum/manifest.json` after the build (CLI `--manifest`). */
+  manifest?: boolean;
+}
+
+/** Apply per-invocation CLI overrides (`--out`, `--base`) to the loaded config. */
+function applyOverrides(config: OvellumConfig, input: RunBuildInput): OvellumConfig {
+  let out = config;
+  if (input.outDir) out = { ...out, output: input.outDir };
+  if (input.basePath !== undefined) {
+    out = { ...out, site: { ...out.site, basePath: input.basePath } };
+  }
+  return out;
 }
 
 /**
@@ -37,6 +54,9 @@ export interface BuildSummary {
   merged?: string[];
   orphans?: number;
   quarantined?: string[];
+
+  /** Path to the deploy manifest, when `--manifest` was requested. */
+  manifestPath?: string;
 }
 
 /**
@@ -45,9 +65,28 @@ export interface BuildSummary {
  * `ovellum dev` (rebuilds on file changes).
  */
 export async function runBuild(input: RunBuildInput): Promise<BuildSummary> {
-  const { config, cwd } = input;
+  const { cwd } = input;
   const startedAt = Date.now();
+  const config = applyOverrides(input.config, input);
 
+  const summary = await runBuildForMode(config, cwd, input, startedAt);
+
+  // Deploy manifest — an inventory of the built output a host tool can use to
+  // deploy anywhere (atomic / incremental uploads), independent of any host.
+  if (input.manifest) {
+    const outputAbs = path.resolve(cwd, config.output);
+    const manifestPath = await writeDeployManifest({ outputAbs, generatedAt: new Date() });
+    summary.manifestPath = path.relative(cwd, manifestPath).replace(/\\/g, '/');
+  }
+  return summary;
+}
+
+async function runBuildForMode(
+  config: OvellumConfig,
+  cwd: string,
+  input: RunBuildInput,
+  startedAt: number,
+): Promise<BuildSummary> {
   if (config.mode === 'manual') {
     const result = await buildSite({ config, cwd, includeDrafts: input.includeDrafts });
     return {
