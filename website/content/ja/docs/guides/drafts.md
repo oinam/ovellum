@@ -2,6 +2,7 @@
 title: ドラフト
 description: ローカルでプレビューはするものの決して公開しない、作業中のページ。フロントマターまたはフォルダ単位で指定し、dev ではリボン付きで表示され、本番からは除外されます。
 tags: [drafts, authoring, dev, preview]
+sourceHash: 'b6471e13ebacc239'
 ---
 
 # ドラフト

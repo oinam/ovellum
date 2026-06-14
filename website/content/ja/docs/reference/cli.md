@@ -1,6 +1,7 @@
 ---
 title: CLI リファレンス
 description: ovellum CLI のすべてのサブコマンドとフラグ。
+sourceHash: 'c566b925a17a50d3'
 ---
 
 # CLI リファレンス
@@ -291,12 +292,22 @@ ovellum serve [--cwd <dir>] [--config <path>] [--port <n>] [--host <addr>]
 2. 安全でない URL スキーム（`javascript:`、`vbscript:`、`data:`、`file:`）を
    使うリンクがないこと。`renderMarkdown` がレンダリング時にこれらを除去するとはいえ、
    `check` はここで警告し、作者がソースの段階で削除できるようにします。
+3. i18n サイト（`site.locales` が 2 つ以上）では、翻訳がそのソースページと
+   同期していること — [翻訳の陳腐化](#翻訳の陳腐化)を参照してください。
 
 ### 構文
 
 ```
-ovellum check [--cwd <dir>] [--config <path>]
+ovellum check [--cwd <dir>] [--config <path>] [--update-translations]
 ```
+
+### フラグ
+
+| フラグ                    | 型      | デフォルト | 説明                                                                            |
+| ------------------------- | ------- | ---------- | ------------------------------------------------------------------------------- |
+| `--cwd`                   | string  | cwd        | プロジェクトルート。                                                            |
+| `--config`                | string  | —          | `ovellum.config.{ts,js,json}` へのパス。                                        |
+| `--update-translations`   | boolean | `false`    | 各翻訳ページの `sourceHash` を現在のソースにスタンプして終了します。下記参照。  |
 
 ### 出力
 
@@ -343,6 +354,30 @@ ovellum check complete in 87ms
 
 フロントマターの検証、必須フィールドのチェック、hybrid モードの孤立リスト表示は
 今後の対応となります。
+
+### 翻訳の陳腐化
+
+`site.locales` が 2 つ以上あるサイトでは、`check` は各翻訳ページが、それがミラーする
+デフォルトロケールのページ（ロケールフォルダをまたいで同一のパスで対応）と同期して
+いることも検証します。各翻訳はフロントマターに `sourceHash` を持ちます — ソースページの
+**本文**の指紋です（フロントマターは除外、改行コードは正規化）。`check` はこれを再計算し、
+`[i18n]` タグを付けて報告します:
+
+- スタンプ後にソースが**変わった**翻訳（stale）。
+- `sourceHash` が**ない**翻訳（未スタンプ）。
+- 対応する**ソースページがない**翻訳（orphan）。
+
+いずれも issue として数えられるため、`check` は `1` で終了します — CI がドリフトを
+検知できます。翻訳を同期させた後にハッシュをスタンプ（または再スタンプ）するには、次を
+実行します:
+
+```
+ovellum check --update-translations
+```
+
+各翻訳ページに現在の `sourceHash` を書き込み（変更するのはそのフロントマター 1 行だけ）、
+`0` で終了します。ワークフローは [i18n ガイド](/ja/docs/guides/i18n/#翻訳を同期させ続ける)
+を参照してください。
 
 ## `ovellum watch`
 

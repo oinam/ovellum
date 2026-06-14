@@ -1,6 +1,7 @@
 ---
 title: デプロイ
 description: 一度ビルドすれば自己完結した dist/ フォルダができあがり、あとはどこにでもホストできます — セルフホスト、GitHub Pages、Cloudflare、または任意の静的ホスト。
+sourceHash: '07338e6d49488daf'
 ---
 
 # デプロイ

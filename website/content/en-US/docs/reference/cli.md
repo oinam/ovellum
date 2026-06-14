@@ -291,12 +291,22 @@ correctly ignored), and verifies:
 2. No link uses an unsafe URL scheme (`javascript:`, `vbscript:`, `data:`,
    `file:`). Even though `renderMarkdown` strips these at render time,
    `check` flags them here so authors can remove them at the source.
+3. On i18n sites (two or more `site.locales`), translations are in sync with
+   their source page — see [Translation staleness](#translation-staleness).
 
 ### Synopsis
 
 ```
-ovellum check [--cwd <dir>] [--config <path>]
+ovellum check [--cwd <dir>] [--config <path>] [--update-translations]
 ```
+
+### Flags
+
+| Flag                     | Type    | Default | Notes                                                                                         |
+| ------------------------ | ------- | ------- | --------------------------------------------------------------------------------------------- |
+| `--cwd`                  | string  | cwd     | Project root.                                                                                  |
+| `--config`               | string  | —       | Path to `ovellum.config.{ts,js,json}`.                                                         |
+| `--update-translations`  | boolean | `false` | Stamp each translated page's `sourceHash` to the current source, then exit. See below.        |
 
 ### Output
 
@@ -344,6 +354,30 @@ run `ovellum build` first.
 
 Frontmatter validation, required-fields checking, and orphan listing
 for hybrid mode are deferred.
+
+### Translation staleness
+
+On a site with two or more `site.locales`, `check` also verifies that each
+translated page is in sync with the default-locale page it mirrors (matched by
+identical path across the locale folders). Each translation carries a
+`sourceHash` in its frontmatter — a fingerprint of the source page's **body**
+(frontmatter excluded, line endings normalized). `check` recomputes it and
+reports, tagged `[i18n]`:
+
+- a translation whose source **changed** since it was stamped (stale);
+- a translation **missing** its `sourceHash` (never stamped);
+- a translation with **no matching source** page (orphan).
+
+Any of these counts as an issue, so `check` exits `1` — CI catches drift. To
+stamp (or re-stamp) the hashes after syncing a translation, run:
+
+```
+ovellum check --update-translations
+```
+
+It writes the current `sourceHash` into every translated page — touching only
+that one frontmatter line — and exits `0`. See the
+[i18n guide](/docs/guides/i18n/#keeping-translations-in-sync) for the workflow.
 
 ## `ovellum watch`
 

@@ -1,6 +1,7 @@
 ---
 title: 手動モードのサイトを構築する
 description: Markdown ファイルのフォルダから、デプロイ可能な静的サイトへ。
+sourceHash: 'ec830eefb886f71c'
 ---
 
 # 手動モードのサイトを構築する

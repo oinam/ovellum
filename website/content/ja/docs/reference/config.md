@@ -1,6 +1,7 @@
 ---
 title: 設定
 description: ovellum.config.{json,ts,js} のすべてのフィールドと、その型・デフォルト値・効果。
+sourceHash: '03e0dd1b609f87e1'
 ---
 
 # 設定

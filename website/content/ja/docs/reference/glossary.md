@@ -1,6 +1,7 @@
 ---
 title: 用語集
 description: ドキュメント全体に登場する用語の 1 行定義。
+sourceHash: 'c62a7d57c40bff5a'
 ---
 
 # 用語集

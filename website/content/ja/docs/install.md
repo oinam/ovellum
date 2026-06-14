@@ -1,6 +1,7 @@
 ---
 title: インストール
 description: pnpm、npm、yarn、bun を使って Ovellum をプロジェクトに追加する。
+sourceHash: 'd4a64441e8f72257'
 ---
 
 # インストール

@@ -2,6 +2,7 @@
 title: アセットとダウンロード
 description: 画像、動画、音声、PDF、その他のファイルをどこに置き、どう参照・埋め込み・リンクするか。
 tags: [assets, images, video, audio, downloads]
+sourceHash: '55ec2695507f2159'
 ---
 
 # アセットとダウンロード

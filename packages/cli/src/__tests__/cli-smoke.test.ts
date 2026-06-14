@@ -180,3 +180,77 @@ describe('ovellum check', () => {
     expect(stderr).toContain('Run `ovellum build` first');
   });
 });
+
+describe('ovellum check — translation staleness (i18n)', () => {
+  let dir: string;
+  const enIndex = path.join('content', 'en-US', 'index.md');
+  const jaIndex = path.join('content', 'ja', 'index.md');
+
+  beforeEach(() => {
+    dir = mkdtempSync(path.join(tmpdir(), 'ovellum-i18n-'));
+    writeFileSync(
+      path.join(dir, 'ovellum.config.json'),
+      JSON.stringify({
+        name: 'x',
+        mode: 'manual',
+        input: 'content',
+        output: 'dist',
+        site: {
+          locales: [
+            { code: 'en-US', label: 'English' },
+            { code: 'ja', label: '日本語' },
+          ],
+          defaultLocale: 'en-US',
+        },
+      }),
+    );
+    mkdirSync(path.join(dir, 'content', 'en-US'), { recursive: true });
+    mkdirSync(path.join(dir, 'content', 'ja'), { recursive: true });
+    writeFileSync(path.join(dir, enIndex), '---\ntitle: Home\n---\n\n# Home\n\nEnglish body.\n');
+    writeFileSync(path.join(dir, jaIndex), '---\ntitle: ホーム\n---\n\n# ホーム\n\n日本語の本文。\n');
+  });
+  afterEach(async () => {
+    await rm(dir, { recursive: true, force: true });
+  });
+
+  it('flags an unstamped translation as [i18n] stale (exit 1)', async () => {
+    const { code, stdout } = await runCli(['check'], { cwd: dir, expectFail: true });
+    expect(code).toBe(1);
+    expect(stdout).toMatch(/stale translations:\s+1/);
+    expect(stdout).toContain('[i18n]');
+    expect(stdout).toContain('no sourceHash');
+  });
+
+  it('stamps with --update-translations, then check passes', async () => {
+    const stamp = await runCli(['check', '--update-translations'], { cwd: dir });
+    expect(stamp.code).toBe(0);
+    expect(stamp.stdout).toMatch(/updated:\s+1/);
+    // The hash is now in the translation's frontmatter…
+    const ja = await readFile(path.join(dir, jaIndex), 'utf8');
+    expect(ja).toMatch(/sourceHash:/);
+    // …and a fresh check is clean.
+    const after = await runCli(['check'], { cwd: dir });
+    expect(after.code).toBe(0);
+    expect(after.stdout).toMatch(/stale translations:\s+0/);
+  });
+
+  it('re-flags as stale after the source page changes', async () => {
+    await runCli(['check', '--update-translations'], { cwd: dir });
+    writeFileSync(path.join(dir, enIndex), '---\ntitle: Home\n---\n\n# Home\n\nEnglish body, revised.\n');
+    const { code, stdout } = await runCli(['check'], { cwd: dir, expectFail: true });
+    expect(code).toBe(1);
+    expect(stdout).toMatch(/stale translations:\s+1/);
+    expect(stdout).toContain('changed since this translation was stamped');
+  });
+
+  it('flags a translation with no source page as an [i18n] orphan', async () => {
+    writeFileSync(path.join(dir, 'content', 'ja', 'extra.md'), '---\ntitle: 余分\n---\n\n本文。\n');
+    const { code, stdout } = await runCli(['check', '--update-translations'], { cwd: dir });
+    // Stamping skips it (nothing to track)…
+    expect(code).toBe(0);
+    expect(stdout).toMatch(/skipped \(no source page\):\s+1/);
+    // …and a plain check reports it as an orphan.
+    const chk = await runCli(['check'], { cwd: dir, expectFail: true });
+    expect(chk.stdout).toContain('tracks nothing');
+  });
+});

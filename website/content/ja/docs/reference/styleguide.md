@@ -2,6 +2,7 @@
 title: スタイルガイド
 description: Ovellum がレンダリングするタイポグラフィ、スケール、リズム、カラー、コンテンツ要素――すべての Markdown ページがどう見えるか、そしてこのシステムがどう構築されているか。
 tags: [styleguide, typography, design, theme]
+sourceHash: '8a92d23f002cd158'
 ---
 
 # スタイルガイド
