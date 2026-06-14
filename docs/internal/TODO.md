@@ -33,11 +33,13 @@ Legend: `[ ]` not started · `[~]` in progress · `[x]` done · `[!]` blocked
 ## Current state (2026-06-14)
 
 **Publish state (read this first):** **`ovellum@0.10.1` is live on npm.** Tags
-`ovellum@0.7.0`…`0.10.1` pushed + GitHub releases published. **THREE pending
+`ovellum@0.7.0`…`0.10.1` pushed + GitHub releases published. **FIVE pending
 changesets for the next release (minor → 0.11.0):** `upgrade-prefers-local`
-(patch), `translation-staleness` (minor), `chrome-i18n` (minor) — all committed
-to `main`, built + tested green (319 tests), NOT yet versioned/published. See
-"In flight" below. (**0.10.1** =
+(patch), `translation-staleness` (minor), `chrome-i18n` (minor),
+`check-i18n-links` (patch), `localized-config-text` (minor) — all committed to
+`main`, built + tested green (328 tests), NOT yet versioned/published. See "In
+flight" below. **i18n is now complete end-to-end** (chrome + content + config
+text localized, staleness-checked, links validated per-locale). (**0.10.1** =
 Markdown footnotes (GFM `[^id]`) + a fix for the doubled clobber-prefix that
 broke every footnote jump link + a global `scroll-padding-top` so anchor jumps
 clear the sticky topbar; 306 tests. See "In flight"→now-shipped block below.)
@@ -120,16 +122,25 @@ everything (changeset version, badge bump in `website/ovellum.config.ts`
   `Intl.DateTimeFormat`; RTL langs get `<html dir="rtl">`; copy-button labels via
   `window.__OV_I18N__`. **Single-language output byte-for-byte identical.** Docs
   en+ja. Re-stamped ja i18n/config after the en doc edits.
+- **`ovellum check` per-locale link validation** (patch, `212e889`). `checkManual`
+  now lints i18n sites locale-by-locale (`localeViews` → each `content/<code>/`
+  subtree's prefixed nav; links validated against the union). Fixed the ~76
+  false broken-links on the website (now checks clean). Single-language unchanged.
+- **i18n config-text localization** (minor, `11f5d4f`). Config-driven labels/copy
+  accept a per-locale map (`LocalizedString = string | Record<code,string>` in
+  core): `topbarNav`/`footerNav` labels + landing hero/CTA/feature/install/trust
+  text. Resolved via `localize()` in template/build; validator accepts
+  string-or-map. The website's landing + nav now ship en/ja maps → **`/ja/` is
+  fully Japanese end to end**. Plain strings pass through (byte-identical).
 
 **Standing notes / next i18n slice:**
 - **Translation drift is now caught** — `ovellum check` flags stale ja mirrors;
   re-stamp with `ovellum check --update-translations` after syncing. **Every
   English doc edit still needs its `content/ja/` mirror updated**, but now CI
   catches it if you forget.
-- **Still English on `/ja/`:** config-driven text only — the landing hero copy and
-  `topbarNav`/`footerNav` LABELS written in `ovellum.config.ts` (the template
-  chrome itself is now localized). Per-locale RSS also deferred. These are the
-  remaining i18n slice.
+- **Still not localized:** per-locale RSS feeds (the only remaining i18n gap —
+  chrome, page content, AND config-driven text are all localized now; the
+  website's `/ja/` is fully Japanese, config labels/hero included).
 - **`ovellum check` i18n link validation: FIXED** (was ~76 false broken links on
   the i18n website). `checkManual` now lints per-locale (`localeViews` → each
   `content/<code>/` subtree's prefixed nav; links validated against the union).
