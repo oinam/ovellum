@@ -71,16 +71,24 @@ const SHIKI_LANGS = [
 // sanitizer would strip, so we keep shiki's emissions out of the sanitization
 // path entirely.
 //
-// Removed: <script>, <iframe>, <object>, <embed>, on* event-handler attrs,
-// and any URL whose scheme isn't on the per-attribute allowlist below
-// (so `javascript:`, `vbscript:`, and `data:` URLs are all dropped — including
-// from <img src>, because data:image/svg+xml can carry executable JS).
+// Removed: <script>, <object>, <embed>, on* event-handler attrs, and any URL
+// whose scheme isn't on the per-attribute allowlist below (so `javascript:`,
+// `vbscript:`, and `data:` URLs are all dropped — including from <img src>,
+// because data:image/svg+xml can carry executable JS).
+//
+// `<iframe>` is allowed through here at the schema level (tag + a fixed
+// attribute set), but a bare iframe is a click-jacking / phishing surface, so
+// it's narrowed a SECOND time by `rehypeSafeIframe` (post-sanitize): any
+// iframe whose `src` host isn't a known video player (YouTube/Vimeo) is
+// removed. Schema = the outer guard (which attributes survive); the host
+// allowlist = the inner guard (which iframes survive at all).
 const SANITIZE_SCHEMA: Schema = {
   ...defaultSchema,
   // Allow native media players in Markdown — <video>/<audio> (+ their
-  // <source>/<track> children). The default schema strips these; we add them
-  // so authors can embed an mp4/webm/mp3 inline, not just link to it.
-  tagNames: [...(defaultSchema.tagNames ?? []), 'video', 'audio', 'source', 'track'],
+  // <source>/<track> children) — and scoped <iframe> video embeds. The default
+  // schema strips all of these; we add them so authors can embed an mp4/webm/
+  // mp3 inline or drop in a YouTube/Vimeo player, not just link out.
+  tagNames: [...(defaultSchema.tagNames ?? []), 'video', 'audio', 'source', 'track', 'iframe'],
   attributes: {
     ...defaultSchema.attributes,
     // Authors writing raw <code> blocks should keep their language class
@@ -105,6 +113,23 @@ const SANITIZE_SCHEMA: Schema = {
     audio: ['src', 'controls', 'preload', 'loop', 'muted', 'autoPlay'],
     source: ['src', 'type', 'srcSet', 'media', 'sizes'],
     track: ['src', 'kind', 'srcLang', 'label', 'default'],
+    // Embed players. `src` is host-scoped by rehypeSafeIframe; the booleans
+    // below (loading/referrerPolicy/allowFullScreen) are also force-set there,
+    // but listing them keeps any author-provided values from being stripped
+    // before that pass runs. The set mirrors YouTube's / Vimeo's own
+    // copy-paste "Share → Embed" markup (incl. the legacy `frameBorder`) so a
+    // pasted snippet survives intact — CSS zeroes the border regardless.
+    iframe: [
+      'src',
+      'title',
+      'width',
+      'height',
+      'loading',
+      'referrerPolicy',
+      'allow',
+      'allowFullScreen',
+      'frameBorder',
+    ],
   },
   protocols: {
     ...defaultSchema.protocols,
@@ -114,6 +139,30 @@ const SANITIZE_SCHEMA: Schema = {
     poster: ['http', 'https'],
   },
 };
+
+// Hosts whose <iframe> players we let through. Matched against the src URL's
+// hostname after stripping a leading `www.`, so `www.youtube.com/embed/…`,
+// `www.youtube-nocookie.com/embed/…`, and `player.vimeo.com/video/…` all pass.
+// Anything else — a relative src, a malformed URL, or any other host — is
+// dropped wholesale. Keep this list tight; each entry is attack surface.
+const IFRAME_ALLOWED_HOSTS = new Set([
+  'youtube.com',
+  'youtube-nocookie.com',
+  'vimeo.com',
+  'player.vimeo.com',
+]);
+
+function iframeHostAllowed(src: unknown): boolean {
+  if (typeof src !== 'string' || src.length === 0) return false;
+  let host: string;
+  try {
+    host = new URL(src).hostname.toLowerCase();
+  } catch {
+    // Relative or malformed src — never an embeddable third-party player.
+    return false;
+  }
+  return IFRAME_ALLOWED_HOSTS.has(host.replace(/^www\./, ''));
+}
 
 // One highlighter holds every supported theme; the choice per page is just
 // which two names from that bundle we pass to `codeToHast`. Avoids the cost
@@ -169,6 +218,10 @@ export async function renderMarkdown(
     // post-sanitize so the className we add is trusted — the HAST we emit
     // here doesn't go back through sanitization.
     .use(rehypeCallouts)
+    // Narrow <iframe> to known video hosts and wrap survivors in a responsive
+    // 16:9 frame. Runs post-sanitize so the schema is the outer guard and this
+    // is the host allowlist — see SANITIZE_SCHEMA / IFRAME_ALLOWED_HOSTS above.
+    .use(rehypeSafeIframe)
     // Wrap every `<table>` in `<div class="ov-table-wrap">` so a table
     // wider than the prose column scrolls horizontally instead of
     // blowing out the layout.
@@ -216,6 +269,52 @@ function rehypeTableWrap() {
         type: 'element',
         tagName: 'div',
         properties: { className: ['ov-table-wrap'] },
+        children: [node],
+      };
+      (parent.children as ElementContent[])[index] = wrapper;
+    });
+  };
+}
+
+/**
+ * Post-sanitize guard for `<iframe>` embeds. The sanitizer lets iframes
+ * through with a fixed attribute set; this pass:
+ *
+ *  - removes any iframe whose `src` host isn't a known video player
+ *    (`iframeHostAllowed`) — relative/malformed src and every other host go,
+ *  - force-sets privacy/perf defaults on the survivors (`loading=lazy`,
+ *    `referrerpolicy=strict-origin-when-cross-origin`, `allowfullscreen`), and
+ *  - wraps each survivor in `<div class="ov-embed">` so CSS can give it a
+ *    responsive 16:9 frame instead of a fixed pixel size.
+ *
+ * Iframes already inside an `.ov-embed` wrapper are skipped (defensive, and it
+ * stops the wrapper we insert from being re-processed into an infinite nest).
+ */
+function rehypeSafeIframe() {
+  return (tree: Root): void => {
+    visit(tree, 'element', (node: Element, index, parent) => {
+      if (node.tagName !== 'iframe') return;
+      if (!parent || typeof index !== 'number') return;
+      if (
+        parent.type === 'element' &&
+        readClassNames(parent as Element).includes('ov-embed')
+      ) {
+        return;
+      }
+      if (!iframeHostAllowed(node.properties?.src)) {
+        (parent.children as ElementContent[]).splice(index, 1);
+        return index; // re-visit the node now occupying this slot
+      }
+      node.properties = {
+        ...(node.properties ?? {}),
+        loading: 'lazy',
+        referrerPolicy: 'strict-origin-when-cross-origin',
+        allowFullScreen: true,
+      };
+      const wrapper: Element = {
+        type: 'element',
+        tagName: 'div',
+        properties: { className: ['ov-embed'] },
         children: [node],
       };
       (parent.children as ElementContent[])[index] = wrapper;

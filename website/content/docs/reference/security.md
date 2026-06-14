@@ -47,7 +47,10 @@ remark-parse → remark-rehype (allowDangerousHtml)
 
 ### What's stripped
 
-- `<script>`, `<iframe>`, `<object>`, `<embed>`
+- `<script>`, `<object>`, `<embed>`
+- `<iframe>` from any host **other than** the video-embed allowlist
+  (see "What's kept" below) — and every iframe with a relative or
+  non-`http(s)` `src`
 - `on*` event-handler attributes (`onclick`, `onload`, etc.)
 - URL schemes other than the allowlist on `href`, `src`, `cite`,
   `longDesc`. Today the allowlist is `http`, `https`, `irc`, `ircs`,
@@ -70,6 +73,16 @@ attributes are kept (`controls`, `width`, `height`, `poster`, `preload`,
 `loop`, `muted`, `autoplay`, `playsinline`); `src`/`poster` go through the same
 `http(s)`-only scheme check, and event handlers are still stripped — so a media
 embed can't carry script.
+
+For **video embeds**, `<iframe>` is allowed — but narrowed twice. The sanitizer
+keeps it with a fixed attribute set (`src`, `title`, `width`, `height`,
+`loading`, `referrerpolicy`, `allow`, `allowfullscreen`), then a second pass
+**removes any iframe whose `src` host isn't a known player** — today
+`youtube.com`, `youtube-nocookie.com`, and `vimeo.com` (with their `www.`/
+`player.` subdomains). Survivors are hardened automatically: `loading="lazy"`,
+`referrerpolicy="strict-origin-when-cross-origin"`, and a responsive wrapper. A
+relative or arbitrary-host iframe is dropped wholesale, so an embed can't point
+at an attacker's page.
 
 ### Order matters
 

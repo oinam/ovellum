@@ -158,10 +158,56 @@ describe('renderMarkdown — HTML sanitization', () => {
     expect(html.toLowerCase()).not.toContain('javascript:');
   });
 
-  it('strips <iframe> tags', async () => {
+  it('strips <iframe> from a non-allowlisted host', async () => {
     const { html } = await renderMarkdown('<iframe src="https://evil.test"></iframe>');
     expect(html).not.toContain('<iframe');
     expect(html).not.toContain('evil.test');
+  });
+
+  it('strips an <iframe> with a relative / missing src (not a known player)', async () => {
+    const rel = await renderMarkdown('<iframe src="/local/page"></iframe>');
+    expect(rel.html).not.toContain('<iframe');
+    const none = await renderMarkdown('<iframe></iframe>');
+    expect(none.html).not.toContain('<iframe');
+  });
+
+  it('allows YouTube / Vimeo <iframe> embeds, scoped and hardened', async () => {
+    for (const src of [
+      'https://www.youtube.com/embed/dQw4w9WgXcQ',
+      'https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ',
+      'https://player.vimeo.com/video/76979871',
+    ]) {
+      const { html } = await renderMarkdown(`<iframe src="${src}" title="Demo"></iframe>`);
+      expect(html).toContain('<iframe');
+      expect(html).toContain(src);
+      // Wrapped in the responsive frame, with forced privacy/perf attributes.
+      expect(html).toContain('ov-embed');
+      expect(html).toContain('loading="lazy"');
+      expect(html.toLowerCase()).toContain('referrerpolicy="strict-origin-when-cross-origin"');
+      expect(html.toLowerCase()).toContain('allowfullscreen');
+    }
+  });
+
+  it("survives YouTube's verbatim copy-paste embed (width/height/frameborder/allow/?si=)", async () => {
+    // The exact markup YouTube's "Share → Embed" hands you, pasted unedited.
+    const yt =
+      '<iframe width="560" height="315" ' +
+      'src="https://www.youtube.com/embed/1Jpjw2w_0l8?si=abc123" ' +
+      'title="YouTube video player" frameborder="0" ' +
+      'allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" ' +
+      'referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>';
+    const { html } = await renderMarkdown(yt);
+    expect(html).toContain('<iframe');
+    expect(html).toContain('1Jpjw2w_0l8'); // host match unaffected by the ?si= query
+    expect(html).toContain('ov-embed');
+    expect(html).toContain('allow="accelerometer'); // author's allow list preserved
+    expect(html).toContain('loading="lazy"'); // hardened
+  });
+
+  it('strips a javascript: src even on an otherwise iframe-shaped tag', async () => {
+    const { html } = await renderMarkdown('<iframe src="javascript:alert(1)"></iframe>');
+    expect(html).not.toContain('<iframe');
+    expect(html.toLowerCase()).not.toContain('javascript:');
   });
 
   it('strips <object> and <embed> tags', async () => {

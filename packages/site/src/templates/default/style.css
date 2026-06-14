@@ -1458,6 +1458,25 @@ a.ov-nav-group--link.is-active::before {
   height: auto;
   border-radius: var(--radius-md);
 }
+/* Video embeds — every allowlisted <iframe> (YouTube/Vimeo) is wrapped by
+   rehypeSafeIframe in `.ov-embed`, which holds a responsive 16:9 frame so the
+   player scales with the prose column instead of carrying a fixed pixel size. */
+.ov-prose .ov-embed {
+  position: relative;
+  margin-block: 0 var(--space-s);
+  inline-size: 100%;
+  aspect-ratio: 16 / 9;
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  background: var(--color-code-bg);
+}
+.ov-prose .ov-embed > iframe {
+  position: absolute;
+  inset: 0;
+  inline-size: 100%;
+  block-size: 100%;
+  border: 0;
+}
 /* Tables — editorial-calm: horizontal rules only, no grid, no header
    fill. Header reads via weight + a thicker bottom rule.
    Each table is wrapped by `.ov-table-wrap` (rehypeTableWrap) so a

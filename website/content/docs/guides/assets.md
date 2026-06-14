@@ -121,8 +121,34 @@ Allowed attributes are presentational/playback only — `controls`, `width`,
 `height`, `poster`, `preload`, `loop`, `muted`, `autoplay`, `playsinline`, plus
 `<source>`/`<track>`. `src`/`poster` URLs are scheme-checked (`http(s)` or
 relative), and event handlers (`onerror`, …) are stripped, so an embed can't
-carry script. Prefer a small, web-optimised `.mp4`/`.webm`/`.mp3`; for large
-media, a host like YouTube/Vimeo (linked) keeps your site light.
+carry script. Prefer a small, web-optimised `.mp4`/`.webm`/`.mp3`.
+
+### YouTube and Vimeo
+
+Open the video on YouTube or Vimeo, hit **Share → Embed**, and paste the
+`<iframe>` it gives you **verbatim** — no editing required:
+
+```html
+<iframe
+  width="560"
+  height="315"
+  src="https://www.youtube.com/embed/VIDEO_ID"
+  title="YouTube video player"
+  frameborder="0"
+  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+  referrerpolicy="strict-origin-when-cross-origin"
+  allowfullscreen
+></iframe>
+```
+
+Ovellum allows `<iframe>` **only from known video hosts** (`youtube.com`,
+`youtube-nocookie.com`, `vimeo.com`), so an iframe pointing anywhere else (or at
+a relative path) is removed during sanitization — you can't accidentally embed
+an untrusted page. Survivors are hardened automatically (`loading="lazy"`, a
+strict referrer policy) and wrapped in a responsive 16:9 frame, so the fixed
+`width`/`height` in the pasted snippet don't matter. Prefer
+`youtube-nocookie.com` if you want YouTube's privacy-preserving embed. See the
+[styleguide](/docs/reference/styleguide/#video) for a live example.
 
 ## Checking links
 
