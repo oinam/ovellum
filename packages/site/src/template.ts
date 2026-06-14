@@ -25,6 +25,27 @@ export interface ShellOptions {
   body: string;
   /** Outer body class — distinguishes landing pages from doc pages. */
   bodyClass?: string;
+  /** `<html lang>` for i18n sites; defaults to `'en'` when unset. */
+  lang?: string;
+  /** Language-picker entries (i18n sites); empty/undefined = no picker. */
+  localeAlternates?: LocaleAlternate[];
+}
+
+/** One entry in the topbar language picker, and the per-page hreflang set. */
+export interface LocaleAlternate {
+  /** BCP 47 code (e.g. `'ja'`). */
+  code: string;
+  /** Display label — the language's autonym (e.g. `'日本語'`). */
+  label: string;
+  /** Where switching to this locale goes — the equivalent page, or that
+   *  locale's home when this page isn't translated. Raw (no basePath). */
+  url: string;
+  /** Whether this is the page's current locale. */
+  current: boolean;
+  /** True when a real translation of THIS page exists (vs. a home fallback). */
+  translated: boolean;
+  /** Whether this locale is the site's default (served at root) — for x-default. */
+  isDefault: boolean;
 }
 
 function renderShell(opts: ShellOptions): string {
@@ -61,8 +82,29 @@ function renderShell(opts: ShellOptions): string {
     bt?.enabled === false
       ? ''
       : `<div class="ov-to-top-anchor"><button class="ov-to-top" type="button" aria-label="Back to top" data-ov-to-top="${bt?.threshold ?? 360}">${renderIcon('arrow-up', { size: 18 })}</button></div>`;
+  // hreflang alternates for i18n pages — one per locale that actually has this
+  // page, plus x-default → the default locale's version. Absolute URLs, so only
+  // emitted when `site.baseUrl` is set.
+  const hreflang =
+    opts.site.baseUrl && opts.localeAlternates && opts.localeAlternates.length
+      ? opts.localeAlternates
+          .filter((a) => a.translated)
+          .map(
+            (a) =>
+              `<link rel="alternate" hreflang="${escapeAttr(a.code)}" href="${escapeAttr(join(opts.site.baseUrl!, basePath + a.url))}">`,
+          )
+          .concat(
+            opts.localeAlternates
+              .filter((a) => a.translated && a.isDefault)
+              .map(
+                (a) =>
+                  `<link rel="alternate" hreflang="x-default" href="${escapeAttr(join(opts.site.baseUrl!, basePath + a.url))}">`,
+              ),
+          )
+          .join('\n  ')
+      : '';
   return `<!doctype html>
-<html lang="en" data-theme="${escapeAttr(opts.site.defaultTheme)}" data-palette="${escapeAttr(palette)}" data-font="${escapeAttr(opts.site.font ?? 'sans')}"${accentAttrs}>
+<html lang="${escapeAttr(opts.lang ?? 'en')}" data-theme="${escapeAttr(opts.site.defaultTheme)}" data-palette="${escapeAttr(palette)}" data-font="${escapeAttr(opts.site.font ?? 'sans')}"${accentAttrs}>
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -82,6 +124,7 @@ function renderShell(opts: ShellOptions): string {
   ${desc ? `<meta name="description" content="${escapeAttr(desc)}">` : ''}
   ${opts.site.baseUrl ? `<link rel="canonical" href="${escapeAttr(join(opts.site.baseUrl, basePath + opts.url))}">` : ''}
   ${opts.site.baseUrl ? `<link rel="alternate" type="application/rss+xml" title="${escapeAttr(opts.site.title)}" href="${escapeAttr(join(opts.site.baseUrl, basePath + '/feed.xml'))}">` : ''}
+  ${hreflang}
   <link rel="icon" href="${escapeAttr(siteUrl(opts.site.favicon ?? '/favicon.ico', basePath))}">
   <link rel="stylesheet" href="${escapeAttr(assets)}assets/ovellum.css">
   ${searchHead}
@@ -147,7 +190,7 @@ function renderShell(opts: ShellOptions): string {
 </head>
 <body${opts.bodyClass ? ` class="${escapeAttr(opts.bodyClass)}"` : ''}>
   ${renderFrame()}
-  ${renderTopbar(opts.site, assets, opts.docsHref ? siteUrl(opts.docsHref, basePath) : undefined, searchEnabled, basePath)}
+  ${renderTopbar(opts.site, assets, opts.docsHref ? siteUrl(opts.docsHref, basePath) : undefined, searchEnabled, basePath, opts.localeAlternates)}
   ${opts.body}
   ${backToTop}
   ${renderFooter(opts.site, opts.generatedAt, basePath)}
@@ -352,14 +395,41 @@ function renderAppearancePanel(): string {
       </div>`;
 }
 
+/**
+ * Topbar language picker — a no-JS `<details>` disclosure listing each locale
+ * (by autonym). Switching navigates to the page's equivalent in that locale, or
+ * that locale's home when it isn't translated. Returns '' for single-language
+ * sites (fewer than two locales).
+ */
+function renderLangPicker(alternates: LocaleAlternate[] | undefined, basePath: string): string {
+  if (!alternates || alternates.length < 2) return '';
+  const current = alternates.find((a) => a.current) ?? alternates[0]!;
+  const options = alternates
+    .map((a) => {
+      const cls = a.current ? 'ov-lang-option is-current' : 'ov-lang-option';
+      const aria = a.current ? ' aria-current="true"' : '';
+      const check = a.current ? renderIcon('check', { size: 14, class: 'ov-lang-check' }) : '';
+      return `<a class="${cls}" href="${escapeAttr(siteUrl(a.url, basePath))}" hreflang="${escapeAttr(a.code)}" lang="${escapeAttr(a.code)}"${aria}><span class="ov-lang-option-label">${escapeHtml(a.label)}</span>${check}</a>`;
+    })
+    .join('\n          ');
+  return `<details class="ov-lang">
+        <summary class="ov-lang-toggle" aria-label="Language" title="Language">${renderIcon('globe', { size: 16 })}<span class="ov-lang-current">${escapeHtml(current.label)}</span>${renderIcon('chevron-down', { size: 14, class: 'ov-lang-caret' })}</summary>
+        <div class="ov-lang-menu" role="menu">
+          ${options}
+        </div>
+      </details>`;
+}
+
 function renderTopbar(
   site: OvellumSiteConfig & { title: string },
   assets: string,
   docsHref: string | undefined,
   searchEnabled: boolean,
   basePath: string,
+  localeAlternates?: LocaleAlternate[],
 ): string {
   const items = resolveTopbarItems(site, basePath);
+  const langPicker = renderLangPicker(localeAlternates, basePath);
   // Desktop splits text links from icon links so a divider can sit between
   // them; the mobile sheet keeps them in one labeled list.
   const desktopTextLinks = renderTopbarLinks(items, docsHref, true, 'text');
@@ -410,7 +480,8 @@ function renderTopbar(
       <div class="ov-topbar-search">${search}</div>
       <div class="ov-topbar-right">
         <nav class="ov-topbar-nav" aria-label="Primary">${desktopTextLinks}</nav>
-        ${desktopTextLinks ? '<span class="ov-topbar-divider" aria-hidden="true"></span>' : ''}
+        ${langPicker}
+        ${desktopTextLinks || langPicker ? '<span class="ov-topbar-divider" aria-hidden="true"></span>' : ''}
         ${desktopIconLinks ? `<div class="ov-topbar-icons">
           ${desktopIconLinks}
         </div>
@@ -420,6 +491,7 @@ function renderTopbar(
       </div>
       <nav id="ov-mobile-nav" class="ov-mobile-nav" aria-label="Mobile">
         ${mobileLinks}
+        ${langPicker ? `<div class="ov-mobile-lang">${langPicker}</div>` : ''}
         <div class="ov-mobile-theme" data-ov-appearance>
           ${renderAppearancePanel()}
         </div>
@@ -517,6 +589,10 @@ export interface RenderPageInput {
   lastModified?: string;
   /** Optional class added to `<body>`. Used today for the special 404 layout. */
   bodyClass?: string;
+  /** `<html lang>` for i18n sites; defaults to `'en'` when unset. */
+  lang?: string;
+  /** Language-picker entries (i18n sites); empty/undefined = no picker. */
+  localeAlternates?: LocaleAlternate[];
 }
 
 /**
@@ -571,6 +647,8 @@ export function renderPage(input: RenderPageInput): string {
     generatedAt: input.generatedAt,
     body,
     bodyClass: input.bodyClass,
+    lang: input.lang,
+    localeAlternates: input.localeAlternates,
   });
 }
 
@@ -593,6 +671,12 @@ export interface RenderLandingInput {
   assetsPrefix?: string;
   /** Resolved docs entry URL (landing.docsHref or first-nav fallback). */
   docsHref?: string;
+  /** Canonical site-relative URL (the locale's home for i18n); defaults to `/`. */
+  url?: string;
+  /** `<html lang>` for i18n sites; defaults to `'en'` when unset. */
+  lang?: string;
+  /** Language-picker entries (i18n sites); empty/undefined = no picker. */
+  localeAlternates?: LocaleAlternate[];
 }
 
 /**
@@ -643,12 +727,14 @@ export function renderLanding(input: RenderLandingInput): string {
     site: input.site,
     fullTitle,
     description: input.site.description,
-    url: '/',
+    url: input.url ?? '/',
     assetsPrefix: input.assetsPrefix,
     docsHref: input.docsHref ? siteUrl(input.docsHref, basePath) : undefined,
     generatedAt: input.generatedAt,
     body,
     bodyClass: 'ov-body-landing',
+    lang: input.lang,
+    localeAlternates: input.localeAlternates,
   });
 }
 

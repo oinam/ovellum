@@ -39,6 +39,21 @@ export type OvellumFont = 'sans' | 'serif' | 'inter' | 'geist';
 export type OvellumDateFormat = 'humanized' | 'iso';
 
 /**
+ * One language a site is published in. `code` is a **BCP 47 language tag**
+ * (e.g. `'en-US'`, `'ja'`, `'zh-Hans'`, `'zh-Hant'`, `'de'`) — it becomes the
+ * `<html lang>`, the URL prefix for non-default locales, and the content
+ * subtree name (`content/<code>/…`). `label` is what the language picker
+ * shows: use the language's **autonym** (`'日本語'`, `'简体中文'`, `'English'`),
+ * since people scan for their own language in its native script.
+ */
+export interface OvellumLocale {
+  /** BCP 47 language tag — also the `content/<code>/` folder name. */
+  code: string;
+  /** Display name in the picker — ideally the language's own autonym. */
+  label: string;
+}
+
+/**
  * Named color palette for the whole site (page chrome, surfaces, text —
  * not just code blocks). Every palette ships a light and a dark variant;
  * the light/dark/auto mode choice stays independent (`defaultTheme`).
@@ -286,6 +301,23 @@ export interface OvellumSiteConfig {
    * Defaults to `""` (no prefix; site is served from the root).
    */
   basePath?: string;
+  /**
+   * Languages the site is published in (**opt-in i18n**). Each entry is a
+   * `{ code, label }` (see {@link OvellumLocale}). When set, content lives in
+   * per-locale subtrees — `content/<code>/…` — instead of at the content root;
+   * the `defaultLocale` is served at the root (`/guide/`) and every other
+   * locale is served under its code (`/ja/guide/`). A language picker appears
+   * in the topbar, and each page gets `<html lang>` + `hreflang` alternates.
+   * **Leave unset for a single-language site** — behavior is then unchanged
+   * and no migration into a locale folder is needed.
+   */
+  locales?: OvellumLocale[];
+  /**
+   * Which of `locales` is the primary language, served at the site root (no
+   * URL prefix). Must match one of the `locales[].code` values. Defaults to
+   * the first entry of `locales`. Ignored when `locales` is unset.
+   */
+  defaultLocale?: string;
   /** Initial theme before user preference loads. */
   defaultTheme: OvellumDefaultTheme;
   /**

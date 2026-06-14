@@ -3,7 +3,7 @@ import { copyFile, cp, mkdir, readFile, readdir, stat, writeFile } from 'node:fs
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import matter from 'gray-matter';
-import type { OvellumConfig, OvellumSiteConfig } from '@ovellum/core';
+import type { OvellumConfig, OvellumLocale, OvellumSiteConfig } from '@ovellum/core';
 import { renderMarkdown } from './markdown.js';
 import { isExcludedContentFile, isExcludedDirName } from './content-filter.js';
 import {
@@ -18,7 +18,7 @@ import { countWords, lastModifiedISO, readingMinutes } from './page-meta.js';
 import { indexSite } from './search.js';
 import { generateRss } from './rss.js';
 import { generateSitemap } from './sitemap.js';
-import { renderLanding, renderPage } from './template.js';
+import { renderLanding, renderPage, type LocaleAlternate } from './template.js';
 import { normaliseBasePath, siteUrl } from './url.js';
 
 export interface BuildSiteOptions {
@@ -117,31 +117,10 @@ export async function buildSite(options: BuildSiteOptions): Promise<BuildSiteRes
   }
 
   const site = resolveSiteConfig(config);
-  // The reserved static-assets dir (default `public`) — its contents are copied
-  // to the output root below; it's skipped everywhere else (no pages, no nav).
+  // The reserved static-assets dir (default `public`) is SHARED across locales:
+  // it lives at the content root, is copied to the output root below, and is
+  // skipped everywhere else (no pages, no nav, never under a locale subtree).
   const publicAbs = path.join(inputAbs, site.publicDir);
-  // Resolve the home page: `site.home`, else root `index.md`, else root
-  // `README.md`. The file mapped to `/` (instead of its own slug); the nav root
-  // uses it as its index so it doesn't double as a child entry.
-  const homeRel = resolveHomeRel(inputAbs, site);
-  const homeBasename = homeRel && !homeRel.includes('/') ? homeRel : undefined;
-  const nav = await buildNav(
-    config.input,
-    cwd,
-    site.ignoreFolders,
-    site.ignoreFiles ?? [],
-    outputAbs,
-    homeBasename,
-    publicAbs,
-  );
-  // The nav is the single source of truth for page URLs — it resolves
-  // index/README folder pages and frontmatter `permalink`s with full
-  // folder-sibling awareness. Map each page's source path to its URL so the
-  // build emits files at exactly the URLs the sidebar/links point to.
-  const urlBySource = new Map<string, string>();
-  for (const node of flattenNav(nav)) {
-    if (node.sourcePath) urlBySource.set(node.sourcePath, node.url);
-  }
   const warnings: string[] = [];
 
   await mkdir(assetsAbs, { recursive: true });
@@ -171,160 +150,208 @@ export async function buildSite(options: BuildSiteOptions): Promise<BuildSiteRes
     assetBase && publicPaths.length ? rewriteAssetUrls(h, assetBase, publicPaths) : h;
 
   const landingEnabled = site.landing.enabled === true;
-  const docsHref = landingEnabled ? (site.landing.docsHref ?? firstNavUrl(nav)) : undefined;
+
+  // Resolve which languages to build. A single-language site (no `site.locales`)
+  // yields exactly one spec rooted at the content dir with no URL prefix — the
+  // legacy path, byte-for-byte unchanged. An i18n site yields one spec per
+  // locale (`content/<code>/…`, default locale at root, others prefixed).
+  const specs = resolveLocaleSpecs(site, inputAbs);
+
+  // Phase A — build each locale's nav + URL map + translation keys up front, so
+  // Phase B can render the language picker / hreflang with full cross-locale
+  // knowledge (a page in one locale linking to its equivalent in another).
+  for (const spec of specs) {
+    const homeRel = resolveHomeRel(spec.inputAbs, site);
+    const homeBasename = homeRel && !homeRel.includes('/') ? homeRel : undefined;
+    const rawNav = await buildNav(
+      path.relative(cwd, spec.inputAbs).replace(/\\/g, '/') || '.',
+      cwd,
+      site.ignoreFolders,
+      site.ignoreFiles ?? [],
+      outputAbs,
+      homeBasename,
+      publicAbs,
+    );
+    // The nav is the single source of truth for page URLs; prefix every URL
+    // with the locale's path so non-default locales serve under `/<code>/`.
+    spec.nav = prefixNav(rawNav, spec.urlPrefix);
+    spec.sidebarNav = sidebarRootFor(spec.nav);
+    spec.urlBySource = new Map();
+    spec.keys = new Map();
+    for (const node of flattenNav(spec.nav)) {
+      if (!node.sourcePath) continue;
+      spec.urlBySource.set(node.sourcePath, node.url);
+      // Translation key = the URL with the locale prefix stripped, so the same
+      // page in different locales shares a key (that's what the picker follows).
+      spec.keys.set(stripLocalePrefix(node.url, spec.urlPrefix), node.url);
+    }
+    spec.docsHref = landingEnabled
+      ? site.landing.docsHref
+        ? spec.urlPrefix + site.landing.docsHref
+        : firstNavUrl(spec.nav)
+      : undefined;
+  }
 
   const pages: PageOutput[] = [];
   let landingRendered = false;
-  // Tracks whether the content walk produced a /404/ page (from content/404.md).
-  // If not, we synthesise a default one below — every site gets a 404 that
-  // matches the template, whether or not the author wrote one.
-  let notFoundRendered = false;
 
-  // Render the landing page first (if enabled) so `content/index.md`
-  // can be detected as a conflict during the walk.
-  if (landingEnabled) {
-    const landingBody = await readLandingBody(inputAbs, site);
-    // Render each install snippet through the same markdown/shiki pipeline as
-    // doc code blocks (and the pitch body) so it gets syntax highlighting plus
-    // the `data-language` eyebrow + `data-copy` the copy-button JS looks for.
-    const install: Array<{ html: string }> = [];
-    for (const entry of site.landing.install ?? []) {
-      // Fold the title into the code as a leading comment line (rather than a
-      // separate heading), so it copies along with the command and reads like
-      // a hand-typed `# describe this command` annotation.
-      const prefix = commentPrefix(entry.lang || 'bash');
-      const withComment = entry.title
-        ? prefix + ' ' + entry.title + '\n' + entry.code
-        : entry.code;
-      const fenced = '```' + (entry.lang || 'bash') + '\n' + withComment + '\n```';
-      const { html: snippetHtml } = await renderMarkdown(fenced, { codeTheme: site.codeTheme });
-      // The visible block keeps the folded-in title comment, but the copy
-      // button should yield only the command. Stamp the comment-free command
-      // onto the <pre> as data-copy-text so the copy JS can prefer it.
-      if (snippetHtml.includes('<pre ')) {
-        const escaped = escapeCopyAttr(entry.code);
-        const withAttr = snippetHtml.replace('<pre ', `<pre data-copy-text="${escaped}" `);
-        install.push({ html: withAttr });
-      } else {
-        install.push({ html: snippetHtml });
-      }
-    }
-    const html = renderLanding({
-      site,
-      landing: site.landing,
-      pitchHtml: landingBody?.html,
-      install,
-      generatedAt: now.toISOString(),
-      docsHref,
-    });
-    await writeFile(path.join(outputAbs, 'index.html'), finalizeHtml(html), 'utf8');
-    pages.push({
-      sourcePath: landingBody?.sourcePath ?? '(landing config)',
-      outputPath: path.relative(cwd, path.join(outputAbs, 'index.html')).replace(/\\/g, '/'),
-      url: '/',
-      title: site.landing.hero.title ?? site.title,
-    });
-    landingRendered = true;
-  }
+  for (const spec of specs) {
+    const homeUrl = spec.urlPrefix ? spec.urlPrefix + '/' : '/';
+    const alternates = (key: string) => buildLocaleAlternates(specs, spec, key);
+    // Tracks whether this locale's content walk produced its /404/ page.
+    let notFoundRendered = false;
 
-  for await (const file of walkContent(inputAbs, {
-    inputAbs,
-    ignoreFolders: site.ignoreFolders,
-    ignoreFiles: site.ignoreFiles ?? [],
-    outputAbs,
-    publicAbs,
-  })) {
-    const relFromInput = path.relative(inputAbs, file).replace(/\\/g, '/');
-    if (isMarkdown(file)) {
-      // URL comes from the nav (handles index/README folder pages + permalinks);
-      // urlFor is only a fallback for a file the nav didn't surface.
-      const sourceRelFromCwd = path.relative(cwd, file).replace(/\\/g, '/');
-      const url = urlBySource.get(sourceRelFromCwd) ?? urlFor(relFromInput);
-      if (landingEnabled && url === '/') {
-        warnings.push(
-          `Skipped ${relFromInput} because site.landing.enabled is true; ` +
-            `the landing template renders / instead. Move prose to ${LANDING_BODY_FILE} ` +
-            `or rename this file.`,
-        );
-        continue;
+    // Render the landing page first (if enabled) so a locale `index.md`
+    // can be detected as a conflict during the walk.
+    if (landingEnabled) {
+      const landingBody = await readLandingBody(spec.inputAbs, site);
+      // Render each install snippet through the same markdown/shiki pipeline as
+      // doc code blocks (and the pitch body) so it gets syntax highlighting plus
+      // the `data-language` eyebrow + `data-copy` the copy-button JS looks for.
+      const install: Array<{ html: string }> = [];
+      for (const entry of site.landing.install ?? []) {
+        const prefix = commentPrefix(entry.lang || 'bash');
+        const withComment = entry.title
+          ? prefix + ' ' + entry.title + '\n' + entry.code
+          : entry.code;
+        const fenced = '```' + (entry.lang || 'bash') + '\n' + withComment + '\n```';
+        const { html: snippetHtml } = await renderMarkdown(fenced, { codeTheme: site.codeTheme });
+        if (snippetHtml.includes('<pre ')) {
+          const escaped = escapeCopyAttr(entry.code);
+          const withAttr = snippetHtml.replace('<pre ', `<pre data-copy-text="${escaped}" `);
+          install.push({ html: withAttr });
+        } else {
+          install.push({ html: snippetHtml });
+        }
       }
-      const outputPath = path.join(outputAbs, urlToOutputPath(url));
-      const { prev, next } = findAdjacent(nav, url);
-      const breadcrumbs = findBreadcrumbs(nav, url).map((n) => ({ title: n.title, url: n.url }));
-      const result = await renderOne({
-        absInput: file,
-        url,
+      const html = renderLanding({
         site,
-        // Sidebar renders the section subtree; prev/next + breadcrumbs above
-        // still use the full nav so reading order spans the whole site.
-        nav: sidebarRootFor(nav),
-        cwd,
+        landing: site.landing,
+        pitchHtml: landingBody?.html,
+        install,
         generatedAt: now.toISOString(),
-        docsHref,
-        prev: prev ? { title: prev.title, url: prev.url } : undefined,
-        next: next ? { title: next.title, url: next.url } : undefined,
-        breadcrumbs,
-        sourceRelFromCwd,
+        docsHref: spec.docsHref,
+        url: homeUrl,
+        lang: spec.lang,
+        localeAlternates: alternates('/'),
       });
-      if (!result) continue; // draft page (frontmatter draft: true) — skip
-      const pageHtml = finalizeHtml(result.html);
-      await mkdir(path.dirname(outputPath), { recursive: true });
-      await writeFile(outputPath, pageHtml, 'utf8');
-      // Mirror the not-found page to a top-level `404.html`. The pretty-URL
-      // output is `404/index.html`, but most static hosts (GitHub Pages,
-      // Netlify, Cloudflare, …) serve a root-level `404.html` for missing
-      // paths and never look inside `404/index.html`. Emitting both makes a
-      // custom 404 actually trigger in production with no extra build step.
-      if (url === '/404/') {
-        await writeFile(path.join(outputAbs, '404.html'), pageHtml, 'utf8');
-        notFoundRendered = true;
-      }
+      const landingOut = path.join(outputAbs, urlToOutputPath(homeUrl));
+      await mkdir(path.dirname(landingOut), { recursive: true });
+      await writeFile(landingOut, finalizeHtml(html), 'utf8');
       pages.push({
-        sourcePath: path.relative(cwd, file).replace(/\\/g, '/'),
-        outputPath: path.relative(cwd, outputPath).replace(/\\/g, '/'),
-        url,
-        title: result.title,
-        description: result.description,
-        lastModified: result.lastModified,
+        sourcePath: landingBody?.sourcePath ?? '(landing config)',
+        outputPath: path.relative(cwd, landingOut).replace(/\\/g, '/'),
+        url: homeUrl,
+        title: site.landing.hero.title ?? site.title,
       });
-      warnings.push(...result.warnings);
-    } else {
-      // Passthrough static asset
-      const outputPath = path.join(outputAbs, relFromInput);
-      await mkdir(path.dirname(outputPath), { recursive: true });
-      await copyFile(file, outputPath);
+      landingRendered = true;
     }
-  }
 
-  // Always emit a 404 that matches the template. If the author wrote
-  // `content/404.md` it was rendered above; otherwise synthesise a default
-  // here. Both `404/index.html` (pretty URL) and a root `404.html` are written
-  // so static hosts that look for the root file (GitHub Pages, Netlify, …)
-  // trigger it. A platform that serves its own 404 simply ignores ours.
-  if (!notFoundRendered) {
-    const homeHref = siteUrl('/', normaliseBasePath(site.basePath));
-    const bodyHtml =
-      `<h1>Page not found</h1>\n` +
-      `<p>The page you’re looking for doesn’t exist or may have moved.</p>\n` +
-      `<p><a href="${homeHref}">Go to the homepage</a></p>`;
-    const html = renderPage({
-      site,
-      nav: sidebarRootFor(nav),
-      url: '/404/',
-      title: 'Page not found',
-      bodyHtml,
-      headings: [],
-      generatedAt: now.toISOString(),
-      docsHref,
-      bodyClass: 'ov-body-404',
-    });
-    const html404 = finalizeHtml(html);
-    await mkdir(path.join(outputAbs, '404'), { recursive: true });
-    await writeFile(path.join(outputAbs, '404', 'index.html'), html404, 'utf8');
-    await writeFile(path.join(outputAbs, '404.html'), html404, 'utf8');
-    // Intentionally NOT pushed to `pages`: the default 404 is infrastructure,
-    // not authored content, so it shouldn't inflate the build's page count
-    // (nor appear in sitemap/RSS, which already exclude /404/).
+    for await (const file of walkContent(spec.inputAbs, {
+      inputAbs: spec.inputAbs,
+      ignoreFolders: site.ignoreFolders,
+      ignoreFiles: site.ignoreFiles ?? [],
+      outputAbs,
+      publicAbs,
+    })) {
+      const relFromInput = path.relative(spec.inputAbs, file).replace(/\\/g, '/');
+      if (isMarkdown(file)) {
+        // URL comes from the nav (handles index/README folder pages + permalinks);
+        // urlFor is only a fallback for a file the nav didn't surface (then
+        // prefixed for non-default locales).
+        const sourceRelFromCwd = path.relative(cwd, file).replace(/\\/g, '/');
+        const url = spec.urlBySource.get(sourceRelFromCwd) ?? spec.urlPrefix + urlFor(relFromInput);
+        if (landingEnabled && url === homeUrl) {
+          warnings.push(
+            `Skipped ${sourceRelFromCwd} because site.landing.enabled is true; ` +
+              `the landing template renders ${homeUrl} instead. Move prose to ` +
+              `${LANDING_BODY_FILE} or rename this file.`,
+          );
+          continue;
+        }
+        const outputPath = path.join(outputAbs, urlToOutputPath(url));
+        const { prev, next } = findAdjacent(spec.nav, url);
+        const breadcrumbs = findBreadcrumbs(spec.nav, url).map((n) => ({
+          title: n.title,
+          url: n.url,
+        }));
+        const result = await renderOne({
+          absInput: file,
+          url,
+          site,
+          nav: spec.sidebarNav,
+          cwd,
+          generatedAt: now.toISOString(),
+          docsHref: spec.docsHref,
+          prev: prev ? { title: prev.title, url: prev.url } : undefined,
+          next: next ? { title: next.title, url: next.url } : undefined,
+          breadcrumbs,
+          sourceRelFromCwd,
+          lang: spec.lang,
+          localeAlternates: alternates(stripLocalePrefix(url, spec.urlPrefix)),
+        });
+        if (!result) continue; // draft page (frontmatter draft: true) — skip
+        const pageHtml = finalizeHtml(result.html);
+        await mkdir(path.dirname(outputPath), { recursive: true });
+        await writeFile(outputPath, pageHtml, 'utf8');
+        // The DEFAULT locale's 404 is mirrored to a root `404.html` (the file
+        // static hosts serve for missing paths). Non-default locales keep their
+        // own `/<code>/404/` but don't claim the single root mirror.
+        if (url === '/404/') {
+          await writeFile(path.join(outputAbs, '404.html'), pageHtml, 'utf8');
+          notFoundRendered = true;
+        }
+        pages.push({
+          sourcePath: sourceRelFromCwd,
+          outputPath: path.relative(cwd, outputPath).replace(/\\/g, '/'),
+          url,
+          title: result.title,
+          description: result.description,
+          lastModified: result.lastModified,
+        });
+        warnings.push(...result.warnings);
+      } else {
+        // Passthrough static asset — served under the locale prefix so a
+        // co-located `content/<code>/x.png` lands at `/<code>/x.png`.
+        const outRel = spec.urlPrefix ? path.join(spec.urlPrefix.slice(1), relFromInput) : relFromInput;
+        const outputPath = path.join(outputAbs, outRel);
+        await mkdir(path.dirname(outputPath), { recursive: true });
+        await copyFile(file, outputPath);
+      }
+    }
+
+    // Always emit a 404 that matches the template. If this locale authored a
+    // 404 page it was rendered above; otherwise synthesise the default here at
+    // `<prefix>/404/`. The default locale additionally writes the root
+    // `404.html` so hosts that look for the root file trigger it.
+    if (!notFoundRendered) {
+      const notFoundUrl = spec.urlPrefix + '/404/';
+      const homeHref = siteUrl(homeUrl, normaliseBasePath(site.basePath));
+      const bodyHtml =
+        `<h1>Page not found</h1>\n` +
+        `<p>The page you’re looking for doesn’t exist or may have moved.</p>\n` +
+        `<p><a href="${homeHref}">Go to the homepage</a></p>`;
+      const html = renderPage({
+        site,
+        nav: spec.sidebarNav,
+        url: notFoundUrl,
+        title: 'Page not found',
+        bodyHtml,
+        headings: [],
+        generatedAt: now.toISOString(),
+        docsHref: spec.docsHref,
+        bodyClass: 'ov-body-404',
+        lang: spec.lang,
+        localeAlternates: alternates('/404/'),
+      });
+      const html404 = finalizeHtml(html);
+      const out404 = path.join(outputAbs, urlToOutputPath(notFoundUrl));
+      await mkdir(path.dirname(out404), { recursive: true });
+      await writeFile(out404, html404, 'utf8');
+      if (spec.isDefault) {
+        await writeFile(path.join(outputAbs, '404.html'), html404, 'utf8');
+      }
+    }
   }
 
   // Sort pages for deterministic summary output (but keep `/` first).
@@ -385,6 +412,10 @@ interface RenderOneInput {
   breadcrumbs?: Array<{ title: string; url: string }>;
   /** Page's source path relative to the project root; substituted into the edit URL. */
   sourceRelFromCwd: string;
+  /** `<html lang>` for this locale (i18n sites); undefined leaves the default. */
+  lang?: string;
+  /** Language-picker entries (i18n sites); empty for single-language sites. */
+  localeAlternates?: LocaleAlternate[];
 }
 
 interface RenderOneResult {
@@ -450,6 +481,8 @@ async function renderOne(input: RenderOneInput): Promise<RenderOneResult | null>
     readingMinutes: readingMin,
     lastModified,
     bodyClass: input.url === '/404/' ? 'ov-body-404' : undefined,
+    lang: input.lang,
+    localeAlternates: input.localeAlternates,
   });
   return {
     html,
@@ -520,6 +553,109 @@ function sidebarRootFor(nav: NavNode): NavNode {
 function resolveSiteConfig(config: OvellumConfig): OvellumSiteConfig & { title: string } {
   const title = config.site.title ?? config.name ?? 'Ovellum site';
   return { ...config.site, title };
+}
+
+/** One language being built. Single-language sites get exactly one spec with a
+ *  null locale, the content root as input, and no URL prefix (legacy path). */
+interface LocaleSpec {
+  locale: OvellumLocale | null;
+  /** BCP 47 code, or null for a single-language site. */
+  code: string | null;
+  /** `<html lang>` value; undefined leaves the template default for legacy sites. */
+  lang: string | undefined;
+  /** Absolute content dir for this locale (`content/` or `content/<code>`). */
+  inputAbs: string;
+  /** URL prefix: `''` for the default/single locale, `'/ja'` for others. */
+  urlPrefix: string;
+  isDefault: boolean;
+  // Filled in Phase A:
+  nav: NavNode;
+  sidebarNav: NavNode;
+  urlBySource: Map<string, string>;
+  /** Translation key (prefix-stripped URL) → full URL in this locale. */
+  keys: Map<string, string>;
+  docsHref?: string;
+}
+
+function resolveLocaleSpecs(site: OvellumSiteConfig, inputAbs: string): LocaleSpec[] {
+  const placeholders = {
+    nav: { title: '', url: '/', children: [] } as NavNode,
+    sidebarNav: { title: '', url: '/', children: [] } as NavNode,
+    urlBySource: new Map<string, string>(),
+    keys: new Map<string, string>(),
+  };
+  // No i18n → one unprefixed spec rooted at the content dir (legacy behavior).
+  if (!site.locales || site.locales.length === 0) {
+    return [
+      {
+        locale: null,
+        code: null,
+        lang: undefined,
+        inputAbs,
+        urlPrefix: '',
+        isDefault: true,
+        ...placeholders,
+        urlBySource: new Map(),
+        keys: new Map(),
+      },
+    ];
+  }
+  const def = site.defaultLocale ?? site.locales[0]!.code;
+  return site.locales.map((l) => ({
+    locale: l,
+    code: l.code,
+    lang: l.code,
+    inputAbs: path.join(inputAbs, l.code),
+    urlPrefix: l.code === def ? '' : '/' + l.code,
+    isDefault: l.code === def,
+    ...placeholders,
+    urlBySource: new Map(),
+    keys: new Map(),
+  }));
+}
+
+/** Prefix every URL in a nav subtree with the locale path (`/ja`). The default
+ *  locale uses an empty prefix and is returned unchanged. */
+function prefixNav(node: NavNode, prefix: string): NavNode {
+  if (!prefix) return node;
+  return {
+    ...node,
+    url: typeof node.url === 'string' ? prefix + node.url : node.url,
+    children: node.children.map((c) => prefixNav(c, prefix)),
+  };
+}
+
+/** Inverse of the prefix: maps a locale URL back to its translation key.
+ *  `/ja/guides/` → `/guides/`, `/ja/` → `/`. */
+function stripLocalePrefix(url: string, prefix: string): string {
+  if (!prefix) return url;
+  if (url === prefix + '/') return '/';
+  if (url.startsWith(prefix + '/')) return url.slice(prefix.length);
+  return url;
+}
+
+/** Build the language-picker entries for a page (translation key `key`) rendered
+ *  in `current`. Each locale links to its equivalent page when it exists, else
+ *  falls back to that locale's home. Returns [] for single-language sites (no
+ *  picker). URLs are raw (no basePath) — the template finishes them. */
+function buildLocaleAlternates(
+  specs: LocaleSpec[],
+  current: LocaleSpec,
+  key: string,
+): LocaleAlternate[] {
+  if (!current.locale) return [];
+  return specs.map((s) => {
+    const translatedUrl = s.keys.get(key);
+    const homeUrl = s.urlPrefix ? s.urlPrefix + '/' : '/';
+    return {
+      code: s.code!,
+      label: s.locale!.label,
+      url: translatedUrl ?? homeUrl,
+      current: s === current,
+      translated: translatedUrl !== undefined,
+      isDefault: s.isDefault,
+    };
+  });
 }
 
 interface WalkOpts {

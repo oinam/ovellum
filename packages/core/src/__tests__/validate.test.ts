@@ -94,6 +94,43 @@ describe('validateUserConfig', () => {
     );
   });
 
+  it('accepts site.locales + defaultLocale and rejects bad shapes', () => {
+    const ok = {
+      site: {
+        defaultLocale: 'en-US',
+        locales: [
+          { code: 'en-US', label: 'English' },
+          { code: 'ja', label: '日本語' },
+          { code: 'zh-Hans', label: '简体中文' },
+        ],
+      },
+    };
+    expect(validateUserConfig(ok)).toEqual(ok);
+    expect(() => validateUserConfig({ site: { locales: [] } })).toThrow(/site\.locales/);
+    expect(() =>
+      validateUserConfig({ site: { locales: [{ code: 'en_US!', label: 'x' }] } }),
+    ).toThrow(/locales\[0\]\.code/);
+    expect(() => validateUserConfig({ site: { locales: [{ code: 'ja' }] } })).toThrow(
+      /locales\[0\]\.label/,
+    );
+    expect(() =>
+      validateUserConfig({
+        site: {
+          locales: [
+            { code: 'ja', label: 'a' },
+            { code: 'ja', label: 'b' },
+          ],
+        },
+      }),
+    ).toThrow(/duplicate code/);
+    expect(() =>
+      validateUserConfig({ site: { locales: [{ code: 'ja', label: 'a' }], defaultLocale: 'en' } }),
+    ).toThrow(/site\.defaultLocale/);
+    expect(() => validateUserConfig({ site: { defaultLocale: 'en' } })).toThrow(
+      /site\.defaultLocale/,
+    );
+  });
+
   it('accepts a site.assetBaseUrl and rejects empty / whitespace', () => {
     expect(validateUserConfig({ site: { assetBaseUrl: 'https://cdn.example.com/x' } })).toEqual({
       site: { assetBaseUrl: 'https://cdn.example.com/x' },

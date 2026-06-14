@@ -18,6 +18,14 @@ export default {
     description:
       'Markdown documentation for TypeScript and JavaScript projects. A merge engine that lets auto-generated API docs and hand-written prose coexist in the same files, plus a Jekyll-style static-site builder for purely manual docs.',
     baseUrl: 'https://ovellum.oss.oinam.com',
+    // Languages (BCP 47). en-US is canonical (served at root); ja is a demo
+    // translation of a few pages — the picker falls back to the ja home for
+    // untranslated pages. Content lives in content/<code>/.
+    defaultLocale: 'en-US',
+    locales: [
+      { code: 'en-US', label: 'English' },
+      { code: 'ja', label: '日本語' },
+    ],
     defaultTheme: 'auto',
     footer: 'Ovellum is MIT-licensed. Built with itself.',
     // This site IS Ovellum — no self-crediting link in the footer.

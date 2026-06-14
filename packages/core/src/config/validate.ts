@@ -9,6 +9,11 @@ const PALETTES = ['default', 'nord', 'flexoki', 'solarized', 'eink'] as const;
 const CODE_THEMES = ['github', 'nord', 'solarized'] as const;
 const FONTS = ['sans', 'serif', 'inter', 'geist'] as const;
 const DATE_FORMATS = ['humanized', 'iso'] as const;
+// BCP 47-ish: a 2–3 letter primary subtag, then optional script/region/variant
+// subtags (e.g. en, en-US, zh-Hans, pt-BR). Deliberately permissive but enough
+// to reject obvious mistakes ("EN-uk" lowercase-region passes; folder names are
+// case-sensitive on some FS, so we keep authors' casing and don't normalize).
+const LOCALE_CODE_RE = /^[A-Za-z]{2,3}(-[A-Za-z0-9]{2,8})*$/;
 const CTA_STYLES = ['primary', 'secondary'] as const;
 
 function isPlainObject(value: unknown): value is Record<string, unknown> {
@@ -174,6 +179,39 @@ export function validateUserConfig(input: unknown): OvellumUserConfig {
       !DATE_FORMATS.includes(s.dateFormat as (typeof DATE_FORMATS)[number])
     ) {
       throw new ConfigError(`\`site.dateFormat\` must be one of: ${DATE_FORMATS.join(', ')}.`);
+    }
+    if (s.locales !== undefined) {
+      if (!Array.isArray(s.locales) || s.locales.length === 0) {
+        throw new ConfigError('`site.locales` must be a non-empty array of { code, label }.');
+      }
+      const codes = new Set<string>();
+      for (let i = 0; i < s.locales.length; i++) {
+        const loc = s.locales[i] as { code?: unknown; label?: unknown };
+        if (!isPlainObject(loc)) {
+          throw new ConfigError(`\`site.locales[${i}]\` must be an object { code, label }.`);
+        }
+        if (typeof loc.code !== 'string' || !LOCALE_CODE_RE.test(loc.code)) {
+          throw new ConfigError(
+            `\`site.locales[${i}].code\` must be a BCP 47 tag like 'en-US', 'ja', or 'zh-Hans'.`,
+          );
+        }
+        if (typeof loc.label !== 'string' || loc.label.trim() === '') {
+          throw new ConfigError(`\`site.locales[${i}].label\` must be a non-empty string.`);
+        }
+        if (codes.has(loc.code)) {
+          throw new ConfigError(`\`site.locales\` has a duplicate code '${loc.code}'.`);
+        }
+        codes.add(loc.code);
+      }
+      if (s.defaultLocale !== undefined) {
+        if (typeof s.defaultLocale !== 'string' || !codes.has(s.defaultLocale)) {
+          throw new ConfigError(
+            '`site.defaultLocale` must match one of the `site.locales[].code` values.',
+          );
+        }
+      }
+    } else if (s.defaultLocale !== undefined) {
+      throw new ConfigError('`site.defaultLocale` is set but `site.locales` is not.');
     }
     if (
       s.codeTheme !== undefined &&

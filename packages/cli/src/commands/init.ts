@@ -283,6 +283,11 @@ ${descLine}
     // home: 'index.md',         // page rendered at /; auto-resolves to index.md, else a root README.md
     // baseUrl: 'https://example.com', // enables sitemap.xml, RSS, and canonical links
     // basePath: '/docs',        // serve under a subpath (e.g. GitHub project pages)
+    // Multiple languages (i18n) — content moves to content/<code>/ subtrees,
+    // defaultLocale serves at the root, others under /<code>/. Adds a topbar
+    // language picker. Codes are BCP 47 (en-US, ja, zh-Hans). See the i18n guide.
+    // defaultLocale: 'en-US',
+    // locales: [{ code: 'en-US', label: 'English' }, { code: 'ja', label: '日本語' }],
     defaultTheme: ${q(a.defaultTheme)}, // 'auto' | 'light' | 'dark'
     // palette: 'default',       // 'default' | 'nord' | 'flexoki' | 'solarized' | 'eink'
     // accent: 'oklch(57% 0.16 255)', // primary color (CTA buttons, links, focus); any CSS color

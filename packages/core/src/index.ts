@@ -7,6 +7,7 @@ export type {
   OvellumDefaultTheme,
   OvellumFont,
   OvellumDateFormat,
+  OvellumLocale,
   OvellumCodeTheme,
   OvellumCtaStyle,
   ProtectConfig,

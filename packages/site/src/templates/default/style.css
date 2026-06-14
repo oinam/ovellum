@@ -675,6 +675,84 @@ a:hover {
   align-items: center;
   gap: var(--space-3xs);
 }
+/* Language picker — a no-JS <details> dropdown sitting in the text-link cluster
+   (after the nav links, before the divider). Switching is a plain link. */
+.ov-lang {
+  position: relative;
+  flex: none;
+}
+.ov-lang-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35em;
+  cursor: pointer;
+  list-style: none;
+  color: var(--color-fg-muted);
+  font-weight: 500;
+  font-size: 0.94em;
+  padding: var(--space-3xs) var(--space-xs);
+  border-radius: var(--radius-md);
+  user-select: none;
+  transition: color 120ms ease, background-color 120ms ease;
+}
+.ov-lang-toggle::-webkit-details-marker,
+.ov-lang-toggle::marker {
+  display: none;
+  content: '';
+}
+.ov-lang-toggle:hover,
+.ov-lang[open] .ov-lang-toggle {
+  color: var(--color-fg);
+  background: var(--color-bg-subtle);
+}
+.ov-lang-caret {
+  transition: transform 150ms ease;
+}
+.ov-lang[open] .ov-lang-caret {
+  transform: rotate(180deg);
+}
+.ov-lang-menu {
+  position: absolute;
+  inset-inline-end: 0;
+  inset-block-start: calc(100% + 6px);
+  min-inline-size: 9rem;
+  padding: var(--space-3xs);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  box-shadow: 0 10px 30px -16px rgba(0, 0, 0, 0.4);
+  display: grid;
+  gap: 1px;
+  z-index: 50;
+}
+.ov-lang-option {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2xs);
+  padding: var(--space-3xs) var(--space-2xs);
+  border-radius: var(--radius-sm);
+  text-decoration: none;
+  color: var(--color-fg-muted);
+  font-size: 0.9rem;
+}
+.ov-lang-option:hover {
+  background: var(--color-inline-code-bg);
+  color: var(--color-fg);
+}
+.ov-lang-option.is-current {
+  color: var(--color-fg);
+}
+.ov-lang-option-label {
+  flex: 1;
+}
+.ov-lang-check {
+  flex: none;
+  color: var(--color-fg-subtle);
+}
+/* Mobile sheet copy: full-width, static (no absolute menu). */
+.ov-mobile-lang {
+  display: none;
+}
 .ov-topbar-glyph {
   line-height: 0;
 }
@@ -1196,12 +1274,23 @@ body.ov-menu-open {
   .ov-topbar-nav,
   .ov-topbar-divider,
   .ov-topbar-icons,
+  .ov-topbar-right > .ov-lang,
   .ov-appearance {
     display: none;
   }
-  /* …but not the inline copy inside the sheet (same data hook, no class). */
+  /* …but not the inline copies inside the sheet (same data hook / no class). */
   .ov-mobile-nav [data-ov-appearance] {
     display: block;
+  }
+  .ov-mobile-lang {
+    display: block;
+  }
+  .ov-mobile-lang .ov-lang-menu {
+    position: static;
+    box-shadow: none;
+    border: 0;
+    padding: 0;
+    min-inline-size: 0;
   }
   .ov-topbar-menu {
     display: inline-flex;

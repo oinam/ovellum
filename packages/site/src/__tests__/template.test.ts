@@ -337,6 +337,61 @@ describe('renderPage', () => {
     expect(html).toContain('data-font="sans"');
   });
 
+  it('renders the language picker, <html lang>, and hreflang for i18n pages', () => {
+    const html = renderPage({
+      site: { title: 'X', defaultTheme: 'auto', footer: '', baseUrl: 'https://x.test' },
+      nav: NAV,
+      url: '/ja/guides/install/',
+      title: 'Install',
+      bodyHtml: '',
+      headings: [],
+      generatedAt: '2026-06-14T00:00:00.000Z',
+      lang: 'ja',
+      localeAlternates: [
+        {
+          code: 'en-US',
+          label: 'English',
+          url: '/guides/install/',
+          current: false,
+          translated: true,
+          isDefault: true,
+        },
+        {
+          code: 'ja',
+          label: '日本語',
+          url: '/ja/guides/install/',
+          current: true,
+          translated: true,
+          isDefault: false,
+        },
+      ],
+    });
+    expect(html).toContain('<html lang="ja"');
+    expect(html).toContain('ov-lang-toggle');
+    expect(html).toContain('English');
+    expect(html).toContain('日本語');
+    expect(html).toContain('href="/guides/install/"');
+    expect(html).toContain('aria-current="true"');
+    expect(html).toContain('hreflang="en-US" href="https://x.test/guides/install/"');
+    expect(html).toContain('hreflang="ja" href="https://x.test/ja/guides/install/"');
+    expect(html).toContain('hreflang="x-default" href="https://x.test/guides/install/"');
+  });
+
+  it('renders NO language picker for a single-language site', () => {
+    const html = renderPage({
+      site: { title: 'X', defaultTheme: 'auto', footer: '' },
+      nav: NAV,
+      url: '/',
+      title: 'X',
+      bodyHtml: '',
+      headings: [],
+      generatedAt: '2026-06-14T00:00:00.000Z',
+    });
+    expect(html).toContain('<html lang="en"');
+    expect(html).not.toContain('ov-lang-toggle');
+    expect(html).not.toContain('hreflang');
+  });
+
   it('renders the "Edited" page-meta line, humanized by default', () => {
     const html = renderPage({
       site: { title: 'X', defaultTheme: 'auto', footer: '' },

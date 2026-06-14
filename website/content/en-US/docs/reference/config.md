@@ -96,6 +96,8 @@ interface OvellumSiteConfig {
   description?: string;
   baseUrl?: string;
   basePath?: string;
+  locales?: { code: string; label: string }[];
+  defaultLocale?: string;
   defaultTheme: 'auto' | 'light' | 'dark';
   palette: 'default' | 'nord' | 'flexoki' | 'solarized' | 'eink';
   accent?: string;
@@ -128,6 +130,8 @@ interface OvellumSiteConfig {
 | `description`    | `string?`                           | `undefined`                   | Used in `<meta>` and the footer.                                                                                                                                                                                               |
 | `baseUrl`        | `string?`                           | `undefined`                   | E.g. `'https://docs.example.com'`. Used for `<link rel="canonical">`, OG cards, and the `sitemap.xml`. Omit for relative-link output.                                                                                          |
 | `basePath`       | `string?`                           | `''`                          | Jekyll-style subpath. Leading slash, no trailing slash (e.g. `'/ovellum'`). Prepended to every internal URL, asset path, canonical link, and sitemap entry. Authors keep writing root-relative links; the build adds the prefix. |
+| `locales`        | `{ code, label }[]?`                | `undefined`                   | **Opt-in i18n.** Each entry is a language: `code` is a BCP 47 tag (`'en-US'`, `'ja'`, `'zh-Hans'`) and also the `content/<code>/` folder name + `<html lang>`; `label` is the picker text (use the autonym, e.g. `'日本語'`). When set, content moves into per-locale subtrees, a language picker appears in the topbar, and pages get `hreflang`. Unset = single-language (no migration needed). See the [i18n guide](/docs/guides/i18n/). |
+| `defaultLocale`  | `string?`                           | first of `locales`            | Which `locales[].code` is served at the **root** (no URL prefix); the rest serve under `/<code>/`. Ignored when `locales` is unset.                                                                                              |
 | `defaultTheme`   | `'auto' \| 'light' \| 'dark'`       | `'auto'`                      | Initial light/dark mode before user preference loads. Visitors can change it from the topbar appearance control (persisted in `localStorage`).                                                                                  |
 | `palette`        | `'default' \| 'nord' \| 'flexoki' \| 'solarized' \| 'eink'` | `'default'`  | Initial page-wide color palette before user preference loads (`'default'` displays as "Ovellum" in the picker). Every palette ships light **and** dark variants; the mode choice stays independent. Visitors can switch palettes from the topbar appearance control.            |
 | `accent`         | `string?`                           | `undefined`                   | Default primary color — any CSS color value (`'#3b82f6'`, `'oklch(57% 0.16 255)'`, …). Drives the CTA buttons plus links, focus rings, and the ToC indicator; hover states are mixed automatically. Unset = each palette's own primary. Visitors can override it from the appearance control ("Color"). |

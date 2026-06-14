@@ -33,6 +33,7 @@ import Menu from 'lucide/dist/esm/icons/menu.mjs';
 import Monitor from 'lucide/dist/esm/icons/monitor.mjs';
 import Moon from 'lucide/dist/esm/icons/moon.mjs';
 import Package from 'lucide/dist/esm/icons/package.mjs';
+import Globe from 'lucide/dist/esm/icons/globe.mjs';
 import Palette from 'lucide/dist/esm/icons/palette.mjs';
 import PenTool from 'lucide/dist/esm/icons/pen-tool.mjs';
 import Rss from 'lucide/dist/esm/icons/rss.mjs';
@@ -79,6 +80,7 @@ const REGISTRY = {
   mail: Mail,
   package: Package,
   palette: Palette,
+  globe: Globe,
   // Theme glyphs for the appearance panel.
   'pen-tool': PenTool,
   'book-open': BookOpen,
