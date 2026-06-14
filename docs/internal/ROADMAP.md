@@ -128,11 +128,42 @@ A1 unlocks A2–A4.
 - [ ] **B6 (L)** **Versioned docs** — directory-per-version + version
       selector in the topbar. Table-stakes for libraries with maintained
       majors.
-- [ ] **B7 (L)** **i18n** — two passes: content i18n (`content/<locale>/`,
-      locale nav, hreflang, per-locale sitemap/RSS; Pagefind already shards
-      by `lang`) then chrome i18n (extract the hard-coded English UI strings
-      in `template.ts`; drive `<html lang>`/`dir`). Full notes in TODO
-      backlog.
+- [ ] **B7 (L)** **i18n / multi-language — the v0.8.0 focus.** Design locked
+      2026-06-14 (planning session). Scope agreed: build the full engine + a
+      **single Japanese demo** on 2–3 pages (landing + getting-started), English
+      canonical + fallback. **Skip `en-GB`** — after standardizing on American
+      spelling it's a near-duplicate differing only in spelling; pure
+      maintenance, no reader value. More languages = community PRs later.
+  - **Language codes = BCP 47** (not "EN"/"jp"/"ch"): `en-US`, `ja`, `zh-Hans`
+        (Simplified) / `zh-Hant` (Traditional), `ko`, etc. UK English is
+        **`en-GB`** (GB, not UK). Selector labels use the **autonym** (語: 日本語,
+        简体中文, …), not the English name.
+  - **Opt-in, zero breakage:** unset `site.locales` → today's single-language
+        behavior unchanged. i18n activates only when locales are defined.
+  - **Content = locale subtrees:** `content/<locale>/…` (e.g. `content/en-US/`,
+        `content/ja/`). Pages map across languages by **identical relative
+        path** (that's what the selector follows). Per-locale `_meta.json`/nav.
+  - **URLs = default-at-root, others prefixed:** `defaultLocale` → `/guide/`;
+        others → `/ja/guide/`. A site adding i18n moves existing content into
+        `content/<defaultLocale>/` once; non-i18n sites untouched.
+  - **Config shape:** `site.defaultLocale` + `site.locales: [{ code, label }]`.
+  - **Selector placement (maintainer-specified):** right cluster, **after the
+        "Docs" link, before the divider** preceding the GitHub/npm icons. Globe
+        dropdown of autonyms; switching → same page in target locale, else
+        **fall back** to that locale's home (partial translations are fine).
+  - **Per-page:** `<html lang>`, `hreflang` alternates between translations,
+        per-locale sitemap/RSS, Pagefind per-`lang` shard (already supported).
+  - **"Written or generated":** tool renders whatever's in each locale folder;
+        author by hand or pre-translate however you like.
+  - **Chrome strings:** second pass — extract hard-coded English UI strings in
+        `template.ts` (e.g. "Edited", "min read", "On this page", appearance
+        labels) into a per-locale string table; drive `<html dir>` for RTL
+        (Arabic/Hebrew) — RTL itself deferred past v0.8.0.
+  - **On-brand differentiator (consider for v0.8.0 or headline v0.9.0):**
+        **translation-staleness check** — store the source page's content hash
+        in each translation's frontmatter; `ovellum check` flags "English
+        changed, `ja` is stale." This is the anti-drift identity applied to
+        translations — no static i18n does it well. Strong fit.
 - [ ] **B8 (M)** **Build-output severity levels** — split the `warnings[]`
       bag into info/warning (or add a severity enum) so real problems aren't
       buried under "sitemap skipped" notes; CLI renders them distinctly.
@@ -189,6 +220,13 @@ A1 unlocks A2–A4.
    C1 (llms.txt). Docs-heavy, low risk, big first-impression payoff.
 4. **Slice 4 — the big bets, each its own design pass:** B1 (plugin API),
    A3 (rename detection), B6/B7 (versions/i18n), C2 (MCP). Pick by appetite.
+
+> **Update 2026-06-14:** 0.4.0–0.7.0 shipped (appearance control, palettes,
+> publicDir, media + scoped-iframe embeds, bundled font picker + text-size,
+> Styleguide, assetBaseUrl, "Edited" dates, American-English spelling). **B4
+> "custom fonts via config" is largely delivered** by 0.7.0's bundled font
+> picker (revisit only for arbitrary userland fonts). **v0.8.0 focus = B7
+> (i18n)** — design locked above; English-canonical + a Japanese demo.
 
 ---
 
