@@ -131,6 +131,17 @@ Task lists render their checkboxes:
 - [x] Color system
 - [ ] Your next page
 
+## Footnotes
+
+A footnote reference sits as a small superscript[^sg-note] that links down to
+the note, and the note links back. References number by order of appearance,
+and the notes gather into a tinted panel — one type-step smaller than body
+text — at the foot of the page.[^sg-second]
+
+[^sg-note]: The note itself takes inline Markdown — `code`, *emphasis*, even a
+[link](/docs/reference/config/).
+[^sg-second]: A second note, to show the list numbering and the panel rhythm.
+
 ## Code
 
 Inline code reads as `const x = 1`. Fenced blocks are highlighted by Shiki using

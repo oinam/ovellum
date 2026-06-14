@@ -1,7 +1,7 @@
 # TODO
 
 Living checklist for code / automation work. Update in place as work progresses.
-Last updated: 2026-06-14 (0.7.0 → 0.9.0 shipped — see Current state). Previous: 2026-06-12 (full audit → [`ROADMAP.md`](./ROADMAP.md); 0.3.0 live). Older: 2026-05-24 (Chrome split — width unified via `--chrome-max` (topbar + footer never jump width between landing and docs), but **only the footer is chrome-tinted**; topbar reverted to body color with a 1px border-bottom after two passes proving a tinted topbar fights Safari URL-bar sampling and reads noisy against the body. Meta `theme-color` now tracks `--color-bg`, not `--color-bg-chrome`. Also (2026-05-25): auto-theme toggle icon reverted eclipse → monitor (eclipse read weird; monitor is the least-bad option so far). Landing hero imagery removed — `hero.media` dropped from the site config; feature code kept dormant for a later, better imagery pass. Then (2026-05-25, follow-up): **fixed a latent rhythm bug** — `--space-2xl` / `--space-3xl` were referenced by the hero padding + feature-grid margin + 6 other rules but never defined in `style.css` (only in STYLES.md), so those `clamp(var(--space-2xl)…)` declarations were invalid and collapsed to 0. With imagery gone (which had given the hero height via `min-block-size`) the no-media hero went cramped against the topbar — defining the two tokens restores the intended hero top/bottom padding and the hero→body gap. Also **removed the hero's dotted-noise + accent-spotlight pseudo-layers** entirely and **neutralized the background hue site-wide**: `--color-bg` + `--color-bg-chrome` are now pure-neutral grays (chroma 0) in both themes, dropping the faint bluish tint ahead of a planned blended background image. `theme-color` meta hex neutralized to match (#f4f4f4 / #101010).)
+Last updated: 2026-06-14 (0.7.0 → 0.10.0 shipped — see Current state). Previous: 2026-06-12 (full audit → [`ROADMAP.md`](./ROADMAP.md); 0.3.0 live). Older: 2026-05-24 (Chrome split — width unified via `--chrome-max` (topbar + footer never jump width between landing and docs), but **only the footer is chrome-tinted**; topbar reverted to body color with a 1px border-bottom after two passes proving a tinted topbar fights Safari URL-bar sampling and reads noisy against the body. Meta `theme-color` now tracks `--color-bg`, not `--color-bg-chrome`. Also (2026-05-25): auto-theme toggle icon reverted eclipse → monitor (eclipse read weird; monitor is the least-bad option so far). Landing hero imagery removed — `hero.media` dropped from the site config; feature code kept dormant for a later, better imagery pass. Then (2026-05-25, follow-up): **fixed a latent rhythm bug** — `--space-2xl` / `--space-3xl` were referenced by the hero padding + feature-grid margin + 6 other rules but never defined in `style.css` (only in STYLES.md), so those `clamp(var(--space-2xl)…)` declarations were invalid and collapsed to 0. With imagery gone (which had given the hero height via `min-block-size`) the no-media hero went cramped against the topbar — defining the two tokens restores the intended hero top/bottom padding and the hero→body gap. Also **removed the hero's dotted-noise + accent-spotlight pseudo-layers** entirely and **neutralized the background hue site-wide**: `--color-bg` + `--color-bg-chrome` are now pure-neutral grays (chroma 0) in both themes, dropping the faint bluish tint ahead of a planned blended background image. `theme-color` meta hex neutralized to match (#f4f4f4 / #101010).)
 
 > Manual items — prose, decisions, releases, things only a human can do —
 > live in [`TODO-Human.md`](./TODO-Human.md). When in doubt: if the work
@@ -32,16 +32,22 @@ Legend: `[ ]` not started · `[~]` in progress · `[x]` done · `[!]` blocked
 
 ## Current state (2026-06-14)
 
-**Publish state (read this first):** **`ovellum@0.9.0` is live on npm** and
-matches local. Tree clean on `main`, fully pushed, no pending changesets; tags
-`ovellum@0.7.0`…`0.9.0` pushed + GitHub releases published. Release flow
+**Publish state (read this first):** **`ovellum@0.10.0` is live on npm** and
+matches local. Tags `ovellum@0.7.0`…`0.10.0` pushed + GitHub releases published.
+**One pending changeset (`.changeset/footnotes.md`, patch)** for the next release
+— Markdown footnotes (see below); built + tested green (306 tests), not yet
+versioned/published. (**0.10.0** =
+frontmatter `updated:` date override + git `--follow --diff-filter=AM` so renames
+don't reset "Edited" to "today"; rewrote Install→Upgrading docs for the
+`@latest`/caret + global-vs-local upgrade gotchas. The unpublished **0.9.1**
+patch folded into 0.10.0.) Release flow
 unchanged ([`RELEASE.md`](./RELEASE.md), top to bottom): an agent preps
 everything (changeset version, badge bump in `website/ovellum.config.ts`
 `site.version`, build, tests), the **maintainer runs the two human-only steps**
 — `npm publish` from `packages/cli/` (npm session + OTP) and the signed
 `git tag -s` (GPG pinentry) — then the agent cuts the GitHub release.
 
-**What shipped 0.7.0 → 0.9.0 (2026-06-14, this session):**
+**What shipped 0.7.0 → 0.10.0 (2026-06-14, this session):**
 - **0.7.0** — scoped `<iframe>` video embeds (YouTube/Vimeo allowlist) + native
   `<video>`/`<audio>`; **bundled font picker** (System/Serif/**Inter**/**Geist**,
   webfonts shipped in the package at `templates/default/fonts/`, lazy
@@ -63,8 +69,38 @@ everything (changeset version, badge bump in `website/ovellum.config.ts`
   `dev|watch --no-drafts` overrides. `BuildSiteOptions.includeDrafts` →
   `buildNav(includeDrafts, stats)`. **Behavior change** from the old
   excluded-everywhere `draft`. New Drafts guide en + ja. 298 tests.
+- **0.10.0 — smarter "Edited" dates.** Frontmatter **`updated:`** pins a page's
+  date explicitly (`normalizeFrontmatterDate` in page-meta.ts); the git lookup
+  moved from `git log -1` to **`git log --follow --diff-filter=AM`** so renames /
+  pure moves don't reset "Edited" to "today" (the 0.8.0 i18n `git mv` had made
+  every page read "today"). Order: `updated` → git(follow) → fs mtime. Rewrote
+  **Install → Upgrading** (en+ja): `npx ovellum upgrade` vs global, `@latest` vs
+  the caret-locks-minor-in-0.x trap, and the global-vs-local pitfall. The
+  prepped-but-unpublished **0.9.1** (rename-fix patch) folded in here. 301 tests.
+
+**In flight (pending changeset, not yet released):**
+- **Markdown footnotes (GFM `[^id]`).** `remark-gfm` already parsed footnotes,
+  so this was really fixing a half-working feature. Headline fix: the
+  `user-content-` clobber prefix was applied **twice** — `remark-rehype`
+  prefixes the footnote id/href pairs, then `rehype-sanitize`'s own
+  `clobberPrefix` re-prefixed the `id`s (but not the `href`s), so **every jump
+  link was broken**. Fix = `clobberPrefix: ''` in `SANITIZE_SCHEMA` (the single
+  remark-rehype prefix stays; protection retained). Also: `collectHeadings` +
+  the autolink `test` skip the `sr-only` "Footnotes" `<h2>` so it stays out of
+  the ToC / heading-anchor pass; CSS renders the notes as a subtle tinted panel
+  one type-step below body prose with `↩` back-refs; and a **global
+  `scroll-padding-top: calc(var(--ov-header-h) + var(--space-s))`** on `html`
+  now offsets *all* anchor jumps (headings + footnotes) so the target clears the
+  sticky topbar instead of hiding behind it. Docs en+ja (manual-mode guide +
+  styleguide, with live examples), `FEATURES.md`, 5 new markdown tests. Framed
+  **patch** (0.10.1).
 
 **Gotchas / standing notes for next session:**
+- **`ovellum upgrade` upgrades the wrong install** when run as a global binary
+  inside a project that has Ovellum as a local devDependency (it bumps the
+  global, not the project — surfaced live on notes.oinam.com). Docs now warn
+  about it; the real fix is to make `upgrade` prefer the cwd's local dependency.
+  Offered as a 0.10.x patch, deferred — a good small next task.
 - **Translation drift** — the site is now full English↔Japanese 1:1, maintained
   **by hand**. Any English doc edit needs its `content/ja/` mirror updated or it
   drifts. The fix is **ROADMAP B7's translation-staleness check** (store source

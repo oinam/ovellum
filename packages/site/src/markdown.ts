@@ -84,6 +84,15 @@ const SHIKI_LANGS = [
 // allowlist = the inner guard (which iframes survive at all).
 const SANITIZE_SCHEMA: Schema = {
   ...defaultSchema,
+  // GFM footnotes: remark-rehype already prefixes each footnote id/href pair
+  // with `user-content-` to guard against DOM clobbering, so the pair is
+  // internally consistent (`<a href="#user-content-fn-1">` → `<li
+  // id="user-content-fn-1">`). The sanitizer's own `clobberPrefix` would then
+  // prefix the `id`s a SECOND time — but it leaves the `href`s untouched — so
+  // the two ends no longer match and every footnote jump link breaks. Disable
+  // the re-prefix: the single surviving prefix keeps both ends aligned, and the
+  // clobber protection is retained because remark-rehype already applied it.
+  clobberPrefix: '',
   // Allow native media players in Markdown — <video>/<audio> (+ their
   // <source>/<track> children) — and scoped <iframe> video embeds. The default
   // schema strips all of these; we add them so authors can embed an mp4/webm/
@@ -231,6 +240,9 @@ export async function renderMarkdown(
       // `append` keeps the heading text flush-left along with the prose;
       // the `#` indicator floats in after the text on hover (see styles).
       behavior: 'append',
+      // Skip the visually-hidden "Footnotes" label remark-gfm injects — it's a
+      // screen-reader cue, not a navigable heading, so it shouldn't get an anchor.
+      test: (el: Element) => !readClassNames(el).includes('sr-only'),
       properties: { className: ['heading-anchor'], 'aria-label': 'Permalink' },
       content: { type: 'text', value: '#' },
     })
@@ -398,6 +410,9 @@ function rehypeCallouts() {
 function collectHeadings(tree: Root, into: Heading[]): void {
   visit(tree, 'element', (node: Element) => {
     if (!/^h[2-3]$/.test(node.tagName)) return;
+    // The "Footnotes" label remark-gfm injects is an h2, but it's a
+    // visually-hidden screen-reader cue — keep it out of the visible ToC.
+    if (readClassNames(node).includes('sr-only')) return;
     const depth = Number(node.tagName.slice(1));
     const id = typeof node.properties?.id === 'string' ? node.properties.id : '';
     if (!id) return;

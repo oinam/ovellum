@@ -283,3 +283,55 @@ describe('renderMarkdown — HTML sanitization', () => {
     expect(html).toContain('--shiki-light');
   });
 });
+
+describe('renderMarkdown — footnotes (GFM)', () => {
+  const SAMPLE = ['A claim[^1] and a named one[^note].', '', '[^1]: First.', '[^note]: Second.'].join(
+    '\n',
+  );
+
+  it('renders references as superscript markers and collects a footnotes section', async () => {
+    const { html } = await renderMarkdown(SAMPLE);
+    expect(html).toContain('<sup>');
+    expect(html).toContain('data-footnote-ref');
+    expect(html).toContain('class="footnotes"');
+    expect(html).toContain('data-footnote-backref');
+  });
+
+  it('keeps reference ids/hrefs in sync — no doubled clobber prefix (the jump-link regression)', async () => {
+    const { html } = await renderMarkdown(SAMPLE);
+    // remark-rehype prefixes once with `user-content-`; the sanitizer must not
+    // prefix the ids a second time, or the href/id pairs stop matching.
+    expect(html).not.toContain('user-content-user-content');
+    // Forward link: the marker's href resolves to the note's id.
+    expect(html).toContain('href="#user-content-fn-1"');
+    expect(html).toContain('id="user-content-fn-1"');
+    // Back link: the back-ref's href resolves to the marker's id.
+    expect(html).toContain('href="#user-content-fnref-1"');
+    expect(html).toContain('id="user-content-fnref-1"');
+  });
+
+  it('numbers notes by order of first appearance, not definition order', async () => {
+    const md = ['Later[^b] before earlier[^a].', '', '[^a]: A.', '[^b]: B.'].join('\n');
+    const { html } = await renderMarkdown(md);
+    // `[^b]` is referenced first, so its note leads the ordered list.
+    expect(html.indexOf('id="user-content-fn-b"')).toBeLessThan(
+      html.indexOf('id="user-content-fn-a"'),
+    );
+  });
+
+  it('keeps the visually-hidden "Footnotes" label out of the ToC', async () => {
+    const { html, headings } = await renderMarkdown(SAMPLE);
+    expect(headings.some((h) => /footnote/i.test(h.text) || h.id === 'footnote-label')).toBe(false);
+    // …and it carries no clickable heading anchor.
+    expect(html).not.toContain('href="#footnote-label"');
+  });
+
+  it('sanitizes dangerous content inside a footnote definition', async () => {
+    const md = ['See[^x].', '', '[^x]: [tap](javascript:alert(1)) <img src=x onerror=alert(1)>'].join(
+      '\n',
+    );
+    const { html } = await renderMarkdown(md);
+    expect(html.toLowerCase()).not.toContain('javascript:');
+    expect(html).not.toContain('onerror');
+  });
+});

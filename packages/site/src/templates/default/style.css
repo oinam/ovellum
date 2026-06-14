@@ -442,6 +442,10 @@ html {
      anchor jumps (ToC, heading links) — a quick ease that settles to a
      stop, no JS easing library. Disabled below for reduced-motion. */
   scroll-behavior: smooth;
+  /* Offset every anchor jump (ToC, heading `#` links, footnote refs and
+     back-refs) by the sticky topbar's height plus a little air, so the
+     target lands just below the bar instead of hidden behind it. */
+  scroll-padding-top: calc(var(--ov-header-h) + var(--space-s));
 }
 /* Honor the OS "Reduce motion" setting: scroll instantly, no animation. */
 @media (prefers-reduced-motion: reduce) {
@@ -1842,6 +1846,76 @@ a.ov-nav-group--link.is-active::before {
 }
 .heading-anchor:hover {
   color: var(--color-accent);
+}
+
+/* Footnotes
+   ===
+   GitHub `[^id]` syntax: remark-gfm parses the references and remark-rehype
+   emits the markers as `<sup><a data-footnote-ref>` and gathers the notes into
+   `<section class="footnotes">` — a visually-hidden `<h2>` label plus an
+   ordered list numbered by the order the references first appear in the prose.
+   We set the notes off as a subtle tinted panel one type-step below body text,
+   and keep the reference markers light. */
+.ov-prose sup {
+  font-size: 0.75em;
+  line-height: 0;
+}
+.ov-prose [data-footnote-ref] {
+  font-weight: 500;
+  text-decoration: none;
+  padding-inline: 0.15em;
+}
+.ov-prose .footnotes {
+  margin-block-start: var(--space-xl);
+  padding: var(--space-s) var(--space-l);
+  background: var(--color-bg-subtle);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  /* One modular step below body prose. */
+  font-size: calc(var(--font-size-0) / var(--ratio));
+  color: var(--color-fg-muted);
+}
+/* The "Footnotes" heading is for assistive tech only — the panel and the
+   numbered list carry the section visually. */
+.ov-prose .footnotes h2 {
+  position: absolute;
+  inline-size: 1px;
+  block-size: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+.ov-prose .footnotes ol {
+  margin-block: 0;
+}
+.ov-prose .footnotes li {
+  margin-block-end: var(--space-2xs);
+}
+.ov-prose .footnotes li:last-child {
+  margin-block-end: 0;
+}
+.ov-prose .footnotes p {
+  margin-block: 0;
+}
+.ov-prose .footnotes p + p {
+  margin-block-start: var(--space-2xs);
+}
+.ov-prose [data-footnote-backref] {
+  margin-inline-start: 0.3em;
+  text-decoration: none;
+  color: var(--color-fg-subtle);
+}
+.ov-prose [data-footnote-backref]:hover {
+  color: var(--color-accent);
+}
+/* Briefly highlight the note (or the reference) you jumped to. */
+.ov-prose .footnotes li:target,
+.ov-prose [data-footnote-ref]:target {
+  background: var(--color-bg);
+  border-radius: var(--radius-sm);
 }
 
 /* Code blocks (shiki dual-theme)

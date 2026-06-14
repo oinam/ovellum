@@ -216,6 +216,32 @@ links, code spans, even nested lists.
 > Use callouts sparingly — three per page is plenty. They're meant to
 > interrupt the reader, so each one should earn the interruption.
 
+## Footnotes
+
+Use the standard Markdown footnote convention — a `[^id]` reference in the
+prose and a matching `[^id]:` definition anywhere in the file:
+
+```markdown
+Ovellum merges generated and hand-written docs in one file[^merge], and
+ships a static-site builder for purely manual docs[^manual].
+
+[^merge]: The merge engine keeps your protected zones intact on regeneration.
+[^manual]: This very page is built that way.
+```
+
+The reference renders as a small superscript that links down to the note, and
+each note carries a `↩` link back to where you were reading. The `id` is just a
+label — use words (`[^merge]`) or numbers (`[^1]`), whichever reads better in
+the source. Numbering follows the order references *first appear* in the page,
+not the order the definitions are written, and all the notes collect into a
+tinted panel at the foot of the page.
+
+Here's that example rendered live[^merge], with a second reference[^manual] to
+show the numbering.
+
+[^merge]: The merge engine keeps your protected zones intact on regeneration.
+[^manual]: This very page is built in manual mode.
+
 ## Adding the right-side ToC
 
 There's nothing to enable — the right column populates automatically from
