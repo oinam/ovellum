@@ -1,7 +1,7 @@
 # TODO
 
 Living checklist for code / automation work. Update in place as work progresses.
-Last updated: 2026-06-14 (0.7.0 → 0.10.0 shipped — see Current state). Previous: 2026-06-12 (full audit → [`ROADMAP.md`](./ROADMAP.md); 0.3.0 live). Older: 2026-05-24 (Chrome split — width unified via `--chrome-max` (topbar + footer never jump width between landing and docs), but **only the footer is chrome-tinted**; topbar reverted to body color with a 1px border-bottom after two passes proving a tinted topbar fights Safari URL-bar sampling and reads noisy against the body. Meta `theme-color` now tracks `--color-bg`, not `--color-bg-chrome`. Also (2026-05-25): auto-theme toggle icon reverted eclipse → monitor (eclipse read weird; monitor is the least-bad option so far). Landing hero imagery removed — `hero.media` dropped from the site config; feature code kept dormant for a later, better imagery pass. Then (2026-05-25, follow-up): **fixed a latent rhythm bug** — `--space-2xl` / `--space-3xl` were referenced by the hero padding + feature-grid margin + 6 other rules but never defined in `style.css` (only in STYLES.md), so those `clamp(var(--space-2xl)…)` declarations were invalid and collapsed to 0. With imagery gone (which had given the hero height via `min-block-size`) the no-media hero went cramped against the topbar — defining the two tokens restores the intended hero top/bottom padding and the hero→body gap. Also **removed the hero's dotted-noise + accent-spotlight pseudo-layers** entirely and **neutralized the background hue site-wide**: `--color-bg` + `--color-bg-chrome` are now pure-neutral grays (chroma 0) in both themes, dropping the faint bluish tint ahead of a planned blended background image. `theme-color` meta hex neutralized to match (#f4f4f4 / #101010).)
+Last updated: 2026-06-14 (0.7.0 → **0.12.0** shipped — see Current state). Previous: 2026-06-12 (full audit → [`ROADMAP.md`](./ROADMAP.md); 0.3.0 live). Older: 2026-05-24 (Chrome split — width unified via `--chrome-max` (topbar + footer never jump width between landing and docs), but **only the footer is chrome-tinted**; topbar reverted to body color with a 1px border-bottom after two passes proving a tinted topbar fights Safari URL-bar sampling and reads noisy against the body. Meta `theme-color` now tracks `--color-bg`, not `--color-bg-chrome`. Also (2026-05-25): auto-theme toggle icon reverted eclipse → monitor (eclipse read weird; monitor is the least-bad option so far). Landing hero imagery removed — `hero.media` dropped from the site config; feature code kept dormant for a later, better imagery pass. Then (2026-05-25, follow-up): **fixed a latent rhythm bug** — `--space-2xl` / `--space-3xl` were referenced by the hero padding + feature-grid margin + 6 other rules but never defined in `style.css` (only in STYLES.md), so those `clamp(var(--space-2xl)…)` declarations were invalid and collapsed to 0. With imagery gone (which had given the hero height via `min-block-size`) the no-media hero went cramped against the topbar — defining the two tokens restores the intended hero top/bottom padding and the hero→body gap. Also **removed the hero's dotted-noise + accent-spotlight pseudo-layers** entirely and **neutralized the background hue site-wide**: `--color-bg` + `--color-bg-chrome` are now pure-neutral grays (chroma 0) in both themes, dropping the faint bluish tint ahead of a planned blended background image. `theme-color` meta hex neutralized to match (#f4f4f4 / #101010).)
 
 > Manual items — prose, decisions, releases, things only a human can do —
 > live in [`TODO-Human.md`](./TODO-Human.md). When in doubt: if the work
@@ -32,29 +32,41 @@ Legend: `[ ]` not started · `[~]` in progress · `[x]` done · `[!]` blocked
 
 ## Current state (2026-06-14)
 
-**Publish state (read this first):** **`ovellum@0.11.0` is live on npm** and
+**Publish state (read this first):** **`ovellum@0.12.0` is live on npm** and
 matches local. Tree clean on `main`, fully pushed, no pending changesets; tags
-`ovellum@0.7.0`…`0.11.0` pushed + GitHub releases published. (**0.11.0** = the
-i18n-completion batch + the upgrade-local-dep fix, 328 tests — see the now-shipped
-block below: `ovellum upgrade` prefers the cwd's declared local dep;
-translation-staleness check (`ovellum check` + `--update-translations`);
-chrome-string localization + RTL; per-locale `check` link validation;
-config-text localization. **i18n is now complete end-to-end** — chrome + content
-+ config text localized, staleness-checked, links validated per-locale; `/ja/` is
-fully Japanese. Only remaining i18n gap: per-locale RSS.) (**0.10.1** =
-Markdown footnotes (GFM `[^id]`) + a fix for the doubled clobber-prefix that
-broke every footnote jump link + a global `scroll-padding-top` so anchor jumps
-clear the sticky topbar; 306 tests. See "In flight"→now-shipped block below.)
-(**0.10.0** =
-frontmatter `updated:` date override + git `--follow --diff-filter=AM` so renames
-don't reset "Edited" to "today"; rewrote Install→Upgrading docs for the
-`@latest`/caret + global-vs-local upgrade gotchas. The unpublished **0.9.1**
-patch folded into 0.10.0.) Release flow
-unchanged ([`RELEASE.md`](./RELEASE.md), top to bottom): an agent preps
-everything (changeset version, badge bump in `website/ovellum.config.ts`
+`ovellum@0.7.0`…`0.12.0` pushed + GitHub releases published (0.12.0 release cut
+2026-06-14).
+
+- **0.12.0 — AI-Ready output + portable deploy-anywhere build (343 tests).**
+  **C1:** `site.ai` config (`{enabled?,llmsTxt?,fullText?,mdMirror?}`) → `/llms.txt`
+  (default on), `/llms-full.txt` (default off), per-page `.md` mirrors at
+  `<page>.md` (default on); per-locale, drafts/404 excluded, **HTML
+  byte-identical**. Code: `packages/site/src/llms.ts` + `build.ts` (renderOne
+  now returns raw `parsed.content`). **D1:** `ovellum build --out <dir>` /
+  `--base <path>` per-invocation overrides (`applyOverrides` in `run-build.ts`).
+  **D4:** `--manifest` → `<output>/.ovellum/manifest.json` (sha256 inventory;
+  `dev/manifest.ts`, OS-junk + own-dir excluded). Principle: *Ovellum builds a
+  portable folder; the host deploys it — no GitHub dependency.* Docs en+ja
+  (`config.md` `site.ai`, `cli.md` flags) + `FEATURES.md`. **Rest of Tier C/D
+  still deferred** — see ROADMAP: C2 MCP (needs A1 IR persistence), C3 `--json`
+  (with U4), C4 Skill/`AGENTS.md`, C5 positioning; D2 programmatic `build()` API
+  (flips `@ovellum/*` bundled-private), D3 lifecycle hooks (with B1), D5 recipes.
+- **0.11.0** — i18n-completion batch + upgrade-local-dep fix (328 tests):
+  `upgrade` prefers cwd's local dep; translation-staleness check; chrome-string
+  localization + RTL; per-locale `check` link validation; config-text
+  localization. **i18n complete end-to-end**; `/ja/` fully Japanese. Only i18n
+  gap left: per-locale RSS.
+- **0.10.1** — Markdown footnotes (GFM `[^id]`) + doubled-clobber-prefix fix +
+  global `scroll-padding-top` (306 tests).
+- **0.10.0** — frontmatter `updated:` + git `--follow --diff-filter=AM` ("Edited"
+  no longer resets on rename); rewrote Install→Upgrading docs. (0.9.1 folded in.)
+
+Release flow unchanged ([`RELEASE.md`](./RELEASE.md), top to bottom): an agent
+preps everything (changeset version, badge bump in `website/ovellum.config.ts`
 `site.version`, build, tests), the **maintainer runs the two human-only steps**
 — `npm publish` from `packages/cli/` (npm session + OTP) and the signed
-`git tag -s` (GPG pinentry) — then the agent cuts the GitHub release.
+`git tag -s` (GPG pinentry) — then the agent cuts the GitHub release. (0.12.0
+followed this exactly.)
 
 **What shipped 0.7.0 → 0.10.0 (2026-06-14, this session):**
 - **0.7.0** — scoped `<iframe>` video embeds (YouTube/Vimeo allowlist) + native
@@ -151,21 +163,10 @@ everything (changeset version, badge bump in `website/ovellum.config.ts`
   publish/scheduling workflow, in-place preview (both build on the draft plumbing).
 - Pick next work from [`ROADMAP.md`](./ROADMAP.md) — v0.8.0 (B7 i18n) and v0.9.0
   (U8 drafts) are now **done**; their design blocks there are historical record.
-- **AI-Ready slice SHIPPED (2026-06-14, "build out the two AI big features"):**
-  **C1** — `site.ai` config → `llms.txt` (default on) + `llms-full.txt` (default
-  off) + per-page `.md` mirrors (default on), per-locale, drafts/404 excluded,
-  HTML byte-identical (`packages/site/src/llms.ts` + `build.ts`). **D1** —
-  `ovellum build --out <dir>` / `--base <path>` per-invocation overrides
-  (`applyOverrides` in `run-build.ts`). **D4** — `--manifest` writes
-  `<output>/.ovellum/manifest.json` (sha256 inventory; `dev/manifest.ts`).
-  343 tests green; en+ja reference docs (`config.md` `site.ai`, `cli.md` flags) +
-  `FEATURES.md` updated; changeset `ai-ready-output-and-portable-build.md`
-  staged (minor). **Re-stamp ja `sourceHash` after the en doc edits** with
-  `ovellum check --update-translations` (the staleness check will otherwise flag
-  config.md + cli.md). **Deferred rest of Tier C/D:** C2 MCP (needs A1 IR
-  persistence), C3 `--json` (with U4), C4 Skill/`AGENTS.md`, C5 positioning; D2
-  programmatic `build()` API (flips `@ovellum/*` bundled-private), D3 lifecycle
-  hooks (with B1), D5 deploy recipes.
+- **AI-Ready (C1) + portable build (D1/D4) shipped in 0.12.0** — see the Publish
+  state block at the top of this Current state for the detail; ja already
+  re-stamped, release cut. The **rest of Tier C/D is still the next big work**
+  (next bullet + ROADMAP).
 - **NEXT BIGGEST RELEASE (rest prepared, not started): Tier D "Embed & deploy
   anywhere"** in `ROADMAP.md` — make Ovellum a portable, embeddable *build step*
   any external tool / CI can drive and **deploy itself**, no GitHub dependency.
