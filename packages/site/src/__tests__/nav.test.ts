@@ -282,7 +282,7 @@ describe('buildNav', () => {
     expect(nav.children.find((c) => c.url === '/secret/')).toBeUndefined();
   });
 
-  it('omits pages with frontmatter draft: true', async () => {
+  it('omits pages with frontmatter draft: true (production default)', async () => {
     const content = path.join(tmp, 'content');
     mkdirSync(content);
     writeFileSync(path.join(content, 'index.md'), '# Home\n');
@@ -293,5 +293,35 @@ describe('buildNav', () => {
     const urls = nav.children.map((c) => c.url);
     expect(urls).toContain('/live/');
     expect(urls).not.toContain('/wip/');
+  });
+
+  it('includes & flags drafts when includeDrafts; cascades _meta draft + counts', async () => {
+    const content = path.join(tmp, 'content');
+    mkdirSync(content);
+    writeFileSync(path.join(content, 'index.md'), '# Home\n');
+    writeFileSync(path.join(content, 'live.md'), '# Live page\n');
+    writeFileSync(path.join(content, 'wip.md'), '---\ndraft: true\n---\n# Draft page\n');
+    const section = path.join(content, 'wip-section');
+    mkdirSync(section);
+    writeFileSync(path.join(section, '_meta.json'), '{ "draft": true }');
+    writeFileSync(path.join(section, 'page.md'), '# Section page\n');
+
+    // Production: drafts excluded; stats count the page + the section.
+    const prodStats = { draftPages: 0, draftSections: 0 };
+    const prod = await buildNav('./content', tmp, [], [], undefined, undefined, undefined, false, prodStats);
+    const prodUrls = prod.children.map((c) => c.url);
+    expect(prodUrls).not.toContain('/wip/');
+    expect(prodUrls).not.toContain('/wip-section/');
+    expect(prodStats).toEqual({ draftPages: 1, draftSections: 1 });
+
+    // Dev (includeDrafts): drafts present and flagged; folder cascades to child.
+    const dev = await buildNav('./content', tmp, [], [], undefined, undefined, undefined, true);
+    const wip = dev.children.find((c) => c.url === '/wip/');
+    expect(wip?.draft).toBe(true);
+    const live = dev.children.find((c) => c.url === '/live/');
+    expect(live?.draft).toBeUndefined(); // a live page carries no draft flag
+    const sectionNode = dev.children.find((c) => c.url === '/wip-section/');
+    expect(sectionNode?.draft).toBe(true);
+    expect(sectionNode?.children.every((ch) => ch.draft === true)).toBe(true); // cascade
   });
 });

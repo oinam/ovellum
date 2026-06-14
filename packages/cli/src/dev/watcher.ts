@@ -22,6 +22,8 @@ export interface WatchAndBuildOptions {
    * dev server alive instead of crashing.
    */
   onError?: (err: Error) => void;
+  /** Include draft pages — the dev/watch loop defaults to true (preview). */
+  includeDrafts?: boolean;
 }
 
 export interface ActiveWatcher {
@@ -39,10 +41,10 @@ export interface ActiveWatcher {
  */
 export async function watchAndBuild(input: WatchAndBuildOptions): Promise<ActiveWatcher> {
   let { config, configFile } = input;
-  const { cwd, onBuild, onError } = input;
+  const { cwd, onBuild, onError, includeDrafts } = input;
   const logError = onError ?? ((err) => process.stderr.write(`build failed: ${err.message}\n`));
 
-  await safeBuild(config, cwd, onBuild, logError);
+  await safeBuild(config, cwd, onBuild, logError, includeDrafts);
 
   const inputAbs = path.resolve(cwd, config.input);
   const outputAbs = path.resolve(cwd, config.output);
@@ -96,7 +98,7 @@ export async function watchAndBuild(input: WatchAndBuildOptions): Promise<Active
           throw err;
         }
       }
-      await safeBuild(config, cwd, onBuild, logError);
+      await safeBuild(config, cwd, onBuild, logError, includeDrafts);
     }, DEBOUNCE_MS);
   };
 
@@ -117,9 +119,10 @@ async function safeBuild(
   cwd: string,
   onBuild: WatchAndBuildOptions['onBuild'],
   onError: (err: Error) => void,
+  includeDrafts?: boolean,
 ): Promise<void> {
   try {
-    const result = await runBuild({ config, cwd });
+    const result = await runBuild({ config, cwd, includeDrafts });
     const count = result.mode === 'manual' ? result.pages?.length ?? 0 : result.written?.length ?? 0;
     const unit = result.mode === 'manual' ? 'page' : 'file';
     process.stdout.write(

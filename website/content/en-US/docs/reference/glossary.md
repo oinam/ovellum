@@ -56,6 +56,15 @@ the root to the current page; the final entry carries
 A button on the landing-page hero that invites the reader to do
 something. Configured under `site.landing.hero.ctas`.
 
+### Draft
+
+A work-in-progress page, marked with frontmatter `draft: true` or a
+folder's `_meta.json "draft": true` (which cascades). Drafts are shown in
+`ovellum dev` with a ribbon + sidebar badge and excluded from `ovellum
+build` (and the sitemap/RSS). They're unpublished, not secret — still
+visible to anyone with repo access. Distinct from `site.ignoreFiles`,
+which is never parsed at all. See the [Drafts guide](/docs/guides/drafts/).
+
 ### Edit-this-page link
 
 The "Edit this page" link rendered under each article when

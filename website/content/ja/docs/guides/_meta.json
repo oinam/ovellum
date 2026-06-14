@@ -1,4 +1,4 @@
 {
   "title": "ガイド",
-  "order": ["manual-mode", "hybrid-mode", "development", "assets", "themes", "i18n", "search", "deploy"]
+  "order": ["manual-mode", "hybrid-mode", "development", "drafts", "assets", "themes", "i18n", "search", "deploy"]
 }

@@ -79,7 +79,7 @@ ovellum init [--cwd <dir>] [--yes] [--force]
 ### 構文
 
 ```
-ovellum build [--cwd <dir>] [--config <path>]
+ovellum build [--cwd <dir>] [--config <path>] [--drafts]
 ```
 
 ### フラグ
@@ -88,6 +88,7 @@ ovellum build [--cwd <dir>] [--config <path>]
 | ----------------- | ---- | --------------- | --------------------------------------------------------------- |
 | `--cwd <dir>`     | path | `process.cwd()` | プロジェクトのルート。設定内のすべてのパスはこれを基準に解決されます。 |
 | `--config <path>` | path | auto-discovered | 自動検出をスキップし、このファイルを直接読み込みます。                     |
+| `--drafts`        | flag | off             | [ドラフト](/ja/docs/guides/drafts/)ページを含めます（通常は本番ビルドから除外されます）。 |
 
 ### モードごとの挙動
 
@@ -183,7 +184,7 @@ npx ovellum build --config ./config/ovellum.prod.ts
 ### 構文
 
 ```
-ovellum dev [--cwd <dir>] [--config <path>] [--port <n>] [--host <addr>]
+ovellum dev [--cwd <dir>] [--config <path>] [--port <n>] [--host <addr>] [--no-drafts]
 ```
 
 ### フラグ
@@ -194,6 +195,7 @@ ovellum dev [--cwd <dir>] [--config <path>] [--port <n>] [--host <addr>]
 | `--config <path>` | path    | auto        | 自動検出をスキップし、このファイルを直接読み込みます。                                          |
 | `--port <n>`      | integer | `3000`      | 開始ポート。使用中の場合、最大 19 ポート先まで自動でずらして試し、それでもだめなら諦めます。          |
 | `--host <addr>`   | string  | `127.0.0.1` | バインドアドレス。`0.0.0.0` を渡すとローカルネットワークに公開します。                         |
+| `--no-drafts`     | flag    | drafts on   | [ドラフト](/ja/docs/guides/drafts/)ページをローカルで隠し、本番が公開する内容をそのまま確認します。（`watch` も `--no-drafts` を受け付けます。） |
 
 ### 挙動
 

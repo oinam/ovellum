@@ -17,6 +17,10 @@ export const buildCommand = defineCommand({
       type: 'string',
       description: 'Project root (defaults to current directory)',
     },
+    drafts: {
+      type: 'boolean',
+      description: 'Include draft pages (default: drafts are excluded from a production build)',
+    },
   },
   async run({ args }) {
     const cwd = path.resolve(args.cwd ?? process.cwd());
@@ -39,7 +43,7 @@ export const buildCommand = defineCommand({
       process.exit(1);
     }
 
-    const summary = await runBuild({ config, cwd });
+    const summary = await runBuild({ config, cwd, includeDrafts: args.drafts === true });
     process.stdout.write(formatBuildSummary(summary, configFile) + '\n');
     for (const w of summary.warnings) process.stderr.write(`warning: ${w}\n`);
   },

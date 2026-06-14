@@ -11,7 +11,9 @@ import {
   findAdjacent,
   findBreadcrumbs,
   flattenNav,
+  isDraftDir,
   isHiddenDir,
+  type NavDraftStats,
   type NavNode,
 } from './nav.js';
 import { countWords, lastModifiedISO, readingMinutes } from './page-meta.js';
@@ -26,6 +28,13 @@ export interface BuildSiteOptions {
   cwd: string;
   /** Build timestamp recorded in page footers. Defaults to `new Date()`. */
   now?: Date;
+  /**
+   * Include draft pages/folders (frontmatter `draft: true` / `_meta.json
+   * "draft"`). `true` for `ovellum dev`/`watch` (preview, with a ribbon +
+   * sidebar badge); `false` (default) for production `build`, which excludes
+   * them and reports how many were dropped.
+   */
+  includeDrafts?: boolean;
 }
 
 export interface PageOutput {
@@ -37,6 +46,8 @@ export interface PageOutput {
   description?: string;
   /** ISO-8601 last-modified timestamp from git → fs mtime fallback. */
   lastModified?: string;
+  /** True for a draft page (dev builds only); excluded from sitemap/RSS. */
+  draft?: boolean;
 }
 
 export interface BuildSiteResult {
@@ -105,6 +116,9 @@ function commentPrefix(lang: string): string {
 export async function buildSite(options: BuildSiteOptions): Promise<BuildSiteResult> {
   const { config, cwd } = options;
   const now = options.now ?? new Date();
+  const includeDrafts = options.includeDrafts === true;
+  // Accumulated across locales so a production build can report total drafts dropped.
+  const draftStats: NavDraftStats = { draftPages: 0, draftSections: 0 };
 
   const inputAbs = path.resolve(cwd, config.input);
   const outputAbs = path.resolve(cwd, config.output);
@@ -171,16 +185,20 @@ export async function buildSite(options: BuildSiteOptions): Promise<BuildSiteRes
       outputAbs,
       homeBasename,
       publicAbs,
+      includeDrafts,
+      draftStats,
     );
     // The nav is the single source of truth for page URLs; prefix every URL
     // with the locale's path so non-default locales serve under `/<code>/`.
     spec.nav = prefixNav(rawNav, spec.urlPrefix);
     spec.sidebarNav = sidebarRootFor(spec.nav);
     spec.urlBySource = new Map();
+    spec.draftBySource = new Set();
     spec.keys = new Map();
     for (const node of flattenNav(spec.nav)) {
       if (!node.sourcePath) continue;
       spec.urlBySource.set(node.sourcePath, node.url);
+      if (node.draft) spec.draftBySource.add(node.sourcePath);
       // Translation key = the URL with the locale prefix stripped, so the same
       // page in different locales shares a key (that's what the picker follows).
       spec.keys.set(stripLocalePrefix(node.url, spec.urlPrefix), node.url);
@@ -254,6 +272,7 @@ export async function buildSite(options: BuildSiteOptions): Promise<BuildSiteRes
       ignoreFiles: site.ignoreFiles ?? [],
       outputAbs,
       publicAbs,
+      includeDrafts,
     })) {
       const relFromInput = path.relative(spec.inputAbs, file).replace(/\\/g, '/');
       if (isMarkdown(file)) {
@@ -294,8 +313,10 @@ export async function buildSite(options: BuildSiteOptions): Promise<BuildSiteRes
           lang: spec.lang,
           localeAlternates: alternates(stripLocalePrefix(url, spec.urlPrefix)),
           localePrefix: spec.urlPrefix,
+          includeDrafts,
+          draft: spec.draftBySource.has(sourceRelFromCwd),
         });
-        if (!result) continue; // draft page (frontmatter draft: true) — skip
+        if (!result) continue; // draft page excluded in production — skip
         const pageHtml = finalizeHtml(result.html);
         await mkdir(path.dirname(outputPath), { recursive: true });
         await writeFile(outputPath, pageHtml, 'utf8');
@@ -313,6 +334,7 @@ export async function buildSite(options: BuildSiteOptions): Promise<BuildSiteRes
           title: result.title,
           description: result.description,
           lastModified: result.lastModified,
+          draft: spec.draftBySource.has(sourceRelFromCwd) || undefined,
         });
         warnings.push(...result.warnings);
       } else {
@@ -367,13 +389,37 @@ export async function buildSite(options: BuildSiteOptions): Promise<BuildSiteRes
     return a.url.localeCompare(b.url);
   });
 
+  // Tell the author when a production build dropped drafts — so a draft never
+  // silently vanishes from the published site.
+  if (!includeDrafts && draftStats.draftPages + draftStats.draftSections > 0) {
+    const parts: string[] = [];
+    if (draftStats.draftPages) {
+      parts.push(`${draftStats.draftPages} draft page${draftStats.draftPages === 1 ? '' : 's'}`);
+    }
+    if (draftStats.draftSections) {
+      parts.push(
+        `${draftStats.draftSections} draft section${draftStats.draftSections === 1 ? '' : 's'}`,
+      );
+    }
+    warnings.push(
+      `Excluded ${parts.join(' and ')} from this production build — run \`ovellum dev\` to preview drafts.`,
+    );
+  }
+
+  // Drafts (dev builds) never belong in publish artifacts.
+  const publishedPages = pages.filter((p) => !p.draft);
+
   // Emit sitemap.xml and feed.xml when site.baseUrl is configured.
   if (site.baseUrl) {
-    const xml = generateSitemap({ pages, baseUrl: site.baseUrl, basePath: site.basePath });
+    const xml = generateSitemap({
+      pages: publishedPages,
+      baseUrl: site.baseUrl,
+      basePath: site.basePath,
+    });
     if (xml) await writeFile(path.join(outputAbs, 'sitemap.xml'), xml, 'utf8');
 
     const rss = generateRss({
-      pages,
+      pages: publishedPages,
       baseUrl: site.baseUrl,
       basePath: site.basePath,
       title: site.title,
@@ -424,6 +470,10 @@ interface RenderOneInput {
   localeAlternates?: LocaleAlternate[];
   /** Current locale's URL prefix (`'/ja'`, or `''`) — localizes config nav links. */
   localePrefix?: string;
+  /** Whether this build includes drafts (dev). Production excludes them. */
+  includeDrafts?: boolean;
+  /** Whether this page is a draft (renders the ribbon; only ever in dev). */
+  draft?: boolean;
 }
 
 interface RenderOneResult {
@@ -443,8 +493,11 @@ async function renderOne(input: RenderOneInput): Promise<RenderOneResult | null>
     draft?: boolean;
     tags?: unknown;
   };
-  // Draft pages are unpublished — skip rendering (nav.ts keeps them out too).
-  if (frontmatter.draft === true) return null;
+  // A frontmatter draft is excluded from production (dev renders it with a
+  // ribbon). walkContent still yields the file (it doesn't read frontmatter), so
+  // skip it here. The COUNT is owned by nav.ts `pageNode` (same draftStats),
+  // which already tallied it — don't double-count.
+  if (frontmatter.draft === true && !input.includeDrafts) return null;
   // `tags` (string or string[]) → <meta name="keywords">. Coerced + trimmed.
   const tags = Array.isArray(frontmatter.tags)
     ? frontmatter.tags.filter((t): t is string => typeof t === 'string')
@@ -492,6 +545,7 @@ async function renderOne(input: RenderOneInput): Promise<RenderOneResult | null>
     lang: input.lang,
     localeAlternates: input.localeAlternates,
     localePrefix: input.localePrefix,
+    draft: input.draft,
   });
   return {
     html,
@@ -581,6 +635,8 @@ interface LocaleSpec {
   nav: NavNode;
   sidebarNav: NavNode;
   urlBySource: Map<string, string>;
+  /** Source paths whose nav node is a draft (dev builds) → drives the ribbon. */
+  draftBySource: Set<string>;
   /** Translation key (prefix-stripped URL) → full URL in this locale. */
   keys: Map<string, string>;
   docsHref?: string;
@@ -591,6 +647,7 @@ function resolveLocaleSpecs(site: OvellumSiteConfig, inputAbs: string): LocaleSp
     nav: { title: '', url: '/', children: [] } as NavNode,
     sidebarNav: { title: '', url: '/', children: [] } as NavNode,
     urlBySource: new Map<string, string>(),
+    draftBySource: new Set<string>(),
     keys: new Map<string, string>(),
   };
   // No i18n → one unprefixed spec rooted at the content dir (legacy behavior).
@@ -605,6 +662,7 @@ function resolveLocaleSpecs(site: OvellumSiteConfig, inputAbs: string): LocaleSp
         isDefault: true,
         ...placeholders,
         urlBySource: new Map(),
+        draftBySource: new Set(),
         keys: new Map(),
       },
     ];
@@ -619,6 +677,7 @@ function resolveLocaleSpecs(site: OvellumSiteConfig, inputAbs: string): LocaleSp
     isDefault: l.code === def,
     ...placeholders,
     urlBySource: new Map(),
+    draftBySource: new Set(),
     keys: new Map(),
   }));
 }
@@ -676,6 +735,8 @@ interface WalkOpts {
   outputAbs?: string;
   /** Absolute reserved publicDir — skipped here (copied to the root separately). */
   publicAbs?: string;
+  /** Include `_meta.json "draft"` folders (dev). Production skips them. */
+  includeDrafts?: boolean;
 }
 
 export async function* walkContent(dirAbs: string, opts: WalkOpts): AsyncGenerator<string> {
@@ -693,6 +754,9 @@ export async function* walkContent(dirAbs: string, opts: WalkOpts): AsyncGenerat
       if (isExcludedDirName(name)) continue;
       if (opts.ignoreFolders.includes(name)) continue;
       if (await isHiddenDir(abs)) continue;
+      // Draft folders (`_meta.json "draft"`) are skipped in production; dev
+      // descends into them (the pages render with a ribbon).
+      if (!opts.includeDrafts && (await isDraftDir(abs))) continue;
       yield* walkContent(abs, opts);
     } else {
       // Drop structural/project files (`_meta.json`, dotfiles, the config,

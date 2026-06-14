@@ -31,6 +31,8 @@ export interface ShellOptions {
   localeAlternates?: LocaleAlternate[];
   /** Current locale's URL prefix (`'/ja'`, or `''`) — localizes config nav links. */
   localePrefix?: string;
+  /** Render the draft ribbon (dev builds only — drafts never reach production). */
+  draft?: boolean;
 }
 
 /** One entry in the topbar language picker, and the per-page hreflang set. */
@@ -190,7 +192,8 @@ function renderShell(opts: ShellOptions): string {
     })();
   </script>
 </head>
-<body${opts.bodyClass ? ` class="${escapeAttr(opts.bodyClass)}"` : ''}>
+<body${opts.bodyClass ? ` class="${escapeAttr(opts.bodyClass)}${opts.draft ? ' ov-has-draft' : ''}"` : opts.draft ? ' class="ov-has-draft"' : ''}>
+  ${opts.draft ? `<div class="ov-draft-ribbon" role="status"><strong>Draft</strong> — visible locally only, never published.</div>` : ''}
   ${renderFrame()}
   ${renderTopbar(opts.site, assets, opts.docsHref ? siteUrl(opts.docsHref, basePath) : undefined, searchEnabled, basePath, opts.localeAlternates, opts.localePrefix ?? '')}
   ${opts.body}
@@ -613,6 +616,8 @@ export interface RenderPageInput {
   localeAlternates?: LocaleAlternate[];
   /** Current locale's URL prefix (`'/ja'`, or `''`) — localizes config nav links. */
   localePrefix?: string;
+  /** Draft page — renders the ribbon (dev only). */
+  draft?: boolean;
 }
 
 /**
@@ -670,6 +675,7 @@ export function renderPage(input: RenderPageInput): string {
     lang: input.lang,
     localeAlternates: input.localeAlternates,
     localePrefix: input.localePrefix,
+    draft: input.draft,
   });
 }
 
@@ -901,18 +907,20 @@ function navList(
       const isActive = node.url === activeUrl;
       const hasChildren = node.children.length > 0;
       const href = node.sourcePath ? escapeAttr(siteUrl(node.url, basePath)) : undefined;
+      // Draft badge (dev builds only — drafts are absent in production).
+      const badge = node.draft ? '<span class="ov-nav-draft">Draft</span>' : '';
       // Leaf page → a plain link (normal weight).
       if (!hasChildren) {
         const link = href
-          ? `<a class="ov-nav-link${isActive ? ' is-active' : ''}" href="${href}">${escapeHtml(node.title)}</a>`
-          : `<span class="ov-nav-group">${escapeHtml(node.title)}</span>`;
+          ? `<a class="ov-nav-link${isActive ? ' is-active' : ''}" href="${href}">${escapeHtml(node.title)}${badge}</a>`
+          : `<span class="ov-nav-group">${escapeHtml(node.title)}${badge}</span>`;
         return `<li>${link}</li>`;
       }
       // Folder → a bold category heading (group style), even when the folder
       // has its own `index.md` (then the heading is a clickable link to it).
       const heading = href
-        ? `<a class="ov-nav-group ov-nav-group--link${isActive ? ' is-active' : ''}" href="${href}">${escapeHtml(node.title)}</a>`
-        : `<span class="ov-nav-group">${escapeHtml(node.title)}</span>`;
+        ? `<a class="ov-nav-group ov-nav-group--link${isActive ? ' is-active' : ''}" href="${href}">${escapeHtml(node.title)}${badge}</a>`
+        : `<span class="ov-nav-group">${escapeHtml(node.title)}${badge}</span>`;
       // <details> disclosure (no JS). Collapsed by default, but the branch
       // holding the current page stays open so the active item is visible;
       // `site.sidebar.collapse: false` opens every folder, and a folder's

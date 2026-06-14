@@ -17,6 +17,20 @@ export interface NavNode {
   collapse?: boolean;
   /** Child nodes (sub-pages and sub-directories). */
   children: NavNode[];
+  /**
+   * True when this node is a draft — frontmatter `draft: true`, or inside a
+   * folder whose `_meta.json` sets `"draft": true` (cascades). Only present in
+   * dev builds (`includeDrafts`); production omits draft nodes entirely. Drives
+   * the sidebar "Draft" badge.
+   */
+  draft?: boolean;
+}
+
+/** Mutable counters threaded through `buildNav` so the caller can report how
+ *  many drafts a production build dropped. */
+export interface NavDraftStats {
+  draftPages: number;
+  draftSections: number;
 }
 
 /**
@@ -89,6 +103,13 @@ interface MetaJson {
   /** When true, the folder and all its content are excluded from nav + build. */
   hidden?: boolean;
   /**
+   * When true, the whole folder (and its descendants) is a **draft** — visible
+   * in `ovellum dev` with a ribbon + badge, excluded from production `build`.
+   * Cascades to children. Distinct from `hidden` (always excluded) and
+   * `site.ignoreFiles` (never even parsed).
+   */
+  draft?: boolean;
+  /**
    * Per-folder override of the sidebar collapse default (`site.sidebar.collapse`).
    * `false` keeps this folder expanded; `true` collapses it. Unset = inherit.
    */
@@ -122,6 +143,10 @@ export async function buildNav(
   homeBasename?: string,
   /** Absolute reserved publicDir — skipped (static assets, not content). */
   publicAbs?: string,
+  /** Include draft pages/folders (dev). Production (default false) omits them. */
+  includeDrafts = false,
+  /** Optional counters of excluded drafts (filled only when !includeDrafts). */
+  stats?: NavDraftStats,
 ): Promise<NavNode> {
   const absRoot = path.resolve(cwd, rootDir);
   const rel = (abs: string) => '/' + path.posix.relative(absRoot, abs).replace(/\\/g, '/');
@@ -137,6 +162,9 @@ export async function buildNav(
     homeBasename,
     publicAbs,
     true,
+    includeDrafts,
+    false,
+    stats,
   );
   // walk() returns null for hidden/empty dirs; the root is never pruned.
   return root ?? { title: 'Untitled', url: '/', children: [] };
@@ -145,6 +173,11 @@ export async function buildNav(
 /** True when `<dirAbs>/_meta.json` marks the folder `"hidden": true`. */
 export async function isHiddenDir(dirAbs: string): Promise<boolean> {
   return (await readMeta(dirAbs))?.hidden === true;
+}
+
+/** True when `<dirAbs>/_meta.json` marks the folder `"draft": true`. */
+export async function isDraftDir(dirAbs: string): Promise<boolean> {
+  return (await readMeta(dirAbs))?.draft === true;
 }
 
 async function walk(
@@ -159,9 +192,20 @@ async function walk(
   homeBasename: string | undefined,
   publicAbs: string | undefined,
   isRoot: boolean,
+  includeDrafts: boolean,
+  /** Whether an ancestor folder marked this subtree draft (cascades). */
+  draftCtx: boolean,
+  stats: NavDraftStats | undefined,
 ): Promise<NavNode | null> {
   const items = await listDir(dirAbs);
   const meta = await readMeta(dirAbs);
+  // This folder is draft if an ancestor was, or its own `_meta.json` says so.
+  const dirDraft = draftCtx || meta?.draft === true;
+  // In production, a draft folder (and everything under it) is excluded.
+  if (!isRoot && dirDraft && !includeDrafts) {
+    if (stats) stats.draftSections++;
+    return null;
+  }
 
   // Every folder's index resolves to `index.*` first, then **`README.md`** (the
   // GitHub norm) — so a folder with only a README uses it as the section page.
@@ -175,7 +219,9 @@ async function walk(
         items.find(
           (i) => !i.isDir && isMarkdown(i.name) && stem(i.name).toLowerCase() === 'readme',
         ));
-  const indexNode = indexItem ? await pageNode(indexItem.abs, urlPrefix, cwd) : undefined;
+  const indexNode = indexItem
+    ? await pageNode(indexItem.abs, urlPrefix, cwd, includeDrafts, dirDraft, stats)
+    : undefined;
 
   const children: NavNode[] = [];
   for (const item of items) {
@@ -183,7 +229,8 @@ async function walk(
     if (item.isDir) {
       // Output dir (avoids self-recursion under `input: '.'`), the reserved
       // publicDir (static assets), structural (`_`/dot/`node_modules`),
-      // configured, and self-hidden folders.
+      // configured, and self-hidden folders. (Draft folders are handled by the
+      // recursive walk, which returns null + counts them in production.)
       if (outputAbs && item.abs === outputAbs) continue;
       if (publicAbs && item.abs === publicAbs) continue;
       if (isExcludedDirName(item.name)) continue;
@@ -202,6 +249,9 @@ async function walk(
         homeBasename,
         publicAbs,
         false,
+        includeDrafts,
+        dirDraft,
+        stats,
       );
       if (child) children.push(child);
     } else if (isMarkdown(item.name)) {
@@ -211,7 +261,7 @@ async function walk(
       const relForMatch = path.posix.relative(absRoot, item.abs).replace(/\\/g, '/');
       if (isExcludedContentFile(relForMatch, item.name, ignoreFiles)) continue;
       const childUrl = ensureTrailingSlash(urlPrefix + stem(item.name) + '/');
-      const node = await pageNode(item.abs, childUrl, cwd);
+      const node = await pageNode(item.abs, childUrl, cwd, includeDrafts, dirDraft, stats);
       if (node) children.push(node);
     }
   }
@@ -232,14 +282,27 @@ async function walk(
     sourcePath: indexNode?.sourcePath,
     collapse: meta?.collapse,
     children,
+    draft: dirDraft || undefined,
   };
 }
 
-async function pageNode(abs: string, url: string, cwd: string): Promise<NavNode | null> {
+async function pageNode(
+  abs: string,
+  url: string,
+  cwd: string,
+  includeDrafts: boolean,
+  draftCtx: boolean,
+  stats: NavDraftStats | undefined,
+): Promise<NavNode | null> {
   const raw = await readFile(abs, 'utf8');
   const { data, content } = matter(raw);
-  // Draft pages are unpublished — kept out of the nav (and the build).
-  if (data.draft === true) return null;
+  const pageDraft = draftCtx || data.draft === true;
+  // Draft pages: kept out of nav + build in production, included (and flagged
+  // for the badge/ribbon) in dev.
+  if (pageDraft && !includeDrafts) {
+    if (stats) stats.draftPages++;
+    return null;
+  }
   const fmTitle = typeof data.title === 'string' ? data.title : undefined;
   const h1 = firstH1(content);
   const title = fmTitle ?? h1 ?? titleFromSegment(stem(path.basename(abs))) ?? 'Untitled';
@@ -254,6 +317,7 @@ async function pageNode(abs: string, url: string, cwd: string): Promise<NavNode 
     url: permalink ?? ensureTrailingSlash(url),
     sourcePath: path.relative(cwd, abs).replace(/\\/g, '/'),
     children: [],
+    draft: pageDraft || undefined,
   };
 }
 

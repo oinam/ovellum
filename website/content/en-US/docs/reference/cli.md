@@ -79,7 +79,7 @@ writes output to disk, prints a summary.
 ### Synopsis
 
 ```
-ovellum build [--cwd <dir>] [--config <path>]
+ovellum build [--cwd <dir>] [--config <path>] [--drafts]
 ```
 
 ### Flags
@@ -88,6 +88,7 @@ ovellum build [--cwd <dir>] [--config <path>]
 | ----------------- | ---- | --------------- | --------------------------------------------------------------- |
 | `--cwd <dir>`     | path | `process.cwd()` | Project root. All paths in the config resolve relative to this. |
 | `--config <path>` | path | auto-discovered | Skip discovery and load this file directly.                     |
+| `--drafts`        | flag | off             | Include [draft](/docs/guides/drafts/) pages (normally excluded from a production build). |
 
 ### Behavior by mode
 
@@ -183,7 +184,7 @@ you want running while writing.
 ### Synopsis
 
 ```
-ovellum dev [--cwd <dir>] [--config <path>] [--port <n>] [--host <addr>]
+ovellum dev [--cwd <dir>] [--config <path>] [--port <n>] [--host <addr>] [--no-drafts]
 ```
 
 ### Flags
@@ -194,6 +195,7 @@ ovellum dev [--cwd <dir>] [--config <path>] [--port <n>] [--host <addr>]
 | `--config <path>` | path    | auto        | Skip discovery and load this file directly.                                          |
 | `--port <n>`      | integer | `3000`      | Starting port. If busy, auto-bumps up to 19 ports forward before giving up.          |
 | `--host <addr>`   | string  | `127.0.0.1` | Bind address. Pass `0.0.0.0` to expose on the local network.                         |
+| `--no-drafts`     | flag    | drafts on   | Hide [draft](/docs/guides/drafts/) pages locally, to preview exactly what production publishes. (`watch` takes `--no-drafts` too.) |
 
 ### Behavior
 

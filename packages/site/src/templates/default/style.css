@@ -625,6 +625,57 @@ a:hover {
   align-items: center;
   min-inline-size: 0;
 }
+/* Draft ribbon + sidebar badge — shown only in dev builds (drafts never reach
+   production), so the amber here never affects the published monochrome site.
+   Self-contained tokens with a dark variant. */
+:root {
+  --ov-draft-fg: oklch(40% 0.07 70);
+  --ov-draft-bg: oklch(92% 0.08 85);
+  --ov-draft-border: oklch(84% 0.1 82);
+}
+:root[data-theme='dark'] {
+  --ov-draft-fg: oklch(91% 0.06 92);
+  --ov-draft-bg: oklch(38% 0.06 75);
+  --ov-draft-border: oklch(50% 0.07 75);
+}
+@media (prefers-color-scheme: dark) {
+  :root[data-theme='auto'] {
+    --ov-draft-fg: oklch(91% 0.06 92);
+    --ov-draft-bg: oklch(38% 0.06 75);
+    --ov-draft-border: oklch(50% 0.07 75);
+  }
+}
+/* A non-sticky band at the very top of a draft page — announces the draft on
+   load without fighting the sticky topbar; the sidebar badges persist. */
+.ov-draft-ribbon {
+  padding: var(--space-2xs) var(--space-s);
+  text-align: center;
+  font-size: 0.85rem;
+  line-height: 1.4;
+  font-weight: 500;
+  color: var(--ov-draft-fg);
+  background: var(--ov-draft-bg);
+  border-block-end: 1px solid var(--ov-draft-border);
+}
+.ov-draft-ribbon strong {
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+.ov-nav-draft {
+  display: inline-block;
+  margin-inline-start: var(--space-2xs);
+  padding: 0 0.4em;
+  font-size: 0.6rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--ov-draft-fg);
+  background: var(--ov-draft-bg);
+  border: 1px solid var(--ov-draft-border);
+  border-radius: var(--radius-sm);
+  vertical-align: middle;
+  line-height: 1.5;
+}
 .ov-topbar-link {
   display: inline-flex;
   align-items: center;

@@ -11,6 +11,8 @@ import { buildSite, type PageOutput } from '@ovellum/site';
 export interface RunBuildInput {
   config: OvellumConfig;
   cwd: string;
+  /** Include draft pages (dev/watch preview); production build excludes them. */
+  includeDrafts?: boolean;
 }
 
 /**
@@ -47,7 +49,7 @@ export async function runBuild(input: RunBuildInput): Promise<BuildSummary> {
   const startedAt = Date.now();
 
   if (config.mode === 'manual') {
-    const result = await buildSite({ config, cwd });
+    const result = await buildSite({ config, cwd, includeDrafts: input.includeDrafts });
     return {
       mode: 'manual',
       elapsedMs: Date.now() - startedAt,

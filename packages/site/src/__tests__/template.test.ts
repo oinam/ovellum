@@ -433,6 +433,46 @@ describe('renderPage', () => {
     expect(html).not.toContain('href="/ja/feed.xml"');
   });
 
+  it('renders the draft ribbon only when the page is a draft', () => {
+    const base = {
+      site: { title: 'X', defaultTheme: 'auto', footer: '' },
+      nav: NAV,
+      url: '/',
+      title: 'X',
+      bodyHtml: '',
+      headings: [],
+      generatedAt: '2026-06-14T00:00:00.000Z',
+    } as const;
+    const draft = renderPage({ ...base, draft: true });
+    expect(draft).toContain('ov-draft-ribbon');
+    expect(draft).toContain('never published');
+    expect(draft).toContain('ov-has-draft');
+    expect(renderPage({ ...base, draft: false })).not.toContain('ov-draft-ribbon');
+  });
+
+  it('renders a "Draft" badge in the sidebar for draft nav nodes', () => {
+    const nav = {
+      title: '',
+      url: '/',
+      children: [
+        { title: 'Live', url: '/live/', sourcePath: 'live.md', children: [] },
+        { title: 'WIP', url: '/wip/', sourcePath: 'wip.md', children: [], draft: true },
+      ],
+    };
+    const html = renderPage({
+      site: { title: 'X', defaultTheme: 'auto', footer: '' },
+      nav,
+      url: '/live/',
+      title: 'Live',
+      bodyHtml: '',
+      headings: [],
+      generatedAt: '2026-06-14T00:00:00.000Z',
+    });
+    expect(html).toContain('ov-nav-draft');
+    // The live page link carries no badge.
+    expect(html).toContain('>Live</a>');
+  });
+
   it('renders NO language picker for a single-language site', () => {
     const html = renderPage({
       site: { title: 'X', defaultTheme: 'auto', footer: '' },

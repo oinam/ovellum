@@ -29,6 +29,11 @@ export const devCommand = defineCommand({
       type: 'string',
       description: `Host to bind (default ${DEFAULT_HOST}; pass 0.0.0.0 to expose on the network)`,
     },
+    drafts: {
+      type: 'boolean',
+      default: true,
+      description: 'Show draft pages (on by default in dev; use --no-drafts to simulate production)',
+    },
   },
   async run({ args }) {
     const cwd = path.resolve(args.cwd ?? process.cwd());
@@ -73,6 +78,7 @@ export const devCommand = defineCommand({
       cwd,
       config,
       configFile,
+      includeDrafts: args.drafts !== false,
       onBuild: () => server.broadcastReload(),
     });
 

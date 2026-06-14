@@ -17,6 +17,11 @@ export const watchCommand = defineCommand({
       type: 'string',
       description: 'Project root (defaults to current directory)',
     },
+    drafts: {
+      type: 'boolean',
+      default: true,
+      description: 'Show draft pages (on by default; use --no-drafts to simulate production)',
+    },
   },
   async run({ args }) {
     const cwd = path.resolve(args.cwd ?? process.cwd());
@@ -36,7 +41,12 @@ export const watchCommand = defineCommand({
       `ovellum watch starting from ${configFile ?? '(defaults)'} (mode: ${config.mode})\n`,
     );
 
-    const watcher = await watchAndBuild({ cwd, config, configFile });
+    const watcher = await watchAndBuild({
+      cwd,
+      config,
+      configFile,
+      includeDrafts: args.drafts !== false,
+    });
 
     const inputAbs = path.resolve(cwd, config.input);
     process.stdout.write(`watching ${path.relative(cwd, inputAbs) || inputAbs} for changes…\n`);
