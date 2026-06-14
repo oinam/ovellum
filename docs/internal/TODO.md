@@ -32,14 +32,16 @@ Legend: `[ ]` not started · `[~]` in progress · `[x]` done · `[!]` blocked
 
 ## Current state (2026-06-14)
 
-**Publish state (read this first):** **`ovellum@0.10.1` is live on npm.** Tags
-`ovellum@0.7.0`…`0.10.1` pushed + GitHub releases published. **FIVE pending
-changesets for the next release (minor → 0.11.0):** `upgrade-prefers-local`
-(patch), `translation-staleness` (minor), `chrome-i18n` (minor),
-`check-i18n-links` (patch), `localized-config-text` (minor) — all committed to
-`main`, built + tested green (328 tests), NOT yet versioned/published. See "In
-flight" below. **i18n is now complete end-to-end** (chrome + content + config
-text localized, staleness-checked, links validated per-locale). (**0.10.1** =
+**Publish state (read this first):** **`ovellum@0.11.0` is live on npm** and
+matches local. Tree clean on `main`, fully pushed, no pending changesets; tags
+`ovellum@0.7.0`…`0.11.0` pushed + GitHub releases published. (**0.11.0** = the
+i18n-completion batch + the upgrade-local-dep fix, 328 tests — see the now-shipped
+block below: `ovellum upgrade` prefers the cwd's declared local dep;
+translation-staleness check (`ovellum check` + `--update-translations`);
+chrome-string localization + RTL; per-locale `check` link validation;
+config-text localization. **i18n is now complete end-to-end** — chrome + content
++ config text localized, staleness-checked, links validated per-locale; `/ja/` is
+fully Japanese. Only remaining i18n gap: per-locale RSS.) (**0.10.1** =
 Markdown footnotes (GFM `[^id]`) + a fix for the doubled clobber-prefix that
 broke every footnote jump link + a global `scroll-padding-top` so anchor jumps
 clear the sticky topbar; 306 tests. See "In flight"→now-shipped block below.)
@@ -102,7 +104,7 @@ everything (changeset version, badge bump in `website/ovellum.config.ts`
   styleguide, with live examples), `FEATURES.md`, 5 new markdown tests. Shipped
   as **0.10.1**.
 
-**In flight (3 pending changesets → 0.11.0, committed but not released):**
+**Shipped in 0.11.0 (2026-06-14 — the i18n-completion batch):**
 - **`ovellum upgrade` prefers the local dep** (patch, `ccf9ac6`). `isLocalInstall`
   now also reads the cwd `package.json` (deps/devDeps/optionalDeps), so a project
   that *declares* ovellum is upgraded locally even via the global binary (the
