@@ -254,3 +254,55 @@ describe('ovellum check — translation staleness (i18n)', () => {
     expect(chk.stdout).toContain('tracks nothing');
   });
 });
+
+describe('ovellum check — i18n link validation (per-locale)', () => {
+  let dir: string;
+  const cfg = JSON.stringify({
+    name: 'x',
+    mode: 'manual',
+    input: 'content',
+    output: 'dist',
+    site: {
+      locales: [
+        { code: 'en-US', label: 'English' },
+        { code: 'ja', label: '日本語' },
+      ],
+      defaultLocale: 'en-US',
+    },
+  });
+
+  beforeEach(() => {
+    dir = mkdtempSync(path.join(tmpdir(), 'ovellum-i18nlinks-'));
+    writeFileSync(path.join(dir, 'ovellum.config.json'), cfg);
+    for (const code of ['en-US', 'ja']) {
+      mkdirSync(path.join(dir, 'content', code, 'docs'), { recursive: true });
+      writeFileSync(path.join(dir, 'content', code, 'docs', 'guide.md'), `---\ntitle: Guide\n---\n\n# Guide\n`);
+    }
+    // English home links to a default-locale page; Japanese home links to BOTH
+    // its own locale-prefixed page and the cross-locale default page.
+    writeFileSync(path.join(dir, 'content', 'en-US', 'index.md'), '# Home\n\n[guide](/docs/guide/)\n');
+    writeFileSync(
+      path.join(dir, 'content', 'ja', 'index.md'),
+      '# ホーム\n\n[ガイド](/ja/docs/guide/)\n[英語](/docs/guide/)\n',
+    );
+  });
+  afterEach(async () => {
+    await rm(dir, { recursive: true, force: true });
+  });
+
+  it('treats locale-prefixed and cross-locale links as valid (no false broken links)', async () => {
+    await runCli(['check', '--update-translations'], { cwd: dir }); // clear staleness noise
+    const { code, stdout } = await runCli(['check'], { cwd: dir });
+    expect(code).toBe(0);
+    expect(stdout).toMatch(/broken links:\s+0/);
+  });
+
+  it('still flags a genuinely broken locale-prefixed link', async () => {
+    await runCli(['check', '--update-translations'], { cwd: dir });
+    writeFileSync(path.join(dir, 'content', 'ja', 'index.md'), '# ホーム\n\n[なし](/ja/missing/)\n');
+    const { code, stdout } = await runCli(['check'], { cwd: dir, expectFail: true });
+    expect(code).toBe(1);
+    expect(stdout).toMatch(/broken links:\s+1/);
+    expect(stdout).toContain('/ja/missing/');
+  });
+});

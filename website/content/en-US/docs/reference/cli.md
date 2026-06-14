@@ -344,7 +344,11 @@ ovellum check complete in 87ms
 ### Behavior by mode
 
 **Manual mode** — walks `input/` for `.md` files and validates every
-internal link against the sidebar nav.
+internal link against the sidebar nav. On i18n sites this runs **per-locale**:
+each `content/<code>/` subtree builds its own locale-prefixed nav, and links are
+checked against the union of all locales' URLs — so a `/ja/…` link, a
+cross-locale `/docs/…` link to the default locale, and relative links all
+resolve correctly.
 
 **Hybrid / auto mode** — walks the **output** directory (the
 auto-generated Markdown), validates every internal link against the

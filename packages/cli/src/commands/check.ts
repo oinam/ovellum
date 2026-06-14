@@ -11,7 +11,6 @@ import {
   flattenNav,
   resolveHomeRel,
   walkContent,
-  type NavNode,
 } from '@ovellum/site';
 import { detectUnsafeScheme } from './check-utils.js';
 
@@ -131,14 +130,6 @@ export const checkCommand = defineCommand({
   },
 });
 
-function collectValidUrls(nav: NavNode, config: OvellumConfig): Set<string> {
-  const urls = new Set<string>();
-  for (const page of flattenNav(nav)) urls.add(page.url);
-  // Landing replaces `/` when enabled.
-  if (config.site.landing.enabled) urls.add('/');
-  return urls;
-}
-
 interface CheckRun {
   issues: Issue[];
   files: string[];
@@ -149,68 +140,107 @@ interface CheckInput {
   cwd: string;
 }
 
+/** One content tree to lint: the whole `content/` for a single-language site, or
+ *  one `content/<code>/` subtree per locale with its URL prefix (`''` for the
+ *  default locale, `'/ja'` for others) — mirroring how `build` lays out i18n
+ *  sites so link validation sees the same URLs the build emits. */
+interface LocaleView {
+  relInput: string;
+  inputAbs: string;
+  urlPrefix: string;
+}
+
+function localeViews(config: OvellumConfig, cwd: string): LocaleView[] {
+  const inputAbs = path.resolve(cwd, config.input);
+  const locales = config.site.locales ?? [];
+  // No i18n → one unprefixed view over the content root (original behavior).
+  if (locales.length === 0) {
+    return [{ relInput: config.input, inputAbs, urlPrefix: '' }];
+  }
+  const def = config.site.defaultLocale ?? locales[0]!.code;
+  return locales.map((l) => {
+    const dir = path.join(inputAbs, l.code);
+    return {
+      relInput: path.relative(cwd, dir).replace(/\\/g, '/') || '.',
+      inputAbs: dir,
+      urlPrefix: l.code === def ? '' : '/' + l.code,
+    };
+  });
+}
+
 /**
- * Manual mode: walk `input/`, validate every internal link against the
- * sidebar nav. This is the original behavior.
+ * Manual mode: validate every internal link against the sidebar nav. On i18n
+ * sites this runs per-locale — each `content/<code>/` subtree builds its own
+ * locale-prefixed nav, and links are checked against the union of all locales'
+ * URLs (so a `/ja/…` link, a cross-locale `/docs/…` link to the default locale,
+ * and a relative link all resolve correctly). Single-language sites take one
+ * unprefixed pass — identical to the original behavior.
  */
 async function checkManual({ config, cwd }: CheckInput): Promise<CheckRun> {
-  const inputAbs = path.resolve(cwd, config.input);
   const outputAbs = path.resolve(cwd, config.output);
-  const publicAbs = path.join(inputAbs, config.site.publicDir);
+  const inputRootAbs = path.resolve(cwd, config.input);
+  const publicAbs = path.join(inputRootAbs, config.site.publicDir);
+  const views = localeViews(config, cwd);
+
   // Honor the same exclusions as `build` (ignoreFolders / ignoreFiles, the
   // structural auto-excludes, and the output dir) so `check` lints only real
-  // content — never `node_modules`, dotfiles, dependency READMEs, or a nested
-  // output dir under `input: '.'`.
-  // Resolve the home file the same way `build` does, so a README/site.home home
-  // maps to `/` in the nav — otherwise `check` would flag `/` links as broken.
-  const homeRel = resolveHomeRel(inputAbs, config.site);
-  const homeBasename = homeRel && !homeRel.includes('/') ? homeRel : undefined;
-  const nav = await buildNav(
-    config.input,
-    cwd,
-    config.site.ignoreFolders,
-    config.site.ignoreFiles,
-    outputAbs,
-    homeBasename,
-    publicAbs,
-  );
-  const validUrls = collectValidUrls(nav, config);
+  // content. Resolve each locale's home the same way `build` does, so a
+  // README/site.home home maps to `/` (prefixed) in the nav.
+  const validUrls = new Set<string>();
+  for (const v of views) {
+    const homeRel = resolveHomeRel(v.inputAbs, config.site);
+    const homeBasename = homeRel && !homeRel.includes('/') ? homeRel : undefined;
+    const nav = await buildNav(
+      v.relInput,
+      cwd,
+      config.site.ignoreFolders,
+      config.site.ignoreFiles,
+      outputAbs,
+      homeBasename,
+      publicAbs,
+    );
+    for (const page of flattenNav(nav)) validUrls.add(v.urlPrefix + page.url);
+    // Landing replaces `/` (per-locale home) when enabled.
+    if (config.site.landing.enabled) validUrls.add(v.urlPrefix + '/');
+  }
 
   const issues: Issue[] = [];
   const files: string[] = [];
-  for await (const file of walkContent(inputAbs, {
-    inputAbs,
-    ignoreFolders: config.site.ignoreFolders,
-    ignoreFiles: config.site.ignoreFiles ?? [],
-    outputAbs,
-    publicAbs,
-  })) {
-    if (!/\.(md|markdown)$/i.test(file)) continue;
-    files.push(file);
-    const rel = path.relative(cwd, file).replace(/\\/g, '/');
-    const raw = await readFile(file, 'utf8');
-    const { content } = matter(raw);
-    const url = urlForPage(file, inputAbs);
-    for (const { target, line } of extractMarkdownLinks(content)) {
-      const unsafe = detectUnsafeScheme(target);
-      if (unsafe) {
-        issues.push({
-          file: rel,
-          line,
-          kind: 'unsafe-scheme',
-          message: `unsafe URL scheme '${unsafe}:' — link will be stripped by the HTML sanitizer (raw: ${target})`,
-        });
-        continue;
-      }
-      const resolved = resolveLink(target, url);
-      if (resolved === undefined) continue; // external / mailto / fragment / unparseable
-      if (!validUrls.has(resolved)) {
-        issues.push({
-          file: rel,
-          line,
-          kind: 'broken-link',
-          message: `broken internal link to ${resolved} (raw: ${target})`,
-        });
+  for (const v of views) {
+    for await (const file of walkContent(v.inputAbs, {
+      inputAbs: v.inputAbs,
+      ignoreFolders: config.site.ignoreFolders,
+      ignoreFiles: config.site.ignoreFiles ?? [],
+      outputAbs,
+      publicAbs,
+    })) {
+      if (!/\.(md|markdown)$/i.test(file)) continue;
+      files.push(file);
+      const rel = path.relative(cwd, file).replace(/\\/g, '/');
+      const raw = await readFile(file, 'utf8');
+      const { content } = matter(raw);
+      const url = v.urlPrefix + urlForPage(file, v.inputAbs);
+      for (const { target, line } of extractMarkdownLinks(content)) {
+        const unsafe = detectUnsafeScheme(target);
+        if (unsafe) {
+          issues.push({
+            file: rel,
+            line,
+            kind: 'unsafe-scheme',
+            message: `unsafe URL scheme '${unsafe}:' — link will be stripped by the HTML sanitizer (raw: ${target})`,
+          });
+          continue;
+        }
+        const resolved = resolveLink(target, url);
+        if (resolved === undefined) continue; // external / mailto / fragment / unparseable
+        if (!validUrls.has(resolved)) {
+          issues.push({
+            file: rel,
+            line,
+            kind: 'broken-link',
+            message: `broken internal link to ${resolved} (raw: ${target})`,
+          });
+        }
       }
     }
   }

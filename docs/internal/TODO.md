@@ -130,11 +130,10 @@ everything (changeset version, badge bump in `website/ovellum.config.ts`
   `topbarNav`/`footerNav` LABELS written in `ovellum.config.ts` (the template
   chrome itself is now localized). Per-locale RSS also deferred. These are the
   remaining i18n slice.
-- **Pre-existing, separate bug:** `ovellum check` reports ~76 broken internal
-  links on the i18n website — its link validator builds a single nav over
-  `content/` (with `en-US/`+`ja/` subtrees) and doesn't understand locale-prefixed
-  URLs. Not caused by the staleness work (link logic untouched). Worth a dedicated
-  fix: make `check` validate links per-locale like the build does.
+- **`ovellum check` i18n link validation: FIXED** (was ~76 false broken links on
+  the i18n website). `checkManual` now lints per-locale (`localeViews` → each
+  `content/<code>/` subtree's prefixed nav; links validated against the union).
+  The website now checks fully clean (broken 0 / unsafe 0 / stale 0).
 - **"The Editor" theme continues** — drafts were slice 1; natural follow-ons:
   publish/scheduling workflow, in-place preview (both build on the draft plumbing).
 - Pick next work from [`ROADMAP.md`](./ROADMAP.md) — v0.8.0 (B7 i18n) and v0.9.0
