@@ -45,12 +45,12 @@ npm install --save-dev ovellum
 この設定は、Ovellum に `./content/` をたどって `.md` ファイルを探し、
 静的サイトを `./dist/` に書き出すように指示します。代わりに TypeScript ソースから
 ドキュメントを生成したい場合は `mode` を `auto` に、両方を同じファイル内で混在させたい場合は
-`hybrid` に置き換えてください。違いについては [コンセプト → モード](/docs/concepts/modes/) を参照してください。
+`hybrid` に置き換えてください。違いについては [コンセプト → モード](/ja/docs/concepts/modes/) を参照してください。
 
 デフォルトでは、`/` は `content/index.md` をそのままドキュメントレイアウトに描画し、
 読者は直接ドキュメントに到達します。代わりに `/` にマーケティング風のホームページを
 置きたい場合は、`site.landing.enabled: true` を設定してください。詳しい設定については
-[ランディングページ](/docs/guides/manual-mode/#landing) を参照してください。
+[ランディングページ](/ja/docs/guides/manual-mode/#landing) を参照してください。
 
 TypeScript の設定ファイル（`ovellum.config.ts`）も使えます。エクスポートされた
 `defineConfig` ヘルパーを通じて、オートコンプリートも得られます:
@@ -110,9 +110,9 @@ npx serve dist
 ## 次のステップ
 
 - ドキュメントの上にランディング/マーケティングページが欲しいですか?
-  [ランディングを有効化](/docs/guides/manual-mode/#landing)しましょう。
+  [ランディングを有効化](/ja/docs/guides/manual-mode/#landing)しましょう。
 - 自動生成された API ドキュメントと手書きの文章を混在させたいですか?
-  [ハイブリッドモード](/docs/guides/hybrid-mode/)を参照してください。
-- 公開する準備はできましたか? [デプロイガイド](/docs/guides/deploy/)では、
+  [ハイブリッドモード](/ja/docs/guides/hybrid-mode/)を参照してください。
+- 公開する準備はできましたか? [デプロイガイド](/ja/docs/guides/deploy/)では、
   GitHub Pages、Netlify、Vercel、そして「`dist/` をどこかにアップロードするだけ」までを解説します。
-- リファレンス: [設定フィールド](/docs/reference/config/) と [CLI コマンド](/docs/reference/cli/)。
+- リファレンス: [設定フィールド](/ja/docs/reference/config/) と [CLI コマンド](/ja/docs/reference/cli/)。
