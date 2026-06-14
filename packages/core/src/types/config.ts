@@ -1,5 +1,14 @@
 export type OvellumMode = 'hybrid' | 'manual' | 'auto';
 
+/**
+ * A user-facing config string that may be localized. Either a plain `string`
+ * (same in every locale) or a `Record<localeCode, string>` map (e.g.
+ * `{ 'en-US': 'Docs', ja: 'ドキュメント' }`). At render time it resolves to the
+ * current locale, falling back to the default locale, then the first entry.
+ * Plain strings pass through unchanged — single-language sites are unaffected.
+ */
+export type LocalizedString = string | Record<string, string>;
+
 export type OvellumFormat = 'md' | 'mdx';
 
 export type OrphanStrategy = 'quarantine' | 'warn';
@@ -74,7 +83,7 @@ export type OvellumCodeTheme = 'github' | 'nord' | 'solarized';
 export type OvellumCtaStyle = 'primary' | 'secondary';
 
 export interface OvellumLandingCta {
-  label: string;
+  label: LocalizedString;
   href: string;
   /** Visual style. Defaults to `'primary'` for the first CTA, `'secondary'` thereafter. */
   style?: OvellumCtaStyle;
@@ -98,9 +107,9 @@ export interface OvellumLandingHeroMedia {
 
 export interface OvellumLandingHero {
   /** Defaults to `site.title`. */
-  title?: string;
+  title?: LocalizedString;
   /** Short tagline rendered under the title. */
-  subtitle?: string;
+  subtitle?: LocalizedString;
   /** Hero call-to-action buttons. Render in order. */
   ctas: OvellumLandingCta[];
   /**
@@ -114,13 +123,13 @@ export interface OvellumLandingHero {
 export interface OvellumLandingFeature {
   /** Emoji, short string, or raw HTML (e.g. SVG). Rendered as-is. */
   icon?: string;
-  title: string;
-  description: string;
+  title: LocalizedString;
+  description: LocalizedString;
 }
 
 export interface OvellumLandingInstall {
   /** Heading above the snippet, e.g. "Install Ovellum globally". */
-  title: string;
+  title: LocalizedString;
   /** The command(s) to show in the code block. */
   code: string;
   /** Highlight language (shiki). Defaults to 'bash'. */
@@ -142,7 +151,7 @@ export interface OvellumLandingScene {
 }
 
 export interface OvellumLandingTrustItem {
-  name: string;
+  name: LocalizedString;
   /** Optional external link. */
   href?: string;
   /** Path (relative to `input/`) to an SVG/PNG passed through as a static asset. */
@@ -151,7 +160,7 @@ export interface OvellumLandingTrustItem {
 
 export interface OvellumLandingTrustStrip {
   /** Section label, e.g. `"Trusted by"`. */
-  label?: string;
+  label?: LocalizedString;
   items: OvellumLandingTrustItem[];
 }
 
@@ -162,7 +171,7 @@ export interface OvellumSiteSearchConfig {
 
 export interface OvellumTopbarNavItem {
   /** Visible label. Always rendered (even when `icon` is set) for screen readers. */
-  label: string;
+  label: LocalizedString;
   /** Site-relative or external href. */
   href: string;
   /**
@@ -182,7 +191,7 @@ export interface OvellumTopbarNavItem {
 
 export interface OvellumFooterNavItem {
   /** Visible label. Always rendered (even when `icon` is set) for screen readers. */
-  label: string;
+  label: LocalizedString;
   /** Site-relative or external href. */
   href: string;
   /**

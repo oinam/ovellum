@@ -30,5 +30,6 @@ export {
   baseLang,
   isRtl,
   resolveStrings,
+  localize,
 } from './strings.js';
 export type { UiStrings } from './strings.js';

@@ -3,7 +3,7 @@ import { ICONS, renderIcon, type IconName } from './icons.js';
 import type { Heading } from './markdown.js';
 import type { NavNode } from './nav.js';
 import { formatEditedDate } from './page-meta.js';
-import { DEFAULT_STRINGS, type UiStrings } from './strings.js';
+import { DEFAULT_STRINGS, localize, type UiStrings } from './strings.js';
 import { assetsPrefix as assetsPrefixFor, normaliseBasePath, siteUrl } from './url.js';
 
 export interface ShellOptions {
@@ -202,10 +202,10 @@ ${i18nScript(strings)}</head>
 <body${opts.bodyClass ? ` class="${escapeAttr(opts.bodyClass)}${opts.draft ? ' ov-has-draft' : ''}"` : opts.draft ? ' class="ov-has-draft"' : ''}>
   ${opts.draft ? `<div class="ov-draft-ribbon" role="status"><strong>${escapeHtml(strings.draftLabel)}</strong> — ${escapeHtml(strings.draftRibbonNote)}.</div>` : ''}
   ${renderFrame()}
-  ${renderTopbar(opts.site, assets, opts.docsHref ? siteUrl(opts.docsHref, basePath) : undefined, searchEnabled, basePath, strings, opts.localeAlternates, opts.localePrefix ?? '')}
+  ${renderTopbar(opts.site, assets, opts.docsHref ? siteUrl(opts.docsHref, basePath) : undefined, searchEnabled, basePath, strings, opts.localeAlternates, opts.localePrefix ?? '', opts.lang, opts.site.defaultLocale)}
   ${opts.body}
   ${backToTop}
-  ${renderFooter(opts.site, opts.generatedAt, basePath, strings, opts.localePrefix ?? '')}
+  ${renderFooter(opts.site, opts.generatedAt, basePath, strings, opts.localePrefix ?? '', opts.lang, opts.site.defaultLocale)}
   ${searchScripts}
   <script src="${escapeAttr(assets)}assets/ovellum.js" defer></script>
 </body>
@@ -265,12 +265,14 @@ function resolveTopbarItems(
   site: OvellumSiteConfig & { title: string },
   basePath: string,
   localePrefix: string,
+  lang: string | undefined,
+  defaultLocale: string | undefined,
 ): ResolvedTopbarItem[] {
   return (site.topbarNav ?? []).map((item) => {
     const external = item.external === true || /^https?:\/\//i.test(item.href);
     const icon = item.icon && item.icon in ICONS ? (item.icon as IconName) : undefined;
     return {
-      label: item.label,
+      label: localize(item.label, lang, defaultLocale),
       href: external ? item.href : siteUrl(localizeHref(item.href, localePrefix), basePath),
       external,
       icon,
@@ -477,8 +479,10 @@ function renderTopbar(
   strings: UiStrings,
   localeAlternates?: LocaleAlternate[],
   localePrefix = '',
+  lang?: string,
+  defaultLocale?: string,
 ): string {
-  const items = resolveTopbarItems(site, basePath, localePrefix);
+  const items = resolveTopbarItems(site, basePath, localePrefix, lang, defaultLocale);
   const langPicker = renderLangPicker(localeAlternates, basePath, strings.languageLabel);
   // Desktop splits text links from icon links so a divider can sit between
   // them; the mobile sheet keeps them in one labeled list.
@@ -556,6 +560,8 @@ function renderFooter(
   basePath: string,
   strings: UiStrings,
   localePrefix = '',
+  lang?: string,
+  defaultLocale?: string,
 ): string {
   const items = site.footerNav ?? [];
   const hasItems = items.length > 0;
@@ -578,25 +584,33 @@ function renderFooter(
   const left = `<div class="ov-footer-left">${bits.join('<span class="ov-footer-sep">·</span>')}</div>`;
 
   const right = hasItems
-    ? `<nav class="ov-footer-right" aria-label="${escapeAttr(strings.footerNav)}">${items.map((item) => renderFooterNavItem(item, basePath, localePrefix)).join('')}</nav>`
+    ? `<nav class="ov-footer-right" aria-label="${escapeAttr(strings.footerNav)}">${items.map((item) => renderFooterNavItem(item, basePath, localePrefix, lang, defaultLocale)).join('')}</nav>`
     : '';
 
   return `<footer class="ov-footer"><div class="ov-footer-inner">${left}${right}</div></footer>`;
 }
 
 function renderFooterNavItem(
-  item: { label: string; href: string; icon?: string; external?: boolean },
+  item: {
+    label: string | Record<string, string>;
+    href: string;
+    icon?: string;
+    external?: boolean;
+  },
   basePath: string,
   localePrefix = '',
+  lang?: string,
+  defaultLocale?: string,
 ): string {
   const external = item.external === true || /^https?:\/\//i.test(item.href);
   const href = external ? item.href : siteUrl(localizeHref(item.href, localePrefix), basePath);
   const rel = external ? ' rel="noopener" target="_blank"' : '';
+  const label = localize(item.label, lang, defaultLocale);
   const iconName = item.icon as IconName | undefined;
   if (iconName && iconName in ICONS) {
-    return `<a class="ov-footer-link ov-footer-link--icon" href="${escapeAttr(href)}"${rel} aria-label="${escapeAttr(item.label)}" title="${escapeAttr(item.label)}">${renderIcon(iconName, { class: 'ov-footer-icon', size: 18 })}<span class="ov-sr-only">${escapeHtml(item.label)}</span></a>`;
+    return `<a class="ov-footer-link ov-footer-link--icon" href="${escapeAttr(href)}"${rel} aria-label="${escapeAttr(label)}" title="${escapeAttr(label)}">${renderIcon(iconName, { class: 'ov-footer-icon', size: 18 })}<span class="ov-sr-only">${escapeHtml(label)}</span></a>`;
   }
-  return `<a class="ov-footer-link" href="${escapeAttr(href)}"${rel}>${escapeHtml(item.label)}</a>`;
+  return `<a class="ov-footer-link" href="${escapeAttr(href)}"${rel}>${escapeHtml(label)}</a>`;
 }
 
 // -- doc pages -----------------------------------------------------------
@@ -760,28 +774,48 @@ export interface RenderLandingInput {
  */
 export function renderLanding(input: RenderLandingInput): string {
   const strings = input.strings ?? DEFAULT_STRINGS;
-  const heroTitle = input.landing.hero.title ?? input.site.title;
+  const lang = input.lang;
+  const def = input.site.defaultLocale;
+  const loc = (v: string | Record<string, string> | undefined): string => localize(v, lang, def);
+
+  const heroTitle = input.landing.hero.title ? loc(input.landing.hero.title) : input.site.title;
   const fullTitle = input.site.title;
   const basePath = normaliseBasePath(input.site.basePath);
 
+  // Resolve config-localized labels to plain strings here, then pass them to the
+  // string-typed sub-renderers (their signatures stay locale-agnostic).
+  const ctas = input.landing.hero.ctas.map((cta) => ({ ...cta, label: loc(cta.label) }));
+  const features = input.landing.features.map((f) => ({
+    ...f,
+    title: loc(f.title),
+    description: loc(f.description),
+  }));
+  const trustStrip = input.landing.trustStrip
+    ? {
+        ...input.landing.trustStrip,
+        label: input.landing.trustStrip.label ? loc(input.landing.trustStrip.label) : undefined,
+        items: input.landing.trustStrip.items.map((it) => ({ ...it, name: loc(it.name) })),
+      }
+    : undefined;
+
   const hero = renderHero(
     heroTitle,
-    input.landing.hero.subtitle,
-    input.landing.hero.ctas,
+    input.landing.hero.subtitle ? loc(input.landing.hero.subtitle) : undefined,
+    ctas,
     input.landing.hero.media,
     basePath,
   );
   const install = renderInstall(input.install ?? []);
-  const features = renderFeatures(input.landing.features);
+  const featuresHtml = renderFeatures(features);
   const pitch = input.pitchHtml
     ? `<section class="ov-pitch"><div class="ov-pitch-inner">${input.pitchHtml}</div></section>`
     : '';
-  const trust = renderTrustStrip(input.landing.trustStrip);
+  const trust = renderTrustStrip(trustStrip);
 
   // Interleave scenes between the rendered sections, in order. With three
   // sections after the hero, three scenes fill all three gaps; extras fall
   // through after the last section.
-  const sections = [hero, install, features, pitch, trust].filter((s) => s !== '');
+  const sections = [hero, install, featuresHtml, pitch, trust].filter((s) => s !== '');
   const scenes = input.landing.scenes ?? [];
   const interleaved: string[] = [];
   sections.forEach((section, i) => {
@@ -819,7 +853,8 @@ export function renderLanding(input: RenderLandingInput): string {
 function renderHero(
   title: string,
   subtitle: string | undefined,
-  ctas: OvellumLandingConfig['hero']['ctas'],
+  // Labels already resolved to plain strings by the caller (`renderLanding`).
+  ctas: Array<{ label: string; href: string; style?: OvellumLandingConfig['hero']['ctas'][number]['style'] }>,
   media: OvellumLandingConfig['hero']['media'],
   basePath: string,
 ): string {
@@ -887,7 +922,10 @@ function renderInstall(install: Array<{ html: string }>): string {
   </section>`;
 }
 
-function renderFeatures(features: OvellumLandingConfig['features']): string {
+// Labels already resolved to plain strings by `renderLanding`.
+function renderFeatures(
+  features: Array<{ icon?: string; title: string; description: string }>,
+): string {
   if (features.length === 0) return '';
   const cards = features
     .map((f) => {
@@ -906,7 +944,12 @@ function renderFeatures(features: OvellumLandingConfig['features']): string {
   </section>`;
 }
 
-function renderTrustStrip(trust: OvellumLandingConfig['trustStrip']): string {
+// Labels/names already resolved to plain strings by `renderLanding`.
+function renderTrustStrip(
+  trust:
+    | { label?: string; items: Array<{ name: string; href?: string; image?: string }> }
+    | undefined,
+): string {
   if (!trust || trust.items.length === 0) return '';
   const items = trust.items
     .map((it) => {

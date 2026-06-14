@@ -225,3 +225,23 @@ export function resolveStrings(
     ...(override ?? {}),
   };
 }
+
+/**
+ * Resolve a config-driven localizable string for the current locale. A plain
+ * `string` passes through unchanged. A per-locale map resolves to the current
+ * `code`, falling back to `defaultLocale`, then the first entry. `undefined`
+ * resolves to `''`. Crucially, `localize('Docs', undefined, undefined) === 'Docs'`,
+ * so single-language sites stay byte-for-byte identical.
+ */
+export function localize(
+  value: string | Record<string, string> | undefined,
+  code: string | undefined,
+  defaultLocale: string | undefined,
+): string {
+  if (value == null) return '';
+  if (typeof value === 'string') return value;
+  if (code && value[code] != null) return value[code];
+  if (defaultLocale && value[defaultLocale] != null) return value[defaultLocale];
+  const first = Object.values(value)[0];
+  return first ?? '';
+}

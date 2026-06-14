@@ -2,6 +2,7 @@ export type { DocKind, DocParam, DocReturn, DocNode, DocFile, DocProject } from 
 
 export type {
   OvellumMode,
+  LocalizedString,
   OvellumFormat,
   OrphanStrategy,
   OvellumDefaultTheme,

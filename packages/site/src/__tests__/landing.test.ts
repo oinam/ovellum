@@ -317,4 +317,62 @@ describe('renderLanding', () => {
     });
     expect(html).not.toContain('class="ov-scene"');
   });
+
+  it('resolves per-locale landing + nav labels to the current locale', () => {
+    const i18nSite = {
+      ...SITE,
+      defaultLocale: 'en-US',
+      topbarNav: [{ label: { 'en-US': 'Docs', ja: 'ドキュメント' }, href: '/docs/' }],
+    };
+    const landing = landingConfig({
+      hero: {
+        title: { 'en-US': 'Welcome', ja: 'ようこそ' },
+        subtitle: { 'en-US': 'A short pitch.', ja: '短い紹介。' },
+        ctas: [{ label: { 'en-US': 'Get started', ja: 'はじめる' }, href: '/start/' }],
+      },
+      features: [
+        {
+          title: { 'en-US': 'A Merge Engine', ja: 'マージエンジン' },
+          description: { 'en-US': 'Merges docs.', ja: 'ドキュメントをマージします。' },
+        },
+      ],
+    });
+
+    const ja = renderLanding({
+      site: i18nSite,
+      landing,
+      lang: 'ja',
+      generatedAt: '2026-05-16T00:00:00.000Z',
+    });
+    expect(ja).toContain('ようこそ');
+    expect(ja).toContain('短い紹介。');
+    expect(ja).toContain('はじめる');
+    expect(ja).toContain('マージエンジン');
+    expect(ja).toContain('ドキュメント'); // topbar nav label
+    expect(ja).not.toContain('>Welcome<');
+
+    const en = renderLanding({
+      site: i18nSite,
+      landing,
+      lang: 'en-US',
+      generatedAt: '2026-05-16T00:00:00.000Z',
+    });
+    expect(en).toContain('Welcome');
+    expect(en).toContain('Get started');
+    expect(en).toContain('A Merge Engine');
+    expect(en).not.toContain('ようこそ');
+  });
+
+  it('renders a plain-string label unchanged regardless of locale', () => {
+    const html = renderLanding({
+      site: { ...SITE, defaultLocale: 'en-US' },
+      landing: landingConfig({
+        hero: { title: 'Plain Title', ctas: [{ label: 'Click', href: '/x/' }] },
+      }),
+      lang: 'ja',
+      generatedAt: '2026-05-16T00:00:00.000Z',
+    });
+    expect(html).toContain('Plain Title');
+    expect(html).toContain('Click');
+  });
 });

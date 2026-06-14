@@ -25,6 +25,17 @@ function isStringArray(value: unknown): value is string[] {
 }
 
 /**
+ * A localizable config string: either a plain string (same in every locale) or
+ * a per-locale `{ code: string }` map. Used for user-facing landing/nav labels.
+ */
+function isLocalized(v: unknown): boolean {
+  return (
+    typeof v === 'string' ||
+    (isPlainObject(v) && Object.values(v).every((x) => typeof x === 'string'))
+  );
+}
+
+/**
  * Validate a user-supplied config (post-parse, pre-merge). Throws `ConfigError`
  * with a path-qualified message on the first invalid field encountered.
  */
@@ -234,8 +245,10 @@ export function validateUserConfig(input: unknown): OvellumUserConfig {
       s.topbarNav.forEach((item, i) => {
         const path = `site.topbarNav[${i}]`;
         if (!isPlainObject(item)) throw new ConfigError(`\`${path}\` must be an object.`);
-        if (typeof item.label !== 'string') {
-          throw new ConfigError(`\`${path}.label\` must be a string.`);
+        if (!isLocalized(item.label)) {
+          throw new ConfigError(
+            `\`${path}.label\` must be a string or a per-locale map of strings.`,
+          );
         }
         if (typeof item.href !== 'string') {
           throw new ConfigError(`\`${path}.href\` must be a string.`);
@@ -258,8 +271,10 @@ export function validateUserConfig(input: unknown): OvellumUserConfig {
       s.footerNav.forEach((item, i) => {
         const path = `site.footerNav[${i}]`;
         if (!isPlainObject(item)) throw new ConfigError(`\`${path}\` must be an object.`);
-        if (typeof item.label !== 'string') {
-          throw new ConfigError(`\`${path}.label\` must be a string.`);
+        if (!isLocalized(item.label)) {
+          throw new ConfigError(
+            `\`${path}.label\` must be a string or a per-locale map of strings.`,
+          );
         }
         if (typeof item.href !== 'string') {
           throw new ConfigError(`\`${path}.href\` must be a string.`);
@@ -371,11 +386,15 @@ function validateLanding(value: unknown): void {
       throw new ConfigError('`site.landing.hero` must be an object.');
     }
     const h = l.hero;
-    if (h.title !== undefined && typeof h.title !== 'string') {
-      throw new ConfigError('`site.landing.hero.title` must be a string.');
+    if (h.title !== undefined && !isLocalized(h.title)) {
+      throw new ConfigError(
+        '`site.landing.hero.title` must be a string or a per-locale map of strings.',
+      );
     }
-    if (h.subtitle !== undefined && typeof h.subtitle !== 'string') {
-      throw new ConfigError('`site.landing.hero.subtitle` must be a string.');
+    if (h.subtitle !== undefined && !isLocalized(h.subtitle)) {
+      throw new ConfigError(
+        '`site.landing.hero.subtitle` must be a string or a per-locale map of strings.',
+      );
     }
     if (h.ctas !== undefined) {
       if (!Array.isArray(h.ctas)) {
@@ -408,8 +427,10 @@ function validateLanding(value: unknown): void {
       throw new ConfigError('`site.landing.trustStrip` must be an object.');
     }
     const ts = l.trustStrip;
-    if (ts.label !== undefined && typeof ts.label !== 'string') {
-      throw new ConfigError('`site.landing.trustStrip.label` must be a string.');
+    if (ts.label !== undefined && !isLocalized(ts.label)) {
+      throw new ConfigError(
+        '`site.landing.trustStrip.label` must be a string or a per-locale map of strings.',
+      );
     }
     if (ts.items !== undefined) {
       if (!Array.isArray(ts.items)) {
@@ -439,7 +460,8 @@ function validateHeroMedia(value: unknown): void {
 function validateCta(value: unknown, path: string): void {
   if (!isPlainObject(value)) throw new ConfigError(`\`${path}\` must be an object.`);
   const c = value;
-  if (typeof c.label !== 'string') throw new ConfigError(`\`${path}.label\` must be a string.`);
+  if (!isLocalized(c.label))
+    throw new ConfigError(`\`${path}.label\` must be a string or a per-locale map of strings.`);
   if (typeof c.href !== 'string') throw new ConfigError(`\`${path}.href\` must be a string.`);
   if (c.style !== undefined && !CTA_STYLES.includes(c.style as (typeof CTA_STYLES)[number])) {
     throw new ConfigError(`\`${path}.style\` must be one of: ${CTA_STYLES.join(', ')}.`);
@@ -449,9 +471,10 @@ function validateCta(value: unknown, path: string): void {
 function validateFeature(value: unknown, path: string): void {
   if (!isPlainObject(value)) throw new ConfigError(`\`${path}\` must be an object.`);
   const f = value;
-  if (typeof f.title !== 'string') throw new ConfigError(`\`${path}.title\` must be a string.`);
-  if (typeof f.description !== 'string') {
-    throw new ConfigError(`\`${path}.description\` must be a string.`);
+  if (!isLocalized(f.title))
+    throw new ConfigError(`\`${path}.title\` must be a string or a per-locale map of strings.`);
+  if (!isLocalized(f.description)) {
+    throw new ConfigError(`\`${path}.description\` must be a string or a per-locale map of strings.`);
   }
   if (f.icon !== undefined && typeof f.icon !== 'string') {
     throw new ConfigError(`\`${path}.icon\` must be a string.`);
@@ -461,7 +484,8 @@ function validateFeature(value: unknown, path: string): void {
 function validateInstall(value: unknown, path: string): void {
   if (!isPlainObject(value)) throw new ConfigError(`\`${path}\` must be an object.`);
   const it = value;
-  if (typeof it.title !== 'string') throw new ConfigError(`\`${path}.title\` must be a string.`);
+  if (!isLocalized(it.title))
+    throw new ConfigError(`\`${path}.title\` must be a string or a per-locale map of strings.`);
   if (typeof it.code !== 'string') throw new ConfigError(`\`${path}.code\` must be a string.`);
   if (it.lang !== undefined && typeof it.lang !== 'string') {
     throw new ConfigError(`\`${path}.lang\` must be a string.`);
@@ -485,7 +509,8 @@ function validateScene(value: unknown, path: string): void {
 function validateTrustItem(value: unknown, path: string): void {
   if (!isPlainObject(value)) throw new ConfigError(`\`${path}\` must be an object.`);
   const t = value;
-  if (typeof t.name !== 'string') throw new ConfigError(`\`${path}.name\` must be a string.`);
+  if (!isLocalized(t.name))
+    throw new ConfigError(`\`${path}.name\` must be a string or a per-locale map of strings.`);
   if (t.href !== undefined && typeof t.href !== 'string') {
     throw new ConfigError(`\`${path}.href\` must be a string.`);
   }

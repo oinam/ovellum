@@ -26,7 +26,7 @@ import { indexSite } from './search.js';
 import { generateRss } from './rss.js';
 import { generateSitemap } from './sitemap.js';
 import { renderLanding, renderPage, type LocaleAlternate } from './template.js';
-import { isRtl, resolveStrings, type UiStrings } from './strings.js';
+import { isRtl, localize, resolveStrings, type UiStrings } from './strings.js';
 import { normaliseBasePath, siteUrl } from './url.js';
 
 export interface BuildSiteOptions {
@@ -244,9 +244,8 @@ export async function buildSite(options: BuildSiteOptions): Promise<BuildSiteRes
       const install: Array<{ html: string }> = [];
       for (const entry of site.landing.install ?? []) {
         const prefix = commentPrefix(entry.lang || 'bash');
-        const withComment = entry.title
-          ? prefix + ' ' + entry.title + '\n' + entry.code
-          : entry.code;
+        const title = localize(entry.title, spec.code ?? undefined, site.defaultLocale);
+        const withComment = title ? prefix + ' ' + title + '\n' + entry.code : entry.code;
         const fenced = '```' + (entry.lang || 'bash') + '\n' + withComment + '\n```';
         const { html: snippetHtml } = await renderMarkdown(fenced, { codeTheme: site.codeTheme });
         if (snippetHtml.includes('<pre ')) {
@@ -278,7 +277,9 @@ export async function buildSite(options: BuildSiteOptions): Promise<BuildSiteRes
         sourcePath: landingBody?.sourcePath ?? '(landing config)',
         outputPath: path.relative(cwd, landingOut).replace(/\\/g, '/'),
         url: homeUrl,
-        title: site.landing.hero.title ?? site.title,
+        title:
+          localize(site.landing.hero.title, spec.code ?? undefined, site.defaultLocale) ||
+          site.title,
       });
       landingRendered = true;
     }

@@ -40,50 +40,81 @@ export default {
     search: { enabled: true },
     pageMeta: { readingTime: false, lastModified: true },
     topbarNav: [
-      { label: 'Docs', href: '/docs/' },
+      { label: { 'en-US': 'Docs', ja: 'ドキュメント' }, href: '/docs/' },
       { label: 'GitHub', href: 'https://github.com/oinam/ovellum', icon: 'github', external: true },
       { label: 'npm', href: 'https://www.npmjs.com/package/ovellum', icon: 'package', external: true },
     ],
     footerNav: [
-      { label: 'Contributing', href: '/docs/contributing/' },
-      { label: 'Security', href: '/docs/reference/security/' },
+      { label: { 'en-US': 'Contributing', ja: 'コントリビュート' }, href: '/docs/contributing/' },
+      { label: { 'en-US': 'Security', ja: 'セキュリティ' }, href: '/docs/reference/security/' },
       { label: 'Issues', href: 'https://github.com/oinam/ovellum/issues', external: true },
       { label: 'GitHub', href: 'https://github.com/oinam/ovellum', icon: 'github', external: true },
       { label: 'npm', href: 'https://www.npmjs.com/package/ovellum', icon: 'package', external: true },
-      { label: 'RSS feed', href: '/feed.xml', icon: 'rss' },
+      { label: { 'en-US': 'RSS feed', ja: 'RSS フィード' }, href: '/feed.xml', icon: 'rss' },
     ],
     landing: {
       enabled: true,
       docsHref: '/docs/',
       hero: {
-        title: "Documentation that doesn't drift.",
-        subtitle:
-          'Ovellum is an open-source documentation tool for TypeScript and JavaScript. Auto-generate from source, hand-write narrative pages, or mix both in the same file. Your prose never gets silently overwritten.',
+        title: {
+          'en-US': "Documentation that doesn't drift.",
+          ja: 'ドリフトしないドキュメント。',
+        },
+        subtitle: {
+          'en-US':
+            'Ovellum is an open-source documentation tool for TypeScript and JavaScript. Auto-generate from source, hand-write narrative pages, or mix both in the same file. Your prose never gets silently overwritten.',
+          ja: 'Ovellum は TypeScript と JavaScript のためのオープンソースのドキュメントツールです。ソースから自動生成し、説明的なページを手で書き、あるいは同じファイルで両方を混在させられます。あなたの文章が知らぬ間に上書きされることはありません。',
+        },
         ctas: [
-          { label: 'Get started', href: '/docs/', style: 'primary' },
-          { label: 'View on GitHub', href: 'https://github.com/oinam/ovellum', style: 'secondary' },
+          { label: { 'en-US': 'Get started', ja: 'はじめる' }, href: '/docs/', style: 'primary' },
+          {
+            label: { 'en-US': 'View on GitHub', ja: 'GitHub で見る' },
+            href: 'https://github.com/oinam/ovellum',
+            style: 'secondary',
+          },
         ],
       },
       install: [
-        { title: 'Install Ovellum globally', code: 'npm install -g ovellum', lang: 'bash' },
-        { title: 'Run without installing', code: 'npx ovellum init', lang: 'bash' },
-        { title: 'Add to a project', code: 'npm install -D ovellum', lang: 'bash' },
+        {
+          title: { 'en-US': 'Install Ovellum globally', ja: 'Ovellum をグローバルにインストール' },
+          code: 'npm install -g ovellum',
+          lang: 'bash',
+        },
+        {
+          title: { 'en-US': 'Run without installing', ja: 'インストールせずに実行' },
+          code: 'npx ovellum init',
+          lang: 'bash',
+        },
+        {
+          title: { 'en-US': 'Add to a project', ja: 'プロジェクトに追加' },
+          code: 'npm install -D ovellum',
+          lang: 'bash',
+        },
       ],
       features: [
         {
-          title: 'A Merge Engine',
-          description:
-            'Tag sections of your Markdown as human-owned with a single comment pair. Ovellum updates the auto-generated parts around them; your prose survives every rebuild.',
+          title: { 'en-US': 'A Merge Engine', ja: 'マージエンジン' },
+          description: {
+            'en-US':
+              'Tag sections of your Markdown as human-owned with a single comment pair. Ovellum updates the auto-generated parts around them; your prose survives every rebuild.',
+            ja: 'コメント 1 組で、Markdown のセクションを人間が所有する部分として印します。Ovellum はその周囲の自動生成部分だけを更新し、あなたの文章はどのリビルドでも生き残ります。',
+          },
         },
         {
-          title: 'Three Modes',
-          description:
-            '`auto` regenerates from source. `manual` builds a static site from Markdown. `hybrid` (default) merges the two. Switch per-project or per-file.',
+          title: { 'en-US': 'Three Modes', ja: '3 つのモード' },
+          description: {
+            'en-US':
+              '`auto` regenerates from source. `manual` builds a static site from Markdown. `hybrid` (default) merges the two. Switch per-project or per-file.',
+            ja: '`auto` はソースから再生成します。`manual` は Markdown から静的サイトを構築します。`hybrid`（デフォルト）は両者をマージします。プロジェクト単位でもファイル単位でも切り替えられます。',
+          },
         },
         {
-          title: 'Orphans Quarantined',
-          description:
-            'When you rename or delete a documented symbol, any hand-written prose tied to it gets archived to `.ovellum/orphans/`. Reviewable in PRs, recoverable any time.',
+          title: { 'en-US': 'Orphans Quarantined', ja: '孤立ブロックを隔離' },
+          description: {
+            'en-US':
+              'When you rename or delete a documented symbol, any hand-written prose tied to it gets archived to `.ovellum/orphans/`. Reviewable in PRs, recoverable any time.',
+            ja: 'ドキュメント化されたシンボルの名前を変更・削除すると、それに結びついた手書きの文章は `.ovellum/orphans/` にアーカイブされます。PR でレビューでき、いつでも復元できます。',
+          },
         },
       ],
       scenes: [],
