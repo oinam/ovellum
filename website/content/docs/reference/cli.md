@@ -406,7 +406,7 @@ ovellum upgrade [--dry-run] [--yes]
 - The install runs in a subprocess with inherited output; `ovellum
   upgrade` exits with that process's exit code.
 
-### The update notice
+### Update notice
 
 Independently of this command, Ovellum prints a one-line **"update
 available"** notice after a command finishes when a newer version exists.

@@ -9,7 +9,7 @@ Manual mode is the simplest pipeline. You write Markdown; Ovellum produces
 HTML, CSS, and a tiny bit of JavaScript. There's no source parsing, no
 merge engine, no orphan archive — just rendering.
 
-## The minimum project
+## Minimum project
 
 ```
 my-docs/
@@ -247,7 +247,7 @@ dist/
   hello/index.html
 ```
 
-### The reserved `public/` folder → site root
+### Reserved `public/` folder → site root
 
 The **[`publicDir`](/docs/reference/config/)** (default `public`) is a
 **reserved** folder copied to the **output root** — the convention you know from
@@ -317,7 +317,7 @@ the feature grid and the trust strip. Treat it as the "Why" section.
 
 Full landing reference: [config → site.landing](/docs/reference/config/#sitelanding).
 
-## The 404 page
+## 404 page
 
 **Every build ships a 404 page** — you don't have to write one. If you
 don't, Ovellum generates a default "Page not found" that matches your

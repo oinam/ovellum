@@ -36,7 +36,7 @@ Reference it with a **root-absolute path** (a leading `/`):
 > would resolve against `/guides/install/` rather than the folder the file is
 > in. `/guides/architecture.svg` always points where you mean.
 
-## 2. The `public/` folder → site root
+## 2. `public/` folder → site root
 
 The reserved [`publicDir`](/docs/reference/config/) (default `public/`) is
 copied to the **site root** — the same convention as Next.js, Astro, Vite, and

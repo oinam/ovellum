@@ -14,7 +14,7 @@ finished without writing a single line of CSS.
 This page covers how the theme is structured and how to override the
 parts you'll most often want to.
 
-## The token model
+## Token model
 
 Every colour is a CSS custom property at one of three layers, each built on the
 one above:
@@ -76,7 +76,7 @@ Font roles are CSS variables: `--font-sans` (body + headings), `--font-mono`
 
 The default ships **system-font only** — instant first paint, no webfont hop.
 
-#### The built-in font picker
+#### Built-in font picker
 
 [`site.font`](/docs/reference/config/) takes **four** values, and the appearance
 control exposes the same set as a live **Font** picker:
@@ -152,7 +152,7 @@ ramp — like a Kindle or Safari Reader size stepper. It scales the whole modula
 type scale (body and every heading) proportionally via `--ov-text-scale`,
 written to `<html data-text-size>` and remembered per visitor.
 
-## The appearance control
+## Appearance control
 
 The palette icon at the right end of the topbar opens a small panel with
 five controls (inlined into the menu sheet on mobile):
@@ -349,7 +349,7 @@ Pick one via `site.codeTheme`:
 
 - A `site.theme` config to switch the **page** theme by name (Nord, Dracula,
   …). Each theme ships its own grey ramp + role values plus a reversed-ramp
-  dark block, per the [token model](#the-token-model). Today only the default
+  dark block, per the [token model](#token-model). Today only the default
   page theme ships; `site.codeTheme` already switches the syntax palette.
 - A plugin API for fully custom templates.
 - Per-page `extraStyles` for one-off page-specific CSS.

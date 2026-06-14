@@ -86,7 +86,7 @@ generated content. The merger can't find a home for the protected block.
 That block becomes an [orphan](/docs/concepts/orphans/) and is quarantined to
 `.ovellum/orphans/` for your review — never silently dropped.
 
-## The inline cousin: `@preserve`
+## Inline cousin: `@preserve`
 
 The block tag works inside Markdown files. There's a JSDoc counterpart for
 your source code:

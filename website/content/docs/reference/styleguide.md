@@ -31,7 +31,7 @@ prose stays comfortable. Headings tighten to a **`1.2` line-height** with a
 small negative letter-spacing so they read as one unit rather than spaced
 words.
 
-### The type scale
+### Type scale
 
 Sizes come from a **modular scale**: one base size, multiplied by a fixed ratio
 at each step. Ovellum uses a **major third (1.25)** on a fluid base that grows
@@ -174,11 +174,12 @@ than the column scrolls horizontally rather than blowing out the layout:
 Images scale to the column width, keep their aspect ratio, and pick up the same
 corner radius as other media:
 
-![Ovellum](/ovellum-logo.svg)
+![A sample photograph](/docs/reference/styleguide-sample.jpg)
 
-Put a page-specific image next to its Markdown file and reference it with a
-root-absolute path; see the [Assets & downloads](/docs/guides/assets/) guide for
-where images, downloads, and media live.
+This one sits next to the page's Markdown file (`styleguide-sample.jpg`) and is
+referenced with a root-absolute path — the pattern the
+[Assets & downloads](/docs/guides/assets/) guide recommends for page-specific
+images.
 
 ## Video
 
@@ -220,7 +221,7 @@ A thematic break sets a quiet divider between passages:
 That rule, like everything above, is the default template doing its job — no
 custom CSS on this page.
 
-## The colour system
+## Colour system
 
 Five palettes ship, each authored in **OKLCH** (perceptually uniform, so a ramp
 steps in even visual increments rather than the uneven jumps sRGB hex gives):
