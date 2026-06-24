@@ -1,7 +1,7 @@
 ---
 title: CLI リファレンス
 description: ovellum CLI のすべてのサブコマンドとフラグ。
-sourceHash: 'ddb29f5bfb8bdf87'
+sourceHash: '08306edfa32ba05e'
 ---
 
 # CLI リファレンス
@@ -62,6 +62,8 @@ ovellum init [--cwd <dir>] [--yes] [--force]
 
 - `ovellum.config.json`
 - `<input>/index.md`（manual + hybrid モードのみ）。親しみやすいスターター付き。
+- `AGENTS.md` — AI コーディングエージェント向けの、モードに応じた指示（保護ゾーンの契約 +
+  コマンド）。[自動化](/ja/docs/guides/automation/)を参照。
 - `.gitignore` — 未記載の場合に `<output>/` と `.orphans/` を追記します。
 
 選択したモードに応じた番号付きの次のステップ一覧を表示します。

@@ -61,6 +61,8 @@ Writes only files that don't already exist (unless `--force`):
 
 - `ovellum.config.json`
 - `<input>/index.md` (manual + hybrid modes only) with a friendly starter.
+- `AGENTS.md` — mode-aware instructions for AI coding agents (the protected-zone
+  contract + commands). See [Automation](/docs/guides/automation/).
 - `.gitignore` — appends `<output>/` and `.orphans/` if absent.
 
 Prints a numbered next-steps list keyed to the chosen mode.

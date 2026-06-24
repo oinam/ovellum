@@ -88,13 +88,21 @@ Legend: `[ ]` not started · `[~]` in progress · `[x]` done · `[!]` blocked
   `machine-readable-cli.md`. Tests: build/check `--json` smoke (2) + mcp check
   (1). **Remaining (folds U4):** `--verbose`; B8 warning-severity split.
 
+- **C4 — agent packaging (uncommitted).** `ovellum init` scaffolds a mode-aware
+  `AGENTS.md` (`renderAgentsMd` in `commands/init.ts`; hybrid/auto lead with the
+  protected-zone contract; only-if-absent). Distributable Claude Skill at
+  `skills/ovellum-docs/SKILL.md`, documented in the Automation guide. Fixed a
+  stale scaffold marker (`ovellum:manual:start` → `@manual:start`). Changeset
+  `agent-packaging.md`. Tests `agents-md.test.ts` (4) + init smoke.
+
 **Still open in Tier A/C:** A4/A3 **write side** — interactive reattach/delete
 (`ovellum orphans --reattach`); A5 `@preserve` auto-wrap, A6 `check --strict`,
-A7 incremental watch; **U4** `--verbose`; C4 Skill/`AGENTS.md`, C5 positioning.
-Not yet versioned/published (changeset-version → **0.13.0** when shipping; 6
+A7 incremental watch; **U4** `--verbose`; **C5** "Ovellum for AI/agents"
+positioning section (only AI piece left). Tier C otherwise complete (C1–C4).
+Not yet versioned/published (changeset-version → **0.13.0** when shipping; **7**
 changesets staged: `persist-parsed-ir` (A1), `ovellum-diff` (A2),
 `rename-detection` (A3), `orphans-command` (A4), `mcp-server` (C2),
-`machine-readable-cli` (C3) — all minor).
+`machine-readable-cli` (C3), `agent-packaging` (C4) — all minor).
 
 - **0.12.0 — AI-Ready output + portable deploy-anywhere build (343 tests).**
   **C1:** `site.ai` config (`{enabled?,llmsTxt?,fullText?,mdMirror?}`) → `/llms.txt`

@@ -67,6 +67,13 @@ describe('ovellum init', () => {
     expect(existsSync(path.join(dir, 'ovellum.config.ts'))).toBe(true);
     expect(existsSync(path.join(dir, 'content', 'index.md'))).toBe(true);
     expect(existsSync(path.join(dir, '.gitignore'))).toBe(true);
+    expect(existsSync(path.join(dir, 'AGENTS.md'))).toBe(true);
+
+    // AGENTS.md (manual mode) points agents at the content dir, not the output.
+    const agents = await readFile(path.join(dir, 'AGENTS.md'), 'utf8');
+    expect(agents).toContain('AGENTS.md');
+    expect(agents).toContain('manual');
+    expect(agents).toContain('ovellum check');
 
     // The generated config is annotated TypeScript: active options set, the
     // rest commented with defaults so users can tinker in-file.

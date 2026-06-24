@@ -92,6 +92,14 @@ export const initCommand = defineCommand({
     const gitignoreUpdated = await ensureGitignore(cwd, answers);
     if (gitignoreUpdated) writes.push('.gitignore');
 
+    // AGENTS.md — instructions for AI coding agents (the protected-zone contract
+    // + commands). Written only if absent, so we never clobber a user's own.
+    const agentsPath = path.join(cwd, 'AGENTS.md');
+    if (!existsSync(agentsPath)) {
+      await writeFile(agentsPath, renderAgentsMd(answers), 'utf8');
+      writes.push('AGENTS.md');
+    }
+
     const lines = [
       `ovellum project initialized in ${cwd === process.cwd() ? '.' : cwd}/`,
       `  mode:      ${answers.mode}`,
@@ -380,8 +388,106 @@ function nextSteps(a: InitAnswers): string[] {
   return [
     `  1. Point \`tsconfig\` at the project you want to document.`,
     `  2. Run \`ovellum build\` to generate Markdown into ${a.output}/.`,
-    `  3. ${a.mode === 'hybrid' ? 'Add hand-written zones inside `<!-- ovellum:manual:start --> … <!-- ovellum:manual:end -->` markers; they survive regeneration.' : 'Re-run on every source change; the output is fully regenerated each time.'}`,
+    `  3. ${a.mode === 'hybrid' ? 'Add hand-written zones inside `<!-- @manual:start id="…" --> … <!-- @manual:end -->` markers; they survive regeneration.' : 'Re-run on every source change; the output is fully regenerated each time.'}`,
   ];
+}
+
+/**
+ * Render an `AGENTS.md` — the cross-tool convention for instructions to coding
+ * agents. Mode-aware: the hybrid/auto variants lead with the protected-zone
+ * contract (what survives regeneration), since that's the rule an agent most
+ * needs to respect; manual leads with "edit the Markdown, never the output".
+ */
+export function renderAgentsMd(a: InitAnswers): string {
+  const automation = 'https://ovellum.oss.oinam.com/docs/guides/automation/';
+
+  if (a.mode === 'manual') {
+    return `# AGENTS.md
+
+Guidance for AI coding agents in this repository. This is an **Ovellum**
+documentation project in **manual** mode: hand-written Markdown built into a
+static site.
+
+## Layout
+
+- \`${a.input}/\` — the Markdown you edit. Each \`.md\` is a page; subfolders group
+  pages; an \`_meta.json\` controls titles and ordering.
+- \`${a.output}/\` — generated output. **Never edit by hand** — it is overwritten on
+  every build.
+
+## Commands
+
+- \`ovellum build\` — render the site to \`${a.output}/\` (\`--json\` for machine output).
+- \`ovellum check\` — validate internal links + flag unsafe URLs (\`--json\`; exit 1
+  on issues).
+- \`ovellum dev\` — build + watch + live-reload while editing.
+
+## For agents
+
+- Edit \`.md\` files under \`${a.input}/\`; do not touch \`${a.output}/\`.
+- Run \`ovellum check\` after edits and fix any broken links it reports.
+- Machine-readable \`--json\` output and an MCP server (\`ovellum mcp\`) are
+  available — see ${automation}
+`;
+  }
+
+  const generated = a.output;
+  const zoneRules =
+    a.mode === 'hybrid'
+      ? `## The protected-zone contract (read this first)
+
+- Generated Markdown lives in \`${generated}/\` and is **regenerated on every build**.
+- Hand-written prose survives **only** inside a protected zone:
+
+\`\`\`markdown
+<!-- @manual:start id="rationale" -->
+Your prose here — this survives regeneration.
+<!-- @manual:end -->
+\`\`\`
+
+- Anything **outside** a protected zone in a generated file is overwritten on the
+  next build. Edit the JSDoc in the **source** to change generated content.
+- When the symbol a zone was attached to disappears (a rename/refactor), its
+  prose is moved to \`.ovellum/orphans/\` rather than lost. Review with
+  \`ovellum orphans\`; \`ovellum diff\` flags likely renames.
+`
+      : `## What's editable
+
+- This project is **auto** mode: \`${generated}/\` is **fully regenerated from source**
+  on every build. **Never edit \`${generated}/\` by hand** — change the JSDoc in the
+  source instead. (Switch to \`hybrid\` mode if you need hand-written prose that
+  survives regeneration.)
+`;
+
+  return `# AGENTS.md
+
+Guidance for AI coding agents in this repository. This is an **Ovellum**
+documentation project in **${a.mode}** mode: API docs generated from
+TypeScript/JavaScript source${a.mode === 'hybrid' ? ', merged with hand-written prose' : ''}.
+
+${zoneRules}
+## Commands
+
+- \`ovellum build\` — parse source, generate${a.mode === 'hybrid' ? ', merge' : ''} (\`--json\` for machine output).
+- \`ovellum diff\` — preview what a rebuild would change: added / removed / changed
+  / renamed symbols, and which docs (\`--json\`, \`--exit-code\`).
+- \`ovellum check\` — validate internal links (\`--json\`; exit 1 on issues).${
+    a.mode === 'hybrid' ? '\n- `ovellum orphans` — list quarantined prose (`--stale`, `--json`).' : ''
+  }
+
+## For agents
+${
+  a.mode === 'hybrid'
+    ? `
+- To add prose to a generated doc, wrap it in a \`@manual\` zone under the relevant
+  anchor — or use the MCP \`ovellum_write_zone\` tool, which does this safely.
+- Never edit generated content outside a protected zone; it won't survive.`
+    : `
+- Don't hand-edit \`${generated}/\`; change the source's JSDoc and rebuild.`
+}
+- Machine-readable \`--json\` output and an MCP server (\`ovellum mcp\`) are
+  available — see ${automation}
+`;
 }
 
 function titleFromName(name: string): string {

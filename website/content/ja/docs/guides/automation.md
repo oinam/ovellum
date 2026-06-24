@@ -1,7 +1,7 @@
 ---
 title: 自動化と AI エージェント
 description: スクリプト・CI ジョブ・AI エージェントから Ovellum を操作する — 機械可読な --json 出力、安定した終了コード、MCP サーバー。
-sourceHash: '74d3d4a40f0ecd4c'
+sourceHash: 'c2d2fe07a876bbfb'
 ---
 
 # 自動化と AI エージェント
@@ -96,6 +96,22 @@ ovellum diff --exit-code # 現在のソースが一致しなくなったら exit
 ```bash
 claude mcp add ovellum -- npx ovellum mcp --cwd /path/to/project
 ```
+
+## エージェントに Ovellum の使い方を伝える
+
+2 つの成果物が、エージェントが探す場所で待ち受けます:
+
+- **`AGENTS.md`** — `ovellum init` がプロジェクトのルートに `AGENTS.md`（「コーディング
+  エージェントへの指示」のツール横断的な慣習）を生成します。モードに応じた内容で、
+  hybrid/auto プロジェクトでは保護ゾーンの契約 — 何が再生成を生き延び、何が上書きされるか —
+  を先頭に置くので、エージェントが正しい場所を編集します。既存の `AGENTS.md` がある場合は
+  書き込みません。
+- **Claude Skill** — すぐ使える `SKILL.md`（「Ovellum ドキュメントのセットアップと保守」）が
+  リポジトリの
+  [`skills/ovellum-docs/`](https://github.com/oinam/ovellum/tree/main/skills/ovellum-docs)
+  にあります。そのフォルダをプロジェクトの `.claude/skills/`（または `~/.claude/skills/`）に
+  コピーすれば、Claude Code が要求に応じて Ovellum ドキュメントをスキャフォールド・ビルド・
+  安全に編集できます。
 
 ## AI フレンドリーな出力
 

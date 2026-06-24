@@ -97,6 +97,21 @@ for the full tool list.
 claude mcp add ovellum -- npx ovellum mcp --cwd /path/to/project
 ```
 
+## Telling agents how to use Ovellum
+
+Two artifacts meet agents where they look:
+
+- **`AGENTS.md`** — `ovellum init` scaffolds an `AGENTS.md` at your project root
+  (the cross-tool convention for "instructions to coding agents"). It's
+  mode-aware: hybrid/auto projects lead with the protected-zone contract — what
+  survives regeneration and what gets overwritten — so an agent edits in the
+  right place. It's written only if one doesn't already exist.
+- **A Claude Skill** — a ready-to-use `SKILL.md` ("set up and maintain Ovellum
+  docs") lives in the repo at
+  [`skills/ovellum-docs/`](https://github.com/oinam/ovellum/tree/main/skills/ovellum-docs).
+  Copy that folder into your project's `.claude/skills/` (or `~/.claude/skills/`)
+  and Claude Code can scaffold, build, and safely edit Ovellum docs on request.
+
 ## AI-friendly output
 
 A build also emits machine-readable companions next to the HTML — `/llms.txt`,

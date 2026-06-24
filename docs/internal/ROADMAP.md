@@ -313,15 +313,15 @@ differentiator no other docs tool can make.
 
 #### C4 — agent packaging (Claude Skill / `AGENTS.md`)
 
-- [ ] **C4 (S–M)** Tell agents *how* to use Ovellum, in the formats agents
-      look for. Two cheap, high-signal artifacts:
-  - **A Claude Skill** (`SKILL.md` + the MCP wiring or CLI recipes) — "set up
-        and maintain Ovellum docs" — so it's one-step adoptable in Claude Code.
-  - **An `AGENTS.md`** at the repo root (and/or scaffolded by `ovellum init`)
-        describing the hybrid contract, protected-zone rules, and the commands
-        an agent should run. This is the convention coalescing across tools for
-        "instructions to coding agents." Cheap to write, meets agents where
-        they look.
+- [x] **C4 (S–M)** Tell agents *how* to use Ovellum, in the formats agents
+      look for. Two cheap, high-signal artifacts. **Done 2026-06-24:**
+  - **A Claude Skill** — `skills/ovellum-docs/SKILL.md` (setup + the hybrid
+        contract + CLI/MCP recipes); documented in the Automation guide for
+        one-copy adoption into `.claude/skills/`.
+  - **An `AGENTS.md`** scaffolded by `ovellum init` (`renderAgentsMd`,
+        mode-aware: hybrid/auto lead with the protected-zone contract; only
+        written if absent). Also fixed a stale scaffold marker
+        (`ovellum:manual:start` → `@manual:start`).
 
 #### C5 — positioning (do alongside C1, not as code)
 
