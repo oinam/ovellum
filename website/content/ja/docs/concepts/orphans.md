@@ -1,7 +1,7 @@
 ---
 title: 孤立ブロック
 description: ドキュメント化していたシンボルが消えたとき、あなたの文章に何が起こるか。
-sourceHash: 'df4e2e7d645bb803'
+sourceHash: '9988b47c6249b764'
 ---
 
 # 孤立ブロック
@@ -64,8 +64,8 @@ ovellum build complete in 219ms
 シンボルの Markdown セクションに `<!-- @manual:start -->` ブロックとしてコピーし、
 孤立ファイルを削除します。
 
-将来の `ovellum orphans` サブコマンドが、このプロンプトを1つずつ自動化します。
-今のところはコピー＆ペーストの手順です。
+[`ovellum orphans`](/ja/docs/reference/cli/#ovellum-orphans) が溜まった孤立を
+一覧表示します。対話的な再アタッチは計画中で、今のところはコピー＆ペーストの手順です。
 
 ### 2. 削除する
 
@@ -94,15 +94,19 @@ ovellum build complete in 219ms
 
 ## 孤立ブロックが積み重なったとき
 
-各孤立ファイルには `orphaned:` のタイムスタンプが付いています。将来の
-`ovellum orphans --stale` サブコマンドが、
+各孤立ファイルには `orphaned:` のタイムスタンプが付いています。
+[`ovellum orphans`](/ja/docs/reference/cli/#ovellum-orphans) が溜まったもの —
+アンカー id、由来のドキュメント、経過日数、アンカーがソースに戻っているか — を一覧表示し、
+`ovellum orphans --stale` が
 [`protect.orphanRetention`](/ja/docs/reference/config/#protect) 日（デフォルトは
-`90`）より古いエントリにフラグを立て、四半期ごとのレビューと、もう関連性のないものの
-剪定を簡単にします。
-
-そのサブコマンドが登場するまでは、同じことを手作業でも行えます:
+`90`）より古いエントリにフラグを立てて、四半期ごとのレビューを簡単にします:
 
 ```bash
-# 90 日より古い孤立ブロック
-find .ovellum/orphans -name '*.md' -mtime +90 -print
+# すべての隔離されたもの
+ovellum orphans
+
+# 古いものだけを、CI チェック向けに JSON で
+ovellum orphans --stale --json
 ```
+
+再アタッチ（文章を一致するアンカーの下へ戻す）と削除は、今のところ手作業です。

@@ -372,3 +372,65 @@ describe('ovellum diff', () => {
     expect(parsed.docs[0].output).toBe('docs/math.md');
   });
 });
+
+describe('ovellum orphans', () => {
+  let dir: string;
+
+  function writeOrphanFile(name: string, anchorId: string, orphanedAt: string): void {
+    const orphanDir = path.join(dir, '.ovellum', 'orphans');
+    mkdirSync(orphanDir, { recursive: true });
+    const body = `---\norphaned: '${orphanedAt}'\nsource_file: docs/format.md\nanchor_id: '${anchorId}'\n---\n\nHand-written rationale to keep.\n`;
+    writeFileSync(path.join(orphanDir, name), body, 'utf8');
+  }
+
+  beforeEach(() => {
+    dir = mkdtempSync(path.join(tmpdir(), 'ovellum-orphans-cli-'));
+    writeFileSync(
+      path.join(dir, 'ovellum.config.json'),
+      JSON.stringify({ mode: 'hybrid', input: './src', output: './docs' }),
+    );
+  });
+  afterEach(async () => {
+    await rm(dir, { recursive: true, force: true });
+  });
+
+  it('reports an empty archive cleanly', async () => {
+    const { code, stdout } = await runCli(['orphans'], { cwd: dir });
+    expect(code).toBe(0);
+    expect(stdout).toContain('none quarantined');
+  });
+
+  // "today" so the recent fixture is always fresh whenever the suite runs.
+  const todayIso = new Date().toISOString();
+
+  it('lists quarantined orphans as JSON', async () => {
+    writeOrphanFile('2020-01-01_src-format.ts-old.md', 'src/format.ts::old', '2020-01-01T00:00:00.000Z');
+    writeOrphanFile('recent_src-format.ts-recent.md', 'src/format.ts::recent', todayIso);
+
+    const { code, stdout } = await runCli(['orphans', '--json'], { cwd: dir });
+    expect(code).toBe(0);
+    const parsed = JSON.parse(stdout);
+    expect(parsed.count).toBe(2);
+    expect(parsed.hasSnapshot).toBe(false);
+    // Sorted oldest-first by orphaned timestamp.
+    expect(parsed.orphans.map((o: { anchorId: string }) => o.anchorId)).toEqual([
+      'src/format.ts::old',
+      'src/format.ts::recent',
+    ]);
+    // No IR snapshot yet → anchor status is unknown.
+    expect(parsed.orphans[0].anchor).toBe('unknown');
+  });
+
+  it('--stale filters to entries past the retention window', async () => {
+    writeOrphanFile('2020-01-01_src-format.ts-old.md', 'src/format.ts::old', '2020-01-01T00:00:00.000Z');
+    writeOrphanFile('recent_src-format.ts-recent.md', 'src/format.ts::recent', todayIso);
+
+    const { code, stdout } = await runCli(['orphans', '--stale', '--json'], { cwd: dir });
+    expect(code).toBe(0);
+    const parsed = JSON.parse(stdout);
+    // Default retention is 90 days; only the 2020 orphan qualifies.
+    expect(parsed.count).toBe(1);
+    expect(parsed.orphans[0].anchorId).toBe('src/format.ts::old');
+    expect(parsed.orphans[0].stale).toBe(true);
+  });
+});

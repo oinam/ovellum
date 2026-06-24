@@ -95,15 +95,20 @@ the build will surface the warning but won't write a file.
 
 ## When orphans pile up
 
-Each orphan file carries an `orphaned:` timestamp. A future
-`ovellum orphans --stale` subcommand will flag entries older than
+Each orphan file carries an `orphaned:` timestamp.
+[`ovellum orphans`](/docs/reference/cli/#ovellum-orphans) lists what's
+accumulated — anchor id, the doc it came from, age, and whether the anchor is
+back in the source — and `ovellum orphans --stale` flags entries older than
 [`protect.orphanRetention`](/docs/reference/config/#protect) days (default
-`90`), making it easy to do a quarterly review and prune what's no longer
-relevant.
-
-Until that subcommand lands you can do the same thing by hand:
+`90`), making a quarterly review easy:
 
 ```bash
-# Orphans older than 90 days
-find .ovellum/orphans -name '*.md' -mtime +90 -print
+# Everything quarantined
+ovellum orphans
+
+# Just the stale ones, as JSON for a CI check
+ovellum orphans --stale --json
 ```
+
+Reattaching (move the prose back under the matching anchor) and deleting are
+still done by hand for now.

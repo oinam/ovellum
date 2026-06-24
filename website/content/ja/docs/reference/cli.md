@@ -1,7 +1,7 @@
 ---
 title: CLI リファレンス
 description: ovellum CLI のすべてのサブコマンドとフラグ。
-sourceHash: 'a7342944d8fd70c8'
+sourceHash: '98de08242b42239a'
 ---
 
 # CLI リファレンス
@@ -23,7 +23,7 @@ sourceHash: 'a7342944d8fd70c8'
 | `serve`    | available | ビルド済みサイトを HTTP で配信します。監視もライブリロードもありません。                |
 | `check`    | available | 設定を検証し、リンク切れの内部リンクを確認し、安全でない URL を警告します。    |
 | `upgrade`  | available | npm に新しい Ovellum がないか確認し、インストールします。                            |
-| `orphans`  | planned   | 隔離された手動ブロックの一覧表示・確認・再アタッチを行います。                     |
+| `orphans`  | available | 隔離された手動ブロックを一覧表示します（`--stale` / `--json` 対応）。              |
 | `clean`    | planned   | 手動ファイルを保持したまま、自動生成された出力を削除します。             |
 
 ## `ovellum init`
@@ -554,15 +554,58 @@ ovellum upgrade [--dry-run] [--yes]
   **無効**になります。
 - コマンドを遅延させたり失敗させたりすることは決してありません。あらゆるエラー経路は握りつぶされます。
 
+## `ovellum orphans`
+
+[`protect.orphanDir`](/ja/docs/reference/config/#protect)（デフォルト
+`.ovellum/orphans/`）配下の隔離された手動ブロックを一覧表示します。hybrid ビルド中に
+保護された `@manual` ブロックのアンカーが消えると、その文章は失われる代わりにここへ
+移されます。`ovellum orphans` は溜まったものを確認するためのコマンドです。読み取り専用で、
+何も書き込みません。
+
+各孤立について、アンカー id、それが存在していたドキュメント、孤立した日時（および経過日数）、
+アンカーを最後に見たビルド、そして — [IR スナップショット](#ovellum-build)がある場合は —
+そのアンカーが**ソースに戻っている**（手作業で再アタッチできる）か**消えた**ままかを表示します。
+
+### 構文
+
+```
+ovellum orphans [--cwd <dir>] [--config <path>] [--stale] [--json]
+```
+
+### フラグ
+
+| Flag          | Type    | Default         | 説明                                                                  |
+| ------------- | ------- | --------------- | ---------------------------------------------------------------------- |
+| `--cwd <dir>` | path    | `process.cwd()` | プロジェクトのルート。                                                          |
+| `--config <path>` | path | auto-discovered | 自動検出をスキップし、このファイルを直接読み込みます。                            |
+| `--stale`     | boolean | `false`         | [`protect.orphanRetention`](/ja/docs/reference/config/#protect) 日（デフォルト `90`）より古い孤立だけを表示します — 四半期レビュー向けのフィルタです。 |
+| `--json`      | boolean | `false`         | 一覧を JSON（`{ orphanDir, retentionDays, hasSnapshot, count, orphans[] }`）で出力します（CI / ツール向け）。 |
+
+### 出力
+
+```
+ovellum orphans — 1 orphan in .ovellum/orphans/
+
+  src/math.ts::add
+    orphaned:   2026-06-24T18:25:19.412Z (today)
+    last seen:  2026-06-24T18:25:18.992Z
+    doc:        docs/math.md
+    block id:   why
+    anchor:     gone from current source
+    file:       .ovellum/orphans/2026-06-24_src-math.ts-add.md
+```
+
+孤立の再アタッチ（文章を一致するアンカーの下へ戻す）や削除（アーカイブファイルを消す）は、
+今のところ手作業です。対話的な `reattach` / `delete` フローは計画中です。
+
+### 終了コード
+
+| Code | 意味                                                     |
+| ---- | ----------------------------------------------------------- |
+| `0`  | 成功（孤立が 1 つもない場合を含む）。                                   |
+| `3`  | `ConfigError` — 設定スキーマが不正、ファイルが見つからない、など。 |
+
 ## 計画中のサブコマンド
-
-### `ovellum orphans`
-
-`.ovellum/orphans/` を閲覧します。
-
-- デフォルト: メタデータ付きで一覧表示
-- `--stale`: `protect.orphanRetention` 日より古い孤立に絞り込み
-- `--interactive`: 再アタッチ / 削除 / スキップのプロンプト
 
 ### `ovellum clean`
 

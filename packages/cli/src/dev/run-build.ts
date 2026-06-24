@@ -8,7 +8,7 @@ import { readManualDoc } from '@ovellum/reader';
 import { merge, writeOrphan } from '@ovellum/merger';
 import { buildSite, type PageOutput } from '@ovellum/site';
 import { writeDeployManifest } from './manifest.js';
-import { writeProjectIR } from './ir.js';
+import { collectAnchorIds, readProjectIR, writeProjectIR } from './ir.js';
 
 export interface RunBuildInput {
   config: OvellumConfig;
@@ -103,6 +103,13 @@ async function runBuildForMode(
   }
 
   // auto / hybrid
+  //
+  // Read the previous IR snapshot *before* we overwrite it, so a freshly
+  // orphaned block can record when its anchor was last seen — the timestamp of
+  // the last build that still contained it (A4 / `ovellum orphans`).
+  const prevIR = readProjectIR(cwd);
+  const prevAnchors = prevIR ? collectAnchorIds(prevIR.project) : null;
+
   const project = parseProject({ config, cwd });
   const { files, warnings } = generateDocs(project, config);
 
@@ -133,6 +140,11 @@ async function runBuildForMode(
   if (orphanRecords.length > 0) {
     const orphanDir = path.resolve(cwd, config.protect.orphanDir);
     for (const record of orphanRecords) {
+      // If the prior snapshot still carried this anchor, that build's
+      // timestamp is when the symbol was last seen.
+      if (prevIR && prevAnchors?.has(record.anchorId)) {
+        record.anchorLastSeen = prevIR.project.generatedAt;
+      }
       const archivePath = await writeOrphan(record, orphanDir);
       quarantined.push(path.relative(cwd, archivePath));
     }

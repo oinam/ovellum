@@ -52,11 +52,20 @@ Legend: `[ ]` not started · `[~]` in progress · `[x]` done · `[!]` blocked
   (`diff.test.ts` +7, cli-smoke +4); docs en+ja (cli.md) re-stamped;
   FEATURES/ROADMAP updated.
 
+- **A4 — `ovellum orphans` (read slice, uncommitted).** Lists quarantined
+  manual blocks under `protect.orphanDir`: anchor id, doc, age, last-seen, and
+  (vs `.ovellum/ir.json`) whether the anchor is present/gone/unknown. `--stale`
+  (> `orphanRetention` days), `--json`. `commands/orphans.ts` + pure
+  `dev/orphans.ts` (`parseOrphanFile` round-trips the merger writer,
+  `loadOrphans`, `summarizeOrphans`). **A1 wiring:** `run-build.ts` stamps
+  `anchorLastSeen` on new orphans from the prior snapshot's `generatedAt`.
+  Changeset `orphans-command.md`. **Remaining: interactive reattach/delete**
+  (write side). Docs en+ja (cli.md + concepts/orphans.md) re-stamped.
+
 **Still open in Tier A:** A3 rename detection (anchor disappears + similar
-symbol appears → suggest remap), A4 `ovellum orphans` CLI (populate last-seen
-from the snapshot), A5 `@preserve` auto-wrap, A6 `check --strict`, A7
-incremental watch. Not yet versioned/published (changeset-version → 0.13.0 when
-shipping).
+symbol appears → suggest remap), A4 interactive reattach/delete, A5 `@preserve`
+auto-wrap, A6 `check --strict`, A7 incremental watch. Not yet versioned/published
+(changeset-version → 0.13.0 when shipping).
 
 - **0.12.0 — AI-Ready output + portable deploy-anywhere build (343 tests).**
   **C1:** `site.ai` config (`{enabled?,llmsTxt?,fullText?,mdMirror?}`) → `/llms.txt`

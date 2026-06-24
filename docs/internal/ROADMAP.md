@@ -95,10 +95,16 @@ A1 unlocks A2–A4.
       cause of orphans (refactors). Start suggest-only (`ovellum build`
       prints "did `formatDate` become `formatDateUTC`? run
       `ovellum orphans --reattach`").
-- [ ] **A4 (M)** **`ovellum orphans` CLI** — list (default), `--stale`,
+- [~] **A4 (M)** **`ovellum orphans` CLI** — list (default), `--stale`,
       interactive reattach/delete. The merger already returns full
       `OrphanRecord`s; this is surface area, long promised in docs (marked
       "planned"). Populate `anchorLastSeen` from the persisted IR (A1).
+      **Read slice done 2026-06-24:** `commands/orphans.ts` + pure
+      `dev/orphans.ts` (`parseOrphanFile` round-trips the writer, `loadOrphans`,
+      `summarizeOrphans`); default list + `--stale` + `--json`; anchor
+      present/gone/unknown vs the IR snapshot; `run-build.ts` now stamps
+      `anchorLastSeen` from the prior snapshot. **Remaining: interactive
+      reattach/delete** (the write side).
 - [ ] **A5 (S)** **`@preserve` auto-wrapping** — generator emits
       `@manual:start/end` around `@preserve`-tagged JSDoc content; merger
       already treats them uniformly. IR flag (`isPreserved`) exists; this is
@@ -135,7 +141,10 @@ A1 unlocks A2–A4.
 - [ ] **B6 (L)** **Versioned docs** — directory-per-version + version
       selector in the topbar. Table-stakes for libraries with maintained
       majors.
-- [ ] **B7 (L)** **i18n / multi-language — the v0.8.0 focus.** Design locked
+- [x] **B7 (L)** **i18n / multi-language — SHIPPED (v0.8.0 + v0.11.0).** Full
+      engine + English↔Japanese 1:1 site; chrome-string localization + RTL;
+      per-locale `check` + translation-staleness. Only gap left: per-locale RSS.
+      Design locked
       2026-06-14 (planning session). Scope agreed: build the full engine + a
       **single Japanese demo** on 2–3 pages (landing + getting-started), English
       canonical + fallback. **Skip `en-GB`** — after standardizing on American
@@ -414,7 +423,7 @@ machine-readable-CLI groundwork (C3 ≈ D1).
       manual/hybrid guides; reframe hybrid-mode limits as "what's stable".
 - [ ] **U7 (M)** **"Why hybrid" comparison section** in the hybrid guide —
       before/after regeneration story vs TypeDoc and vs hand-written prose.
-- [ ] **U8 (M)** **Drafts — the v0.9.0 focus ("the Editor").** Design locked
+- [x] **U8 (M)** **Drafts — SHIPPED (v0.9.0, "the Editor" slice 1).** Design locked
       2026-06-14 (planning session). Model: a draft is **dev-visible, never
       published** — WIP you preview locally (and the team sees in source), then
       decide whether to publish.

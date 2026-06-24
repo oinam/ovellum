@@ -22,7 +22,7 @@ package manager's task runner.
 | `serve`    | available | Serve the built site over HTTP. No watch, no live reload.                |
 | `check`    | available | Validate config + check for broken internal links + flag unsafe URLs.    |
 | `upgrade`  | available | Check npm for a newer Ovellum and install it.                            |
-| `orphans`  | planned   | List / inspect / reattach quarantined manual blocks.                     |
+| `orphans`  | available | List quarantined manual blocks (with `--stale` / `--json`).              |
 | `clean`    | planned   | Remove auto-generated outputs while preserving manual files.             |
 
 ## `ovellum init`
@@ -558,15 +558,61 @@ check:
   [`update.check`](/docs/reference/config/#update) is `false`;
 - never delays or fails a command — every error path is swallowed.
 
+## `ovellum orphans`
+
+List the quarantined manual blocks under
+[`protect.orphanDir`](/docs/reference/config/#protect) (default
+`.ovellum/orphans/`). When a protected `@manual` block's anchor disappears
+during a hybrid build, the prose is moved here instead of being lost;
+`ovellum orphans` is how you review what's accumulated. Read-only — it writes
+nothing.
+
+For each orphan it shows the anchor id, the doc it lived in, when it was
+orphaned (and how long ago), the last build that still saw the anchor, and —
+when an [IR snapshot](#ovellum-build) exists — whether that anchor is **back in
+the source** (so the block could be reattached by hand) or **gone**.
+
+### Synopsis
+
+```
+ovellum orphans [--cwd <dir>] [--config <path>] [--stale] [--json]
+```
+
+### Flags
+
+| Flag          | Type    | Default         | Notes                                                                  |
+| ------------- | ------- | --------------- | ---------------------------------------------------------------------- |
+| `--cwd <dir>` | path    | `process.cwd()` | Project root.                                                          |
+| `--config <path>` | path | auto-discovered | Skip discovery and load this file directly.                        |
+| `--stale`     | boolean | `false`         | Show only orphans older than [`protect.orphanRetention`](/docs/reference/config/#protect) days (default `90`) — the quarterly-review filter. |
+| `--json`      | boolean | `false`         | Emit the list as JSON (`{ orphanDir, retentionDays, hasSnapshot, count, orphans[] }`) for CI / tooling. |
+
+### Output
+
+```
+ovellum orphans — 1 orphan in .ovellum/orphans/
+
+  src/math.ts::add
+    orphaned:   2026-06-24T18:25:19.412Z (today)
+    last seen:  2026-06-24T18:25:18.992Z
+    doc:        docs/math.md
+    block id:   why
+    anchor:     gone from current source
+    file:       .ovellum/orphans/2026-06-24_src-math.ts-add.md
+```
+
+Reattaching or deleting orphans is still done by hand (move the prose back under
+the matching anchor in the doc, or delete the archive file); an interactive
+`reattach` / `delete` flow is planned.
+
+### Exit codes
+
+| Code | Meaning                                                     |
+| ---- | ----------------------------------------------------------- |
+| `0`  | Success (including when there are no orphans).               |
+| `3`  | `ConfigError` — config schema invalid, file not found, etc. |
+
 ## Planned subcommands
-
-### `ovellum orphans`
-
-Browse `.ovellum/orphans/`:
-
-- default: list with metadata
-- `--stale`: filter to orphans older than `protect.orphanRetention` days
-- `--interactive`: reattach / delete / skip prompts
 
 ### `ovellum clean`
 

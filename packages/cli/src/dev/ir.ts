@@ -1,3 +1,4 @@
+import { existsSync, readFileSync } from 'node:fs';
 import { mkdir, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import type { DocProject } from '@ovellum/core';
@@ -53,4 +54,39 @@ export async function writeProjectIR(
   const out = path.join(dir, IR_FILE);
   await writeFile(out, JSON.stringify(payload, null, 2) + '\n', 'utf8');
   return out;
+}
+
+/** Absolute path of the persisted IR snapshot for a project root. */
+export function irPathFor(cwd: string): string {
+  return path.resolve(cwd, IR_DIR, IR_FILE);
+}
+
+/**
+ * Read the persisted IR snapshot, or `null` if it's absent, unreadable, or
+ * written for a different `IR_FORMAT`. Callers that need to distinguish those
+ * cases (e.g. `ovellum diff`) should read the file themselves; this is the
+ * forgiving accessor for callers that simply want the last snapshot if usable.
+ */
+export function readProjectIR(cwd: string): PersistedIR | null {
+  const file = irPathFor(cwd);
+  if (!existsSync(file)) return null;
+  try {
+    const parsed = JSON.parse(readFileSync(file, 'utf8')) as PersistedIR;
+    return parsed.format === IR_FORMAT ? parsed : null;
+  } catch {
+    return null;
+  }
+}
+
+/** Collect every anchor id in a project (top-level + nested members). */
+export function collectAnchorIds(project: DocProject): Set<string> {
+  const ids = new Set<string>();
+  const walk = (nodes: DocProject['files'][number]['nodes']): void => {
+    for (const node of nodes) {
+      ids.add(node.id);
+      if (node.children) walk(node.children);
+    }
+  };
+  for (const file of project.files) walk(file.nodes);
+  return ids;
 }
