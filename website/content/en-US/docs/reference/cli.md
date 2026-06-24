@@ -202,11 +202,13 @@ removed, and changed symbols, plus which output docs they'd touch. Writes
 nothing; it's a preview, not a build. Auto/hybrid only (manual builds parse no
 source and keep no IR).
 
-It matches symbols by their stable anchor id, so a rename shows up as a removed
-symbol plus an added one (dedicated rename detection is a separate feature).
-Cosmetic edits that only shift line numbers are ignored — a change is reported
-only when the documented surface (signature, params, return, description,
-deprecation, JSDoc tags, export/visibility) actually differs.
+It matches symbols by their stable anchor id. When an anchor disappears and a
+similar symbol appears (same kind, similar name, same signature shape), the two
+are paired as a **likely rename** instead of an unrelated removal + addition —
+the suggestion you'd act on after a refactor. Cosmetic edits that only shift
+line numbers are ignored — a change is reported only when the documented surface
+(signature, params, return, description, deprecation, JSDoc tags,
+export/visibility) actually differs.
 
 ### Synopsis
 
@@ -220,7 +222,7 @@ ovellum diff [--cwd <dir>] [--config <path>] [--json] [--exit-code]
 | -------------- | ------- | --------------- | --------------------------------------------------------------------------- |
 | `--cwd <dir>`  | path    | `process.cwd()` | Project root.                                                               |
 | `--config <path>` | path | auto-discovered | Skip discovery and load this file directly.                                |
-| `--json`       | boolean | `false`         | Emit the diff as JSON (`{ baselineGeneratedAt, added, removed, changed, docs, hasChanges }`) for CI / tooling. |
+| `--json`       | boolean | `false`         | Emit the diff as JSON (`{ baselineGeneratedAt, added, removed, changed, renames, docs, hasChanges }`) for CI / tooling. |
 | `--exit-code`  | boolean | `false`         | Exit `1` when changes are found (git-diff style). Without it, `diff` always exits `0` so it can be run informationally. |
 
 ### Output
@@ -228,7 +230,10 @@ ovellum diff [--cwd <dir>] [--config <path>] [--json] [--exit-code]
 ```
 ovellum diff — current source vs .ovellum/ir.json (built 2026-06-24T17:58:46.322Z)
 
-  + 1 added   - 0 removed   ~ 1 changed
+  + 1 added   - 0 removed   ~ 1 changed   → 1 renamed
+
+likely renames:
+  → src/date.ts::formatDate → src/date.ts::formatDateUTC  (97%)
 
 added:
   + src/math.ts::mul  (function)

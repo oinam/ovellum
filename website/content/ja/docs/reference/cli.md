@@ -1,7 +1,7 @@
 ---
 title: CLI リファレンス
 description: ovellum CLI のすべてのサブコマンドとフラグ。
-sourceHash: '98de08242b42239a'
+sourceHash: '82cbb90b889e9bae'
 ---
 
 # CLI リファレンス
@@ -202,10 +202,11 @@ npx ovellum build --out ./docs --base /docs --manifest
 ビルドではなくプレビューです。auto/hybrid 専用です（manual ビルドはソースを解析せず
 IR を持ちません）。
 
-シンボルは安定したアンカー id で照合するため、リネームは削除されたシンボル 1 つと
-追加されたシンボル 1 つとして現れます（専用のリネーム検出は別機能です）。行番号が
-ずれるだけの表面的な編集は無視され、ドキュメント化された面（シグネチャ・引数・戻り値・
-説明・非推奨・JSDoc タグ・エクスポート/可視性）が実際に異なるときだけ変更として
+シンボルは安定したアンカー id で照合します。アンカーが消え、似たシンボル（同じ種別・
+似た名前・同じシグネチャ形状）が現れた場合、その 2 つは無関係な削除＋追加ではなく
+**リネームの可能性が高い**ペアとして扱われます — リファクタリング後に対応すべき提案です。
+行番号がずれるだけの表面的な編集は無視され、ドキュメント化された面（シグネチャ・引数・
+戻り値・説明・非推奨・JSDoc タグ・エクスポート/可視性）が実際に異なるときだけ変更として
 報告されます。
 
 ### 構文
@@ -220,7 +221,7 @@ ovellum diff [--cwd <dir>] [--config <path>] [--json] [--exit-code]
 | -------------- | ------- | --------------- | --------------------------------------------------------------------------- |
 | `--cwd <dir>`  | path    | `process.cwd()` | プロジェクトのルート。                                                               |
 | `--config <path>` | path | auto-discovered | 自動検出をスキップし、このファイルを直接読み込みます。                                 |
-| `--json`       | boolean | `false`         | 差分を JSON（`{ baselineGeneratedAt, added, removed, changed, docs, hasChanges }`）で出力します（CI / ツール向け）。 |
+| `--json`       | boolean | `false`         | 差分を JSON（`{ baselineGeneratedAt, added, removed, changed, renames, docs, hasChanges }`）で出力します（CI / ツール向け）。 |
 | `--exit-code`  | boolean | `false`         | 変更が見つかったら `1` で終了します（git-diff スタイル）。指定しない場合、`diff` は常に `0` で終了するため情報表示として実行できます。 |
 
 ### 出力
@@ -228,7 +229,10 @@ ovellum diff [--cwd <dir>] [--config <path>] [--json] [--exit-code]
 ```
 ovellum diff — current source vs .ovellum/ir.json (built 2026-06-24T17:58:46.322Z)
 
-  + 1 added   - 0 removed   ~ 1 changed
+  + 1 added   - 0 removed   ~ 1 changed   → 1 renamed
+
+likely renames:
+  → src/date.ts::formatDate → src/date.ts::formatDateUTC  (97%)
 
 added:
   + src/math.ts::mul  (function)

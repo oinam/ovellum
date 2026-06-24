@@ -62,10 +62,19 @@ Legend: `[ ]` not started · `[~]` in progress · `[x]` done · `[!]` blocked
   Changeset `orphans-command.md`. **Remaining: interactive reattach/delete**
   (write side). Docs en+ja (cli.md + concepts/orphans.md) re-stamped.
 
-**Still open in Tier A:** A3 rename detection (anchor disappears + similar
-symbol appears → suggest remap), A4 interactive reattach/delete, A5 `@preserve`
-auto-wrap, A6 `check --strict`, A7 incremental watch. Not yet versioned/published
-(changeset-version → 0.13.0 when shipping).
+- **A3 — rename detection (suggest-only, uncommitted).** Pure `dev/rename.ts`
+  `detectRenames` (kind gate + Levenshtein name sim + signature-shape sim +
+  same-file bonus, greedy 1:1 ≥0.6 confidence, name floor 0.34). Surfaced in
+  `diff` (likely-renames section + JSON; lifted out of add/remove) and at build
+  time (`did X become Y? … reattach` warning, computed over the prior IR
+  snapshot in `run-build.ts`). Changeset `rename-detection.md`. Tests
+  `rename.test.ts` (6) + `rename-build.test.ts` (1) + a diff case.
+
+**Still open in Tier A:** A4/A3 **write side** — the actual interactive
+reattach/delete (`ovellum orphans --reattach`); A5 `@preserve` auto-wrap, A6
+`check --strict`, A7 incremental watch. Not yet versioned/published
+(changeset-version → 0.13.0 when shipping). **Next up this session: C2 MCP
+server** (now unblocked by A1).
 
 - **0.12.0 — AI-Ready output + portable deploy-anywhere build (343 tests).**
   **C1:** `site.ai` config (`{enabled?,llmsTxt?,fullText?,mdMirror?}`) → `/llms.txt`

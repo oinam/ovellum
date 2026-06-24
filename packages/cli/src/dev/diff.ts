@@ -1,5 +1,6 @@
 import type { DocKind, DocNode, DocProject, OvellumConfig } from '@ovellum/core';
 import { outputPathFor } from '@ovellum/generator';
+import { detectRenames, type Rename } from './rename.js';
 
 /**
  * Structural diff between two parsed IRs (the persisted `.ovellum/ir.json`
@@ -37,6 +38,8 @@ export interface IRDiff {
   added: SymbolRef[];
   removed: SymbolRef[];
   changed: SymbolChange[];
+  /** Likely renames — pairs lifted out of `added`/`removed` (suggest-only). */
+  renames: Rename[];
   /** Output docs a rebuild would touch, with per-doc symbol tallies. */
   docs: DocChange[];
   hasChanges: boolean;
@@ -114,35 +117,43 @@ export function diffProjects(
   const base = flatten(baseline);
   const cur = flatten(current);
 
-  const added: SymbolRef[] = [];
-  const removed: SymbolRef[] = [];
+  const addedNodes: DocNode[] = [];
+  const removedNodes: DocNode[] = [];
   const changed: SymbolChange[] = [];
 
   for (const [id, node] of cur) {
     const prev = base.get(id);
     if (!prev) {
-      added.push(ref(node));
+      addedNodes.push(node);
     } else {
       const fields = changedFields(prev, node);
       if (fields.length > 0) changed.push({ ...ref(node), fields });
     }
   }
   for (const [id, node] of base) {
-    if (!cur.has(id)) removed.push(ref(node));
+    if (!cur.has(id)) removedNodes.push(node);
   }
 
-  added.sort(byId);
-  removed.sort(byId);
+  // Lift likely renames out of the raw add/remove sets so a refactor reads as a
+  // rename, not an unrelated removal + addition.
+  const renames = detectRenames(removedNodes, addedNodes);
+  const renamedFrom = new Set(renames.map((r) => r.from.id));
+  const renamedTo = new Set(renames.map((r) => r.to.id));
+
+  const added = addedNodes.filter((n) => !renamedTo.has(n.id)).map(ref).sort(byId);
+  const removed = removedNodes.filter((n) => !renamedFrom.has(n.id)).map(ref).sort(byId);
   changed.sort(byId);
 
-  const docs = rollUpDocs(baseline, current, config, { added, removed, changed });
+  const docs = rollUpDocs(baseline, current, config, { added, removed, changed, renames });
 
   return {
     added,
     removed,
     changed,
+    renames,
     docs,
-    hasChanges: added.length > 0 || removed.length > 0 || changed.length > 0,
+    hasChanges:
+      added.length > 0 || removed.length > 0 || changed.length > 0 || renames.length > 0,
   };
 }
 
@@ -151,7 +162,7 @@ function rollUpDocs(
   baseline: DocProject,
   current: DocProject,
   config: OvellumConfig,
-  changes: { added: SymbolRef[]; removed: SymbolRef[]; changed: SymbolChange[] },
+  changes: { added: SymbolRef[]; removed: SymbolRef[]; changed: SymbolChange[]; renames: Rename[] },
 ): DocChange[] {
   const baseFiles = new Set(baseline.files.map((f) => f.filePath));
   const curFiles = new Set(current.files.map((f) => f.filePath));
@@ -165,6 +176,11 @@ function rollUpDocs(
   for (const s of changes.added) bump(s.source, 'added');
   for (const s of changes.removed) bump(s.source, 'removed');
   for (const s of changes.changed) bump(s.source, 'changed');
+  // A rename moves an anchor: gone from the old doc, present in the new one.
+  for (const r of changes.renames) {
+    bump(r.from.source, 'removed');
+    bump(r.to.source, 'added');
+  }
 
   const docs: DocChange[] = [];
   for (const [source, counts] of tally) {

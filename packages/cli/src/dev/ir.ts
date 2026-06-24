@@ -78,15 +78,22 @@ export function readProjectIR(cwd: string): PersistedIR | null {
   }
 }
 
-/** Collect every anchor id in a project (top-level + nested members). */
-export function collectAnchorIds(project: DocProject): Set<string> {
-  const ids = new Set<string>();
-  const walk = (nodes: DocProject['files'][number]['nodes']): void => {
+type Node = DocProject['files'][number]['nodes'][number];
+
+/** Collect every node in a project (top-level + nested members), flattened. */
+export function collectNodes(project: DocProject): Node[] {
+  const out: Node[] = [];
+  const walk = (nodes: Node[]): void => {
     for (const node of nodes) {
-      ids.add(node.id);
+      out.push(node);
       if (node.children) walk(node.children);
     }
   };
   for (const file of project.files) walk(file.nodes);
-  return ids;
+  return out;
+}
+
+/** Collect every anchor id in a project (top-level + nested members). */
+export function collectAnchorIds(project: DocProject): Set<string> {
+  return new Set(collectNodes(project).map((n) => n.id));
 }

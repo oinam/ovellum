@@ -89,12 +89,15 @@ A1 unlocks A2–A4.
       id (rename = remove+add, A3 separate), flattens members, ignores
       `line`/`filePath`, maps docs via `outputPathFor`; `--json` + `--exit-code`
       (git-diff style). Next consumer of the A1 snapshot; A3/A4 still open.
-- [ ] **A3 (L)** **Rename detection** — when an anchor disappears and a
-      similar symbol (same signature shape, fuzzy-matched name, same-file or
-      moved-file) appears, offer the remap instead of orphaning. Kills the #1
-      cause of orphans (refactors). Start suggest-only (`ovellum build`
-      prints "did `formatDate` become `formatDateUTC`? run
-      `ovellum orphans --reattach`").
+- [x] **A3 (L)** **Rename detection (suggest-only)** — when an anchor disappears
+      and a similar symbol (same signature shape, fuzzy-matched name, same-file
+      or moved-file) appears, offer the remap instead of orphaning. Kills the #1
+      cause of orphans (refactors). **Done 2026-06-24:** pure `dev/rename.ts`
+      `detectRenames` (kind gate + Levenshtein name sim + signature-shape sim +
+      same-file bonus, greedy 1:1 ≥0.6); surfaced in `diff` (likely-renames
+      section + JSON) and at build time (`did X become Y? … reattach` warning
+      over the prior snapshot). **Remaining: the actual `--reattach` write
+      action** (folds into A4's interactive slice).
 - [~] **A4 (M)** **`ovellum orphans` CLI** — list (default), `--stale`,
       interactive reattach/delete. The merger already returns full
       `OrphanRecord`s; this is surface area, long promised in docs (marked

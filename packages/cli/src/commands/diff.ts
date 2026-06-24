@@ -105,8 +105,17 @@ export function formatDiff(diff: IRDiff, persisted: PersistedIR): string {
   const lines = [
     `ovellum diff — current source vs .ovellum/ir.json (built ${when})`,
     '',
-    `  + ${diff.added.length} added   - ${diff.removed.length} removed   ~ ${diff.changed.length} changed`,
+    `  + ${diff.added.length} added   - ${diff.removed.length} removed   ~ ${diff.changed.length} changed   → ${diff.renames.length} renamed`,
   ];
+
+  if (diff.renames.length > 0) {
+    lines.push('', 'likely renames:');
+    for (const r of diff.renames) {
+      const pct = Math.round(r.confidence * 100);
+      const note = r.signatureChanged ? ', signature changed' : '';
+      lines.push(`  → ${r.from.id} → ${r.to.id}  (${pct}%${note})`);
+    }
+  }
 
   if (diff.added.length > 0) {
     lines.push('', 'added:');

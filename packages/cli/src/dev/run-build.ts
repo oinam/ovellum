@@ -8,7 +8,8 @@ import { readManualDoc } from '@ovellum/reader';
 import { merge, writeOrphan } from '@ovellum/merger';
 import { buildSite, type PageOutput } from '@ovellum/site';
 import { writeDeployManifest } from './manifest.js';
-import { collectAnchorIds, readProjectIR, writeProjectIR } from './ir.js';
+import { collectAnchorIds, collectNodes, readProjectIR, writeProjectIR } from './ir.js';
+import { detectRenames } from './rename.js';
 
 export interface RunBuildInput {
   config: OvellumConfig;
@@ -139,6 +140,19 @@ async function runBuildForMode(
   const quarantined: string[] = [];
   if (orphanRecords.length > 0) {
     const orphanDir = path.resolve(cwd, config.protect.orphanDir);
+
+    // Suggest-only rename detection: if a block was orphaned because its anchor
+    // vanished, but a similar new symbol appeared this build, the symbol was
+    // probably renamed — point at the likely new home instead of silently
+    // quarantining (A3).
+    const currentAnchors = collectAnchorIds(project);
+    const renameTarget = new Map<string, string>();
+    if (prevIR && prevAnchors) {
+      const removed = collectNodes(prevIR.project).filter((n) => !currentAnchors.has(n.id));
+      const added = collectNodes(project).filter((n) => !prevAnchors.has(n.id));
+      for (const r of detectRenames(removed, added)) renameTarget.set(r.from.id, r.to.id);
+    }
+
     for (const record of orphanRecords) {
       // If the prior snapshot still carried this anchor, that build's
       // timestamp is when the symbol was last seen.
@@ -147,6 +161,13 @@ async function runBuildForMode(
       }
       const archivePath = await writeOrphan(record, orphanDir);
       quarantined.push(path.relative(cwd, archivePath));
+
+      const target = renameTarget.get(record.anchorId);
+      if (target) {
+        warnings.push(
+          `did ${record.anchorId} become ${target}? a protected block was orphaned — reattach it under the new anchor (see \`ovellum orphans\`).`,
+        );
+      }
     }
   }
 

@@ -63,8 +63,11 @@ The symbol was renamed; the prose is still useful. Open the orphan file,
 copy the body into the new symbol's Markdown section as a
 `<!-- @manual:start -->` block, then delete the orphan file.
 
-A future `ovellum orphans` subcommand will automate this prompt-by-prompt;
-for now it's a copy-paste step.
+When a block is orphaned by a rename, the build often spots it for you —
+"did `formatDate` become `formatDateUTC`?" — and
+[`ovellum diff`](/docs/reference/cli/#ovellum-diff) pairs the two as a likely
+rename. Performing the re-attach is still a copy-paste step; an interactive
+flow is planned.
 
 ### 2. Delete it
 

@@ -1,7 +1,7 @@
 ---
 title: 孤立ブロック
 description: ドキュメント化していたシンボルが消えたとき、あなたの文章に何が起こるか。
-sourceHash: '9988b47c6249b764'
+sourceHash: '1e50fe8abb13e499'
 ---
 
 # 孤立ブロック
@@ -64,8 +64,12 @@ ovellum build complete in 219ms
 シンボルの Markdown セクションに `<!-- @manual:start -->` ブロックとしてコピーし、
 孤立ファイルを削除します。
 
-[`ovellum orphans`](/ja/docs/reference/cli/#ovellum-orphans) が溜まった孤立を
-一覧表示します。対話的な再アタッチは計画中で、今のところはコピー＆ペーストの手順です。
+リネームでブロックが孤立した場合、ビルドがしばしばそれを見つけてくれます —
+「`formatDate` は `formatDateUTC` になった?」 — また
+[`ovellum diff`](/ja/docs/reference/cli/#ovellum-diff) は 2 つをリネームの可能性が高い
+ペアとして示します。[`ovellum orphans`](/ja/docs/reference/cli/#ovellum-orphans) は
+溜まった孤立を一覧表示します。再アタッチ自体は今のところコピー＆ペーストの手順で、
+対話的なフローは計画中です。
 
 ### 2. 削除する
 

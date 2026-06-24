@@ -129,6 +129,22 @@ describe('diffProjects', () => {
     expect(changedIds).toContain('src/box.ts::Box.area');
   });
 
+  it('reports a likely rename instead of an add + remove', () => {
+    write('date.ts', '/** Format. */\nexport function formatDate(d: Date): string {\n  return String(d);\n}\n');
+    const before = parse();
+    write('date.ts', '/** Format. */\nexport function formatDateUTC(d: Date): string {\n  return String(d);\n}\n');
+    const after = parse();
+
+    const diff = diffProjects(before, after, DEFAULT_CONFIG);
+    expect(diff.renames).toHaveLength(1);
+    expect(diff.renames[0].from.id).toBe('src/date.ts::formatDate');
+    expect(diff.renames[0].to.id).toBe('src/date.ts::formatDateUTC');
+    // The pair is lifted out of the raw add/remove sets.
+    expect(diff.added).toHaveLength(0);
+    expect(diff.removed).toHaveLength(0);
+    expect(diff.hasChanges).toBe(true);
+  });
+
   it('marks a wholly new source file as an added doc', () => {
     write('math.ts', '/** Add. */\nexport function add(a: number): number {\n  return a;\n}\n');
     const before = parse();
