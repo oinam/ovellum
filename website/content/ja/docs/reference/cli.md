@@ -1,7 +1,7 @@
 ---
 title: CLI リファレンス
 description: ovellum CLI のすべてのサブコマンドとフラグ。
-sourceHash: 'fac15d0e82c1359a'
+sourceHash: '89cfeb9381e814cf'
 ---
 
 # CLI リファレンス
@@ -139,7 +139,15 @@ ovellum build complete in 207ms
     → docs/user.md
   quarantined:          ← only printed when orphans > 0
     ↪ .ovellum/orphans/2026-05-15_src-format.ts-padZero.md
+  ir:        .ovellum/ir.json   ← parsed IR snapshot, written every auto/hybrid build
 ```
+
+auto/hybrid ビルドは毎回、解析した IR をプロジェクトルートの `.ovellum/ir.json`
+（`.ovellum/orphans/` の隣）にも書き出します — 直前に読み取ったシンボル・アンカー・
+シグネチャのスナップショットです。これはデプロイ成果物ではなくビルド _状態_ なので、
+`--out` に関係なくプロジェクトルートに残り、`.ovellum/` はデフォルトの雛形で gitignore
+されています。今後のソース差分・リネーム検出・アンカーの最終確認追跡の基盤であり、
+API サーフェスの構造化ビューを必要とするツールから自分で読み取ることもできます。
 
 #### Manual
 

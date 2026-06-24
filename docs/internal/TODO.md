@@ -32,10 +32,20 @@ Legend: `[ ]` not started · `[~]` in progress · `[x]` done · `[!]` blocked
 
 ## Current state (2026-06-14)
 
-**Publish state (read this first):** **`ovellum@0.12.0` is live on npm** and
-matches local. Tree clean on `main`, fully pushed, no pending changesets; tags
+**Publish state (read this first):** **`ovellum@0.12.0` is live on npm.** Tags
 `ovellum@0.7.0`…`0.12.0` pushed + GitHub releases published (0.12.0 release cut
 2026-06-14).
+
+**In flight (uncommitted, next release):** **A1 — IR persistence** (ROADMAP
+Tier A). Every auto/hybrid build now writes the parsed `DocProject` to
+`<cwd>/.ovellum/ir.json` (`packages/cli/src/dev/ir.ts` `writeProjectIR`,
+envelope `{generator, format, version, project}`), reported as the `ir:` build-
+summary line. Build _state_ at the project root beside `.ovellum/orphans/`,
+unaffected by `--out`, gitignored. Manual mode writes none. 348 tests
+(`ir.test.ts` +5); docs en+ja (cli.md) re-stamped; FEATURES/ROADMAP updated;
+changeset `persist-parsed-ir.md` (minor → 0.13.0). **Unlocks A2 `ovellum diff`,
+A3 rename detection, A4 `ovellum orphans` last-seen** — all read this snapshot.
+Not yet versioned/published.
 
 - **0.12.0 — AI-Ready output + portable deploy-anywhere build (343 tests).**
   **C1:** `site.ai` config (`{enabled?,llmsTxt?,fullText?,mdMirror?}`) → `/llms.txt`

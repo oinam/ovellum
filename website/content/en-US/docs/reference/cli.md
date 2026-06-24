@@ -138,7 +138,16 @@ ovellum build complete in 207ms
     → docs/user.md
   quarantined:          ← only printed when orphans > 0
     ↪ .ovellum/orphans/2026-05-15_src-format.ts-padZero.md
+  ir:        .ovellum/ir.json   ← parsed IR snapshot, written every auto/hybrid build
 ```
+
+Every auto/hybrid build also writes its parsed IR to `.ovellum/ir.json` at the
+project root (beside `.ovellum/orphans/`) — a snapshot of the symbols, anchors,
+and signatures it just read. It's build _state_, not deploy output, so it stays
+at the project root regardless of `--out`, and `.ovellum/` is gitignored by the
+default scaffold. It's the foundation for upcoming source-diff, rename
+detection, and anchor last-seen tracking; you can also read it yourself for any
+tooling that needs a structured view of your API surface.
 
 #### Manual
 

@@ -131,7 +131,7 @@ Anchor IDs: done `{relativeFilePath}::{symbolPath}` per [`DESIGN.md` §8.3](./DE
 | Section detection (anchor → next heading boundary)                          | done     | Splices manual blocks at section end.               |
 | Orphan quarantine                                                           | done     | Writes `.ovellum/orphans/{YYYY-MM-DD}_{slug}.md`.   |
 | `OrphanRecord` metadata (orphaned, source_file, anchor_id, manual_block_id) | done     |                                                     |
-| Anchor last-seen timestamp on orphans                                       | deferred | Needs persisted IR history.                         |
+| Anchor last-seen timestamp on orphans                                       | deferred | IR now persisted (A1, `.ovellum/ir.json`); last-seen wiring is A4. |
 | `@preserve` auto-wrapping in generator                                      | deferred | IR carries `isPreserved`; generator wiring pending. |
 
 **Tests:** 8 vitest cases.
@@ -143,7 +143,7 @@ See the [CLI reference](https://ovellum.oss.oinam.com/docs/reference/cli/) for f
 | Subcommand        | Status   |
 | ----------------- | -------- |
 | `ovellum init`    | done     |
-| `ovellum build`   | done     | manual / hybrid / auto. **Deploy-anywhere flags (D1/D4, 2026-06-14):** `--out <dir>` overrides `config.output` and `--base <path>` overrides `site.basePath` per-invocation (`applyOverrides` in `run-build.ts`) so a CI/deploy pipeline points the build at any folder (e.g. a repo's `/docs`) without editing config. `--manifest` writes `<output>/.ovellum/manifest.json` — a hashed inventory (path/bytes/sha256, sorted, OS-junk + own-dir excluded) for atomic/incremental deploys (`dev/manifest.ts` `writeDeployManifest`). Principle: Ovellum builds a portable static folder; the host deploys it, no GitHub dependency. Pinned by `manifest.test.ts` + e2e. |
+| `ovellum build`   | done     | manual / hybrid / auto. **Deploy-anywhere flags (D1/D4, 2026-06-14):** `--out <dir>` overrides `config.output` and `--base <path>` overrides `site.basePath` per-invocation (`applyOverrides` in `run-build.ts`) so a CI/deploy pipeline points the build at any folder (e.g. a repo's `/docs`) without editing config. `--manifest` writes `<output>/.ovellum/manifest.json` — a hashed inventory (path/bytes/sha256, sorted, OS-junk + own-dir excluded) for atomic/incremental deploys (`dev/manifest.ts` `writeDeployManifest`). Principle: Ovellum builds a portable static folder; the host deploys it, no GitHub dependency. Pinned by `manifest.test.ts` + e2e. **IR persistence (A1, 2026-06-24):** every auto/hybrid build also writes the parsed `DocProject` to `<cwd>/.ovellum/ir.json` (envelope `{generator, format, version, project}`, `dev/ir.ts` `writeProjectIR`) — build _state_ kept at the project root beside `.ovellum/orphans/`, **unaffected by `--out`**, gitignored by the default scaffold. Foundation for `ovellum diff` (A2), rename detection (A3), and anchor last-seen (A4). Manual mode writes none. Pinned by `ir.test.ts`. |
 | `ovellum dev`     | done     | manual-only (HTML + live reload). Watcher ignores the output dir, `node_modules`, dot-dirs, and `ignoreFolders` (2026-06-13) — fixes an endless rebuild loop under `input: "."` where each build wrote `dist/` and re-triggered itself. |
 | `ovellum watch`   | done     | manual / hybrid / auto |
 | `ovellum serve`   | done     |

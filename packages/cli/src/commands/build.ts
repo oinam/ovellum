@@ -102,6 +102,7 @@ export function formatBuildSummary(
       lines.push('  quarantined:');
       lines.push(...(summary.quarantined ?? []).map((p) => `    ↪ ${p}`));
     }
+    if (summary.irPath) lines.push(`  ir:        ${summary.irPath}`);
   }
   if (summary.manifestPath) lines.push(`  manifest:  ${summary.manifestPath}`);
   return lines.join('\n');

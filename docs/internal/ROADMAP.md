@@ -75,9 +75,13 @@ document trust boundaries.
 Nobody else has the protected-zone/orphan model; these multiply it.
 A1 unlocks A2–A4.
 
-- [ ] **A1 (M)** **IR persistence** — write the parsed `DocProject` IR to
+- [x] **A1 (M)** **IR persistence** — write the parsed `DocProject` IR to
       `.ovellum/ir.json` after each auto/hybrid build. Foundation for diff,
-      rename detection, and last-seen tracking.
+      rename detection, and last-seen tracking. **Done 2026-06-24:**
+      `dev/ir.ts` `writeProjectIR` persists `{generator, format, version,
+      project}` to `<cwd>/.ovellum/ir.json` (project root, not output dir;
+      unaffected by `--out`); reported as the `ir:` summary line. Next: A2/A4
+      read it.
 - [ ] **A2 (M)** **`ovellum diff`** — compare current source IR against the
       persisted one; report added/removed/changed symbols (and which docs
       would change) without writing. CI-friendly `--json`. Already in the

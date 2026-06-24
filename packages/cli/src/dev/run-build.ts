@@ -8,6 +8,7 @@ import { readManualDoc } from '@ovellum/reader';
 import { merge, writeOrphan } from '@ovellum/merger';
 import { buildSite, type PageOutput } from '@ovellum/site';
 import { writeDeployManifest } from './manifest.js';
+import { writeProjectIR } from './ir.js';
 
 export interface RunBuildInput {
   config: OvellumConfig;
@@ -57,6 +58,8 @@ export interface BuildSummary {
 
   /** Path to the deploy manifest, when `--manifest` was requested. */
   manifestPath?: string;
+  /** Path to the persisted IR snapshot (auto/hybrid builds). */
+  irPath?: string;
 }
 
 /**
@@ -135,6 +138,10 @@ async function runBuildForMode(
     }
   }
 
+  // Persist the parsed IR as build state for diff / rename / last-seen.
+  const irAbs = await writeProjectIR(project, { cwd });
+  const irPath = path.relative(cwd, irAbs).replace(/\\/g, '/');
+
   return {
     mode: config.mode,
     elapsedMs: Date.now() - startedAt,
@@ -144,5 +151,6 @@ async function runBuildForMode(
     merged: mergedFiles,
     orphans: orphanRecords.length,
     quarantined,
+    irPath,
   };
 }
