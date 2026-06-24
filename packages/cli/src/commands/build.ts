@@ -33,16 +33,27 @@ export const buildCommand = defineCommand({
       type: 'boolean',
       description: 'Write <output>/.ovellum/manifest.json (a hashed inventory for deploy tools)',
     },
+    json: {
+      type: 'boolean',
+      description: 'Emit the build summary as JSON (for CI / tooling); no decorative output.',
+    },
   },
   async run({ args }) {
     const cwd = path.resolve(args.cwd ?? process.cwd());
+    const asJson = args.json === true;
     let loaded;
     try {
       loaded = await loadOvellumConfig({ cwd, configFile: args.config });
     } catch (err) {
       if (err instanceof ConfigError) {
-        process.stderr.write(`config error: ${err.message}\n`);
-        if (err.hint) process.stderr.write(`hint: ${err.hint}\n`);
+        if (asJson) {
+          process.stdout.write(
+            JSON.stringify({ ok: false, command: 'build', error: err.message, hint: err.hint ?? null }, null, 2) + '\n',
+          );
+        } else {
+          process.stderr.write(`config error: ${err.message}\n`);
+          if (err.hint) process.stderr.write(`hint: ${err.hint}\n`);
+        }
         process.exit(3);
       }
       throw err;
@@ -51,7 +62,13 @@ export const buildCommand = defineCommand({
     const { config, configFile } = loaded;
 
     if (config.mode !== 'auto' && config.mode !== 'hybrid' && config.mode !== 'manual') {
-      process.stderr.write(`'${config.mode}' mode is not recognized.\n`);
+      if (asJson) {
+        process.stdout.write(
+          JSON.stringify({ ok: false, command: 'build', error: `'${config.mode}' mode is not recognized.` }, null, 2) + '\n',
+        );
+      } else {
+        process.stderr.write(`'${config.mode}' mode is not recognized.\n`);
+      }
       process.exit(1);
     }
 
@@ -63,10 +80,53 @@ export const buildCommand = defineCommand({
       basePath: typeof args.base === 'string' ? args.base : undefined,
       manifest: args.manifest === true,
     });
+
+    if (asJson) {
+      process.stdout.write(JSON.stringify(buildSummaryToJson(summary, configFile), null, 2) + '\n');
+      return;
+    }
     process.stdout.write(formatBuildSummary(summary, configFile) + '\n');
     for (const w of summary.warnings) process.stderr.write(`warning: ${w}\n`);
   },
 });
+
+/**
+ * The machine-readable shape of a build for `--json` — a stable contract an
+ * agent or CI step parses. Mode-specific fields are included only when present;
+ * `warnings` always appears so a caller never has to scrape stderr.
+ */
+export function buildSummaryToJson(
+  summary: BuildSummary,
+  configFile: string | undefined,
+): Record<string, unknown> {
+  const base: Record<string, unknown> = {
+    ok: true,
+    command: 'build',
+    mode: summary.mode,
+    durationMs: summary.elapsedMs,
+    config: configFile ?? null,
+    warnings: summary.warnings,
+  };
+  if (summary.mode === 'manual') {
+    return {
+      ...base,
+      output: summary.outputDir ?? null,
+      landingRendered: summary.landingRendered ?? false,
+      pages: (summary.pages ?? []).map((p) => ({ url: p.url, outputPath: p.outputPath })),
+      manifest: summary.manifestPath ?? null,
+    };
+  }
+  return {
+    ...base,
+    sources: summary.sources ?? 0,
+    written: summary.written ?? [],
+    merged: summary.merged ?? [],
+    orphans: summary.orphans ?? 0,
+    quarantined: summary.quarantined ?? [],
+    ir: summary.irPath ?? null,
+    manifest: summary.manifestPath ?? null,
+  };
+}
 
 /**
  * Render a `BuildSummary` as the CLI's stdout block. Exported in case other

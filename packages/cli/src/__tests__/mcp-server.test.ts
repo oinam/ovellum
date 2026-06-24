@@ -63,10 +63,19 @@ describe('MCP server', () => {
     const names = (res?.result as { tools: Array<{ name: string }> }).tools.map((t) => t.name);
     expect(names).toContain('ovellum_query_symbol');
     expect(names).toContain('ovellum_diff');
+    expect(names).toContain('ovellum_check');
     expect(names).toContain('ovellum_list_orphans');
     expect(names).toContain('ovellum_get_page');
     expect(names).toContain('ovellum_build');
     expect(names).toContain('ovellum_write_zone');
+  });
+
+  it('runs ovellum_check and returns structured findings', async () => {
+    const res = await callText(server, 'ovellum_check', {});
+    const payload = JSON.parse((res?.result as { content: Array<{ text: string }> }).content[0].text);
+    expect(payload).toHaveProperty('ok');
+    expect(payload).toHaveProperty('counts.brokenLinks');
+    expect(Array.isArray(payload.issues)).toBe(true);
   });
 
   it('queries a symbol from the IR snapshot', async () => {

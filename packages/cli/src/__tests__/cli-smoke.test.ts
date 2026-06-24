@@ -116,6 +116,16 @@ describe('ovellum build (manual)', () => {
     expect(existsSync(path.join(dir, 'dist', 'index.html'))).toBe(true);
     expect(existsSync(path.join(dir, 'dist', 'assets', 'ovellum.css'))).toBe(true);
   });
+
+  it('--json emits a parseable machine summary and nothing else on stdout', async () => {
+    const { code, stdout } = await runCli(['build', '--json'], { cwd: dir });
+    expect(code).toBe(0);
+    const parsed = JSON.parse(stdout);
+    expect(parsed).toMatchObject({ ok: true, command: 'build', mode: 'manual' });
+    expect(parsed.pages.length).toBe(1);
+    expect(parsed.pages[0]).toHaveProperty('url');
+    expect(Array.isArray(parsed.warnings)).toBe(true);
+  });
 });
 
 describe('ovellum check', () => {
@@ -145,6 +155,16 @@ describe('ovellum check', () => {
     expect(code).toBe(1);
     expect(stdout).toMatch(/broken links:\s+1/);
     expect(stdout).toContain('/does-not-exist/');
+  });
+
+  it('--json emits structured findings and keeps exit code 1 on issues', async () => {
+    writeFileSync(path.join(dir, 'content', 'index.md'), '# Home\n\n[gone](/does-not-exist/)\n');
+    const { code, stdout } = await runCli(['check', '--json'], { cwd: dir, expectFail: true });
+    expect(code).toBe(1);
+    const parsed = JSON.parse(stdout);
+    expect(parsed).toMatchObject({ ok: false, command: 'check' });
+    expect(parsed.counts.brokenLinks).toBe(1);
+    expect(parsed.issues[0]).toMatchObject({ kind: 'broken-link' });
   });
 
   it('flags a javascript: URL as a [SECURITY] issue', async () => {

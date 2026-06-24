@@ -1,7 +1,7 @@
 ---
 title: CLI リファレンス
 description: ovellum CLI のすべてのサブコマンドとフラグ。
-sourceHash: 'b125795ca170d870'
+sourceHash: 'ddb29f5bfb8bdf87'
 ---
 
 # CLI リファレンス
@@ -95,6 +95,7 @@ ovellum build [--cwd <dir>] [--config <path>] [--drafts] [--out <dir>] [--base <
 | `--out <dir>`     | path | `output` 設定   | このビルドの**出力ディレクトリを上書き**します。設定を編集せずに CI/デプロイのパイプラインを任意のフォルダ（例: リポジトリの `/docs`）に向けられます。 |
 | `--base <path>`   | path | `site.basePath` | サイトを配信する**ベースパスを上書き**します（例: `/docs`）。`site.basePath` と同じ効果を呼び出しごとに与えます。 |
 | `--manifest`      | flag | off             | `<output>/.ovellum/manifest.json` を書き出します — ビルドされた全ファイルのハッシュ付きインベントリ（パス・バイト数・sha256）。デプロイツールが変更分だけをプッシュし、完全性を検証できます。 |
+| `--json`          | flag | off             | ビルドサマリーを JSON で出力します（CI / ツール向け）。装飾的な出力はありません。[自動化](/ja/docs/guides/automation/)を参照。 |
 
 ### モードごとの挙動
 
@@ -402,6 +403,7 @@ ovellum check [--cwd <dir>] [--config <path>] [--update-translations]
 | `--cwd`                   | string  | cwd        | プロジェクトルート。                                                            |
 | `--config`                | string  | —          | `ovellum.config.{ts,js,json}` へのパス。                                        |
 | `--update-translations`   | boolean | `false`    | 各翻訳ページの `sourceHash` を現在のソースにスタンプして終了します。下記参照。  |
+| `--json`                  | boolean | `false`    | 結果（またはスタンプ結果）を JSON で出力します。終了コードは変わりません。[自動化](/ja/docs/guides/automation/)を参照。 |
 
 ### 出力
 
@@ -632,6 +634,7 @@ ovellum mcp [--cwd <dir>]
 | ---------------------- | -------------- | --------------------------------------------------------------------------- |
 | `ovellum_query_symbol` | IR を読む       | `.ovellum/ir.json` 内のシンボルをアンカー `id` または `name` で検索します — シグネチャ・ソース位置・引数・戻り値。 |
 | `ovellum_diff`         | IR を読む       | 直前のビルドに対する追加 / 削除 / 変更 / リネームされたシンボルと、変わるドキュメント。 |
+| `ovellum_check`        | 読む           | プロジェクトを検証します — リンク切れ・安全でない URL スキーム・古い翻訳。件数と問題ごとの一覧。 |
 | `ovellum_list_orphans` | 読む           | 隔離された手動ブロック（任意の `stale` フィルタ）と、スナップショットに対する再アタッチ可否。 |
 | `ovellum_get_page`     | 読む           | 1 ページのビルド済み Markdown（AI フレンドリーな `.md` ミラー）を、出力ディレクトリ配下のパスで取得します。 |
 | `ovellum_build`        | docs を書く    | ビルドを実行します。ビルドサマリーを返します。                                     |

@@ -94,6 +94,7 @@ ovellum build [--cwd <dir>] [--config <path>] [--drafts] [--out <dir>] [--base <
 | `--out <dir>`     | path | `output` config | **Override the output directory** for this build, without editing the config — point a CI/deploy pipeline at any folder (e.g. a repo's `/docs`). |
 | `--base <path>`   | path | `site.basePath` | **Override the base path** the site is served from (e.g. `/docs`). Same effect as `site.basePath`, per-invocation. |
 | `--manifest`      | flag | off             | Write `<output>/.ovellum/manifest.json` — a hashed inventory of every built file (path, bytes, sha256) so a deploy tool can push only what changed and verify completeness. |
+| `--json`          | flag | off             | Emit the build summary as JSON (for CI / tooling); no decorative output. See [Automation](/docs/guides/automation/). |
 
 ### Behavior by mode
 
@@ -403,6 +404,7 @@ ovellum check [--cwd <dir>] [--config <path>] [--update-translations]
 | `--cwd`                  | string  | cwd     | Project root.                                                                                  |
 | `--config`               | string  | —       | Path to `ovellum.config.{ts,js,json}`.                                                         |
 | `--update-translations`  | boolean | `false` | Stamp each translated page's `sourceHash` to the current source, then exit. See below.        |
+| `--json`                 | boolean | `false` | Emit results (or stamping outcome) as JSON; exit code unchanged. See [Automation](/docs/guides/automation/). |
 
 ### Output
 
@@ -642,6 +644,7 @@ through it.
 | ---------------------- | -------------- | --------------------------------------------------------------------------- |
 | `ovellum_query_symbol` | reads IR       | Look up a symbol by anchor `id` or `name` in `.ovellum/ir.json` — signature, source location, params, returns. |
 | `ovellum_diff`         | reads IR       | Added / removed / changed / renamed symbols vs the last build, and which docs would change. |
+| `ovellum_check`        | reads          | Validate the project: broken links, unsafe URL schemes, stale translations — counts + per-issue list. |
 | `ovellum_list_orphans` | reads          | Quarantined manual blocks (optional `stale` filter), with reattachability vs the snapshot. |
 | `ovellum_get_page`     | reads          | The built Markdown for one page (the AI-friendly `.md` mirror), by path under the output dir. |
 | `ovellum_build`        | writes docs    | Run a build; returns the build summary.                                     |

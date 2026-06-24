@@ -80,13 +80,21 @@ Legend: `[ ]` not started · `[~]` in progress · `[x]` done · `[!]` blocked
   `mcp-server.test.ts` (6) + stdio smoke (1). **Deferred MCP tools:**
   `ovellum_check` (needs C3 `--json`), `ovellum_search_docs` (Pagefind).
 
+- **C3 — machine-readable CLI (uncommitted).** `--json` on `build`
+  (`buildSummaryToJson`) + `check` (`diff` already had it); stable exit codes;
+  ConfigError as JSON on the `--json` path. `check` logic extracted to exported
+  `runCheck`, reused by a new **`ovellum_check` MCP tool** (so the deferred MCP
+  tool is now shipped). New `/docs/guides/automation/` guide (en+ja). Changeset
+  `machine-readable-cli.md`. Tests: build/check `--json` smoke (2) + mcp check
+  (1). **Remaining (folds U4):** `--verbose`; B8 warning-severity split.
+
 **Still open in Tier A/C:** A4/A3 **write side** — interactive reattach/delete
 (`ovellum orphans --reattach`); A5 `@preserve` auto-wrap, A6 `check --strict`,
-A7 incremental watch; **C3** `--json` on build/check (would unlock the
-`ovellum_check` MCP tool), C4 Skill/`AGENTS.md`, C5 positioning. Not yet
-versioned/published (changeset-version → **0.13.0** when shipping; 5 changesets
-staged: `persist-parsed-ir` (A1), `ovellum-diff` (A2), `rename-detection` (A3),
-`orphans-command` (A4), `mcp-server` (C2) — all minor).
+A7 incremental watch; **U4** `--verbose`; C4 Skill/`AGENTS.md`, C5 positioning.
+Not yet versioned/published (changeset-version → **0.13.0** when shipping; 6
+changesets staged: `persist-parsed-ir` (A1), `ovellum-diff` (A2),
+`rename-detection` (A3), `orphans-command` (A4), `mcp-server` (C2),
+`machine-readable-cli` (C3) — all minor).
 
 - **0.12.0 — AI-Ready output + portable deploy-anywhere build (343 tests).**
   **C1:** `site.ai` config (`{enabled?,llmsTxt?,fullText?,mdMirror?}`) → `/llms.txt`

@@ -4,6 +4,7 @@ import path from 'node:path';
 import { loadOvellumConfig, type OvellumConfig } from '@ovellum/core';
 import { outputPathFor } from '@ovellum/generator';
 import { parseProject } from '@ovellum/parser';
+import { runCheck } from '../../commands/check.js';
 import { diffProjects } from '../diff.js';
 import { collectNodes, readProjectIR, type PersistedIR } from '../ir.js';
 import { loadOrphans, summarizeOrphans } from '../orphans.js';
@@ -94,6 +95,25 @@ export function ovellumTools(): McpTool[] {
         const snapshot = requireSnapshot(cwd);
         const current = parseProject({ config, cwd });
         return diffProjects(snapshot.project, current, config);
+      },
+    },
+    {
+      name: 'ovellum_check',
+      description:
+        'Validate the project without writing: broken internal links, unsafe URL schemes, and stale translations. Returns counts and a per-issue list.',
+      inputSchema: { type: 'object', properties: {} },
+      handler: async (cwd) => {
+        const config = await loadConfig(cwd);
+        const { issues, files } = await runCheck({ config, cwd });
+        const unsafe = issues.filter((i) => i.kind === 'unsafe-scheme').length;
+        const stale = issues.filter((i) => i.kind === 'stale-translation' || i.kind === 'orphan-translation').length;
+        return {
+          ok: issues.length === 0,
+          mode: config.mode,
+          pages: files.length,
+          counts: { brokenLinks: issues.length - unsafe - stale, unsafeSchemes: unsafe, staleTranslations: stale },
+          issues: issues.map((it) => ({ file: it.file, line: it.line, kind: it.kind, message: it.message })),
+        };
       },
     },
     {

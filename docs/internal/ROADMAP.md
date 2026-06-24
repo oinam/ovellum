@@ -287,11 +287,16 @@ differentiator no other docs tool can make.
 
 #### C3 — AI-usable CLI (machine-readable I/O — folds in U4)
 
-- [ ] **C3 (M)** An agent shouldn't *need* MCP to drive Ovellum — a clean CLI
+- [~] **C3 (M)** An agent shouldn't *need* MCP to drive Ovellum — a clean CLI
       contract is the floor. **Largely the same work as U4** (`--json` +
       `--verbose`); pull it forward under the AI-Ready theme and treat the
       machine-readable surface as a first-class deliverable, not a CI
-      afterthought.
+      afterthought. **Done 2026-06-24:** `--json` on `build` / `check` (`diff`
+      already had it); stable exit codes (0 / 1 / 3); ConfigError as JSON on the
+      `--json` path; `runCheck` extracted + reused by the new `ovellum_check`
+      MCP tool; `/docs/guides/automation/` documents the contract (schemas, exit
+      codes, MCP, llms.txt). **Remaining (folds U4):** `--verbose` debug output;
+      B8 warning-severity split inside the JSON.
   - **`--json` on `build` / `check` / `diff`** — structured results (counts,
         warnings with severity per B8, broken links, stale translations, draft
         exclusions, orphan list) as a stable schema an agent parses. No

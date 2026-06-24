@@ -41,6 +41,10 @@ export const checkCommand = defineCommand({
       description:
         "Stamp each translated page's frontmatter with the current source hash (run after re-syncing a translation), then exit.",
     },
+    json: {
+      type: 'boolean',
+      description: 'Emit results as JSON (for CI / tooling); no decorative output.',
+    },
   },
   async run({ args }) {
     const cwd = path.resolve(args.cwd ?? process.cwd());
@@ -57,10 +61,18 @@ export const checkCommand = defineCommand({
     }
     const { config, configFile } = loaded;
 
+    const asJson = args.json === true;
+
     // Stamping mode is a dedicated, write-only path: refresh the stored source
     // hashes and exit, rather than reporting staleness.
     if (args['update-translations']) {
       const { stamped, skipped } = await stampTranslations({ config, cwd });
+      if (asJson) {
+        process.stdout.write(
+          JSON.stringify({ ok: true, command: 'check', action: 'update-translations', stamped, skipped }, null, 2) + '\n',
+        );
+        process.exit(0);
+      }
       const out = ['ovellum check: stamped translation source hashes', `  updated:  ${stamped.length}`];
       for (const f of stamped) out.push(`    ${f}`);
       if (skipped.length > 0) {
@@ -75,42 +87,63 @@ export const checkCommand = defineCommand({
     }
 
     const startedAt = Date.now();
-    let issues: Issue[];
-    let files: string[];
+    let run: CheckRun;
     try {
-      if (config.mode === 'manual') {
-        ({ issues, files } = await checkManual({ config, cwd }));
-      } else {
-        ({ issues, files } = await checkGenerated({ config, cwd }));
-      }
-      // Translation staleness is additive and independent of mode — it only
-      // fires when the site opts into i18n with two or more locales.
-      issues.push(...(await checkTranslations({ config, cwd })));
+      run = await runCheck({ config, cwd });
     } catch (err) {
       if (err instanceof ConfigError) {
-        process.stderr.write(`check error: ${err.message}\n`);
-        if (err.hint) process.stderr.write(`hint: ${err.hint}\n`);
+        if (asJson) {
+          process.stdout.write(
+            JSON.stringify({ ok: false, command: 'check', error: err.message, hint: err.hint ?? null }, null, 2) + '\n',
+          );
+        } else {
+          process.stderr.write(`check error: ${err.message}\n`);
+          if (err.hint) process.stderr.write(`hint: ${err.hint}\n`);
+        }
         process.exit(1);
       }
       throw err;
     }
+    const { issues, files } = run;
 
     const elapsed = Date.now() - startedAt;
-    const unsafeCount = issues.filter((i) => i.kind === 'unsafe-scheme').length;
-    const staleCount = issues.filter(
-      (i) => i.kind === 'stale-translation' || i.kind === 'orphan-translation',
-    ).length;
-    const brokenCount = issues.length - unsafeCount - staleCount;
+    const counts = countIssues(issues);
+    const showStale = (config.site.locales?.length ?? 0) > 1;
+
+    if (asJson) {
+      process.stdout.write(
+        JSON.stringify(
+          {
+            ok: issues.length === 0,
+            command: 'check',
+            mode: config.mode,
+            durationMs: elapsed,
+            config: configFile ?? null,
+            pages: files.length,
+            counts: {
+              brokenLinks: counts.broken,
+              unsafeSchemes: counts.unsafe,
+              ...(showStale ? { staleTranslations: counts.stale } : {}),
+            },
+            issues: issues.map((it) => ({ file: it.file, line: it.line, kind: it.kind, message: it.message })),
+          },
+          null,
+          2,
+        ) + '\n',
+      );
+      process.exit(issues.length === 0 ? 0 : 1);
+    }
+
     const lines = [
       `ovellum check complete in ${elapsed}ms`,
       `  config:    ${configFile ?? '(defaults)'}`,
       `  mode:      ${config.mode}`,
       `  pages:     ${files.length}`,
-      `  broken links:    ${brokenCount}`,
-      `  unsafe schemes:  ${unsafeCount}`,
+      `  broken links:    ${counts.broken}`,
+      `  unsafe schemes:  ${counts.unsafe}`,
     ];
-    if ((config.site.locales?.length ?? 0) > 1) {
-      lines.push(`  stale translations: ${staleCount}`);
+    if (showStale) {
+      lines.push(`  stale translations: ${counts.stale}`);
     }
     if (issues.length > 0) {
       lines.push('  details:');
@@ -138,6 +171,31 @@ interface CheckRun {
 interface CheckInput {
   config: OvellumConfig;
   cwd: string;
+}
+
+function countIssues(issues: Issue[]): { broken: number; unsafe: number; stale: number } {
+  const unsafe = issues.filter((i) => i.kind === 'unsafe-scheme').length;
+  const stale = issues.filter((i) => i.kind === 'stale-translation' || i.kind === 'orphan-translation').length;
+  return { broken: issues.length - unsafe - stale, unsafe, stale };
+}
+
+/**
+ * Run all checks for a project and return the raw issues + page count. Shared
+ * by the `ovellum check` command and the `ovellum_check` MCP tool so they can't
+ * drift. Throws `ConfigError` on a config problem; callers decide how to report.
+ */
+export async function runCheck({ config, cwd }: CheckInput): Promise<CheckRun> {
+  let issues: Issue[];
+  let files: string[];
+  if (config.mode === 'manual') {
+    ({ issues, files } = await checkManual({ config, cwd }));
+  } else {
+    ({ issues, files } = await checkGenerated({ config, cwd }));
+  }
+  // Translation staleness is additive and independent of mode — it only
+  // fires when the site opts into i18n with two or more locales.
+  issues.push(...(await checkTranslations({ config, cwd })));
+  return { issues, files };
 }
 
 /** One content tree to lint: the whole `content/` for a single-language site, or
