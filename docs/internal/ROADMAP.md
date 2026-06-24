@@ -253,12 +253,20 @@ differentiator no other docs tool can make.
 
 #### C2 — MCP server (the headline; needs A1 first)
 
-- [ ] **C2 (L)** Ship Ovellum as an **MCP server** so agents drive it as a
+- [~] **C2 (L)** Ship Ovellum as an **MCP server** so agents drive it as a
       first-class tool. Form: a new `ovellum mcp` subcommand launching a
       **stdio MCP server** (preferred over a separate package — one install,
       one binary; revisit if it bloats the CLI). Needs its own design pass.
       **A1 (IR persistence) is the hard prerequisite** for the query/write
-      tools — they read `.ovellum/ir.json`.
+      tools — they read `.ovellum/ir.json`. **Done 2026-06-24:** `ovellum mcp`,
+      a **dependency-free** hand-rolled JSON-RPC stdio server (`dev/mcp/`, no SDK
+      so the published CLI stays lean). Tools: `ovellum_query_symbol`,
+      `ovellum_diff`, `ovellum_list_orphans`, `ovellum_get_page`,
+      `ovellum_build`, and the differentiator **`ovellum_write_zone`**
+      (`applyWriteZone` — write prose into a `@manual` zone that survives hybrid
+      regen; `dryRun`). **Deferred:** `ovellum_check` (needs C3 JSON),
+      `ovellum_search_docs` (Pagefind index). If the no-SDK choice ever fights
+      protocol drift, revisit `@modelcontextprotocol/sdk`.
   - **Read tools (ship first, low risk):** `ovellum_build`, `ovellum_check`
         (returns structured findings — reuse C3's JSON), `ovellum_query_symbol`
         (look up a symbol in the persisted IR — signature, anchor, source loc),

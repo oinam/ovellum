@@ -1,7 +1,7 @@
 ---
 title: CLI リファレンス
 description: ovellum CLI のすべてのサブコマンドとフラグ。
-sourceHash: '82cbb90b889e9bae'
+sourceHash: 'b125795ca170d870'
 ---
 
 # CLI リファレンス
@@ -24,6 +24,7 @@ sourceHash: '82cbb90b889e9bae'
 | `check`    | available | 設定を検証し、リンク切れの内部リンクを確認し、安全でない URL を警告します。    |
 | `upgrade`  | available | npm に新しい Ovellum がないか確認し、インストールします。                            |
 | `orphans`  | available | 隔離された手動ブロックを一覧表示します（`--stale` / `--json` 対応）。              |
+| `mcp`      | available | Ovellum を stdio 上の MCP サーバーとして起動し、AI エージェントから操作できるようにします。 |
 | `clean`    | planned   | 手動ファイルを保持したまま、自動生成された出力を削除します。             |
 
 ## `ovellum init`
@@ -608,6 +609,47 @@ ovellum orphans — 1 orphan in .ovellum/orphans/
 | ---- | ----------------------------------------------------------- |
 | `0`  | 成功（孤立が 1 つもない場合を含む）。                                   |
 | `3`  | `ConfigError` — 設定スキーマが不正、ファイルが見つからない、など。 |
+
+## `ovellum mcp`
+
+Ovellum を [Model Context Protocol](https://modelcontextprotocol.io) サーバーとして
+stdio 上で起動し、AI エージェントが第一級のツールとして操作できるようにします。stdin/stdout
+で改行区切りの JSON-RPC を話します — 任意の MCP クライアントを `ovellum mcp` に向ければ、
+下記のツールが検出されます。（追加の依存はありません。サーバーは CLI に組み込まれています。）
+
+### 構文
+
+```
+ovellum mcp [--cwd <dir>]
+```
+
+`--cwd` はツールが操作するプロジェクトのルートを指定します（デフォルトはカレント
+ディレクトリ）。**stdout はプロトコルのチャネル**です — それ以外のものを流し込まないでください。
+
+### ツール
+
+| Tool                   | 読み / 書き    | 内容                                                                 |
+| ---------------------- | -------------- | --------------------------------------------------------------------------- |
+| `ovellum_query_symbol` | IR を読む       | `.ovellum/ir.json` 内のシンボルをアンカー `id` または `name` で検索します — シグネチャ・ソース位置・引数・戻り値。 |
+| `ovellum_diff`         | IR を読む       | 直前のビルドに対する追加 / 削除 / 変更 / リネームされたシンボルと、変わるドキュメント。 |
+| `ovellum_list_orphans` | 読む           | 隔離された手動ブロック（任意の `stale` フィルタ）と、スナップショットに対する再アタッチ可否。 |
+| `ovellum_get_page`     | 読む           | 1 ページのビルド済み Markdown（AI フレンドリーな `.md` ミラー）を、出力ディレクトリ配下のパスで取得します。 |
+| `ovellum_build`        | docs を書く    | ビルドを実行します。ビルドサマリーを返します。                                     |
+| `ovellum_write_zone`   | **文章を書く** | アンカー id の下の保護された `@manual` ゾーンに Markdown を書き込みます。hybrid のマージエンジンが次回の再生成でも保持します — 人間が `@manual:start/end` の間を編集するのと同じ保証です。`dryRun` 対応。 |
+
+`ovellum_write_zone` は、他のどんなドキュメントサーバーも提供できないものです。エージェントが
+手書きの文章を寄与し、それが次回のビルドで上書きされる代わりに**再生成を生き延びます**。生存には
+[`hybrid` モード](/ja/docs/concepts/modes/)が必要です。`auto` モードではブロックは書き込まれますが、
+次回のビルドで上書きされます。
+
+IR ベースのツールはスナップショットを必要とします — 先にビルドを実行してください（または
+`ovellum_build` を呼んでください）。そうすれば `.ovellum/ir.json` が存在します。
+
+### 例（Claude Code）
+
+```bash
+claude mcp add ovellum -- npx ovellum mcp --cwd /path/to/project
+```
 
 ## 計画中のサブコマンド
 

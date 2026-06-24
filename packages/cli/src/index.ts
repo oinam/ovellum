@@ -4,6 +4,7 @@ import { checkCommand } from './commands/check.js';
 import { devCommand } from './commands/dev.js';
 import { diffCommand } from './commands/diff.js';
 import { initCommand } from './commands/init.js';
+import { mcpCommand } from './commands/mcp.js';
 import { orphansCommand } from './commands/orphans.js';
 import { serveCommand } from './commands/serve.js';
 import { upgradeCommand } from './commands/upgrade.js';
@@ -28,6 +29,7 @@ const main = defineCommand({
     serve: serveCommand,
     check: checkCommand,
     orphans: orphansCommand,
+    mcp: mcpCommand,
     upgrade: upgradeCommand,
   },
 });

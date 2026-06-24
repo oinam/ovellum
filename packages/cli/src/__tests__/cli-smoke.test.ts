@@ -1,4 +1,4 @@
-import { execFile } from 'node:child_process';
+import { execFile, spawn } from 'node:child_process';
 import { existsSync, mkdtempSync, writeFileSync, mkdirSync } from 'node:fs';
 import { readFile, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
@@ -432,5 +432,65 @@ describe('ovellum orphans', () => {
     expect(parsed.count).toBe(1);
     expect(parsed.orphans[0].anchorId).toBe('src/format.ts::old');
     expect(parsed.orphans[0].stale).toBe(true);
+  });
+});
+
+describe('ovellum mcp', () => {
+  let dir: string;
+
+  beforeEach(async () => {
+    dir = mkdtempSync(path.join(tmpdir(), 'ovellum-mcp-cli-'));
+    mkdirSync(path.join(dir, 'src'), { recursive: true });
+    writeFileSync(
+      path.join(dir, 'ovellum.config.json'),
+      JSON.stringify({ mode: 'hybrid', input: './src', output: './docs' }),
+    );
+    writeFileSync(
+      path.join(dir, 'src', 'math.ts'),
+      '/** Add. */\nexport function add(a: number, b: number): number {\n  return a + b;\n}\n',
+    );
+    await runCli(['build'], { cwd: dir });
+  });
+  afterEach(async () => {
+    await rm(dir, { recursive: true, force: true });
+  });
+
+  it('speaks JSON-RPC over stdio: initialize + tools/list + tools/call', async () => {
+    const lines = [
+      '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2025-06-18"}}',
+      '{"jsonrpc":"2.0","method":"notifications/initialized"}',
+      '{"jsonrpc":"2.0","id":2,"method":"tools/list"}',
+      '{"jsonrpc":"2.0","id":3,"method":"tools/call","params":{"name":"ovellum_query_symbol","arguments":{"id":"src/math.ts::add"}}}',
+      '',
+    ].join('\n');
+
+    const stdout = await new Promise<string>((resolve, reject) => {
+      const child = spawn('node', [CLI, 'mcp', '--cwd', dir], {
+        cwd: dir,
+        env: { ...process.env, NO_COLOR: '1' },
+      });
+      let out = '';
+      child.stdout.on('data', (d: Buffer) => (out += d.toString()));
+      child.on('error', reject);
+      child.on('close', () => resolve(out));
+      child.stdin.write(lines);
+      child.stdin.end();
+    });
+
+    const responses = stdout
+      .trim()
+      .split('\n')
+      .map((l) => JSON.parse(l) as { id?: number; result?: Record<string, unknown> });
+
+    const init = responses.find((r) => r.id === 1);
+    expect((init?.result as { serverInfo: { name: string } }).serverInfo.name).toBe('ovellum');
+
+    const list = responses.find((r) => r.id === 2);
+    const names = (list?.result as { tools: Array<{ name: string }> }).tools.map((t) => t.name);
+    expect(names).toContain('ovellum_write_zone');
+
+    const call = responses.find((r) => r.id === 3);
+    const payload = JSON.parse((call?.result as { content: Array<{ text: string }> }).content[0].text);
+    expect(payload.symbols[0].id).toBe('src/math.ts::add');
   });
 });

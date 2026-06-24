@@ -23,6 +23,7 @@ package manager's task runner.
 | `check`    | available | Validate config + check for broken internal links + flag unsafe URLs.    |
 | `upgrade`  | available | Check npm for a newer Ovellum and install it.                            |
 | `orphans`  | available | List quarantined manual blocks (with `--stale` / `--json`).              |
+| `mcp`      | available | Run Ovellum as an MCP server over stdio so an AI agent can drive it.      |
 | `clean`    | planned   | Remove auto-generated outputs while preserving manual files.             |
 
 ## `ovellum init`
@@ -616,6 +617,50 @@ the matching anchor in the doc, or delete the archive file); an interactive
 | ---- | ----------------------------------------------------------- |
 | `0`  | Success (including when there are no orphans).               |
 | `3`  | `ConfigError` — config schema invalid, file not found, etc. |
+
+## `ovellum mcp`
+
+Run Ovellum as a [Model Context Protocol](https://modelcontextprotocol.io)
+server over stdio, so an AI agent can drive it as a first-class tool. It speaks
+newline-delimited JSON-RPC on stdin/stdout — point any MCP client at
+`ovellum mcp` and it discovers the tools below. (No extra dependency: the server
+is built into the CLI.)
+
+### Synopsis
+
+```
+ovellum mcp [--cwd <dir>]
+```
+
+`--cwd` sets the project root the tools operate on (defaults to the current
+directory). **stdout is the protocol channel** — don't pipe anything else
+through it.
+
+### Tools
+
+| Tool                   | Reads / writes | What it does                                                                 |
+| ---------------------- | -------------- | --------------------------------------------------------------------------- |
+| `ovellum_query_symbol` | reads IR       | Look up a symbol by anchor `id` or `name` in `.ovellum/ir.json` — signature, source location, params, returns. |
+| `ovellum_diff`         | reads IR       | Added / removed / changed / renamed symbols vs the last build, and which docs would change. |
+| `ovellum_list_orphans` | reads          | Quarantined manual blocks (optional `stale` filter), with reattachability vs the snapshot. |
+| `ovellum_get_page`     | reads          | The built Markdown for one page (the AI-friendly `.md` mirror), by path under the output dir. |
+| `ovellum_build`        | writes docs    | Run a build; returns the build summary.                                     |
+| `ovellum_write_zone`   | **writes prose** | Write Markdown into a protected `@manual` zone under an anchor id. The hybrid merge engine preserves it across the next regeneration — the same guarantee a human editing between `@manual:start/end` gets. Supports `dryRun`. |
+
+`ovellum_write_zone` is the one no other docs server can offer: an agent
+contributes hand-written prose that **survives regeneration** instead of being
+overwritten on the next build. Survival requires
+[`hybrid` mode](/docs/concepts/modes/); in `auto` mode the block is written but
+the next build overwrites it.
+
+The IR-backed tools need a snapshot — run a build first (or call
+`ovellum_build`) so `.ovellum/ir.json` exists.
+
+### Example (Claude Code)
+
+```bash
+claude mcp add ovellum -- npx ovellum mcp --cwd /path/to/project
+```
 
 ## Planned subcommands
 
