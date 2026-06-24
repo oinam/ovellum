@@ -36,16 +36,27 @@ Legend: `[ ]` not started · `[~]` in progress · `[x]` done · `[!]` blocked
 `ovellum@0.7.0`…`0.12.0` pushed + GitHub releases published (0.12.0 release cut
 2026-06-14).
 
-**In flight (uncommitted, next release):** **A1 — IR persistence** (ROADMAP
-Tier A). Every auto/hybrid build now writes the parsed `DocProject` to
-`<cwd>/.ovellum/ir.json` (`packages/cli/src/dev/ir.ts` `writeProjectIR`,
-envelope `{generator, format, version, project}`), reported as the `ir:` build-
-summary line. Build _state_ at the project root beside `.ovellum/orphans/`,
-unaffected by `--out`, gitignored. Manual mode writes none. 348 tests
-(`ir.test.ts` +5); docs en+ja (cli.md) re-stamped; FEATURES/ROADMAP updated;
-changeset `persist-parsed-ir.md` (minor → 0.13.0). **Unlocks A2 `ovellum diff`,
-A3 rename detection, A4 `ovellum orphans` last-seen** — all read this snapshot.
-Not yet versioned/published.
+**In flight (next release → 0.13.0):** ROADMAP **Tier A**, two slices.
+- **A1 — IR persistence (committed `d9478d9`).** Every auto/hybrid build writes
+  the parsed `DocProject` to `<cwd>/.ovellum/ir.json` (`dev/ir.ts`
+  `writeProjectIR`, envelope `{generator, format, version, project}`), reported
+  as the `ir:` build-summary line. Build _state_ at the project root beside
+  `.ovellum/orphans/`, unaffected by `--out`, gitignored. Manual mode writes
+  none. Changeset `persist-parsed-ir.md`.
+- **A2 — `ovellum diff` (uncommitted).** Parses current source, loads the
+  snapshot, reports added/removed/changed symbols + which output docs would
+  change; writes nothing. `commands/diff.ts` + pure `dev/diff.ts` `diffProjects`;
+  anchor-id match (rename = remove+add), flattens members, ignores
+  `line`/`filePath`, maps docs via generator `outputPathFor`; `--json`,
+  `--exit-code` (git-diff style). Changeset `ovellum-diff.md`. 359 tests
+  (`diff.test.ts` +7, cli-smoke +4); docs en+ja (cli.md) re-stamped;
+  FEATURES/ROADMAP updated.
+
+**Still open in Tier A:** A3 rename detection (anchor disappears + similar
+symbol appears → suggest remap), A4 `ovellum orphans` CLI (populate last-seen
+from the snapshot), A5 `@preserve` auto-wrap, A6 `check --strict`, A7
+incremental watch. Not yet versioned/published (changeset-version → 0.13.0 when
+shipping).
 
 - **0.12.0 — AI-Ready output + portable deploy-anywhere build (343 tests).**
   **C1:** `site.ai` config (`{enabled?,llmsTxt?,fullText?,mdMirror?}`) → `/llms.txt`

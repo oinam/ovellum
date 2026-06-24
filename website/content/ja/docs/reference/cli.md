@@ -1,7 +1,7 @@
 ---
 title: CLI リファレンス
 description: ovellum CLI のすべてのサブコマンドとフラグ。
-sourceHash: '89cfeb9381e814cf'
+sourceHash: 'a7342944d8fd70c8'
 ---
 
 # CLI リファレンス
@@ -17,6 +17,7 @@ sourceHash: '89cfeb9381e814cf'
 | ---------- | --------- | ------------------------------------------------------------------------ |
 | `init`     | available | 新しいプロジェクトを生成します（設定 + スターターコンテンツ + `.gitignore` エントリ）。  |
 | `build`    | available | 設定済みのパイプラインを実行します（parse + generate + merge、またはサイトのビルド）。 |
+| `diff`     | available | 現在のソースを直前のビルドの IR スナップショットと比較し、再ビルドで何が変わるかをプレビューします。 |
 | `dev`      | available | ビルド、監視、配信、接続中のブラウザのライブリロードをまとめて実行する、1 コマンドの開発ループです。 |
 | `watch`    | available | ビルド後、`input/` 配下の変更ごとに再ビルドします（300 ms のデバウンス付き）。   |
 | `serve`    | available | ビルド済みサイトを HTTP で配信します。監視もライブリロードもありません。                |
@@ -191,6 +192,78 @@ npx ovellum build --config ./config/ovellum.prod.ts
 
 # Deploy-anywhere: build into a repo's /docs folder with a deploy manifest
 npx ovellum build --out ./docs --base /docs --manifest
+```
+
+## `ovellum diff`
+
+**現在のソース**を、直前のビルドが書き出した IR スナップショット
+（`.ovellum/ir.json`）と比較し、再ビルドで何が変わるか — 追加・削除・変更された
+シンボルと、それらが触れる出力ドキュメント — を報告します。何も書き込みません。
+ビルドではなくプレビューです。auto/hybrid 専用です（manual ビルドはソースを解析せず
+IR を持ちません）。
+
+シンボルは安定したアンカー id で照合するため、リネームは削除されたシンボル 1 つと
+追加されたシンボル 1 つとして現れます（専用のリネーム検出は別機能です）。行番号が
+ずれるだけの表面的な編集は無視され、ドキュメント化された面（シグネチャ・引数・戻り値・
+説明・非推奨・JSDoc タグ・エクスポート/可視性）が実際に異なるときだけ変更として
+報告されます。
+
+### 構文
+
+```
+ovellum diff [--cwd <dir>] [--config <path>] [--json] [--exit-code]
+```
+
+### フラグ
+
+| Flag           | Type    | Default         | 説明                                                                       |
+| -------------- | ------- | --------------- | --------------------------------------------------------------------------- |
+| `--cwd <dir>`  | path    | `process.cwd()` | プロジェクトのルート。                                                               |
+| `--config <path>` | path | auto-discovered | 自動検出をスキップし、このファイルを直接読み込みます。                                 |
+| `--json`       | boolean | `false`         | 差分を JSON（`{ baselineGeneratedAt, added, removed, changed, docs, hasChanges }`）で出力します（CI / ツール向け）。 |
+| `--exit-code`  | boolean | `false`         | 変更が見つかったら `1` で終了します（git-diff スタイル）。指定しない場合、`diff` は常に `0` で終了するため情報表示として実行できます。 |
+
+### 出力
+
+```
+ovellum diff — current source vs .ovellum/ir.json (built 2026-06-24T17:58:46.322Z)
+
+  + 1 added   - 0 removed   ~ 1 changed
+
+added:
+  + src/math.ts::mul  (function)
+
+changed:
+  ~ src/math.ts::add  (function)  signature, params
+
+docs that would change:
+  ~ docs/math.md  (+1 ~1 -0)
+```
+
+差分がない場合:
+
+```
+ovellum diff — no changes since the last build (.ovellum/ir.json, <timestamp>).
+```
+
+### 終了コード
+
+| Code | 意味                                                                       |
+| ---- | ----------------------------------------------------------------------------- |
+| `0`  | 成功 — 変更なし、または `--exit-code` なしで変更を表示した場合。                |
+| `1`  | **`--exit-code` 付き**で変更が見つかった場合、または比較するスナップショットがない/読めない場合。 |
+| `3`  | `ConfigError` — 設定スキーマが不正、ファイルが見つからない、など。                    |
+
+### 例
+
+```bash
+# See what a rebuild would change
+npx ovellum build           # records the baseline snapshot
+# ...edit source...
+npx ovellum diff            # preview the impact
+
+# Fail CI if docs would drift from source
+npx ovellum diff --exit-code
 ```
 
 ## `ovellum dev`

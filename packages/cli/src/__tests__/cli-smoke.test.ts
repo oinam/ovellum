@@ -306,3 +306,69 @@ describe('ovellum check — i18n link validation (per-locale)', () => {
     expect(stdout).toContain('/ja/missing/');
   });
 });
+
+describe('ovellum diff', () => {
+  let dir: string;
+
+  beforeEach(() => {
+    dir = mkdtempSync(path.join(tmpdir(), 'ovellum-diff-cli-'));
+    mkdirSync(path.join(dir, 'src'), { recursive: true });
+    writeFileSync(
+      path.join(dir, 'ovellum.config.json'),
+      JSON.stringify({ mode: 'auto', input: './src', output: './docs' }),
+    );
+    writeFileSync(
+      path.join(dir, 'src', 'math.ts'),
+      '/** Add. */\nexport function add(a: number, b: number): number {\n  return a + b;\n}\n',
+    );
+  });
+  afterEach(async () => {
+    await rm(dir, { recursive: true, force: true });
+  });
+
+  it('errors with a hint when no snapshot exists yet', async () => {
+    const { code, stderr } = await runCli(['diff'], { cwd: dir, expectFail: true });
+    expect(code).toBe(1);
+    expect(stderr).toContain('ovellum build');
+  });
+
+  it('reports no changes right after a build', async () => {
+    await runCli(['build'], { cwd: dir });
+    const { code, stdout } = await runCli(['diff'], { cwd: dir });
+    expect(code).toBe(0);
+    expect(stdout).toContain('no changes');
+  });
+
+  it('reports an added symbol and exits 1 only with --exit-code', async () => {
+    await runCli(['build'], { cwd: dir });
+    writeFileSync(
+      path.join(dir, 'src', 'math.ts'),
+      '/** Add. */\nexport function add(a: number, b: number): number {\n  return a + b;\n}\n\n/** Multiply. */\nexport function mul(a: number, b: number): number {\n  return a * b;\n}\n',
+    );
+
+    // Default: prints the diff but exits 0.
+    const plain = await runCli(['diff'], { cwd: dir });
+    expect(plain.code).toBe(0);
+    expect(plain.stdout).toContain('src/math.ts::mul');
+    expect(plain.stdout).toContain('docs/math.md');
+
+    // --exit-code: same output, exits 1 for CI gating.
+    const gated = await runCli(['diff', '--exit-code'], { cwd: dir, expectFail: true });
+    expect(gated.code).toBe(1);
+  });
+
+  it('emits machine-readable JSON with --json', async () => {
+    await runCli(['build'], { cwd: dir });
+    writeFileSync(
+      path.join(dir, 'src', 'math.ts'),
+      '/** Add three. */\nexport function add(a: number, b: number, c: number): number {\n  return a + b + c;\n}\n',
+    );
+    const { code, stdout } = await runCli(['diff', '--json'], { cwd: dir });
+    expect(code).toBe(0);
+    const parsed = JSON.parse(stdout);
+    expect(parsed.hasChanges).toBe(true);
+    expect(parsed.changed[0].id).toBe('src/math.ts::add');
+    expect(parsed.changed[0].fields).toContain('signature');
+    expect(parsed.docs[0].output).toBe('docs/math.md');
+  });
+});

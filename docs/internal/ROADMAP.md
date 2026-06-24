@@ -82,10 +82,13 @@ A1 unlocks A2–A4.
       project}` to `<cwd>/.ovellum/ir.json` (project root, not output dir;
       unaffected by `--out`); reported as the `ir:` summary line. Next: A2/A4
       read it.
-- [ ] **A2 (M)** **`ovellum diff`** — compare current source IR against the
+- [x] **A2 (M)** **`ovellum diff`** — compare current source IR against the
       persisted one; report added/removed/changed symbols (and which docs
-      would change) without writing. CI-friendly `--json`. Already in the
-      backlog; IR persistence makes it cheap.
+      would change) without writing. CI-friendly `--json`. **Done 2026-06-24:**
+      `commands/diff.ts` + pure `dev/diff.ts` `diffProjects`; matches by anchor
+      id (rename = remove+add, A3 separate), flattens members, ignores
+      `line`/`filePath`, maps docs via `outputPathFor`; `--json` + `--exit-code`
+      (git-diff style). Next consumer of the A1 snapshot; A3/A4 still open.
 - [ ] **A3 (L)** **Rename detection** — when an anchor disappears and a
       similar symbol (same signature shape, fuzzy-matched name, same-file or
       moved-file) appears, offer the remap instead of orphaning. Kills the #1
