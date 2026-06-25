@@ -32,10 +32,28 @@ Legend: `[ ]` not started · `[~]` in progress · `[x]` done · `[!]` blocked
 
 ## Current state (2026-06-14)
 
-**Publish state (read this first):** **`ovellum@0.14.0` is live on npm**
-(2026-06-25), matches local. Tree clean on `main`, fully pushed; tag
-`ovellum@0.14.0` (signed) pushed + GitHub release published; **no pending
-changesets**. Tags `ovellum@0.7.0`…`0.14.0` all up.
+**Publish state (read this first):** **`ovellum@0.15.0` is live on npm**
+(2026-06-26), matches local. Tree clean on `main`, fully pushed; tag
+`ovellum@0.15.0` (signed) pushed + GitHub release published; **no pending
+changesets**. Tags `ovellum@0.7.0`…`0.15.0` all up.
+
+**0.15.0 (2026-06-26) — embeddable + AI-native MCP (4 changesets):** **D2**
+programmatic API — `import { build, watch, loadConfig, defineConfig } from
+'ovellum'` (`packages/cli/src/api.ts`); **side-effect-free** library entry split
+from the CLI bin (`main`/`exports["."]` → `dist/api.js`, `bin` → `dist/index.js`);
+**ESM-only** (pagefind is ESM-only); self-contained `.d.ts` via tsup
+`dts:{resolve:[@ovellum]}` + `tsconfig.dts.json` (private `@ovellum/*` inlined, not
+flipped). **D5** deploy guide "embedding in another build" recipes. **AI-Native
+MCP (M1–M3, plan in `AI-NATIVE-MCP.md`):** M1 Resources (`ovellum://llms.txt`,
+`…/page/{path}`, `…/ir`, `…/orphans`) + Prompts (`set-up-ovellum`,
+`document-symbol`, `review-doc-drift`) — `dev/mcp/{resources,prompts}.ts`,
+`capabilities:{tools,resources,prompts}`; M2 Claude Code plugin (`plugins/ovellum/`
++ root `.claude-plugin/marketplace.json`; skill moved out of old `skills/`) +
+cross-tool install snippets + `mcp` in notifier skip list; M3 tools
+`ovellum_search_docs` (in-process text search, `dev/mcp/search.ts` — NOT Pagefind,
+browser-only) + `ovellum_reattach`. 145 cli tests; docs en+ja 1:1. **Server now:
+9 tools + resources + prompts, one-step installable.** **Only AI item left: the
+human MCP-registry submission (TODO-Human).**
 
 **0.14.0 (2026-06-25) — Tier A hybrid-moat completion + CLI polish (5
 changesets):** A4/A3 write side `ovellum orphans --reattach` (interactive
