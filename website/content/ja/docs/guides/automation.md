@@ -1,7 +1,7 @@
 ---
 title: 自動化と AI エージェント
 description: スクリプト・CI ジョブ・AI エージェントから Ovellum を操作する — 機械可読な --json 出力、安定した終了コード、MCP サーバー。
-sourceHash: 'c2d2fe07a876bbfb'
+sourceHash: '0c92fc89fb012baa'
 ---
 
 # 自動化と AI エージェント
@@ -9,7 +9,9 @@ sourceHash: 'c2d2fe07a876bbfb'
 Ovellum は、ターミナルの前の人間以外のもの — CI ジョブ、デプロイスクリプト、AI
 エージェント — から操作されることを前提に作られています。すべてのコマンドはパイプ
 されてもきれいに動作し、主要なコマンドは JSON を話し、終了コードは安定しており、
-エージェント向けの組み込み [MCP サーバー](#mcp-server)があります。
+エージェント向けの組み込み [MCP サーバー](#mcp-server)があります。全体像 — なぜ
+あなたのドキュメントが最初から AI 対応なのか — は
+[AI エージェントのための Ovellum](/ja/docs/concepts/ai-ready/)を参照してください。
 
 ## 機械可読な出力（`--json`）
 

@@ -192,6 +192,11 @@ A1 unlocks A2–A4.
 
 ### Tier C — the AI age ("AI-Ready" theme)
 
+**STATUS: COMPLETE (2026-06-24).** All five slices shipped — C1 (`site.ai`
+output), C2 (`ovellum mcp` server), C3 (`--json` CLI), C4 (AGENTS.md + Skill),
+C5 (positioning page). Staged for 0.13.0. (Only adjacent non-C follow-ups left:
+B8 warning-severity inside the JSON, U4 `--verbose`, `ovellum_search_docs`.)
+
 **Theme (proposed, design NOT yet locked — task prepared 2026-06-14 on
 maintainer request; "we won't do now, but prepare").** Make Ovellum
 **AI-Ready / AI-Native** along three independent surfaces — the docs it
@@ -325,12 +330,15 @@ differentiator no other docs tool can make.
 
 #### C5 — positioning (do alongside C1, not as code)
 
-- [ ] **C5 (S)** Once C1 ships, say so where adopters read: a short
+- [x] **C5 (S)** Once C1 ships, say so where adopters read: a short
       **"Ovellum for AI / agents"** landing or docs section — "your docs are
       `llms.txt`-ready out of the box; agents can read and *safely edit* them."
       Editorial-calm, no hype. This is the close-circle-announcement-grade
       surface the maintainer cares about (no stale facts) — write it only after
-      the feature is real.
+      the feature is real. **Done 2026-06-24:** `concepts/ai-ready.md` (en+ja),
+      "Ovellum for AI agents" — read-ready / drivable / safely-editable, each
+      cross-linked to the real feature. Chose a docs concept page over a landing
+      section (landing redesign is queued; don't pre-empt it).
 
 ### Tier D — Embed & deploy anywhere ("the portable build" — NEXT BIGGEST RELEASE)
 

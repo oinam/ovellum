@@ -95,13 +95,19 @@ Legend: `[ ]` not started · `[~]` in progress · `[x]` done · `[!]` blocked
   stale scaffold marker (`ovellum:manual:start` → `@manual:start`). Changeset
   `agent-packaging.md`. Tests `agents-md.test.ts` (4) + init smoke.
 
-**Still open in Tier A/C:** A4/A3 **write side** — interactive reattach/delete
-(`ovellum orphans --reattach`); A5 `@preserve` auto-wrap, A6 `check --strict`,
-A7 incremental watch; **U4** `--verbose`; **C5** "Ovellum for AI/agents"
-positioning section (only AI piece left). Tier C otherwise complete (C1–C4).
-Not yet versioned/published (changeset-version → **0.13.0** when shipping; **7**
-changesets staged: `persist-parsed-ir` (A1), `ovellum-diff` (A2),
-`rename-detection` (A3), `orphans-command` (A4), `mcp-server` (C2),
+- **C5 — positioning (uncommitted, docs-only).** `concepts/ai-ready.md` (en+ja),
+  "Ovellum for AI agents" — read-ready / drivable / safely-editable, each claim
+  cross-linked to the real feature; reciprocal link from the Automation guide.
+  Chose a docs concept page over a landing section (landing redesign is queued).
+  **No changeset** — website content only, not in the published package.
+
+**Tier C COMPLETE (C1–C5).** Still open elsewhere: A4/A3 **write side** —
+interactive reattach/delete (`ovellum orphans --reattach`); A5 `@preserve`
+auto-wrap, A6 `check --strict`, A7 incremental watch; **U4** `--verbose`; B8
+warning-severity (would enrich the `--json` surface); `ovellum_search_docs` MCP
+tool (Pagefind). Not yet versioned/published (changeset-version → **0.13.0**
+when shipping; **7** changesets staged: `persist-parsed-ir` (A1), `ovellum-diff`
+(A2), `rename-detection` (A3), `orphans-command` (A4), `mcp-server` (C2),
 `machine-readable-cli` (C3), `agent-packaging` (C4) — all minor).
 
 - **0.12.0 — AI-Ready output + portable deploy-anywhere build (343 tests).**

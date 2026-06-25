@@ -8,7 +8,9 @@ description: Drive Ovellum from a script, a CI job, or an AI agent — machine-r
 Ovellum is built to be driven by something other than a human at a terminal — a
 CI job, a deploy script, or an AI agent. Every command degrades cleanly when
 piped, the important ones speak JSON, the exit codes are stable, and there's a
-built-in [MCP server](#mcp-server) for agents.
+built-in [MCP server](#mcp-server) for agents. For the bigger picture — why your
+docs are AI-ready out of the box — see
+[Ovellum for AI agents](/docs/concepts/ai-ready/).
 
 ## Machine-readable output (`--json`)
 

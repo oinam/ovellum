@@ -294,7 +294,7 @@ GitHub Pages on every push to `main`. Lives in
 
 | Feature                                     | Status   | Notes                                                                                                              |
 | ------------------------------------------- | -------- | ------------------------------------------------------------------------------------------------------------------ |
-| Landing + 15 doc pages built from Markdown  | done     | `pnpm -w run build:website` → `website/dist/`.                                                                     |
+| Landing + full docs tree built from Markdown | done    | `pnpm -w run build:website` → `website/dist/`. Includes the AI-Ready surface: `guides/automation` (C3) + `concepts/ai-ready` (C5, "Ovellum for AI agents" positioning). |
 | Custom domain via `CNAME`                   | done     | `website/content/CNAME` passes through to `dist/CNAME`. Target: `ovellum.oss.oinam.com` (DNS pending; TODO-Human). |
 | `404.html` for missing paths                | done     | Always emitted by core `ovellum build` (since 2026-06-13): `content/404.md` → `dist/404/index.html` **and** root `dist/404.html`; if absent, a default template-matched 404 is synthesised. The file GitHub Pages/Netlify/Cloudflare serve for missing paths (a platform that serves its own simply ignores ours). |
 | Deploy workflow (`deploy-website.yml`)      | done     | Push to `main` → build → `actions/deploy-pages@v4`. Concurrency-cancellation enabled.                              |
