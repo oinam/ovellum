@@ -1,5 +1,84 @@
 # ovellum
 
+## 0.14.0
+
+### Minor Changes
+
+- 8b2e0a9: `ovellum check --strict` — opt-in stricter validation.
+
+  `--strict` adds three checks on top of the defaults (broken links, unsafe URL
+  schemes, stale translations):
+  - **Positional protected zones** — a `<!-- @manual:start -->` with no `id=`.
+    Id-less zones fall back to positional matching, so reordering can lose them.
+  - **Stale anchors** — a generated-doc anchor whose symbol no longer exists in the
+    source (a delete, or a rename you haven't rebuilt). Rebuild, or reattach the
+    prose with `ovellum orphans --reattach`.
+  - **Title-less pages** — a page with neither a frontmatter `title:` nor a
+    top-level `# heading`.
+
+  Strict issues are tagged `[STRICT]` and counted under `strict issues:` (and
+  `counts.strictIssues` in `--json`); they exit `1` like any other issue. It's off
+  by default, so existing `ovellum check` behavior is unchanged. The MCP
+  `ovellum_check` tool also gains a `strict` option.
+
+- 172af81: Incremental watch builds for auto/hybrid projects.
+
+  `ovellum watch` (and `dev`) used to re-parse the entire project on every
+  keystroke. Now, in auto and hybrid modes, the watcher keeps the TypeScript
+  parser warm: when you save a file it re-parses only that file, then rebuilds only
+  the docs whose content actually changed — much faster once a codebase grows past
+  a handful of files.
+
+  It stays correct: the whole project is re-extracted from the warm in-memory AST
+  (so a cross-file type change still ripples into every doc that references it),
+  the persisted `.ovellum/ir.json` snapshot continues to reflect the whole
+  project, and hybrid protected zones are preserved exactly as in a full build.
+  Manual-mode sites and config-file changes still do a full rebuild.
+
+  No new flags — it's automatic under `ovellum watch`/`dev`.
+
+- 4d03712: `ovellum orphans --reattach` — interactively rescue quarantined prose.
+
+  When a refactor orphans a protected block, getting the prose back used to be a
+  copy-paste chore. `ovellum orphans --reattach` now walks the archive one orphan
+  at a time and, for each, offers to:
+  - **Reattach** it to a suggested anchor — the same anchor if the symbol is back
+    in the source, or a name-similar one if it was likely renamed (or type a
+    different anchor id). The prose is spliced into a `@manual` protected zone
+    under that anchor, so the next build preserves it, and the archive file is
+    removed.
+  - **Delete** the orphan (with confirmation), or **skip** it.
+
+  It reads the current anchors from the last build's IR snapshot, so run
+  `ovellum build` first; the reattach target is a built doc, so the change lands
+  exactly where a rebuild keeps it. This completes the hybrid loop: a rename can
+  orphan prose, and now you can put it back in one interactive pass.
+
+- e71c847: `@preserve` auto-wrapping — keep a symbol's docs hand-owned across regeneration.
+
+  Tag a JSDoc comment with `@preserve` (the configurable inline tag) and, in
+  **hybrid** mode, Ovellum now wraps that symbol's generated section in a `@manual`
+  protected zone automatically. The first build seeds the zone with the generated
+  content; after that, anything you edit inside it survives every regeneration —
+  the same guarantee as a hand-authored zone — and if the symbol is deleted or
+  renamed, the prose is orphaned (to `.ovellum/orphans/`) rather than lost.
+
+  The anchor comment stays outside the zone, so reattach and orphan tracking keep
+  working. Class methods are wrapped too; properties (rendered as a table) are
+  not. `auto` mode regenerates fully each build, so it emits no zones.
+
+- 8d1e1c5: Add `--verbose` to `build`, `check`, and `diff`.
+
+  `--verbose` prints diagnostic detail — which config was resolved, the build's
+  per-stage and file-I/O steps (parse timing, what was generated / written /
+  merged, where the IR and manifest landed), the scanned file count for `check`,
+  and the snapshot/diff summary for `diff`.
+
+  It writes to **stderr**, so it composes cleanly with `--json` — stdout stays
+  pure JSON for tooling while the verbose trace goes to stderr. Handy for figuring
+  out why a build picked the wrong config, didn't see a file, or merged
+  unexpectedly.
+
 ## 0.13.0
 
 ### Minor Changes
