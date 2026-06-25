@@ -32,11 +32,15 @@ Legend: `[ ]` not started · `[~]` in progress · `[x]` done · `[!]` blocked
 
 ## Current state (2026-06-14)
 
-**Publish state (read this first):** **`ovellum@0.12.0` is live on npm.** Tags
-`ovellum@0.7.0`…`0.12.0` pushed + GitHub releases published (0.12.0 release cut
-2026-06-14).
+**Publish state (read this first):** **`ovellum@0.13.0` is live on npm**
+(2026-06-25), matches local. Tree clean on `main`, fully pushed; tag
+`ovellum@0.13.0` (signed) pushed + GitHub release published; no pending
+changesets. Tags `ovellum@0.7.0`…`0.13.0` all up.
 
-**In flight (next release → 0.13.0):** ROADMAP **Tier A**, two slices.
+**Shipped in 0.13.0 (2026-06-25, this session — big AI-Ready + hybrid-moat +
+security batch).** The per-bullet `(committed …)` / `(uncommitted)` status tags
+below are **historical** (everything here shipped in 0.13.0); kept for the
+per-feature detail. ROADMAP **Tier A**:
 - **A1 — IR persistence (committed `d9478d9`).** Every auto/hybrid build writes
   the parsed `DocProject` to `<cwd>/.ovellum/ir.json` (`dev/ir.ts`
   `writeProjectIR`, envelope `{generator, format, version, project}`), reported
@@ -110,15 +114,14 @@ Legend: `[ ]` not started · `[~]` in progress · `[x]` done · `[!]` blocked
   `security-hardening.md` (patch). Tests: dev-server symlink-escape +
   `init-validate.test.ts`.
 
-**Tier C COMPLETE (C1–C5); security slice COMPLETE (S1–S6).** Still open
-elsewhere: A4/A3 **write side** — interactive reattach/delete (`ovellum orphans
---reattach`); A5 `@preserve` auto-wrap, A6 `check --strict`, A7 incremental
-watch; **U4** `--verbose`; B8 warning-severity (would enrich the `--json`
-surface); `ovellum_search_docs` MCP tool (Pagefind). Not yet versioned/published
-(changeset-version → **0.13.0** when shipping; **8** changesets staged:
-`persist-parsed-ir` (A1), `ovellum-diff` (A2), `rename-detection` (A3),
-`orphans-command` (A4), `mcp-server` (C2), `machine-readable-cli` (C3),
-`agent-packaging` (C4) minor + `security-hardening` patch).
+**0.13.0 is published.** Tier C COMPLETE (C1–C5); security slice COMPLETE
+(S1–S6); Tier A mostly done (A1–A4 + rename detection). **Still open** —
+**next up:** A4/A3 **write side** — interactive reattach/delete (`ovellum
+orphans --reattach`), the natural close-out of the hybrid moat. Then: A5
+`@preserve` auto-wrap, A6 `check --strict`, A7 incremental watch; **U4**
+`--verbose`; B8 warning-severity (would enrich `--json`); `ovellum_search_docs`
+MCP tool (Pagefind); and the larger untouched **Tier B** (plugin API, versioned
+docs, composable landing) + **Tier D** (programmatic `build()`, lifecycle hooks).
 
 - **0.12.0 — AI-Ready output + portable deploy-anywhere build (343 tests).**
   **C1:** `site.ai` config (`{enabled?,llmsTxt?,fullText?,mdMirror?}`) → `/llms.txt`
