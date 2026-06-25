@@ -474,9 +474,14 @@ export interface OvellumSiteConfig {
   /**
    * Raw HTML injected verbatim into `<head>` on every page, right before the
    * inline theme-boot script. Intended for analytics snippets and similar
-   * third-party `<script>`/`<link>`/`<meta>` tags. The string is **not**
-   * escaped or sanitised — only set it to markup you control. Unset = nothing
-   * injected (the default for end-user docs).
+   * third-party `<script>`/`<link>`/`<meta>` tags.
+   *
+   * **Trust boundary:** the string is injected **as-is** — never escaped or
+   * sanitised — so it can run arbitrary script on every page. Treat it like
+   * server config: only a site admin/author should set it, and it must be a
+   * literal you control. Never derive it from untrusted input (user content,
+   * request data, a CMS field, env you don't own). Unset = nothing injected
+   * (the default for end-user docs).
    */
   headExtra?: string;
 }

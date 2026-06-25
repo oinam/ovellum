@@ -75,12 +75,21 @@ export const upgradeCommand = defineCommand({
   },
 });
 
-/** Spawn the upgrade command, streaming its output. The command is built from
- *  a fixed manager/package allowlist (never user input), so `shell: true` is
- *  safe and lets the composed string run as written. */
+/** Spawn the upgrade command, streaming its output. The command is composed
+ *  from a fixed manager/package allowlist (never user input), so it's already
+ *  safe — but we still split it into an argv array and spawn **without a
+ *  shell** on POSIX, so no shell metacharacters are ever interpreted and a
+ *  future refactor can't reintroduce an injection. On Windows the package
+ *  managers are `.cmd` shims, which Node refuses to spawn without a shell
+ *  (CVE-2024-27980), so there we keep `shell: true` — still over fixed,
+ *  allowlisted tokens only. */
 function run(command: string): Promise<number> {
   return new Promise((resolve) => {
-    const child = spawn(command, { stdio: 'inherit', shell: true });
+    const [bin, ...rest] = command.trim().split(/\s+/);
+    const isWindows = process.platform === 'win32';
+    const child = isWindows
+      ? spawn(command, { stdio: 'inherit', shell: true })
+      : spawn(bin!, rest, { stdio: 'inherit', shell: false });
     child.on('close', (code) => resolve(code ?? 0));
     child.on('error', (err) => {
       process.stderr.write(`upgrade failed: ${err.message}\n`);

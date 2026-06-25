@@ -182,8 +182,8 @@ async function ask(d: InitAnswers): Promise<InitAnswers> {
   let tsconfig = d.tsconfig;
   let landing = d.landing;
   if (mode === 'manual') {
-    input_ = await input({ message: 'Content directory', default: d.input });
-    output = await input({ message: 'Output directory', default: d.output });
+    input_ = await input({ message: 'Content directory', default: d.input, validate: validateDir });
+    output = await input({ message: 'Output directory', default: d.output, validate: validateDir });
     landing = await confirm({
       message: 'Generate a landing page at / (hero + feature grid)?',
       default: false,
@@ -193,6 +193,7 @@ async function ask(d: InitAnswers): Promise<InitAnswers> {
     output = await input({
       message: 'Output directory for generated Markdown',
       default: 'docs',
+      validate: validateDir,
     });
   }
 
@@ -207,6 +208,19 @@ async function ask(d: InitAnswers): Promise<InitAnswers> {
   })) as InitAnswers['defaultTheme'];
 
   return { name, mode, title, description, input: input_, output, tsconfig, defaultTheme, landing };
+}
+
+/**
+ * Validate a prompted content/output directory: it must stay inside the
+ * project. Reject absolute paths and any `..` segment before we
+ * `path.join(cwd, …)` with it, so a stray answer can't write outside cwd.
+ */
+export function validateDir(value: string): true | string {
+  const v = value.trim();
+  if (v.length === 0) return 'Please enter a directory.';
+  if (path.isAbsolute(v)) return 'Use a path relative to the project, not an absolute one.';
+  if (v.split(/[\\/]/).includes('..')) return 'Path must stay inside the project (no `..`).';
+  return true;
 }
 
 /** Single-quote a string value for embedding in the generated TS. */

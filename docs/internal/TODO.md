@@ -101,14 +101,24 @@ Legend: `[ ]` not started · `[~]` in progress · `[x]` done · `[!]` blocked
   Chose a docs concept page over a landing section (landing redesign is queued).
   **No changeset** — website content only, not in the published package.
 
-**Tier C COMPLETE (C1–C5).** Still open elsewhere: A4/A3 **write side** —
-interactive reattach/delete (`ovellum orphans --reattach`); A5 `@preserve`
-auto-wrap, A6 `check --strict`, A7 incremental watch; **U4** `--verbose`; B8
-warning-severity (would enrich the `--json` surface); `ovellum_search_docs` MCP
-tool (Pagefind). Not yet versioned/published (changeset-version → **0.13.0**
-when shipping; **7** changesets staged: `persist-parsed-ir` (A1), `ovellum-diff`
-(A2), `rename-detection` (A3), `orphans-command` (A4), `mcp-server` (C2),
-`machine-readable-cli` (C3), `agent-packaging` (C4) — all minor).
+- **Security hardening S1–S6 (uncommitted, one slice).** Defense-in-depth, none
+  exploitable: argv spawn in `upgrade` (no shell on POSIX); dev-server symlink
+  re-check (`containedRealPath`) + request/headers timeouts; site passthrough
+  `..`/symlink guard (`isInsideDir`); `site.headExtra` documented as a trust
+  boundary (JSDoc + security page en+ja); `init` `validateDir`; update cache
+  `0o600` + registry `redirect:'error'` + size guard. Changeset
+  `security-hardening.md` (patch). Tests: dev-server symlink-escape +
+  `init-validate.test.ts`.
+
+**Tier C COMPLETE (C1–C5); security slice COMPLETE (S1–S6).** Still open
+elsewhere: A4/A3 **write side** — interactive reattach/delete (`ovellum orphans
+--reattach`); A5 `@preserve` auto-wrap, A6 `check --strict`, A7 incremental
+watch; **U4** `--verbose`; B8 warning-severity (would enrich the `--json`
+surface); `ovellum_search_docs` MCP tool (Pagefind). Not yet versioned/published
+(changeset-version → **0.13.0** when shipping; **8** changesets staged:
+`persist-parsed-ir` (A1), `ovellum-diff` (A2), `rename-detection` (A3),
+`orphans-command` (A4), `mcp-server` (C2), `machine-readable-cli` (C3),
+`agent-packaging` (C4) minor + `security-hardening` patch).
 
 - **0.12.0 — AI-Ready output + portable deploy-anywhere build (343 tests).**
   **C1:** `site.ai` config (`{enabled?,llmsTxt?,fullText?,mdMirror?}`) → `/llms.txt`

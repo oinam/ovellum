@@ -1,4 +1,4 @@
-import { createReadStream, existsSync, statSync } from 'node:fs';
+import { createReadStream, existsSync, realpathSync, statSync } from 'node:fs';
 import { readFile } from 'node:fs/promises';
 import http, { type IncomingMessage, type Server, type ServerResponse } from 'node:http';
 import path from 'node:path';
@@ -125,6 +125,11 @@ export async function startDevServer(opts: DevServerOptions): Promise<DevServer>
       res.end('Internal Server Error');
     });
   });
+  // Sane defaults so a stalled/slow client can't hold a connection open
+  // indefinitely (this binds to localhost by default — see DEFAULT_HOST in the
+  // dev/serve commands; pass --host 0.0.0.0 to expose on the network).
+  server.requestTimeout = 30_000;
+  server.headersTimeout = 15_000;
 
   await new Promise<void>((resolve, reject) => {
     server.once('error', reject);
@@ -175,18 +180,39 @@ function resolveFilePath(rootDir: string, urlPath: string): string | undefined {
   const rel = path.relative(rootDir, candidate);
   if (rel.startsWith('..') || path.isAbsolute(rel)) return undefined;
 
+  let resolved: string | undefined;
   if (existsSync(candidate)) {
     const stat = statSync(candidate);
-    if (stat.isFile()) return candidate;
-    if (stat.isDirectory()) {
+    if (stat.isFile()) resolved = candidate;
+    else if (stat.isDirectory()) {
       const indexHtml = path.join(candidate, 'index.html');
-      if (existsSync(indexHtml)) return indexHtml;
+      if (existsSync(indexHtml)) resolved = indexHtml;
     }
   }
-  // Try `<urlPath>.html` for extensionless requests like `/foo`.
-  const withHtml = candidate + '.html';
-  if (existsSync(withHtml) && statSync(withHtml).isFile()) return withHtml;
-  return undefined;
+  if (!resolved) {
+    // Try `<urlPath>.html` for extensionless requests like `/foo`.
+    const withHtml = candidate + '.html';
+    if (existsSync(withHtml) && statSync(withHtml).isFile()) resolved = withHtml;
+  }
+  if (!resolved) return undefined;
+
+  // The string-level check above defends against `..`, but a symlink inside
+  // rootDir could still point outside it. Resolve symlinks on both sides and
+  // re-verify containment before serving.
+  return containedRealPath(rootDir, resolved);
+}
+
+/** Return `target` only if its real (symlink-resolved) path stays under the
+ *  real path of `rootDir`; otherwise undefined. */
+function containedRealPath(rootDir: string, target: string): string | undefined {
+  try {
+    const root = realpathSync(rootDir);
+    const real = realpathSync(target);
+    if (real === root || real.startsWith(root + path.sep)) return target;
+    return undefined;
+  } catch {
+    return undefined;
+  }
 }
 
 async function serveFile(

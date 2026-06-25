@@ -16,8 +16,14 @@ export async function fetchLatestVersion(timeoutMs = 1500): Promise<string | nul
     const res = await fetch(DIST_TAGS_URL, {
       signal: controller.signal,
       headers: { accept: 'application/json' },
+      // Don't silently follow a redirect off the registry origin; and the
+      // dist-tags payload is a few bytes, so a large body means "not what we
+      // asked for" — bail rather than read it.
+      redirect: 'error',
     });
     if (!res.ok) return null;
+    const declaredLength = Number(res.headers.get('content-length') ?? '0');
+    if (declaredLength > 10_000) return null;
     const data: unknown = await res.json();
     if (data && typeof data === 'object' && 'latest' in data) {
       const latest = (data as Record<string, unknown>).latest;

@@ -41,32 +41,28 @@ defense-in-depth, not as a vulnerability.
 
 ## 1. Security hardening (near-term, all small — do as one slice)
 
-None of these are exploitable today; they remove latent foot-guns and
-document trust boundaries.
+**DONE 2026-06-24 (S1–S6, one slice).** None were exploitable; they remove
+latent foot-guns and document trust boundaries. Staged for 0.13.0.
 
-- [ ] **S1 (S)** `commands/upgrade.ts`: replace `spawn(command, {shell:true})`
-      with argv-array spawn (split the allowlisted command ourselves). Removes
-      the only `shell:true` in the codebase so future refactors can't make it
-      dangerous.
-- [ ] **S2 (S)** `dev/server.ts` `resolveFilePath()`: after the
-      normalize+relative containment check, `realpathSync` the final path and
-      re-verify it's under `rootDir` (closes the symlink escape). Also set
-      `server.requestTimeout`/`headersTimeout` sane defaults and confirm/
-      document localhost-only binding for `dev`/`serve`.
-- [ ] **S3 (S)** `site/src/build.ts` passthrough copy: reject any
-      `relFromInput` containing `..` (and skip symlinks that resolve outside
-      the input dir) with a one-line warning. Today only an in-repo symlink
-      could trigger it — cheap to close.
-- [ ] **S4 (S)** **Document `site.headExtra` as a trust boundary**: JSDoc on
-      the field in `@ovellum/core` types + a paragraph on the site's
-      `reference/security` page ("headExtra is injected verbatim by design;
-      only admins should set it"). It's intentional and tested — it just needs
-      to say so where users read.
-- [ ] **S5 (S)** `commands/init.ts`: validate the prompted input/output dirs —
-      reject absolute paths and `..` segments before `path.join(cwd, …)`.
-- [ ] **S6 (S)** `update/cache.ts`: write the cache file with mode `0o600`.
-      `update/registry.ts`: add `redirect: 'error'` to the fetch and keep the
-      response-size expectation tight.
+- [x] **S1 (S)** `commands/upgrade.ts`: argv-array spawn without a shell on
+      POSIX (split the allowlisted command ourselves); Windows keeps `shell:true`
+      because `.cmd` shims require it (CVE-2024-27980) — still fixed tokens only.
+- [x] **S2 (S)** `dev/server.ts` `resolveFilePath()`: `realpathSync` the final
+      path and re-verify it's under (realpath'd) `rootDir` — `containedRealPath`
+      closes the symlink escape. `server.requestTimeout`/`headersTimeout` set
+      (30s/15s). Localhost-only binding confirmed (DEFAULT_HOST `127.0.0.1`,
+      documented). Pinned by a symlink-escape dev-server test.
+- [x] **S3 (S)** `site/src/build.ts` passthrough copy: rejects `..`/absolute
+      `relFromInput` and symlinks resolving outside the input dir
+      (`isInsideDir`), each with a one-line warning.
+- [x] **S4 (S)** `site.headExtra` documented as a trust boundary — strengthened
+      JSDoc in `@ovellum/core` + a section on `reference/security` (en+ja):
+      injected verbatim by design, admin-only, never from untrusted input.
+- [x] **S5 (S)** `commands/init.ts`: `validateDir` rejects absolute paths and
+      `..` segments on the prompted content/output dirs. Pinned by
+      `init-validate.test.ts`.
+- [x] **S6 (S)** `update/cache.ts`: cache written with mode `0o600`.
+      `update/registry.ts`: `redirect: 'error'` + a content-length size guard.
 
 ## 2. Features — the 10x bets
 

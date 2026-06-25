@@ -1,5 +1,5 @@
 import { existsSync } from 'node:fs';
-import { copyFile, cp, mkdir, readFile, readdir, stat, writeFile } from 'node:fs/promises';
+import { copyFile, cp, mkdir, readFile, readdir, realpath, stat, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import matter from 'gray-matter';
@@ -398,6 +398,17 @@ export async function buildSite(options: BuildSiteOptions): Promise<BuildSiteRes
       } else {
         // Passthrough static asset — served under the locale prefix so a
         // co-located `content/<code>/x.png` lands at `/<code>/x.png`.
+        // Guard against escaping the content dir: a `..` in the relative path,
+        // or a symlink that resolves outside it (only an in-repo symlink could
+        // trigger this, but it's cheap to close).
+        if (relFromInput.startsWith('..') || path.isAbsolute(relFromInput)) {
+          warnings.push(`Skipped asset outside the content directory: ${relFromInput}`);
+          continue;
+        }
+        if (!(await isInsideDir(file, spec.inputAbs))) {
+          warnings.push(`Skipped symlinked asset resolving outside the content directory: ${relFromInput}`);
+          continue;
+        }
         const outRel = spec.urlPrefix ? path.join(spec.urlPrefix.slice(1), relFromInput) : relFromInput;
         const outputPath = path.join(outputAbs, outRel);
         await mkdir(path.dirname(outputPath), { recursive: true });
@@ -957,6 +968,18 @@ export function rewriteAssetUrls(html: string, base: string, paths: string[]): s
       .join('(' + cdn + ')');
   }
   return out;
+}
+
+/** Whether `file`'s real (symlink-resolved) path stays inside `dir`. Used to
+ *  reject passthrough assets that a symlink points outside the content dir. */
+async function isInsideDir(file: string, dir: string): Promise<boolean> {
+  try {
+    const root = await realpath(dir);
+    const real = await realpath(file);
+    return real === root || real.startsWith(root + path.sep);
+  } catch {
+    return false;
+  }
 }
 
 function urlFor(relFromInput: string): string {

@@ -105,6 +105,20 @@ filename argument to `git`, never interpreted by sh/zsh. Tests in
 `inject;touch PWNED;x.md` and `$(touch PWNED).md` and asserting the
 canary never appears.
 
+## Author-controlled HTML (`site.headExtra`)
+
+[`site.headExtra`](/docs/reference/config/#site) is injected into `<head>` on
+every page **verbatim** — never escaped or sanitized — so analytics snippets and
+similar third-party `<script>`/`<link>`/`<meta>` tags work as written. That makes
+it a **trust boundary**, by design: it can run arbitrary script on every page.
+
+Treat it like server configuration — only a site admin/author should set it, and
+only to a literal string you control. **Never** derive `headExtra` from
+untrusted input (reader-supplied content, request data, a CMS field, or
+environment you don't own); doing so reintroduces exactly the injection the
+sanitizer otherwise prevents. It's unset by default, so end-user docs ship with
+nothing injected.
+
 ## URL scheme allowlist in `ovellum check`
 
 Beyond render-time stripping, `ovellum check` flags links whose scheme
@@ -126,11 +140,11 @@ output format and exit codes.
 - **Supply-chain pinning.** `package.json` uses caret ranges (the npm
   default); we don't pin to exact versions. Acceptable for a dev tool
   but worth revisiting once Ovellum is widely installed.
-- **Symlink traversal in `input/`.** If an author's content directory
-  contains a symlink to `/etc/passwd`, Ovellum will read and
-  (depending on the file extension) potentially render its contents.
-  The mitigation is to trust the content directory; we don't try to
-  detect this today.
+- **Symlinked Markdown in `input/`.** Passthrough assets are guarded — the
+  build skips any file that resolves outside the content directory via a
+  symlink — but a symlinked _Markdown_ file inside `input/` is still read and
+  rendered. The mitigation is to trust the content directory; we don't try to
+  detect that case.
 - **Prototype pollution from config files.** A malicious config with
   `"__proto__": {…}` could in theory pollute prototypes, but the
   `Object.keys`-based merge in strict mode doesn't write to

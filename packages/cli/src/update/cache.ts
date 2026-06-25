@@ -52,7 +52,8 @@ export async function writeUpdateCache(cache: UpdateCache): Promise<void> {
   try {
     const file = cacheFile();
     await mkdir(path.dirname(file), { recursive: true });
-    await writeFile(file, JSON.stringify(cache), 'utf8');
+    // Owner-only perms — the cache is per-user state, never shared.
+    await writeFile(file, JSON.stringify(cache), { encoding: 'utf8', mode: 0o600 });
   } catch {
     // A non-writable cache dir is non-fatal; we just check again next time.
   }

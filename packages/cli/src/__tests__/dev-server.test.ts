@@ -1,4 +1,4 @@
-import { mkdtempSync, writeFileSync, mkdirSync } from 'node:fs';
+import { mkdtempSync, writeFileSync, mkdirSync, symlinkSync } from 'node:fs';
 import { rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
@@ -107,6 +107,26 @@ describe('dev server', () => {
     // the file outside rootDir.
     expect(r.body).not.toContain('root:');
     expect(r.status === 404 || r.status === 400).toBe(true);
+  });
+
+  it('does not follow a symlink that escapes the root', async () => {
+    // A secret outside the served root, and an in-root symlink pointing at it.
+    const outside = mkdtempSync(path.join(tmpdir(), 'ovellum-secret-'));
+    const secret = path.join(outside, 'secret.txt');
+    writeFileSync(secret, 'TOP-SECRET');
+    try {
+      symlinkSync(secret, path.join(dir, 'leak.txt'));
+    } catch {
+      return; // symlinks unavailable on this platform/CI — skip.
+    }
+    try {
+      server = await startDevServer({ rootDir: dir, port: 0, host: '127.0.0.1', liveReload: false });
+      const r = await getText(server.url + 'leak.txt');
+      expect(r.body).not.toContain('TOP-SECRET');
+      expect(r.status).toBe(404);
+    } finally {
+      await rm(outside, { recursive: true, force: true });
+    }
   });
 
   it('broadcastReload pushes a reload event to SSE clients', async () => {
