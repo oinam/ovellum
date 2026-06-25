@@ -1,5 +1,75 @@
 # ovellum
 
+## 0.15.0
+
+### Minor Changes
+
+- 7b1bfff: One-step MCP adoption: a Claude Code plugin + cross-tool install.
+
+  Ovellum is now installable as a **Claude Code plugin** that bundles the
+  `ovellum-docs` skill and registers the MCP server in one step:
+
+  ```
+  /plugin marketplace add oinam/ovellum
+  /plugin install ovellum@ovellum
+  ```
+
+  For other MCP clients (Cursor, Windsurf, Cline, VS Code), add `ovellum` to the
+  tool's MCP config — `{ "command": "npx", "args": ["-y", "ovellum", "mcp"] }`. The
+  [Automation guide](https://ovellum.oss.oinam.com/docs/guides/automation/) has
+  per-tool snippets.
+
+  Also: `ovellum mcp` is now explicitly excluded from the update-notifier, so
+  nothing but JSON-RPC ever reaches stdout when running as a server.
+
+- 0e23a66: MCP server: add Resources and Prompts.
+
+  `ovellum mcp` is now a first-class MCP server, not just a bag of tools. It
+  advertises `resources` and `prompts` capabilities alongside `tools`:
+  - **Resources** — Ovellum's read surface as pullable context: `ovellum://llms.txt`
+    / `ovellum://llms-full.txt` (the AI output), `ovellum://page/{path}` (a built
+    page's Markdown), `ovellum://ir` (the IR snapshot), and `ovellum://orphans`.
+  - **Prompts** — guided workflows the client surfaces: `set-up-ovellum`,
+    `document-symbol` (read a symbol, draft prose, and write it into a protected
+    zone that survives regeneration — the differentiator), and `review-doc-drift`.
+
+  Still dependency-free (hand-rolled JSON-RPC, no SDK).
+
+- d860c33: MCP server: add `ovellum_search_docs` and `ovellum_reattach` tools.
+
+  The `ovellum mcp` server gains two tools that round out the agent surface:
+  - **`ovellum_search_docs`** — full-text search over the built docs, returning
+    ranked pages (path, title, score, snippet). It's a built-in term-frequency
+    search over the output Markdown, so it works in every mode with no extra
+    runtime.
+  - **`ovellum_reattach`** — the non-interactive counterpart of
+    `ovellum orphans --reattach`: splice an orphan's prose back into a protected
+    zone under a target anchor (defaulting to the suggested present-again /
+    renamed one) and remove the archive, or delete the orphan — so an agent can
+    rescue orphaned prose after a refactor.
+
+- 26edfb1: Add a programmatic API — drive Ovellum in-process.
+
+  You can now import Ovellum as a library instead of shelling out to the CLI:
+
+  ```ts
+  import { build, watch } from 'ovellum';
+
+  const summary = await build({ cwd: 'docs', out: '../site/public/docs', base: '/docs' });
+  const watcher = await watch({ cwd: 'docs', onBuild: () => devServer.reload() });
+  ```
+
+  - `build(options)` returns the same structured `BuildSummary` the CLI computes.
+  - `watch(options)` returns a handle with `close()`; rebuilds are incremental in
+    auto/hybrid mode.
+  - `loadConfig(options)` returns the resolved config; `defineConfig` and the
+    config / summary types are re-exported.
+
+  `import 'ovellum'` is now **side-effect-free** — the CLI is a separate binary, so
+  importing the package no longer runs it. This makes it clean to wire Ovellum into
+  a framework dev server, a monorepo task runner, or a custom build step. The
+  package is ESM-only (`type: module`); use a dynamic `import()` from CommonJS.
+
 ## 0.14.0
 
 ### Minor Changes
