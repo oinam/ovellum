@@ -1,7 +1,8 @@
 import path from 'node:path';
 import chokidar, { type FSWatcher } from 'chokidar';
 import { ConfigError, loadOvellumConfig, type OvellumConfig } from '@ovellum/core';
-import { runBuild, type BuildSummary } from './run-build.js';
+import { createIncrementalParser, type IncrementalParser } from '@ovellum/parser';
+import { runBuild, runIncrementalBuild, type BuildSummary } from './run-build.js';
 
 const DEBOUNCE_MS = 300;
 
@@ -70,20 +71,46 @@ export async function watchAndBuild(input: WatchAndBuildOptions): Promise<Active
     awaitWriteFinish: { stabilityThreshold: 80, pollInterval: 25 },
   });
 
-  let timer: NodeJS.Timeout | undefined;
-  let pending: Set<string> = new Set();
+  // Warm incremental parser for auto/hybrid (A7). Kept across rebuilds so a
+  // change re-parses only the edited file instead of the whole project. Reset
+  // to null whenever the config (and thus include/exclude globs) reloads, and
+  // recreated lazily. Manual mode doesn't parse source, so it stays full.
+  let parser: IncrementalParser | null = null;
+  const ensureParser = (): IncrementalParser | null => {
+    if (config.mode === 'manual') return null;
+    if (!parser) parser = createIncrementalParser({ config, cwd });
+    return parser;
+  };
+  // Seed the baseline now, before any edits, so the first change diffs against
+  // the project's pre-change state.
+  ensureParser();
 
-  const schedule = (file: string): void => {
-    pending.add(path.relative(cwd, file).replace(/\\/g, '/') || file);
+  let timer: NodeJS.Timeout | undefined;
+  let changed = new Set<string>();
+  let removed = new Set<string>();
+
+  const schedule = (fileAbs: string, kind: 'change' | 'remove'): void => {
+    const abs = path.resolve(fileAbs);
+    if (kind === 'remove') {
+      removed.add(abs);
+      changed.delete(abs);
+    } else {
+      changed.add(abs);
+      removed.delete(abs);
+    }
     if (timer) clearTimeout(timer);
     timer = setTimeout(async () => {
-      const files = Array.from(pending);
-      pending = new Set();
-      process.stdout.write(
-        `\nchanged: ${files.length === 1 ? files[0] : `${files.length} files`}\n`,
-      );
-      // Reload config if it changed.
-      if (configFile && files.some((f) => path.resolve(cwd, f) === configFile)) {
+      const changedAbs = Array.from(changed);
+      const removedAbs = Array.from(removed);
+      changed = new Set();
+      removed = new Set();
+
+      const all = [...changedAbs, ...removedAbs];
+      const rels = all.map((a) => path.relative(cwd, a).replace(/\\/g, '/') || a);
+      process.stdout.write(`\nchanged: ${rels.length === 1 ? rels[0] : `${rels.length} files`}\n`);
+
+      // Config change → reload and full rebuild (globs/input may have moved).
+      if (configFile && all.some((a) => a === configFile)) {
         try {
           const reloaded = await loadOvellumConfig({ cwd, configFile });
           config = reloaded.config;
@@ -97,14 +124,28 @@ export async function watchAndBuild(input: WatchAndBuildOptions): Promise<Active
           }
           throw err;
         }
+        parser = null;
+        await safeBuild(config, cwd, onBuild, logError, includeDrafts);
+        ensureParser();
+        return;
       }
-      await safeBuild(config, cwd, onBuild, logError, includeDrafts);
+
+      const p = ensureParser();
+      if (!p) {
+        // Manual mode — the site builder rebuilds the whole site.
+        await safeBuild(config, cwd, onBuild, logError, includeDrafts);
+        return;
+      }
+      // Auto / hybrid — incremental rebuild of only the affected outputs.
+      const srcChanged = changedAbs.filter((a) => a !== configFile);
+      const srcRemoved = removedAbs.filter((a) => a !== configFile);
+      await safeIncremental(p, config, cwd, srcChanged, srcRemoved, onBuild, logError);
     }, DEBOUNCE_MS);
   };
 
-  watcher.on('add', schedule);
-  watcher.on('change', schedule);
-  watcher.on('unlink', schedule);
+  watcher.on('add', (f) => schedule(f, 'change'));
+  watcher.on('change', (f) => schedule(f, 'change'));
+  watcher.on('unlink', (f) => schedule(f, 'remove'));
 
   return {
     close: async () => {
@@ -127,6 +168,30 @@ async function safeBuild(
     const unit = result.mode === 'manual' ? 'page' : 'file';
     process.stdout.write(
       `built ${count} ${unit}(s) in ${result.elapsedMs}ms` +
+        (result.warnings.length > 0 ? ` (${result.warnings.length} warning(s))` : '') +
+        '\n',
+    );
+    for (const w of result.warnings) process.stderr.write(`warning: ${w}\n`);
+    if (onBuild) await onBuild(result);
+  } catch (err) {
+    onError(err as Error);
+  }
+}
+
+async function safeIncremental(
+  parser: IncrementalParser,
+  config: OvellumConfig,
+  cwd: string,
+  changed: string[],
+  removed: string[],
+  onBuild: WatchAndBuildOptions['onBuild'],
+  onError: (err: Error) => void,
+): Promise<void> {
+  try {
+    const result = await runIncrementalBuild({ parser, config, cwd, changed, removed });
+    const n = result.written?.length ?? 0;
+    process.stdout.write(
+      `rebuilt ${n} file(s) in ${result.elapsedMs}ms` +
         (result.warnings.length > 0 ? ` (${result.warnings.length} warning(s))` : '') +
         '\n',
     );

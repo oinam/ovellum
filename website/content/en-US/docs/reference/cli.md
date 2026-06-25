@@ -525,7 +525,14 @@ ovellum watch [--cwd <dir>] [--config <path>]
 
 - An initial build runs once on start.
 - Changes to any file under `input/` re-trigger the same pipeline.
-- Changes to the **config file itself** reload it before the next build.
+- **Incremental rebuilds (auto / hybrid).** After the first build, the watcher
+  keeps the parser warm and re-parses only the files you changed, then rebuilds
+  only the docs whose content actually changed — much faster on large codebases.
+  The persisted [IR snapshot](#ovellum-build) still reflects the whole project,
+  and hybrid protected zones are preserved exactly as in a full build. (Manual
+  mode rebuilds the whole site, as before.)
+- Changes to the **config file itself** reload it before the next build (and
+  reset the warm parser, since include/exclude globs may have moved).
 - `Ctrl-C` shuts the watcher down cleanly.
 
 No HTTP server, no live reload — pair with `ovellum serve` in another

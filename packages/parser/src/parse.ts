@@ -1,3 +1,4 @@
+import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { Project, ScriptTarget, ModuleKind } from 'ts-morph';
 import type { DocFile, DocProject, OvellumConfig } from '@ovellum/core';
@@ -24,9 +25,89 @@ export interface ParseOptions {
  */
 export function parseProject(options: ParseOptions): DocProject {
   const { config, cwd } = options;
-  const absInput = path.resolve(cwd, config.input);
+  const project = newProject();
+  project.addSourceFilesAtPaths(globPatterns(cwd, config));
+  return {
+    ...projectMeta(options),
+    files: extractAll(project, cwd, config),
+    generatedAt: new Date().toISOString(),
+  };
+}
 
-  const project = new Project({
+/**
+ * A parser that keeps its ts-morph `Project` warm across rebuilds (A7). The
+ * expensive part of a cold parse is creating the project and reading every file
+ * from disk; `update()` reuses the project, refreshing only the files that
+ * changed, then re-extracts (cheap, in-memory AST walks) the whole project so
+ * cross-file effects are still reflected. It reports which `DocFile`s actually
+ * changed so callers can rebuild only the affected outputs.
+ */
+export interface IncrementalParser {
+  /** The current whole-project IR (kept in sync by `update`). */
+  readonly project: DocProject;
+  /**
+   * Apply file changes and return the refreshed IR plus the relative paths of
+   * source files whose `DocFile` changed (new or edited — including ripples
+   * from a cross-file type change).
+   */
+  update(changes: { changed?: string[]; removed?: string[] }): {
+    project: DocProject;
+    affected: string[];
+  };
+}
+
+export function createIncrementalParser(options: ParseOptions): IncrementalParser {
+  const { config, cwd } = options;
+  const patterns = globPatterns(cwd, config);
+  const project = newProject();
+  project.addSourceFilesAtPaths(patterns);
+
+  const meta = projectMeta(options);
+  let current: DocProject = { ...meta, files: extractAll(project, cwd, config), generatedAt: new Date().toISOString() };
+
+  return {
+    get project() {
+      return current;
+    },
+    update({ changed = [], removed = [] }) {
+      for (const abs of removed) {
+        const sf = project.getSourceFile(abs);
+        if (sf) project.removeSourceFile(sf);
+      }
+      let sawNew = false;
+      for (const abs of changed) {
+        const sf = project.getSourceFile(abs);
+        if (sf) {
+          // Re-read from disk and re-parse just this file's AST.
+          try {
+            sf.replaceWithText(readFileSync(abs, 'utf8'));
+          } catch {
+            // The file vanished between the event and now — drop it.
+            project.removeSourceFile(sf);
+          }
+        } else {
+          sawNew = true;
+        }
+      }
+      // A genuinely new path is only documented if it matches the include/
+      // exclude globs — let ts-morph apply them rather than guessing.
+      if (sawNew) project.addSourceFilesAtPaths(patterns);
+
+      const before = new Map(current.files.map((f) => [f.filePath, JSON.stringify(f)]));
+      const files = extractAll(project, cwd, config);
+      const affected: string[] = [];
+      for (const f of files) {
+        if (before.get(f.filePath) !== JSON.stringify(f)) affected.push(f.filePath);
+      }
+
+      current = { ...meta, files, generatedAt: new Date().toISOString() };
+      return { project: current, affected };
+    },
+  };
+}
+
+function newProject(): Project {
+  return new Project({
     compilerOptions: {
       allowJs: true,
       target: ScriptTarget.ESNext,
@@ -37,13 +118,25 @@ export function parseProject(options: ParseOptions): DocProject {
     skipAddingFilesFromTsConfig: true,
     useInMemoryFileSystem: false,
   });
+}
 
-  const patterns = [
+function globPatterns(cwd: string, config: OvellumConfig): string[] {
+  const absInput = path.resolve(cwd, config.input);
+  return [
     ...config.include.map((g) => toPosix(path.join(absInput, g))),
     ...config.exclude.map((g) => '!' + toPosix(path.join(absInput, g))),
   ];
-  project.addSourceFilesAtPaths(patterns);
+}
 
+function projectMeta(options: ParseOptions): { name: string; version: string } {
+  return {
+    name: options.projectName ?? options.config.name ?? 'project',
+    version: options.projectVersion ?? '0.0.0',
+  };
+}
+
+/** Extract every source file in the project into DocFiles (sorted, stable). */
+function extractAll(project: Project, cwd: string, config: OvellumConfig): DocFile[] {
   const files: DocFile[] = [];
   for (const sf of project.getSourceFiles()) {
     const abs = sf.getFilePath();
@@ -57,16 +150,8 @@ export function parseProject(options: ParseOptions): DocProject {
     if (moduleDoc.description) docFile.description = moduleDoc.description;
     files.push(docFile);
   }
-
-  // Sort files for deterministic output ordering.
   files.sort((a, b) => a.filePath.localeCompare(b.filePath));
-
-  return {
-    name: options.projectName ?? config.name ?? 'project',
-    version: options.projectVersion ?? '0.0.0',
-    files,
-    generatedAt: new Date().toISOString(),
-  };
+  return files;
 }
 
 function readModuleJsDoc(sf: import('ts-morph').SourceFile): {

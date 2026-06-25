@@ -118,9 +118,15 @@ A1 unlocks A2–A4.
       vs `collectAnchorIds(parseProject)`), `missing-frontmatter` (no title +
       no H1); `[STRICT]`-tagged, `counts.strictIssues` in `--json`; MCP
       `ovellum_check` gains `strict`. Off by default; exit 1 on any issue.
-- [ ] **A7 (L)** **Incremental watch builds** — re-parse only changed files,
-      re-merge only affected outputs. Matters once real codebases (>100
-      files) adopt hybrid mode.
+- [x] **A7 (L)** **Incremental watch builds** — re-parse only changed files,
+      re-merge only affected outputs. **Done 2026-06-25:** `createIncrementalParser`
+      keeps a warm ts-morph Project; `update()` refreshes only changed files,
+      re-extracts the whole project (cheap, in-memory AST walks → cross-file
+      ripples reflected, no staleness) and returns the changed `DocFile`s; the
+      watcher routes auto/hybrid changes through `runIncrementalBuild`, which
+      rebuilds only affected outputs via the shared `buildProjectDocs` (full +
+      incremental one code path → parity). `ir.json` stays whole-project; hybrid
+      zones preserved; manual + config-change stay full.
 
 ### Tier B — site-builder parity (vs Docusaurus/VitePress/Starlight)
 

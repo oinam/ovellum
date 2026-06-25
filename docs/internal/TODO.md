@@ -119,13 +119,17 @@ per-feature detail. ROADMAP **Tier A**:
 + the `--reattach` write side (uncommitted, in flight for 0.14.0; changeset
 `orphans-reattach.md`, minor; `dev/orphans.ts` `suggestReattachTarget`/
 `reattachOrphan`/`deleteOrphan` + `commands/orphans.ts` `reattachFlow`; 119 cli
-tests). **Tier A COMPLETE except A7** (incremental watch, L). **Still open:** A7;
-**U4** `--verbose`; B8 warning-severity (would enrich `--json`);
-`ovellum_search_docs` MCP tool (Pagefind); and the larger untouched **Tier B**
-(plugin API, versioned docs, composable landing) + **Tier D** (programmatic
-`build()`, lifecycle hooks). **Next release 0.14.0** — 3 changesets staged:
-`orphans-reattach` (A4/A3 write side), `check-strict` (A6), `preserve-autowrap`
-(A5); all minor. (A5 done 2026-06-25: hybrid generator wraps `@preserve` symbols
+tests). **Tier A COMPLETE (A1–A7).** **Still open:** **U4** `--verbose`; B8
+warning-severity (would enrich `--json`); `ovellum_search_docs` MCP tool
+(Pagefind); and the larger untouched **Tier B** (plugin API, versioned docs,
+composable landing) + **Tier D** (programmatic `build()`, lifecycle hooks).
+**Next release 0.14.0** — 4 changesets staged: `orphans-reattach` (A4/A3 write
+side), `check-strict` (A6), `preserve-autowrap` (A5), `incremental-watch` (A7);
+all minor. (A7 done 2026-06-25: `createIncrementalParser` warm ts-morph Project
++ `runIncrementalBuild`; full & incremental share `buildProjectDocs` in
+`run-build.ts` → parity. Known limit by design: re-extracts whole project each
+change so cross-file ripples are correct, but startup parses twice — once in the
+initial `runBuild`, once seeding the warm parser. Acceptable; could unify later.) (A5 done 2026-06-25: hybrid generator wraps `@preserve` symbols
 in a `@manual` seed zone — `templates.ts` `wrapPreserved` + merger
 `stripGeneratedBlocks` to avoid duplicating the seed.)
 

@@ -1,8 +1,8 @@
 import { existsSync } from 'node:fs';
 import { mkdir, writeFile } from 'node:fs/promises';
 import path from 'node:path';
-import type { OrphanRecord, OvellumConfig, OvellumMode } from '@ovellum/core';
-import { parseProject } from '@ovellum/parser';
+import type { DocProject, OrphanRecord, OvellumConfig, OvellumMode } from '@ovellum/core';
+import { parseProject, type IncrementalParser } from '@ovellum/parser';
 import { generateDocs } from '@ovellum/generator';
 import { readManualDoc } from '@ovellum/reader';
 import { merge, writeOrphan } from '@ovellum/merger';
@@ -103,16 +103,36 @@ async function runBuildForMode(
     };
   }
 
-  // auto / hybrid
-  //
+  // auto / hybrid — full parse, then build every output.
+  return buildProjectDocs(parseProject({ config, cwd }), config, cwd, startedAt);
+}
+
+/**
+ * Generate + merge + write an auto/hybrid `DocProject`, write the orphan archive
+ * and the IR snapshot. Shared by full builds and incremental rebuilds so the two
+ * can't diverge. With `opts.onlyFiles`, only those source files' outputs are
+ * (re)generated — the rest of the existing output is left untouched — while the
+ * persisted `ir.json` still reflects the *whole* project.
+ */
+async function buildProjectDocs(
+  project: DocProject,
+  config: OvellumConfig,
+  cwd: string,
+  startedAt: number,
+  opts: { onlyFiles?: Set<string> } = {},
+): Promise<BuildSummary> {
   // Read the previous IR snapshot *before* we overwrite it, so a freshly
   // orphaned block can record when its anchor was last seen — the timestamp of
   // the last build that still contained it (A4 / `ovellum orphans`).
   const prevIR = readProjectIR(cwd);
   const prevAnchors = prevIR ? collectAnchorIds(prevIR.project) : null;
 
-  const project = parseProject({ config, cwd });
-  const { files, warnings } = generateDocs(project, config);
+  // Restrict generation to the affected files for an incremental rebuild; the
+  // IR persisted below is always the whole project.
+  const scoped = opts.onlyFiles
+    ? { ...project, files: project.files.filter((f) => opts.onlyFiles!.has(f.filePath)) }
+    : project;
+  const { files, warnings } = generateDocs(scoped, config);
 
   const orphanRecords: OrphanRecord[] = [];
   const mergedFiles: string[] = [];
@@ -144,7 +164,7 @@ async function runBuildForMode(
     // Suggest-only rename detection: if a block was orphaned because its anchor
     // vanished, but a similar new symbol appeared this build, the symbol was
     // probably renamed — point at the likely new home instead of silently
-    // quarantining (A3).
+    // quarantining (A3). Compared against the *whole* current project.
     const currentAnchors = collectAnchorIds(project);
     const renameTarget = new Map<string, string>();
     if (prevIR && prevAnchors) {
@@ -186,4 +206,26 @@ async function runBuildForMode(
     quarantined,
     irPath,
   };
+}
+
+/**
+ * Incremental auto/hybrid rebuild for the watcher (A7). Re-parses only the
+ * changed files via the warm parser, then rebuilds only the outputs whose IR
+ * actually changed. Behaviour-identical to a full build for those files.
+ */
+export async function runIncrementalBuild(input: {
+  parser: IncrementalParser;
+  config: OvellumConfig;
+  cwd: string;
+  changed: string[];
+  removed: string[];
+}): Promise<BuildSummary> {
+  const startedAt = Date.now();
+  const { project, affected } = input.parser.update({
+    changed: input.changed,
+    removed: input.removed,
+  });
+  return buildProjectDocs(project, input.config, input.cwd, startedAt, {
+    onlyFiles: new Set(affected),
+  });
 }
