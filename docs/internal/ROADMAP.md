@@ -355,13 +355,14 @@ Make the MCP server a first-class citizen (it's the universal AI runtime
 interface) and adoption one-step, leaning on the `write_zone` moat. C1–C5 shipped
 the three surfaces (read / drive / know); these deepen *drive* + distribution.
 
-- [ ] **M1 (M)** **MCP Resources + Prompts.** Extend the hand-rolled server
-      (`dev/mcp/server.ts`) with `resources/*` + `prompts/*` and advertise
-      `capabilities:{tools,resources,prompts}`. Resources: `ovellum://llms.txt`,
-      `…/llms-full.txt`, `ovellum://page/{path}`, `ovellum://ir`,
-      `ovellum://orphans`. Prompts: `set-up-ovellum`, `document-symbol` (the moat
-      workflow: query_symbol → write_zone w/ dry-run), `review-doc-drift`. Stay
-      dependency-free unless notifications force the SDK.
+- [x] **M1 (M)** **MCP Resources + Prompts.** **Done 2026-06-25:** server
+      advertises `capabilities:{tools,resources,prompts}` and implements
+      `resources/{list,templates/list,read}` (`dev/mcp/resources.ts`:
+      `ovellum://llms.txt`, `…/llms-full.txt`, `ovellum://page/{path}`,
+      `ovellum://ir`, `ovellum://orphans`; unknown → -32002) and
+      `prompts/{list,get}` (`dev/mcp/prompts.ts`: `set-up-ovellum`,
+      `document-symbol` (the moat workflow), `review-doc-drift`). Still
+      hand-rolled, no SDK. Pinned by `mcp-server.test.ts` (now 11). Next: M2.
 - [ ] **M2 (S–M)** **One-step distribution.** A **Claude Code plugin** bundling
       the Skill + MCP registration (completes C4); list in the **MCP registry** /
       connector directories; assert `npx ovellum mcp` is clean headless (notifier

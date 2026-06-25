@@ -1,13 +1,14 @@
 import type { Readable, Writable } from 'node:stream';
 import { ovellumTools, type McpTool } from './tools.js';
+import { listResources, listResourceTemplates, readResource, ResourceNotFound } from './resources.js';
+import { ovellumPrompts } from './prompts.js';
 
 /**
  * A minimal, dependency-free MCP server over stdio (newline-delimited JSON-RPC
- * 2.0). Implements just enough of the protocol — `initialize`,
- * `notifications/initialized`, `tools/list`, `tools/call`, `ping` — to expose
- * Ovellum's tools to an agent, without pulling the full MCP SDK (and zod) into
- * the published CLI. `handleMessage` is pure and unit-tested; `runStdio` wires
- * it to streams.
+ * 2.0). Implements enough of the protocol — `initialize`, `tools/*`,
+ * `resources/*`, `prompts/*`, `ping` — to make Ovellum a first-class MCP server
+ * (M1), without pulling the full MCP SDK (and zod) into the published CLI.
+ * `handleMessage` is pure and unit-tested; `runStdio` wires it to streams.
  */
 
 const DEFAULT_PROTOCOL_VERSION = '2024-11-05';
@@ -36,6 +37,8 @@ export interface McpServer {
 export function createMcpServer(opts: { cwd: string; version: string }): McpServer {
   const tools = ovellumTools();
   const byName = new Map<string, McpTool>(tools.map((t) => [t.name, t]));
+  const prompts = ovellumPrompts();
+  const promptByName = new Map(prompts.map((p) => [p.name, p]));
 
   function ok(id: JsonRpcMessage['id'], result: unknown): JsonRpcResponse {
     return { jsonrpc: '2.0', id: id ?? null, result };
@@ -57,7 +60,7 @@ export function createMcpServer(opts: { cwd: string; version: string }): McpServ
             : DEFAULT_PROTOCOL_VERSION;
         return ok(id, {
           protocolVersion: requested,
-          capabilities: { tools: {} },
+          capabilities: { tools: {}, resources: {}, prompts: {} },
           serverInfo: { name: 'ovellum', version: opts.version },
         });
       }
@@ -89,6 +92,39 @@ export function createMcpServer(opts: { cwd: string; version: string }): McpServ
           const message = err instanceof Error ? err.message : String(err);
           return ok(id, { content: [{ type: 'text', text: message }], isError: true });
         }
+      }
+      case 'resources/list':
+        try {
+          return ok(id, { resources: await listResources(opts.cwd) });
+        } catch (err) {
+          return fail(id, -32603, err instanceof Error ? err.message : String(err));
+        }
+      case 'resources/templates/list':
+        return ok(id, { resourceTemplates: listResourceTemplates() });
+      case 'resources/read': {
+        const uri = typeof msg.params?.uri === 'string' ? msg.params.uri : '';
+        try {
+          const contents = await readResource(opts.cwd, uri);
+          return ok(id, { contents: [contents] });
+        } catch (err) {
+          const code = err instanceof ResourceNotFound ? err.code : -32603;
+          return fail(id, code, err instanceof Error ? err.message : String(err));
+        }
+      }
+      case 'prompts/list':
+        return ok(id, {
+          prompts: prompts.map((p) => ({
+            name: p.name,
+            description: p.description,
+            arguments: p.arguments,
+          })),
+        });
+      case 'prompts/get': {
+        const name = typeof msg.params?.name === 'string' ? msg.params.name : '';
+        const prompt = promptByName.get(name);
+        if (!prompt) return fail(id, -32602, `unknown prompt: ${name}`);
+        const args = (msg.params?.arguments as Record<string, string>) ?? {};
+        return ok(id, { description: prompt.description, messages: prompt.render(args) });
       }
       default:
         if (isNotification) return null;

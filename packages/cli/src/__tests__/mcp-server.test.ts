@@ -127,4 +127,65 @@ describe('MCP server', () => {
     const unknownMethod = await server.handleMessage({ jsonrpc: '2.0', id: 5, method: 'does/not/exist' });
     expect(unknownMethod?.error?.code).toBe(-32601);
   });
+
+  it('advertises resources + prompts capabilities', async () => {
+    const init = await server.handleMessage({ jsonrpc: '2.0', id: 1, method: 'initialize', params: {} });
+    expect(init?.result).toMatchObject({ capabilities: { tools: {}, resources: {}, prompts: {} } });
+  });
+
+  it('lists and reads resources (IR + orphans)', async () => {
+    const list = await server.handleMessage({ jsonrpc: '2.0', id: 2, method: 'resources/list' });
+    const uris = (list?.result as { resources: Array<{ uri: string }> }).resources.map((r) => r.uri);
+    // The hybrid project built in beforeEach has an IR snapshot + the orphans resource.
+    expect(uris).toContain('ovellum://ir');
+    expect(uris).toContain('ovellum://orphans');
+
+    const ir = await server.handleMessage({
+      jsonrpc: '2.0',
+      id: 3,
+      method: 'resources/read',
+      params: { uri: 'ovellum://ir' },
+    });
+    const irText = (ir?.result as { contents: Array<{ text: string; mimeType: string }> }).contents[0];
+    expect(irText.mimeType).toBe('application/json');
+    expect(JSON.parse(irText.text).project.files[0].filePath).toBe('src/math.ts');
+
+    const tmpl = await server.handleMessage({ jsonrpc: '2.0', id: 4, method: 'resources/templates/list' });
+    const templates = (tmpl?.result as { resourceTemplates: Array<{ uriTemplate: string }> }).resourceTemplates;
+    expect(templates[0]?.uriTemplate).toBe('ovellum://page/{path}');
+  });
+
+  it('returns -32002 for an unknown resource uri', async () => {
+    const res = await server.handleMessage({
+      jsonrpc: '2.0',
+      id: 5,
+      method: 'resources/read',
+      params: { uri: 'ovellum://nope' },
+    });
+    expect(res?.error?.code).toBe(-32002);
+  });
+
+  it('lists prompts and renders document-symbol with its argument', async () => {
+    const list = await server.handleMessage({ jsonrpc: '2.0', id: 6, method: 'prompts/list' });
+    const names = (list?.result as { prompts: Array<{ name: string }> }).prompts.map((p) => p.name);
+    expect(names).toEqual(['set-up-ovellum', 'document-symbol', 'review-doc-drift']);
+
+    const got = await server.handleMessage({
+      jsonrpc: '2.0',
+      id: 7,
+      method: 'prompts/get',
+      params: { name: 'document-symbol', arguments: { symbol: 'src/math.ts::add' } },
+    });
+    const messages = (got?.result as { messages: Array<{ content: { text: string } }> }).messages;
+    expect(messages[0]?.content.text).toContain('src/math.ts::add');
+    expect(messages[0]?.content.text).toContain('ovellum_write_zone');
+
+    const unknown = await server.handleMessage({
+      jsonrpc: '2.0',
+      id: 8,
+      method: 'prompts/get',
+      params: { name: 'nope' },
+    });
+    expect(unknown?.error?.code).toBe(-32602);
+  });
 });

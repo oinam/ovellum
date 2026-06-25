@@ -702,6 +702,28 @@ the next build overwrites it.
 The IR-backed tools need a snapshot — run a build first (or call
 `ovellum_build`) so `.ovellum/ir.json` exists.
 
+### Resources
+
+Beyond tools, the server exposes Ovellum's read surface as MCP **resources** —
+context an agent can pull directly:
+
+| URI | What |
+| --- | --- |
+| `ovellum://llms.txt` / `ovellum://llms-full.txt` | The AI index / corpus (when built). |
+| `ovellum://page/{path}` | A built page's Markdown by output-relative path (a resource template). |
+| `ovellum://ir` | The parsed IR snapshot (`.ovellum/ir.json`). |
+| `ovellum://orphans` | Quarantined manual blocks with age + reattachability. |
+
+### Prompts
+
+And curated **prompts** (guided workflows the client surfaces):
+
+| Prompt | What |
+| --- | --- |
+| `set-up-ovellum` | Scaffold docs and explain the hybrid contract. |
+| `document-symbol` (`symbol`) | Read a symbol, draft prose, and write it into a protected zone that survives regeneration. |
+| `review-doc-drift` | Diff against the snapshot and surface orphans to reattach. |
+
 ### Example (Claude Code)
 
 ```bash

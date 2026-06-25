@@ -1,7 +1,7 @@
 ---
 title: CLI リファレンス
 description: ovellum CLI のすべてのサブコマンドとフラグ。
-sourceHash: 'c3a731392de466ad'
+sourceHash: '2f54b26ab7fa91c8'
 ---
 
 # CLI リファレンス
@@ -689,6 +689,28 @@ ovellum mcp [--cwd <dir>]
 
 IR ベースのツールはスナップショットを必要とします — 先にビルドを実行してください（または
 `ovellum_build` を呼んでください）。そうすれば `.ovellum/ir.json` が存在します。
+
+### リソース
+
+ツールに加えて、サーバーは Ovellum の読み取り面を MCP **リソース**として公開します —
+エージェントが直接取り込めるコンテキストです:
+
+| URI | 内容 |
+| --- | --- |
+| `ovellum://llms.txt` / `ovellum://llms-full.txt` | AI 用のインデックス / コーパス（ビルド済みのとき）。 |
+| `ovellum://page/{path}` | ビルド済みページの Markdown を出力相対パスで（リソーステンプレート）。 |
+| `ovellum://ir` | 解析済みの IR スナップショット（`.ovellum/ir.json`）。 |
+| `ovellum://orphans` | 隔離された手動ブロックと、経過日数 + 再アタッチ可否。 |
+
+### プロンプト
+
+そして、厳選された**プロンプト**（クライアントが提示する誘導ワークフロー）:
+
+| Prompt | 内容 |
+| --- | --- |
+| `set-up-ovellum` | ドキュメントをスキャフォールドし、hybrid の契約を説明します。 |
+| `document-symbol`（`symbol`） | シンボルを読み、文章を起案し、再生成を生き延びる保護ゾーンに書き込みます。 |
+| `review-doc-drift` | スナップショットと差分し、再アタッチすべき孤立を提示します。 |
 
 ### 例（Claude Code）
 

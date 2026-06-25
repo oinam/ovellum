@@ -33,7 +33,12 @@ copy-paste to install. The plan closes both.
 
 ## Slices
 
-### M1 — MCP Resources + Prompts (highest signal)
+### M1 — MCP Resources + Prompts (highest signal) — DONE 2026-06-25
+
+> Shipped: `dev/mcp/resources.ts` + `dev/mcp/prompts.ts`, wired into
+> `server.ts` with `capabilities:{tools,resources,prompts}`. Resources +
+> templates + prompts all live; unknown resource URI → -32002. Hand-rolled (no
+> SDK). The `notifications/resources/updated` watcher hook is still future.
 
 Make the server a full MCP citizen. Requires extending the hand-rolled protocol
 (`dev/mcp/server.ts`) with `resources/list`, `resources/read`,
