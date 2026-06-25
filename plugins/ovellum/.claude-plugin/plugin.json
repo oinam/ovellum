@@ -1,0 +1,10 @@
+{
+  "name": "ovellum",
+  "description": "Set up and maintain Ovellum documentation — scaffold, build, validate, and safely edit generated docs whose hand-written prose survives regeneration. Bundles the ovellum-docs skill and registers the Ovellum MCP server.",
+  "version": "0.1.0",
+  "author": { "name": "Brajeshwar Oinam", "email": "brajeshwar@oinam.com" },
+  "homepage": "https://ovellum.oss.oinam.com",
+  "repository": "https://github.com/oinam/ovellum",
+  "license": "MIT",
+  "keywords": ["documentation", "docs", "typescript", "mcp", "ovellum"]
+}

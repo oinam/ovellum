@@ -89,6 +89,15 @@ The step-by-step publish runbook lives in its own file:
 ready to ship (changeset → version PR → `npm publish` → badge → signed tag →
 GitHub notes, plus failure modes and changeset gotchas).
 
+### MCP distribution (M2 follow-up)
+
+- [ ] **Submit the MCP server to the registry / connector directories.** The
+  Claude Code plugin + marketplace (`plugins/ovellum/`, `.claude-plugin/
+  marketplace.json`) and the `npx ovellum mcp` config ship in the repo, but
+  listing in the public MCP registry / Cursor & Windsurf directories is an
+  account/submission action only a human can do. Server command:
+  `npx -y ovellum mcp`.
+
 ### v0.1.0 / launch backlog
 
 - [x] Publish to npm — `ovellum@0.2.0` is live (we skipped the `next`

@@ -363,11 +363,15 @@ the three surfaces (read / drive / know); these deepen *drive* + distribution.
       `prompts/{list,get}` (`dev/mcp/prompts.ts`: `set-up-ovellum`,
       `document-symbol` (the moat workflow), `review-doc-drift`). Still
       hand-rolled, no SDK. Pinned by `mcp-server.test.ts` (now 11). Next: M2.
-- [ ] **M2 (S–M)** **One-step distribution.** A **Claude Code plugin** bundling
-      the Skill + MCP registration (completes C4); list in the **MCP registry** /
-      connector directories; assert `npx ovellum mcp` is clean headless (notifier
-      stays suppressed); cross-tool install snippets (Cursor/Windsurf/Cline/VS
-      Code) in the Automation + AI-Ready docs.
+- [~] **M2 (S–M)** **One-step distribution.** **Done 2026-06-25 (in-repo parts):**
+      a **Claude Code plugin** at `plugins/ovellum/` (manifest + `.mcp.json` →
+      `npx ovellum mcp` + the bundled `ovellum-docs` skill, moved from the old
+      `skills/`), listed by repo-root `.claude-plugin/marketplace.json` →
+      `/plugin marketplace add oinam/ovellum` + `/plugin install`. Cross-tool
+      install snippets (Cursor/Windsurf/Cline/VS Code) in the Automation guide.
+      `mcp` added to the notifier skip list (headless-clean). Pinned by
+      `plugin.test.ts`. **Remaining (human / external):** submit to the MCP
+      registry / connector directories (TODO-Human).
 - [ ] **M3 (M)** **Round out tools + moat.** `ovellum_search_docs` (Pagefind over
       `dist/pagefind/`, the deferred read tool) + `ovellum_reattach` (programmatic
       counterpart to `orphans --reattach`, reusing `dev/orphans.ts`).

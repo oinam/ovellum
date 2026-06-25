@@ -1,7 +1,7 @@
 ---
 title: 自動化と AI エージェント
 description: スクリプト・CI ジョブ・AI エージェントから Ovellum を操作する — 機械可読な --json 出力、安定した終了コード、MCP サーバー。
-sourceHash: 'cee5c8bd7369dc35'
+sourceHash: '2b46632fa135cbc5'
 ---
 
 # 自動化と AI エージェント
@@ -127,13 +127,40 @@ await watcher.close();
 
 エージェント向けに、`ovellum mcp` は Ovellum を
 [Model Context Protocol](https://modelcontextprotocol.io) サーバーとして stdio 上で
-起動します。同じ操作をツールとして公開します — シンボルの検索、diff、check、孤立の一覧、
-ページの取得、ビルド、そして**再生成を生き延びる保護ゾーンへの書き込み**。完全なツール
-一覧は [`ovellum mcp` リファレンス](/ja/docs/reference/cli/#ovellum-mcp)を参照してください。
+起動します — これは AI の普遍的なランタイムインターフェースです（Claude Code、Cursor、
+Windsurf、Cline、VS Code などがすべて話します）。Ovellum を**ツール**（シンボルの検索、
+diff、check、孤立の一覧、ページの取得、ビルド、そして**再生成を生き延びる保護ゾーンへの
+書き込み**）、**リソース**（`ovellum://llms.txt`、`ovellum://page/{path}`、`ovellum://ir`、
+`ovellum://orphans`）、**プロンプト**（`set-up-ovellum`、`document-symbol`、
+`review-doc-drift`）として公開します。完全な一覧は
+[`ovellum mcp` リファレンス](/ja/docs/reference/cli/#ovellum-mcp)を参照してください。
 
-```bash
-claude mcp add ovellum -- npx ovellum mcp --cwd /path/to/project
+### お使いの AI ツールへのインストール
+
+**Claude Code** — 同梱プラグイン（Skill + MCP サーバー）でワンステップ:
+
 ```
+/plugin marketplace add oinam/ovellum
+/plugin install ovellum@ovellum
+```
+
+または直接登録: `claude mcp add ovellum -- npx ovellum mcp`。
+
+**Cursor / Windsurf / Cline / VS Code** — そのツールの MCP 設定
+（`.cursor/mcp.json`、`~/.codeium/windsurf/mcp_config.json`、Cline の MCP 設定、
+`.vscode/mcp.json`）に Ovellum を追加します:
+
+```json
+{
+  "mcpServers": {
+    "ovellum": { "command": "npx", "args": ["-y", "ovellum", "mcp"] }
+  }
+}
+```
+
+サーバーはプロジェクトディレクトリで実行されるので、そこに `ovellum` をインストール
+してください（または `--cwd` を渡します）。（VS Code の `.vscode/mcp.json` は
+`"mcpServers"` の代わりに `"servers"` キーを使います。値は同じです。）
 
 ## エージェントに Ovellum の使い方を伝える
 
@@ -144,12 +171,11 @@ claude mcp add ovellum -- npx ovellum mcp --cwd /path/to/project
   hybrid/auto プロジェクトでは保護ゾーンの契約 — 何が再生成を生き延び、何が上書きされるか —
   を先頭に置くので、エージェントが正しい場所を編集します。既存の `AGENTS.md` がある場合は
   書き込みません。
-- **Claude Skill** — すぐ使える `SKILL.md`（「Ovellum ドキュメントのセットアップと保守」）が
-  リポジトリの
-  [`skills/ovellum-docs/`](https://github.com/oinam/ovellum/tree/main/skills/ovellum-docs)
-  にあります。そのフォルダをプロジェクトの `.claude/skills/`（または `~/.claude/skills/`）に
-  コピーすれば、Claude Code が要求に応じて Ovellum ドキュメントをスキャフォールド・ビルド・
-  安全に編集できます。
+- **Claude Skill** — 上記の [Claude Code プラグイン](#お使いの-ai-ツールへのインストール)が
+  `ovellum-docs` skill を同梱しているので、Claude が要求に応じて Ovellum ドキュメントを
+  スキャフォールド・ビルド・安全に編集できます。プラグインなしで使うには、
+  [`plugins/ovellum/skills/ovellum-docs/`](https://github.com/oinam/ovellum/tree/main/plugins/ovellum/skills/ovellum-docs)
+  を `.claude/skills/` にコピーしてください。
 
 ## AI フレンドリーな出力
 

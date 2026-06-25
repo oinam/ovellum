@@ -126,15 +126,41 @@ The package is ESM-only (`type: module`); use a dynamic `import()` from CommonJS
 ## MCP server
 
 For agents, `ovellum mcp` runs Ovellum as a
-[Model Context Protocol](https://modelcontextprotocol.io) server over stdio. It
-exposes the same operations as tools — query a symbol, diff, check, list
-orphans, get a page, build, and **write into a protected zone that survives
-regeneration**. See the [`ovellum mcp` reference](/docs/reference/cli/#ovellum-mcp)
-for the full tool list.
+[Model Context Protocol](https://modelcontextprotocol.io) server over stdio —
+the universal AI runtime interface (Claude Code, Cursor, Windsurf, Cline, VS
+Code, and more all speak it). It exposes Ovellum as **tools** (query a symbol,
+diff, check, list orphans, get a page, build, and **write into a protected zone
+that survives regeneration**), **resources** (`ovellum://llms.txt`,
+`ovellum://page/{path}`, `ovellum://ir`, `ovellum://orphans`), and **prompts**
+(`set-up-ovellum`, `document-symbol`, `review-doc-drift`). See the
+[`ovellum mcp` reference](/docs/reference/cli/#ovellum-mcp) for the full list.
 
-```bash
-claude mcp add ovellum -- npx ovellum mcp --cwd /path/to/project
+### Install in your AI tool
+
+**Claude Code** — one-step, via the bundled plugin (Skill + MCP server):
+
 ```
+/plugin marketplace add oinam/ovellum
+/plugin install ovellum@ovellum
+```
+
+Or register the server directly: `claude mcp add ovellum -- npx ovellum mcp`.
+
+**Cursor / Windsurf / Cline / VS Code** — add Ovellum to the tool's MCP config
+(`.cursor/mcp.json`, `~/.codeium/windsurf/mcp_config.json`, the Cline MCP
+settings, or `.vscode/mcp.json`):
+
+```json
+{
+  "mcpServers": {
+    "ovellum": { "command": "npx", "args": ["-y", "ovellum", "mcp"] }
+  }
+}
+```
+
+The server runs in your project directory, so install `ovellum` there (or pass
+`--cwd`). (VS Code's `.vscode/mcp.json` uses a `"servers"` key instead of
+`"mcpServers"`; the value is the same.)
 
 ## Telling agents how to use Ovellum
 
@@ -145,11 +171,11 @@ Two artifacts meet agents where they look:
   mode-aware: hybrid/auto projects lead with the protected-zone contract — what
   survives regeneration and what gets overwritten — so an agent edits in the
   right place. It's written only if one doesn't already exist.
-- **A Claude Skill** — a ready-to-use `SKILL.md` ("set up and maintain Ovellum
-  docs") lives in the repo at
-  [`skills/ovellum-docs/`](https://github.com/oinam/ovellum/tree/main/skills/ovellum-docs).
-  Copy that folder into your project's `.claude/skills/` (or `~/.claude/skills/`)
-  and Claude Code can scaffold, build, and safely edit Ovellum docs on request.
+- **A Claude Skill** — the [Claude Code plugin](#install-in-your-ai-tool) above
+  bundles an `ovellum-docs` skill so Claude can scaffold, build, and safely edit
+  Ovellum docs on request. To use it without the plugin, copy
+  [`plugins/ovellum/skills/ovellum-docs/`](https://github.com/oinam/ovellum/tree/main/plugins/ovellum/skills/ovellum-docs)
+  into your `.claude/skills/`.
 
 ## AI-friendly output
 

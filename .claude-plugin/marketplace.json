@@ -1,0 +1,15 @@
+{
+  "name": "ovellum",
+  "owner": { "name": "Brajeshwar Oinam", "email": "brajeshwar@oinam.com" },
+  "metadata": {
+    "description": "Ovellum — documentation for TypeScript/JavaScript that AI agents can read and safely edit.",
+    "version": "0.1.0"
+  },
+  "plugins": [
+    {
+      "name": "ovellum",
+      "source": "./plugins/ovellum",
+      "description": "Set up and maintain Ovellum docs, and register the Ovellum MCP server (query symbols, diff, write protected zones that survive regeneration)."
+    }
+  ]
+}

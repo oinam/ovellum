@@ -133,11 +133,13 @@ re-extracts the whole project each change (cross-file ripples stay correct) but
 startup parses twice — initial `runBuild` + seeding the warm parser; acceptable,
 could unify later.
 
-**AI-Native MCP (plan: `AI-NATIVE-MCP.md`):** **M1 done 2026-06-25** — MCP
-Resources + Prompts (`dev/mcp/resources.ts` + `prompts.ts`; server advertises
-`capabilities:{tools,resources,prompts}`; uncommitted, changeset
-`mcp-resources-prompts.md`, minor → next 0.15.0 batch). **Next: M2** (Claude Code
-plugin + MCP registry + cross-tool install snippets), then **M3**
+**AI-Native MCP (plan: `AI-NATIVE-MCP.md`):** **M1 + M2 done 2026-06-25.** M1 —
+MCP Resources + Prompts (`dev/mcp/resources.ts` + `prompts.ts`). M2 — Claude Code
+plugin `plugins/ovellum/` (manifest + `.mcp.json` + bundled `ovellum-docs` skill,
+moved from old `skills/`) + repo-root `.claude-plugin/marketplace.json` +
+cross-tool install snippets + `mcp` in notifier skip list. Changesets
+`mcp-resources-prompts.md`, `mcp-plugin.md` (both minor → 0.15.0). **Remaining
+M2 (human):** submit to the MCP registry — see TODO-Human. **Next: M3**
 (`ovellum_search_docs` Pagefind tool + `ovellum_reattach`).
 
 **Still open (pick next from `ROADMAP.md`):** B8 build-output severity levels

@@ -56,9 +56,11 @@ function shouldSkip(): boolean {
   if (argv.includes('--no-update-check')) return true;
   if (argv.some((a) => ['--version', '-v', '--help', '-h'].includes(a))) return true;
 
-  // Skip for the commands that are about versions themselves.
+  // Skip for the commands that are about versions themselves, and for `mcp` —
+  // its stdout is the JSON-RPC protocol channel, so a notice must never land
+  // there (the non-TTY check above already covers stdio, this is belt-and-braces).
   const cmd = argv.find((a) => !a.startsWith('-'));
-  if (cmd === 'upgrade' || cmd === 'version' || cmd === 'help') return true;
+  if (cmd === 'upgrade' || cmd === 'version' || cmd === 'help' || cmd === 'mcp') return true;
 
   return false;
 }

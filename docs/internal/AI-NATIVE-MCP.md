@@ -16,8 +16,8 @@ surfaces:
   `ovellum_check`, `ovellum_list_orphans`, `ovellum_get_page`, `ovellum_build`,
   and the differentiator **`ovellum_write_zone`** (C2/C3). Plus `--json` on
   build/check/diff so an agent can drive the CLI without MCP.
-- **Know** — a Claude Skill (`skills/ovellum-docs/SKILL.md`), scaffolded
-  `AGENTS.md` (C4), and the "Ovellum for AI agents" page (C5).
+- **Know** — a Claude Skill (`plugins/ovellum/skills/ovellum-docs/SKILL.md`),
+  scaffolded `AGENTS.md` (C4), and the "Ovellum for AI agents" page (C5).
 
 So the question isn't "Skills *or* MCP" — both exist. The next task is to make
 the **MCP server a first-class citizen** (it's the universal runtime interface —
@@ -60,7 +60,13 @@ Make the server a full MCP citizen. Requires extending the hand-rolled protocol
   - `review-doc-drift` — run `ovellum_diff`, summarize, and suggest reattaches
     for orphans.
 
-### M2 — Distribution / one-step adoption
+### M2 — Distribution / one-step adoption — DONE 2026-06-25 (in-repo)
+
+> Shipped: `plugins/ovellum/` (plugin.json + `.mcp.json` + the `ovellum-docs`
+> skill, moved out of the old top-level `skills/`) + repo-root
+> `.claude-plugin/marketplace.json`; cross-tool install snippets in the
+> Automation guide; `mcp` in the notifier skip list. **Remaining:** the actual
+> MCP-registry / connector-directory submission (external; TODO-Human).
 
 - **Claude Code plugin** — bundle the Skill + MCP registration (plugin manifest
   / `.mcp.json`) so it's one install instead of "copy the folder + `claude mcp
