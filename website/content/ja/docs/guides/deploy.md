@@ -1,7 +1,7 @@
 ---
 title: デプロイ
 description: 一度ビルドすれば自己完結した dist/ フォルダができあがり、あとはどこにでもホストできます — セルフホスト、GitHub Pages、Cloudflare、または任意の静的ホスト。
-sourceHash: '07338e6d49488daf'
+sourceHash: '468695df438296c3'
 ---
 
 # デプロイ
@@ -16,6 +16,7 @@ sourceHash: '07338e6d49488daf'
 - **[GitHub Pages](#github-pages)** — 2 つのルート: CI ワークフロー、またはローカルからの `gh-pages` プッシュ。
 - **[Cloudflare（Pages / Workers）](#cloudflarepages--workers)** — リポジトリを接続すると、Cloudflare がプッシュのたびにビルドしてデプロイします。
 - **[その他のプラットフォーム](#その他のプラットフォーム)** — GitLab Pages、Netlify、Vercel など。同じパターンで、設定ファイルが違うだけです。
+- **[別ビルドへの埋め込み](#別プロジェクトのビルドへの埋め込み)** — 既にドキュメントを配信するアプリ / モノレポ / SSG へ、CLI またはプログラマティック API でドキュメントを出力します。
 
 ---
 
@@ -260,6 +261,66 @@ npx vercel --prod dist
 ### それ以外のもの
 
 Render、Surge、Fly static、社内 CDN — レシピは変わりません。ホストが git からビルドするなら、ビルドコマンド（`npx ovellum build`）と出力ディレクトリ（`dist`）を渡します。そうでないなら、ローカルで `ovellum build` を実行して `dist/` をアップロードします。
+
+---
+
+## 別プロジェクトのビルドへの埋め込み
+
+Ovellum はデプロイしません — **ポータブルなフォルダ**をビルドするだけです。ですから
+ドキュメントがアプリ（フレームワークサイト、モノレポ、別の静的サイトジェネレーター）と
+並んで存在するときは、Ovellum をホストに組み込むのではなく、その出力をホストの配信
+ディレクトリに向け、ホストの既存パイプラインに配信させます。
+
+**ビルドをホストのフォルダに向ける。** 永続的な構成の自然な置き場所として、
+`ovellum.config.*` で `output`（サブパス下なら `site.basePath` も）を設定します:
+
+```ts
+// docs/ovellum.config.ts
+export default {
+  mode: 'manual',
+  output: '../app/public/docs', // ホストが既に配信するフォルダ
+  site: { basePath: '/docs' },
+} satisfies OvellumUserConfig;
+```
+
+そしてホストのスクリプトに連結します（ホストが `public/` をバンドルする前に存在するよう、
+ドキュメントを先に）:
+
+```jsonc
+// app/package.json
+{
+  "scripts": {
+    "build": "ovellum build --cwd ../docs && vite build",
+    "dev": "concurrently \"ovellum watch --cwd ../docs\" \"vite\""
+  }
+}
+```
+
+`ovellum watch` は（auto/hybrid で）インクリメンタルに再ビルドし、ホストの開発サーバーが
+書き込まれたファイルを拾ってリフレッシュします。設定を編集せずに一回だけ上書きするなら、
+`ovellum build --out <dir> --base <path>` が同じことを呼び出しごとに行います。
+
+**またはプロセス内で動かす。** より密な統合（Vite プラグイン、独自の開発サーバー、
+Turborepo タスク）には、起動する代わりに
+[プログラマティック API](/ja/docs/guides/automation/#プログラマティック-api)を
+インポートします:
+
+```ts
+import { build, watch } from 'ovellum';
+
+// ビルドステップで
+await build({ cwd: 'docs', out: 'app/public/docs', base: '/docs' });
+
+// 開発サーバーで
+const watcher = await watch({ cwd: 'docs', onBuild: () => server.reload() });
+```
+
+### 変更分だけを同期（マニフェスト）
+
+S3/CDN へのアップロードには、`ovellum build --manifest` が
+`<output>/.ovellum/manifest.json` を書き出します — 各ファイルのパス・バイト数・sha256
+付きです。デプロイスクリプトはこれをライブと差分し、ツリー全体を再アップロードする代わりに
+変更されたハッシュだけをプッシュ（かつ完全性を検証）できます。
 
 ---
 

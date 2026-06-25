@@ -411,8 +411,14 @@ out.
       **incremental / atomic** uploads (S3/CDN sync, cache-bust, completeness
       verify) instead of blind-copying. Pairs with D1 `--json` and the C-tier
       machine-readable theme.
-- [ ] **D5 (S) — "Deploy anywhere" recipes + positioning (docs, not code).** A
-      `/docs/guides/deploying/` page: GitHub Pages from `/docs` (no Actions),
+- [x] **D5 (S) — "Deploy anywhere" recipes + positioning (docs, not code).**
+      **Done 2026-06-25:** the existing `guides/deploy` page already covered
+      hosts (self-hosted, GitHub Pages A/B, Cloudflare, GitLab, Netlify, Vercel,
+      subpath); added the missing pieces — an **"Embedding in another project's
+      build"** section (CLI composition with `--out`/`--base` + `concurrently`,
+      and the in-process [programmatic API](#d2)) and a **manifest/CDN sync**
+      recipe. Website-only (no changeset). Original below:
+      A `/docs/guides/deploying/` page: GitHub Pages from `/docs` (no Actions),
       Netlify / Vercel / Cloudflare Pages (build command + publish dir),
       S3/CDN sync via the D4 manifest, and **embedding the build in a host
       pipeline** (monorepo / Vite / turbo / another SSG's `/docs`). Lead with

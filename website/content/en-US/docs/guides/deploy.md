@@ -23,6 +23,9 @@ lives.
   repo; Cloudflare builds and deploys on every push.
 - **[Other platforms](#other-platforms)** — GitLab Pages, Netlify, Vercel, and
   friends. Same pattern, different config file.
+- **[Embedding in another build](#embedding-in-another-projects-build)** — render
+  docs into an app / monorepo / SSG that already serves them, via the CLI or the
+  programmatic API.
 
 ---
 
@@ -324,6 +327,67 @@ Or `vercel.json`:
 Render, Surge, Fly static, an internal CDN — the recipe doesn't change. If the
 host builds from git, give it the build command (`npx ovellum build`) and output
 dir (`dist`). If it doesn't, run `ovellum build` locally and upload `dist/`.
+
+---
+
+## Embedding in another project's build
+
+Ovellum never deploys — it builds a **portable folder**. So when your docs live
+alongside an app (a framework site, a monorepo, another static-site generator),
+you don't wire Ovellum into a host; you point its output into the host's served
+directory and let the host's existing pipeline ship it.
+
+**Point the build at the host's folder.** Set `output` (and `site.basePath` if
+the docs sit under a subpath) in `ovellum.config.*` — the natural home for a
+persistent setup:
+
+```ts
+// docs/ovellum.config.ts
+export default {
+  mode: 'manual',
+  output: '../app/public/docs', // a folder the host already serves
+  site: { basePath: '/docs' },
+} satisfies OvellumUserConfig;
+```
+
+Then chain it into the host's scripts (docs first, so they exist before the host
+bundles `public/`):
+
+```jsonc
+// app/package.json
+{
+  "scripts": {
+    "build": "ovellum build --cwd ../docs && vite build",
+    "dev": "concurrently \"ovellum watch --cwd ../docs\" \"vite\""
+  }
+}
+```
+
+`ovellum watch` rebuilds incrementally (auto/hybrid), and the host's dev server
+picks up the written files and refreshes. For a one-off override without editing
+config, `ovellum build --out <dir> --base <path>` does the same per-invocation.
+
+**Or drive it in-process.** For tighter integration (a Vite plugin, a custom dev
+server, a Turborepo task), import the
+[programmatic API](/docs/guides/automation/#programmatic-api) instead of shelling
+out:
+
+```ts
+import { build, watch } from 'ovellum';
+
+// in your build step
+await build({ cwd: 'docs', out: 'app/public/docs', base: '/docs' });
+
+// in your dev server
+const watcher = await watch({ cwd: 'docs', onBuild: () => server.reload() });
+```
+
+### Sync only what changed (manifest)
+
+For S3/CDN uploads, `ovellum build --manifest` writes
+`<output>/.ovellum/manifest.json` — every file with its path, byte size, and
+sha256. A deploy script can diff it against what's live and push only changed
+hashes (and verify completeness) rather than re-uploading the whole tree.
 
 ---
 
