@@ -81,7 +81,7 @@ interface ProtectConfig {
 | `inlineTag`       | `string`                 | `'@preserve'`        | JSDoc tag that marks a doc comment as human-managed.                                                       |
 | `orphanStrategy`  | `'quarantine' \| 'warn'` | `'quarantine'`       | `'quarantine'` writes to `orphanDir`; `'warn'` prints only.                                                |
 | `orphanDir`       | `string`                 | `'.ovellum/orphans'` | Relative to project root. Should be committed to VCS.                                                      |
-| `orphanRetention` | `number`                 | `90`                 | Days before an orphan is flagged stale by a future `ovellum orphans --stale`.                              |
+| `orphanRetention` | `number`                 | `90`                 | Days before an orphan is flagged stale by `ovellum orphans --stale`.                                       |
 
 ## `site` (manual mode)
 

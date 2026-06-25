@@ -476,8 +476,9 @@ actual files on disk, and flags unsafe URL schemes the same way.
 If the output dir doesn't exist, `check` exits `1` with a hint to
 run `ovellum build` first.
 
-Frontmatter validation, required-fields checking, and orphan listing
-for hybrid mode are deferred.
+Title-checking and id-less / stale-anchor validation are available via
+[`--strict`](#strict-mode---strict); orphan listing lives in
+[`ovellum orphans`](#ovellum-orphans).
 
 ### Translation staleness
 
@@ -716,12 +717,14 @@ while preserving manual files. Dry-run by default; `--confirm` actually
 deletes. Does **not** touch `.ovellum/orphans/` (those are committed
 manual writing).
 
-## Global flags (planned)
+## Common flags
 
-| Flag        | Notes                                              |
-| ----------- | -------------------------------------------------- |
-| `--strict`  | Promote warnings to errors; exit `2`.              |
-| `--verbose` | Print debug output (parser stages, merge details). |
+These appear on most commands rather than as true globals:
 
-`--cwd` and `--config` are available on `build`, `check`, and `watch`
-today; they'll be promoted to global once more subcommands land.
+| Flag        | Where                          | Notes                                                              |
+| ----------- | ------------------------------ | ----------------------------------------------------------------- |
+| `--cwd`     | all                            | Project root.                                                     |
+| `--config`  | all build-ish commands         | Path to the config file (auto-discovered otherwise).             |
+| `--json`    | `build` / `check` / `diff`     | Machine-readable output. See [Automation](/docs/guides/automation/). |
+| `--verbose` | `build` / `check` / `diff`     | Config-resolution + stage / file-I/O detail to stderr.           |
+| `--strict`  | `check`                        | [Extra validations](#strict-mode---strict); any issue exits `1`. |

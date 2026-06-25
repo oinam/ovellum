@@ -349,6 +349,31 @@ differentiator no other docs tool can make.
       cross-linked to the real feature. Chose a docs concept page over a landing
       section (landing redesign is queued; don't pre-empt it).
 
+#### AI-Native MCP — NEXT (full plan: [`AI-NATIVE-MCP.md`](./AI-NATIVE-MCP.md))
+
+Make the MCP server a first-class citizen (it's the universal AI runtime
+interface) and adoption one-step, leaning on the `write_zone` moat. C1–C5 shipped
+the three surfaces (read / drive / know); these deepen *drive* + distribution.
+
+- [ ] **M1 (M)** **MCP Resources + Prompts.** Extend the hand-rolled server
+      (`dev/mcp/server.ts`) with `resources/*` + `prompts/*` and advertise
+      `capabilities:{tools,resources,prompts}`. Resources: `ovellum://llms.txt`,
+      `…/llms-full.txt`, `ovellum://page/{path}`, `ovellum://ir`,
+      `ovellum://orphans`. Prompts: `set-up-ovellum`, `document-symbol` (the moat
+      workflow: query_symbol → write_zone w/ dry-run), `review-doc-drift`. Stay
+      dependency-free unless notifications force the SDK.
+- [ ] **M2 (S–M)** **One-step distribution.** A **Claude Code plugin** bundling
+      the Skill + MCP registration (completes C4); list in the **MCP registry** /
+      connector directories; assert `npx ovellum mcp` is clean headless (notifier
+      stays suppressed); cross-tool install snippets (Cursor/Windsurf/Cline/VS
+      Code) in the Automation + AI-Ready docs.
+- [ ] **M3 (M)** **Round out tools + moat.** `ovellum_search_docs` (Pagefind over
+      `dist/pagefind/`, the deferred read tool) + `ovellum_reattach` (programmatic
+      counterpart to `orphans --reattach`, reusing `dev/orphans.ts`).
+
+Order: M1 → M2 → M3. Each its own changeset. D2 (programmatic API) keeps new
+tools IR-backed / in-process.
+
 ### Tier D — Embed & deploy anywhere ("the portable build" — NEXT BIGGEST RELEASE)
 
 **Theme (maintainer-requested 2026-06-14, flagged "the next biggest

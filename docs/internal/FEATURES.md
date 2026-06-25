@@ -8,7 +8,7 @@ deferred items see [`TODO.md`](./TODO.md). For human-only tasks (writing prose,
 product decisions, release) see [`TODO-Human.md`](./TODO-Human.md). For
 terminology see the [glossary](https://ovellum.oss.oinam.com/docs/reference/glossary/).
 
-Last updated: 2026-06-07 (CLI update notifier + `ovellum upgrade`; `update` config block)
+Last updated: 2026-06-25 (0.14.0 shipped; D2 programmatic API + D5 deploy recipes; AI-Native MCP plan captured)
 
 Status legend:
 

@@ -1,7 +1,7 @@
 ---
 title: 設定
 description: ovellum.config.{json,ts,js} のすべてのフィールドと、その型・デフォルト値・効果。
-sourceHash: '7ddb7c0c4efd32c1'
+sourceHash: 'b1f274b85edd2464'
 ---
 
 # 設定
@@ -81,7 +81,7 @@ interface ProtectConfig {
 | `inlineTag`       | `string`                 | `'@preserve'`        | ドキュメントコメントを人間管理であると示す JSDoc タグ。                                                       |
 | `orphanStrategy`  | `'quarantine' \| 'warn'` | `'quarantine'`       | `'quarantine'` は `orphanDir` に書き出し、`'warn'` は表示のみ行います。                                                |
 | `orphanDir`       | `string`                 | `'.ovellum/orphans'` | プロジェクトルートからの相対パス。VCS にコミットすべきです。                                                      |
-| `orphanRetention` | `number`                 | `90`                 | 将来の `ovellum orphans --stale` で孤立が「古い」と判定されるまでの日数。                              |
+| `orphanRetention` | `number`                 | `90`                 | `ovellum orphans --stale` で孤立が「古い」と判定されるまでの日数。                              |
 
 ## `site`（manual モード）
 
