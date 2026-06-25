@@ -1,7 +1,7 @@
 ---
 title: CLI リファレンス
 description: ovellum CLI のすべてのサブコマンドとフラグ。
-sourceHash: '2f54b26ab7fa91c8'
+sourceHash: '76888c0bfd42c512'
 ---
 
 # CLI リファレンス
@@ -679,8 +679,10 @@ ovellum mcp [--cwd <dir>]
 | `ovellum_check`        | 読む           | プロジェクトを検証します — リンク切れ・安全でない URL スキーム・古い翻訳。件数と問題ごとの一覧。 |
 | `ovellum_list_orphans` | 読む           | 隔離された手動ブロック（任意の `stale` フィルタ）と、スナップショットに対する再アタッチ可否。 |
 | `ovellum_get_page`     | 読む           | 1 ページのビルド済み Markdown（AI フレンドリーな `.md` ミラー）を、出力ディレクトリ配下のパスで取得します。 |
+| `ovellum_search_docs`  | 読む           | ビルド済みドキュメントの全文検索。パス・タイトル・スコア・抜粋付きでランク付けされたページを返します。 |
 | `ovellum_build`        | docs を書く    | ビルドを実行します。ビルドサマリーを返します。                                     |
 | `ovellum_write_zone`   | **文章を書く** | アンカー id の下の保護された `@manual` ゾーンに Markdown を書き込みます。hybrid のマージエンジンが次回の再生成でも保持します — 人間が `@manual:start/end` の間を編集するのと同じ保証です。`dryRun` 対応。 |
+| `ovellum_reattach`     | 文章を書く     | 孤立を救出します。文章を対象アンカー（既定: 提案された復活 / リネーム先）の下へ差し戻してアーカイブを削除、または削除します。非対話版の `orphans --reattach`。 |
 
 `ovellum_write_zone` は、他のどんなドキュメントサーバーも提供できないものです。エージェントが
 手書きの文章を寄与し、それが次回のビルドで上書きされる代わりに**再生成を生き延びます**。生存には

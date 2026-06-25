@@ -4,6 +4,7 @@ import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { DEFAULT_CONFIG } from '@ovellum/core';
+import { writeOrphan } from '@ovellum/merger';
 import { runBuild } from '../dev/run-build.js';
 import { createMcpServer, type McpServer } from '../dev/mcp/server.js';
 
@@ -66,8 +67,39 @@ describe('MCP server', () => {
     expect(names).toContain('ovellum_check');
     expect(names).toContain('ovellum_list_orphans');
     expect(names).toContain('ovellum_get_page');
+    expect(names).toContain('ovellum_search_docs');
     expect(names).toContain('ovellum_build');
     expect(names).toContain('ovellum_write_zone');
+    expect(names).toContain('ovellum_reattach');
+  });
+
+  it('searches the built docs', async () => {
+    const res = await callText(server, 'ovellum_search_docs', { query: 'add' });
+    const payload = JSON.parse((res?.result as { content: Array<{ text: string }> }).content[0].text);
+    expect(payload.count).toBeGreaterThanOrEqual(1);
+    expect(payload.results.map((r: { path: string }) => r.path)).toContain('math.md');
+  });
+
+  it('reattaches an orphan to a chosen anchor and removes the archive', async () => {
+    const orphanDir = path.join(dir, '.ovellum', 'orphans');
+    await writeOrphan(
+      {
+        orphanedAt: '2026-06-01T00:00:00.000Z',
+        sourceFile: 'docs/old.md',
+        anchorId: 'src/old.ts::gone',
+        manualBlockId: 'note',
+        content: 'Rescued prose.',
+      },
+      orphanDir,
+    );
+    const res = await callText(server, 'ovellum_reattach', {
+      anchorId: 'src/old.ts::gone',
+      target: 'src/math.ts::add',
+    });
+    const payload = JSON.parse((res?.result as { content: Array<{ text: string }> }).content[0].text);
+    expect(payload.action).toBe('inserted');
+    expect(payload.doc).toBe('docs/math.md');
+    expect(readFileSync(path.join(dir, 'docs', 'math.md'), 'utf8')).toContain('Rescued prose.');
   });
 
   it('runs ovellum_check and returns structured findings', async () => {

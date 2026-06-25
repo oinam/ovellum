@@ -7,8 +7,15 @@ import { parseProject } from '@ovellum/parser';
 import { runCheck } from '../../commands/check.js';
 import { diffProjects } from '../diff.js';
 import { collectNodes, readProjectIR, type PersistedIR } from '../ir.js';
-import { loadOrphans, summarizeOrphans } from '../orphans.js';
+import {
+  deleteOrphan,
+  loadOrphans,
+  reattachOrphan,
+  suggestReattachTarget,
+  summarizeOrphans,
+} from '../orphans.js';
 import { runBuild } from '../run-build.js';
+import { searchDocs } from './search.js';
 import { applyWriteZone } from './write-zone.js';
 
 /**
@@ -182,6 +189,28 @@ export function ovellumTools(): McpTool[] {
       },
     },
     {
+      name: 'ovellum_search_docs',
+      description:
+        'Full-text search over the built docs. Returns ranked pages with a path, title, score, and snippet. Run a build first so the output exists.',
+      inputSchema: {
+        type: 'object',
+        properties: {
+          query: { type: 'string', description: 'Search terms.' },
+          limit: { type: 'number', description: 'Max results (default 10).' },
+        },
+        required: ['query'],
+      },
+      handler: async (cwd, args) => {
+        const config = await loadConfig(cwd);
+        const outputAbs = path.resolve(cwd, config.output);
+        if (!existsSync(outputAbs)) throw new Error('no built output — run ovellum_build first.');
+        const query = str(args, 'query');
+        const limit = typeof args.limit === 'number' ? args.limit : undefined;
+        const results = await searchDocs({ outputAbs, query, limit });
+        return { query, count: results.length, results };
+      },
+    },
+    {
       name: 'ovellum_build',
       description: 'Run an Ovellum build (parse + generate + merge, or site build). Returns the build summary.',
       inputSchema: {
@@ -246,6 +275,50 @@ export function ovellumTools(): McpTool[] {
               ? 'In hybrid mode the next build preserves this block.'
               : `Mode is "${config.mode}"; protected blocks only survive regeneration in hybrid mode.`,
         };
+      },
+    },
+    {
+      name: 'ovellum_reattach',
+      description:
+        'Rescue an orphaned manual block: splice its prose back into a @manual zone under a target anchor (defaulting to the suggested present-again / renamed anchor) and remove the archive, or delete the orphan. The non-interactive counterpart of `ovellum orphans --reattach`.',
+      inputSchema: {
+        type: 'object',
+        properties: {
+          anchorId: { type: 'string', description: 'The orphan to act on (its original anchor id).' },
+          target: { type: 'string', description: 'Anchor id to reattach under (default: the suggested target).' },
+          delete: { type: 'boolean', description: 'Delete the orphan instead of reattaching.' },
+        },
+        required: ['anchorId'],
+      },
+      handler: async (cwd, args) => {
+        const config = await loadConfig(cwd);
+        const anchorId = str(args, 'anchorId');
+        const orphanDir = path.resolve(cwd, config.protect.orphanDir);
+        const orphans = await loadOrphans(orphanDir);
+        const orphan = orphans.find((o) => o.anchorId === anchorId);
+        if (!orphan) throw new Error(`no orphan found for anchor "${anchorId}".`);
+
+        if (args.delete === true) {
+          await deleteOrphan(orphan);
+          return { anchorId, action: 'deleted' };
+        }
+
+        let target = typeof args.target === 'string' && args.target ? args.target : undefined;
+        if (!target) {
+          const snapshot = readProjectIR(cwd);
+          const suggestion = snapshot
+            ? suggestReattachTarget(orphan, collectNodes(snapshot.project))
+            : null;
+          if (!suggestion) {
+            throw new Error(
+              `no reattach target for "${anchorId}" — pass \`target\`, or run ovellum_build so a suggestion can be computed.`,
+            );
+          }
+          target = suggestion.anchorId;
+        }
+
+        const result = await reattachOrphan({ orphan, targetAnchorId: target, config, cwd });
+        return { anchorId, target, action: result.action, doc: result.doc };
       },
     },
   ];

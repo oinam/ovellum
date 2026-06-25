@@ -372,9 +372,14 @@ the three surfaces (read / drive / know); these deepen *drive* + distribution.
       `mcp` added to the notifier skip list (headless-clean). Pinned by
       `plugin.test.ts`. **Remaining (human / external):** submit to the MCP
       registry / connector directories (TODO-Human).
-- [ ] **M3 (M)** **Round out tools + moat.** `ovellum_search_docs` (Pagefind over
-      `dist/pagefind/`, the deferred read tool) + `ovellum_reattach` (programmatic
-      counterpart to `orphans --reattach`, reusing `dev/orphans.ts`).
+- [x] **M3 (M)** **Round out tools + moat.** **Done 2026-06-25:**
+      `ovellum_search_docs` — in-process term-frequency search over the built
+      `.md` (`dev/mcp/search.ts`); **not** Pagefind (its query runtime is
+      browser-only WASM — the npm package only *builds* indexes — so a built-in
+      text search is mode-agnostic and dependency-free) — and `ovellum_reattach`
+      (non-interactive `orphans --reattach`, reusing `dev/orphans.ts`
+      `reattachOrphan`/`suggestReattachTarget`/`deleteOrphan`). Pinned by
+      `mcp-server.test.ts` (13). **AI-Native MCP arc complete (M1–M3).**
 
 Order: M1 → M2 → M3. Each its own changeset. D2 (programmatic API) keeps new
 tools IR-backed / in-process.

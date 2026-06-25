@@ -138,9 +138,12 @@ MCP Resources + Prompts (`dev/mcp/resources.ts` + `prompts.ts`). M2 — Claude C
 plugin `plugins/ovellum/` (manifest + `.mcp.json` + bundled `ovellum-docs` skill,
 moved from old `skills/`) + repo-root `.claude-plugin/marketplace.json` +
 cross-tool install snippets + `mcp` in notifier skip list. Changesets
-`mcp-resources-prompts.md`, `mcp-plugin.md` (both minor → 0.15.0). **Remaining
-M2 (human):** submit to the MCP registry — see TODO-Human. **Next: M3**
-(`ovellum_search_docs` Pagefind tool + `ovellum_reattach`).
+`mcp-resources-prompts.md`, `mcp-plugin.md` (both minor → 0.15.0). **M3 done
+2026-06-25:** `ovellum_search_docs` (in-process text search over built `.md`,
+`dev/mcp/search.ts` — not Pagefind, browser-only) + `ovellum_reattach`
+(non-interactive `orphans --reattach`). Changeset `mcp-search-reattach.md`.
+**AI-Native MCP arc COMPLETE (M1–M3).** Only remaining MCP item is the human
+registry submission (TODO-Human).
 
 **Still open (pick next from `ROADMAP.md`):** B8 build-output severity levels
 (would enrich `--json`); `ovellum_search_docs` MCP tool (Pagefind); usability —

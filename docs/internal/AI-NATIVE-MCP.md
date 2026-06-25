@@ -78,7 +78,12 @@ Make the server a full MCP citizen. Requires extending the hand-rolled protocol
 - **Cross-tool install snippets** — Cursor / Windsurf / Cline / VS Code (all MCP)
   in the Automation + "Ovellum for AI agents" docs. Emphasize tool-agnosticism.
 
-### M3 — Round out tools + the moat
+### M3 — Round out tools + the moat — DONE 2026-06-25
+
+> Shipped: `ovellum_search_docs` (`dev/mcp/search.ts` — in-process term-frequency
+> search over the built `.md`; **not** Pagefind, whose query runtime is
+> browser-only WASM) + `ovellum_reattach` (reuses `dev/orphans.ts`). **The whole
+> AI-Native MCP arc (M1–M3) is now complete.**
 
 - **`ovellum_search_docs`** — the deferred read tool: Pagefind-backed search over
   built docs (in-process query of the `dist/pagefind/` index).

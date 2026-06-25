@@ -690,8 +690,10 @@ through it.
 | `ovellum_check`        | reads          | Validate the project: broken links, unsafe URL schemes, stale translations — counts + per-issue list. |
 | `ovellum_list_orphans` | reads          | Quarantined manual blocks (optional `stale` filter), with reattachability vs the snapshot. |
 | `ovellum_get_page`     | reads          | The built Markdown for one page (the AI-friendly `.md` mirror), by path under the output dir. |
+| `ovellum_search_docs`  | reads          | Full-text search over the built docs; ranked pages with path, title, score, snippet. |
 | `ovellum_build`        | writes docs    | Run a build; returns the build summary.                                     |
 | `ovellum_write_zone`   | **writes prose** | Write Markdown into a protected `@manual` zone under an anchor id. The hybrid merge engine preserves it across the next regeneration — the same guarantee a human editing between `@manual:start/end` gets. Supports `dryRun`. |
+| `ovellum_reattach`     | writes prose   | Rescue an orphan: splice its prose under a target anchor (default: the suggested present-again / renamed one) and remove the archive, or delete it. The non-interactive `orphans --reattach`. |
 
 `ovellum_write_zone` is the one no other docs server can offer: an agent
 contributes hand-written prose that **survives regeneration** instead of being
