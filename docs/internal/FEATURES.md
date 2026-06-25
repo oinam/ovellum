@@ -275,6 +275,10 @@ stylesheet **hand-ports** from this.
 
 ---
 
+## 5.5 Programmatic API (`ovellum` library entry)
+
+**D2 (2026-06-25).** `import { build, watch, loadConfig, defineConfig } from 'ovellum'` — a curated, **side-effect-free** facade for driving Ovellum in-process (framework dev servers, monorepo tasks, custom build steps). `packages/cli/src/api.ts`. `build(opts) → BuildSummary` (opts: cwd/configFile/out/base/drafts/manifest/onLog), `watch(opts) → ActiveWatcher{close()}` (cwd/configFile/drafts/onBuild/onError; incremental in auto/hybrid), `loadConfig(opts)`. Packaging: **split entry** — `bin`→`dist/index.js` (CLI, shebang, runs `runMain`), `main`/`exports["."]`→`dist/api.js` (library, no shebang). **ESM-only** (`type: module`; pagefind is ESM-only). Self-contained `.d.ts` via tsup `dts:{resolve:[/^@ovellum\//]}` (inlines the private `@ovellum/*` types; `tsconfig.dts.json` non-composite for the dts pass). Curated facade over `runBuild`/`watchAndBuild` — raw `@ovellum/*` stay private. Also fixes config-file type autocomplete (`import type { OvellumUserConfig } from 'ovellum'` now resolves). Pinned by `api.test.ts` (5).
+
 ## 6. Examples
 
 | Fixture                                                | Mode     | Demo command            | What it shows                                                                                                               |

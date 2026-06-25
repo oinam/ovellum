@@ -1,7 +1,7 @@
 ---
 title: 自動化と AI エージェント
 description: スクリプト・CI ジョブ・AI エージェントから Ovellum を操作する — 機械可読な --json 出力、安定した終了コード、MCP サーバー。
-sourceHash: '1380e02ef7303446'
+sourceHash: 'cee5c8bd7369dc35'
 ---
 
 # 自動化と AI エージェント
@@ -91,6 +91,37 @@ ovellum diff --json
 ovellum build            # ベースラインの IR スナップショットを記録
 ovellum diff --exit-code # 現在のソースが一致しなくなったら exit 1
 ```
+
+## プログラマティック API
+
+CLI を起動するより、プロセス内で Ovellum を動かしたいとき — フレームワークの開発
+サーバー、モノレポのタスク、独自のビルドステップから — ライブラリとしてインポートします。
+`import 'ovellum'` は副作用がなく（CLI は別のバイナリ）、関数は CLI と同じ構造化された
+結果を返します。
+
+```ts
+import { build, watch } from 'ovellum';
+
+// 一回限り: ホストプロジェクトの配信フォルダへ直接ドキュメントを出力。
+const summary = await build({ cwd: 'docs', out: '../site/public/docs', base: '/docs' });
+console.log(summary.written);
+
+// 開発サーバーと並走: 変更で再ビルドし、各ビルド完了時にリフレッシュ。
+const watcher = await watch({ cwd: 'docs', onBuild: () => devServer.reload() });
+// …終了時:
+await watcher.close();
+```
+
+- **`build(options)`** → `BuildSummary`。オプション: `cwd`、`configFile`、`out`、
+  `base`、`drafts`、`manifest`、`onLog`（`--verbose` のストリーム）。
+- **`watch(options)`** → `close()` を持つハンドル。オプション: `cwd`、`configFile`、
+  `drafts`、`onBuild`、`onError`。出力ディレクトリ / ベースパスは設定で指定します。
+  auto/hybrid モードでは再ビルドはインクリメンタルです。
+- **`loadConfig(options)`** → 解決・検証済みの設定。
+- **`defineConfig`** と設定 / サマリーの型を再エクスポートしているので、TypeScript の
+  `ovellum.config.ts` とビルドスクリプトが単一の真実のソースを共有します。
+
+パッケージは ESM 専用（`type: module`）です。CommonJS からは動的 `import()` を使ってください。
 
 ## MCP サーバー
 

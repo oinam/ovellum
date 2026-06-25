@@ -92,6 +92,37 @@ ovellum build            # record the baseline IR snapshot
 ovellum diff --exit-code # exit 1 if the current source no longer matches
 ```
 
+## Programmatic API
+
+When you'd rather drive Ovellum in-process than shell out — from a framework
+dev server, a monorepo task, or your own build step — import it as a library.
+`import 'ovellum'` is side-effect-free (the CLI is a separate binary), and the
+functions return the same structured results the CLI computes.
+
+```ts
+import { build, watch } from 'ovellum';
+
+// One-shot: render docs straight into a host project's served folder.
+const summary = await build({ cwd: 'docs', out: '../site/public/docs', base: '/docs' });
+console.log(summary.written); // ['../site/public/docs/...']
+
+// Alongside a dev server: rebuild on change, refresh when each build finishes.
+const watcher = await watch({ cwd: 'docs', onBuild: () => devServer.reload() });
+// …on shutdown:
+await watcher.close();
+```
+
+- **`build(options)`** → `BuildSummary`. Options: `cwd`, `configFile`, `out`,
+  `base`, `drafts`, `manifest`, `onLog` (the `--verbose` stream).
+- **`watch(options)`** → a handle with `close()`. Options: `cwd`, `configFile`,
+  `drafts`, `onBuild`, `onError`. Set the output dir / base path in your config.
+  In auto/hybrid mode rebuilds are incremental.
+- **`loadConfig(options)`** → the resolved, validated config.
+- **`defineConfig`** and the config / summary types are re-exported, so a
+  TypeScript `ovellum.config.ts` and your build scripts share one source of truth.
+
+The package is ESM-only (`type: module`); use a dynamic `import()` from CommonJS.
+
 ## MCP server
 
 For agents, `ovellum mcp` runs Ovellum as a

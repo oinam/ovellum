@@ -31,17 +31,16 @@
   "publishConfig": {
     "access": "public"
   },
-  "main": "./dist/index.cjs",
-  "module": "./dist/index.js",
-  "types": "./dist/index.d.ts",
+  "main": "./dist/api.js",
+  "module": "./dist/api.js",
+  "types": "./dist/api.d.ts",
   "bin": {
     "ovellum": "./dist/index.js"
   },
   "exports": {
     ".": {
-      "types": "./dist/index.d.ts",
-      "import": "./dist/index.js",
-      "require": "./dist/index.cjs"
+      "types": "./dist/api.d.ts",
+      "import": "./dist/api.js"
     }
   },
   "files": [
@@ -51,7 +50,7 @@
     "LICENSE"
   ],
   "scripts": {
-    "build": "tsup && tsc -b --force && node ../../scripts/cli-copy-templates.mjs",
+    "build": "tsc -b --force && tsup && node ../../scripts/cli-copy-templates.mjs",
     "test": "vitest run --passWithNoTests",
     "lint": "eslint src",
     "typecheck": "tsc --noEmit",

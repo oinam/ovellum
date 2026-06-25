@@ -385,20 +385,17 @@ out.
       stdout. Guarantee **idempotent output** — clean-or-reconcile the target
       dir so repeated builds are diffable and deploys atomic (today the build
       `mkdir`s but doesn't clean — confirm + document the semantics).
-- [ ] **D2 (M) — Programmatic build API (the real "hook").** Export a public
-      `build()` / `check()` from the **`ovellum`** package returning a
-      structured `BuildResult { outDir, pages[], assets[], warnings[], locales }`
-      — `import { build } from 'ovellum'` (or subpath `ovellum/api`). **This
-      flips the parked decision** (TODO "Parked" #2: `@ovellum/*` bundled-private
-      — "if anyone asks for direct imports, the bundling decision needs to
-      flip"). Expose a **curated facade from `ovellum`**, NOT raw `@ovellum/*`
-      imports (keep internals private; we control the surface). **Concrete
-      prerequisite/bug:** today `ovellum`'s `exports["."]` runs the CLI as a
-      *side effect* (`runMain` in `index.ts`) — importing it executes the CLI.
-      Split the entry: `bin` stays the CLI runner; `main`/`exports["."]` (or
-      `exports["./api"]`) becomes the side-effect-free library. `buildSite()`
-      (in `@ovellum/site`) already returns `BuildSiteResult{ outputDir, … }` —
-      this is mostly surfacing it through a stable public type.
+- [x] **D2 (M) — Programmatic build API (the real "hook").** **Done 2026-06-25:**
+      `src/api.ts` exports a curated, side-effect-free facade — `build()`,
+      `watch()`, `loadConfig()`, `defineConfig` + the config/`BuildSummary` types
+      — from the `ovellum` package. Split the entry: `bin` → `dist/index.js`
+      (CLI, shebang), `main`/`exports["."]` → `dist/api.js` (library, no shebang,
+      no `runMain`). **ESM-only** (`type: module`; pagefind is ESM-only and the
+      bin is ESM — a CJS build can't `require()` cleanly). Self-contained types:
+      tsup `dts: { resolve: [/^@ovellum\//] }` inlines the bundled-private types
+      into `dist/api.d.ts` (kept `@ovellum/*` private — no flip needed). Curated
+      facade over the internal engines (`runBuild`/`watchAndBuild`), NOT raw
+      `@ovellum/*`. Pinned by `api.test.ts` (5). Next: D5 recipes, then D3 hooks.
 - [ ] **D3 (M–L) — Build lifecycle hooks (the literal deploy hook; shares B1's
       seam).** `onResolveConfig`, `onBuildStart`, `transformPage` (per-page
       HTML/MD), `onBuildComplete({ outDir, manifest })`. **A host tool's deploy

@@ -1,0 +1,15 @@
+// Used only by tsup's `dts` build for the programmatic API entry (src/api.ts).
+// The main tsconfig.json is `composite` (for project-reference builds), which
+// makes tsup's declaration pass demand every file be explicitly listed. This
+// non-composite variant compiles the whole `src` tree so api.ts's imports
+// resolve, and rolls the bundled `@ovellum/*` types up self-contained.
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "composite": false,
+    "declaration": true,
+    "emitDeclarationOnly": false,
+    "noEmit": false
+  },
+  "references": []
+}
