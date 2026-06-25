@@ -107,9 +107,13 @@ A1 unlocks A2–A4.
       `@manual:start/end` around `@preserve`-tagged JSDoc content; merger
       already treats them uniformly. IR flag (`isPreserved`) exists; this is
       generator wiring.
-- [ ] **A6 (M)** **Validation mode in reader** (`ovellum check --strict`
-      grows): warn on positional-fallback zones (no `id=`), anchors pointing
-      at no-longer-existing symbols, required frontmatter fields.
+- [x] **A6 (M)** **Validation mode** (`ovellum check --strict`): warn on
+      positional-fallback zones (no `id=`), anchors pointing at no-longer-existing
+      symbols, required frontmatter fields. **Done 2026-06-25:** `--strict` adds
+      `positional-zone` (reader `hasExplicitId`), `stale-anchor` (`findAnchors`
+      vs `collectAnchorIds(parseProject)`), `missing-frontmatter` (no title +
+      no H1); `[STRICT]`-tagged, `counts.strictIssues` in `--json`; MCP
+      `ovellum_check` gains `strict`. Off by default; exit 1 on any issue.
 - [ ] **A7 (L)** **Incremental watch builds** — re-parse only changed files,
       re-merge only affected outputs. Matters once real codebases (>100
       files) adopt hybrid mode.

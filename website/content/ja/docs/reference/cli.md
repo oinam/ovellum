@@ -1,7 +1,7 @@
 ---
 title: CLI リファレンス
 description: ovellum CLI のすべてのサブコマンドとフラグ。
-sourceHash: '6f0914477988f26e'
+sourceHash: 'bcd136a6948ad317'
 ---
 
 # CLI リファレンス
@@ -395,7 +395,7 @@ ovellum serve [--cwd <dir>] [--config <path>] [--port <n>] [--host <addr>]
 ### 構文
 
 ```
-ovellum check [--cwd <dir>] [--config <path>] [--update-translations]
+ovellum check [--cwd <dir>] [--config <path>] [--update-translations] [--json] [--strict]
 ```
 
 ### フラグ
@@ -406,6 +406,23 @@ ovellum check [--cwd <dir>] [--config <path>] [--update-translations]
 | `--config`                | string  | —          | `ovellum.config.{ts,js,json}` へのパス。                                        |
 | `--update-translations`   | boolean | `false`    | 各翻訳ページの `sourceHash` を現在のソースにスタンプして終了します。下記参照。  |
 | `--json`                  | boolean | `false`    | 結果（またはスタンプ結果）を JSON で出力します。終了コードは変わりません。[自動化](/ja/docs/guides/automation/)を参照。 |
+| `--strict`                | boolean | `false`    | [追加の検証](#strict-モード--strict)を実行します（デフォルトはオフ）。strict の問題も他と同様に `1` で終了します。 |
+
+### strict モード（`--strict`）
+
+`--strict` はデフォルトに加えて 3 つのオプトイン検証を追加します:
+
+- **位置依存の保護ゾーン** — `id=` のない `<!-- @manual:start -->`。id のない
+  ゾーンは位置で照合されるため、並べ替えで失われる可能性があります。`id="..."` を
+  付けてください。（hybrid / auto）
+- **古いアンカー** — 生成ドキュメント内の `<!-- ovellum:anchor id="…" -->` で、
+  そのシンボルがソースにもう存在しないもの（削除、または再ビルドされていないリネーム）。
+  再ビルドするか、文章を[再アタッチ](#再アタッチ--reattach)してください。（hybrid / auto）
+- **タイトルのないページ** — フロントマターの `title:` も先頭の `# 見出し` もない
+  ページで、実質的なタイトルがありません。（manual）
+
+strict の問題は出力で `[STRICT]` とタグ付けされ、`strict issues:`（`--json` では
+`counts.strictIssues`）に計上されます。
 
 ### 出力
 

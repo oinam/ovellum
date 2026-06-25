@@ -5,6 +5,9 @@ import path from 'node:path';
 import { defineCommand } from 'citty';
 import matter from 'gray-matter';
 import { ConfigError, loadOvellumConfig, type OvellumConfig } from '@ovellum/core';
+import { parseProject } from '@ovellum/parser';
+import { findAnchors } from '@ovellum/merger';
+import { parseManualDoc } from '@ovellum/reader';
 import {
   buildNav,
   extractMarkdownLinks,
@@ -12,14 +15,29 @@ import {
   resolveHomeRel,
   walkContent,
 } from '@ovellum/site';
+import { collectAnchorIds } from '../dev/ir.js';
 import { detectUnsafeScheme } from './check-utils.js';
 
 interface Issue {
   file: string;
   line: number;
   message: string;
-  kind: 'broken-link' | 'unsafe-scheme' | 'stale-translation' | 'orphan-translation';
+  kind:
+    | 'broken-link'
+    | 'unsafe-scheme'
+    | 'stale-translation'
+    | 'orphan-translation'
+    | 'positional-zone'
+    | 'stale-anchor'
+    | 'missing-frontmatter';
 }
+
+/** The strict-only issue kinds (added by `--strict`). */
+const STRICT_KINDS: ReadonlySet<Issue['kind']> = new Set([
+  'positional-zone',
+  'stale-anchor',
+  'missing-frontmatter',
+]);
 
 export const checkCommand = defineCommand({
   meta: {
@@ -44,6 +62,11 @@ export const checkCommand = defineCommand({
     json: {
       type: 'boolean',
       description: 'Emit results as JSON (for CI / tooling); no decorative output.',
+    },
+    strict: {
+      type: 'boolean',
+      description:
+        'Add stricter validations: positional (id-less) protected zones, doc anchors pointing at gone symbols, and pages with no resolvable title.',
     },
   },
   async run({ args }) {
@@ -86,10 +109,11 @@ export const checkCommand = defineCommand({
       process.exit(0);
     }
 
+    const strict = args.strict === true;
     const startedAt = Date.now();
     let run: CheckRun;
     try {
-      run = await runCheck({ config, cwd });
+      run = await runCheck({ config, cwd, strict });
     } catch (err) {
       if (err instanceof ConfigError) {
         if (asJson) {
@@ -124,6 +148,7 @@ export const checkCommand = defineCommand({
               brokenLinks: counts.broken,
               unsafeSchemes: counts.unsafe,
               ...(showStale ? { staleTranslations: counts.stale } : {}),
+              ...(strict ? { strictIssues: counts.strict } : {}),
             },
             issues: issues.map((it) => ({ file: it.file, line: it.line, kind: it.kind, message: it.message })),
           },
@@ -145,6 +170,9 @@ export const checkCommand = defineCommand({
     if (showStale) {
       lines.push(`  stale translations: ${counts.stale}`);
     }
+    if (strict) {
+      lines.push(`  strict issues:   ${counts.strict}`);
+    }
     if (issues.length > 0) {
       lines.push('  details:');
       for (const it of issues) {
@@ -153,7 +181,9 @@ export const checkCommand = defineCommand({
             ? '[SECURITY] '
             : it.kind === 'stale-translation' || it.kind === 'orphan-translation'
               ? '[i18n] '
-              : '';
+              : STRICT_KINDS.has(it.kind)
+                ? '[STRICT] '
+                : '';
         lines.push(`    ${it.file}:${it.line}  ${tag}${it.message}`);
       }
     }
@@ -171,12 +201,33 @@ interface CheckRun {
 interface CheckInput {
   config: OvellumConfig;
   cwd: string;
+  /** Run the stricter validations (see `--strict`). */
+  strict?: boolean;
 }
 
-function countIssues(issues: Issue[]): { broken: number; unsafe: number; stale: number } {
-  const unsafe = issues.filter((i) => i.kind === 'unsafe-scheme').length;
-  const stale = issues.filter((i) => i.kind === 'stale-translation' || i.kind === 'orphan-translation').length;
-  return { broken: issues.length - unsafe - stale, unsafe, stale };
+function countIssues(issues: Issue[]): { broken: number; unsafe: number; stale: number; strict: number } {
+  const by = (k: Issue['kind']) => issues.filter((i) => i.kind === k).length;
+  return {
+    broken: by('broken-link'),
+    unsafe: by('unsafe-scheme'),
+    stale: by('stale-translation') + by('orphan-translation'),
+    strict: issues.filter((i) => STRICT_KINDS.has(i.kind)).length,
+  };
+}
+
+/** A page has a resolvable title if frontmatter sets one or the body has an H1. */
+function hasResolvableTitle(data: Record<string, unknown>, content: string): boolean {
+  if (typeof data.title === 'string' && data.title.trim().length > 0) return true;
+  return /^#\s+\S/m.test(content);
+}
+
+/** 1-based line number of a byte offset in `text`. */
+function lineAt(text: string, index: number): number {
+  let line = 1;
+  for (let i = 0; i < index && i < text.length; i++) {
+    if (text[i] === '\n') line++;
+  }
+  return line;
 }
 
 /**
@@ -184,13 +235,13 @@ function countIssues(issues: Issue[]): { broken: number; unsafe: number; stale: 
  * by the `ovellum check` command and the `ovellum_check` MCP tool so they can't
  * drift. Throws `ConfigError` on a config problem; callers decide how to report.
  */
-export async function runCheck({ config, cwd }: CheckInput): Promise<CheckRun> {
+export async function runCheck({ config, cwd, strict }: CheckInput): Promise<CheckRun> {
   let issues: Issue[];
   let files: string[];
   if (config.mode === 'manual') {
-    ({ issues, files } = await checkManual({ config, cwd }));
+    ({ issues, files } = await checkManual({ config, cwd, strict }));
   } else {
-    ({ issues, files } = await checkGenerated({ config, cwd }));
+    ({ issues, files } = await checkGenerated({ config, cwd, strict }));
   }
   // Translation staleness is additive and independent of mode — it only
   // fires when the site opts into i18n with two or more locales.
@@ -234,7 +285,7 @@ function localeViews(config: OvellumConfig, cwd: string): LocaleView[] {
  * and a relative link all resolve correctly). Single-language sites take one
  * unprefixed pass — identical to the original behavior.
  */
-async function checkManual({ config, cwd }: CheckInput): Promise<CheckRun> {
+async function checkManual({ config, cwd, strict }: CheckInput): Promise<CheckRun> {
   const outputAbs = path.resolve(cwd, config.output);
   const inputRootAbs = path.resolve(cwd, config.input);
   const publicAbs = path.join(inputRootAbs, config.site.publicDir);
@@ -276,7 +327,15 @@ async function checkManual({ config, cwd }: CheckInput): Promise<CheckRun> {
       files.push(file);
       const rel = path.relative(cwd, file).replace(/\\/g, '/');
       const raw = await readFile(file, 'utf8');
-      const { content } = matter(raw);
+      const { content, data } = matter(raw);
+      if (strict && !hasResolvableTitle(data, content)) {
+        issues.push({
+          file: rel,
+          line: 1,
+          kind: 'missing-frontmatter',
+          message: 'page has no title — add a frontmatter `title:` or a top-level `# heading`.',
+        });
+      }
       const url = v.urlPrefix + urlForPage(file, v.inputAbs);
       for (const { target, line } of extractMarkdownLinks(content)) {
         const unsafe = detectUnsafeScheme(target);
@@ -314,7 +373,7 @@ async function checkManual({ config, cwd }: CheckInput): Promise<CheckRun> {
  * Exits early with a clear message when the output directory doesn't
  * exist — usually because the user hasn't run `ovellum build` yet.
  */
-async function checkGenerated({ config, cwd }: CheckInput): Promise<CheckRun> {
+async function checkGenerated({ config, cwd, strict }: CheckInput): Promise<CheckRun> {
   const outputAbs = path.resolve(cwd, config.output);
   if (!existsSync(outputAbs)) {
     throw new ConfigError(
@@ -322,6 +381,10 @@ async function checkGenerated({ config, cwd }: CheckInput): Promise<CheckRun> {
       { hint: 'Run `ovellum build` first; `ovellum check` validates the generated Markdown.' },
     );
   }
+
+  // Strict mode cross-references doc anchors against the *current* source, so a
+  // doc anchor whose symbol was deleted/renamed surfaces as stale. Parse once.
+  const currentAnchorIds = strict ? collectAnchorIds(parseProject({ config, cwd })) : null;
 
   // Collect every .md path in the output dir so we can check links against
   // real files. Keys are stored both with and without the `.md` suffix so a
@@ -341,6 +404,36 @@ async function checkGenerated({ config, cwd }: CheckInput): Promise<CheckRun> {
     const raw = await readFile(file, 'utf8');
     const { content } = matter(raw);
     const pageRel = '/' + path.relative(outputAbs, file).replace(/\\/g, '/');
+
+    if (strict) {
+      // Positional (id-less) protected zones — fragile across reordering.
+      const doc = parseManualDoc(raw, file);
+      for (const block of doc.protectedBlocks) {
+        if (!block.hasExplicitId) {
+          issues.push({
+            file: rel,
+            line: block.startLine,
+            kind: 'positional-zone',
+            message:
+              'protected zone has no id — add id="..." on the <!-- @manual:start --> tag so it survives reordering.',
+          });
+        }
+      }
+      // Anchors pointing at symbols that no longer exist in the source.
+      if (currentAnchorIds) {
+        for (const anchor of findAnchors(content)) {
+          if (!currentAnchorIds.has(anchor.id)) {
+            issues.push({
+              file: rel,
+              line: lineAt(content, anchor.index),
+              kind: 'stale-anchor',
+              message: `anchor "${anchor.id}" points at a symbol no longer in the source — rebuild, or reattach its prose (\`ovellum orphans\`).`,
+            });
+          }
+        }
+      }
+    }
+
     for (const { target, line } of extractMarkdownLinks(content)) {
       const unsafe = detectUnsafeScheme(target);
       if (unsafe) {

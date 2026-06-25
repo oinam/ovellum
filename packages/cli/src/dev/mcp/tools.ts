@@ -100,11 +100,16 @@ export function ovellumTools(): McpTool[] {
     {
       name: 'ovellum_check',
       description:
-        'Validate the project without writing: broken internal links, unsafe URL schemes, and stale translations. Returns counts and a per-issue list.',
-      inputSchema: { type: 'object', properties: {} },
-      handler: async (cwd) => {
+        'Validate the project without writing: broken internal links, unsafe URL schemes, and stale translations (and, with strict, id-less protected zones, stale anchors, and title-less pages). Returns counts and a per-issue list.',
+      inputSchema: {
+        type: 'object',
+        properties: {
+          strict: { type: 'boolean', description: 'Run the stricter validations too.' },
+        },
+      },
+      handler: async (cwd, args) => {
         const config = await loadConfig(cwd);
-        const { issues, files } = await runCheck({ config, cwd });
+        const { issues, files } = await runCheck({ config, cwd, strict: args.strict === true });
         const unsafe = issues.filter((i) => i.kind === 'unsafe-scheme').length;
         const stale = issues.filter((i) => i.kind === 'stale-translation' || i.kind === 'orphan-translation').length;
         return {

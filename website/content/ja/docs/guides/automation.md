@@ -1,7 +1,7 @@
 ---
 title: 自動化と AI エージェント
 description: スクリプト・CI ジョブ・AI エージェントから Ovellum を操作する — 機械可読な --json 出力、安定した終了コード、MCP サーバー。
-sourceHash: '0c92fc89fb012baa'
+sourceHash: 'ae2f8292d93873e5'
 ---
 
 # 自動化と AI エージェント
@@ -67,7 +67,9 @@ ovellum diff --json
 
 `counts.staleTranslations` は [i18n](/ja/docs/guides/i18n/) サイト（`site.locales`
 が 2 つ以上）でのみ現れます。`issue.kind` は `broken-link`、`unsafe-scheme`、
-`stale-translation`、`orphan-translation` のいずれかです。
+`stale-translation`、`orphan-translation` のいずれか — さらに
+[`--strict`](/ja/docs/reference/cli/#strict-モード--strict) では `positional-zone`、
+`stale-anchor`、`missing-frontmatter`（`counts.strictIssues` に計上）が加わります。
 
 ## 終了コード
 

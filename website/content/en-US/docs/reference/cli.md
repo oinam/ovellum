@@ -396,7 +396,7 @@ correctly ignored), and verifies:
 ### Synopsis
 
 ```
-ovellum check [--cwd <dir>] [--config <path>] [--update-translations]
+ovellum check [--cwd <dir>] [--config <path>] [--update-translations] [--json] [--strict]
 ```
 
 ### Flags
@@ -407,6 +407,23 @@ ovellum check [--cwd <dir>] [--config <path>] [--update-translations]
 | `--config`               | string  | —       | Path to `ovellum.config.{ts,js,json}`.                                                         |
 | `--update-translations`  | boolean | `false` | Stamp each translated page's `sourceHash` to the current source, then exit. See below.        |
 | `--json`                 | boolean | `false` | Emit results (or stamping outcome) as JSON; exit code unchanged. See [Automation](/docs/guides/automation/). |
+| `--strict`               | boolean | `false` | Run [extra validations](#strict-mode) — off by default. Any strict issue exits `1` like the rest. |
+
+### Strict mode (`--strict`)
+
+`--strict` adds three opt-in validations on top of the defaults:
+
+- **Positional protected zones** — a `<!-- @manual:start -->` with no `id=`.
+  Id-less zones fall back to positional matching, so reordering can lose them;
+  add `id="..."`. (hybrid / auto)
+- **Stale anchors** — a `<!-- ovellum:anchor id="…" -->` in a generated doc
+  whose symbol no longer exists in the source (a delete or unrebuilt rename).
+  Rebuild, or [reattach](#reattaching---reattach) the prose. (hybrid / auto)
+- **Title-less pages** — a page with neither a frontmatter `title:` nor a
+  top-level `# heading`, so it has no real title. (manual)
+
+Strict issues are tagged `[STRICT]` in the output and counted under
+`strict issues:` (and `counts.strictIssues` in `--json`).
 
 ### Output
 
