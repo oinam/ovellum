@@ -1,7 +1,7 @@
 ---
 title: 孤立ブロック
 description: ドキュメント化していたシンボルが消えたとき、あなたの文章に何が起こるか。
-sourceHash: '1e50fe8abb13e499'
+sourceHash: 'cb3a53c50621217c'
 ---
 
 # 孤立ブロック
@@ -67,9 +67,10 @@ ovellum build complete in 219ms
 リネームでブロックが孤立した場合、ビルドがしばしばそれを見つけてくれます —
 「`formatDate` は `formatDateUTC` になった?」 — また
 [`ovellum diff`](/ja/docs/reference/cli/#ovellum-diff) は 2 つをリネームの可能性が高い
-ペアとして示します。[`ovellum orphans`](/ja/docs/reference/cli/#ovellum-orphans) は
-溜まった孤立を一覧表示します。再アタッチ自体は今のところコピー＆ペーストの手順で、
-対話的なフローは計画中です。
+ペアとして示します。再アタッチには
+[`ovellum orphans --reattach`](/ja/docs/reference/cli/#再アタッチ--reattach) があり、各孤立を巡回して、
+提案された（または選んだ）アンカーの下に保護ゾーンとして差し戻し、アーカイブを削除します —
+コピー＆ペーストは不要です。
 
 ### 2. 削除する
 
@@ -113,4 +114,6 @@ ovellum orphans
 ovellum orphans --stale --json
 ```
 
-再アタッチ（文章を一致するアンカーの下へ戻す）と削除は、今のところ手作業です。
+これらに対処するには、`ovellum orphans --reattach` が各孤立を対話的に巡回し、提案された
+アンカーの下へ再アタッチ・削除・スキップできます —
+[再アタッチ](/ja/docs/reference/cli/#再アタッチ--reattach)を参照してください。

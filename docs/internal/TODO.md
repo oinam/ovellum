@@ -115,13 +115,16 @@ per-feature detail. ROADMAP **Tier A**:
   `init-validate.test.ts`.
 
 **0.13.0 is published.** Tier C COMPLETE (C1–C5); security slice COMPLETE
-(S1–S6); Tier A mostly done (A1–A4 + rename detection). **Still open** —
-**next up:** A4/A3 **write side** — interactive reattach/delete (`ovellum
-orphans --reattach`), the natural close-out of the hybrid moat. Then: A5
-`@preserve` auto-wrap, A6 `check --strict`, A7 incremental watch; **U4**
-`--verbose`; B8 warning-severity (would enrich `--json`); `ovellum_search_docs`
-MCP tool (Pagefind); and the larger untouched **Tier B** (plugin API, versioned
-docs, composable landing) + **Tier D** (programmatic `build()`, lifecycle hooks).
+(S1–S6); **Tier A hybrid moat effectively complete** — A1–A4 + rename detection
++ the `--reattach` write side (uncommitted, in flight for 0.14.0; changeset
+`orphans-reattach.md`, minor; `dev/orphans.ts` `suggestReattachTarget`/
+`reattachOrphan`/`deleteOrphan` + `commands/orphans.ts` `reattachFlow`; 119 cli
+tests). **Still open:** A5 `@preserve` auto-wrap, A6 `check --strict`, A7
+incremental watch; **U4** `--verbose`; B8 warning-severity (would enrich
+`--json`); `ovellum_search_docs` MCP tool (Pagefind); and the larger untouched
+**Tier B** (plugin API, versioned docs, composable landing) + **Tier D**
+(programmatic `build()`, lifecycle hooks). **Next release will be 0.14.0** (one
+changeset staged so far).
 
 - **0.12.0 — AI-Ready output + portable deploy-anywhere build (343 tests).**
   **C1:** `site.ai` config (`{enabled?,llmsTxt?,fullText?,mdMirror?}`) → `/llms.txt`

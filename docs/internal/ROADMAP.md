@@ -92,18 +92,17 @@ A1 unlocks A2–A4.
       `detectRenames` (kind gate + Levenshtein name sim + signature-shape sim +
       same-file bonus, greedy 1:1 ≥0.6); surfaced in `diff` (likely-renames
       section + JSON) and at build time (`did X become Y? … reattach` warning
-      over the prior snapshot). **Remaining: the actual `--reattach` write
-      action** (folds into A4's interactive slice).
-- [~] **A4 (M)** **`ovellum orphans` CLI** — list (default), `--stale`,
+      over the prior snapshot). **The `--reattach` write action landed
+      2026-06-25** with A4 (`ovellum orphans --reattach`).
+- [x] **A4 (M)** **`ovellum orphans` CLI** — list (default), `--stale`,
       interactive reattach/delete. The merger already returns full
-      `OrphanRecord`s; this is surface area, long promised in docs (marked
-      "planned"). Populate `anchorLastSeen` from the persisted IR (A1).
-      **Read slice done 2026-06-24:** `commands/orphans.ts` + pure
-      `dev/orphans.ts` (`parseOrphanFile` round-trips the writer, `loadOrphans`,
-      `summarizeOrphans`); default list + `--stale` + `--json`; anchor
-      present/gone/unknown vs the IR snapshot; `run-build.ts` now stamps
-      `anchorLastSeen` from the prior snapshot. **Remaining: interactive
-      reattach/delete** (the write side).
+      `OrphanRecord`s; long promised in docs. Populate `anchorLastSeen` from the
+      persisted IR (A1). **Read slice done 2026-06-24** (`commands/orphans.ts` +
+      pure `dev/orphans.ts`; list + `--stale` + `--json`; present/gone/unknown vs
+      snapshot; `anchorLastSeen` stamped at build). **Write slice done
+      2026-06-25:** `--reattach` walks each orphan interactively and reattaches
+      (via `suggestReattachTarget` → `applyWriteZone` → delete archive),
+      deletes, or skips — closes A3's `--reattach` too.
 - [ ] **A5 (S)** **`@preserve` auto-wrapping** — generator emits
       `@manual:start/end` around `@preserve`-tagged JSDoc content; merger
       already treats them uniformly. IR flag (`isPreserved`) exists; this is

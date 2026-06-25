@@ -1,11 +1,33 @@
-import { mkdtempSync, writeFileSync } from 'node:fs';
+import { mkdtempSync, mkdirSync, writeFileSync, readFileSync, existsSync } from 'node:fs';
 import { rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-import type { OrphanRecord } from '@ovellum/core';
+import { DEFAULT_CONFIG, type DocNode, type OrphanRecord } from '@ovellum/core';
 import { renderOrphanFile, writeOrphan } from '@ovellum/merger';
-import { loadOrphans, parseOrphanFile, summarizeOrphans } from '../dev/orphans.js';
+import { runBuild } from '../dev/run-build.js';
+import {
+  loadOrphans,
+  parseOrphanFile,
+  reattachOrphan,
+  suggestReattachTarget,
+  summarizeOrphans,
+} from '../dev/orphans.js';
+
+function node(id: string, name: string): DocNode {
+  return {
+    id,
+    kind: 'function',
+    name,
+    filePath: id.slice(0, id.indexOf('::')),
+    line: 1,
+    signature: `function ${name}()`,
+    tags: {},
+    isExported: true,
+    isInternal: false,
+    isPreserved: false,
+  };
+}
 
 /**
  * `ovellum orphans` reading + analysis (ROADMAP A4). The merger writes the
@@ -109,5 +131,85 @@ describe('summarizeOrphans', () => {
       cwd: '/proj',
     });
     expect(unknown[0].anchor).toBe('unknown');
+  });
+});
+
+describe('suggestReattachTarget', () => {
+  const orphan: OrphanRecord = {
+    orphanedAt: '2026-06-01T00:00:00.000Z',
+    sourceFile: 'docs/date.md',
+    anchorId: 'src/date.ts::formatDate',
+    content: 'note',
+  };
+
+  it('prefers the exact anchor when it is back in source', () => {
+    const s = suggestReattachTarget(orphan, [node('src/date.ts::formatDate', 'formatDate')]);
+    expect(s).toEqual({ anchorId: 'src/date.ts::formatDate', reason: 'present', confidence: 1 });
+  });
+
+  it('suggests a name-similar anchor as a likely rename', () => {
+    const s = suggestReattachTarget(orphan, [node('src/date.ts::formatDateUTC', 'formatDateUTC')]);
+    expect(s?.reason).toBe('rename');
+    expect(s?.anchorId).toBe('src/date.ts::formatDateUTC');
+  });
+
+  it('returns null when nothing is close enough', () => {
+    expect(suggestReattachTarget(orphan, [node('src/x.ts::shutdown', 'shutdown')])).toBeNull();
+  });
+});
+
+describe('reattachOrphan', () => {
+  let dir: string;
+  const config = { ...DEFAULT_CONFIG, input: './src', output: './docs', mode: 'hybrid' as const };
+
+  beforeEach(async () => {
+    dir = mkdtempSync(path.join(tmpdir(), 'ovellum-reattach-'));
+    mkdirSync(path.join(dir, 'src'), { recursive: true });
+    writeFileSync(
+      path.join(dir, 'src', 'math.ts'),
+      '/** Add. */\nexport function add(a: number, b: number): number {\n  return a + b;\n}\n',
+      'utf8',
+    );
+    await runBuild({ config, cwd: dir });
+  });
+  afterEach(async () => {
+    await rm(dir, { recursive: true, force: true });
+  });
+
+  it('writes the prose into a @manual zone under the target and removes the archive', async () => {
+    const orphanDir = path.resolve(dir, config.protect.orphanDir);
+    await writeOrphan(
+      {
+        orphanedAt: '2026-06-01T00:00:00.000Z',
+        sourceFile: 'docs/math.md',
+        anchorId: 'src/math.ts::add',
+        manualBlockId: 'why',
+        content: 'Kept rationale.',
+      },
+      orphanDir,
+    );
+    const [orphan] = await loadOrphans(orphanDir);
+    const archive = orphan!.archivePath!;
+
+    const result = await reattachOrphan({ orphan: orphan!, targetAnchorId: 'src/math.ts::add', config, cwd: dir });
+    expect(result.action).toBe('inserted');
+
+    const doc = readFileSync(path.join(dir, 'docs', 'math.md'), 'utf8');
+    expect(doc).toContain('<!-- @manual:start id="why" -->');
+    expect(doc).toContain('Kept rationale.');
+    // The orphan archive is consumed.
+    expect(existsSync(archive)).toBe(false);
+  });
+
+  it('throws when the target anchor is not in the built doc', async () => {
+    const orphan: OrphanRecord = {
+      orphanedAt: '2026-06-01T00:00:00.000Z',
+      sourceFile: 'docs/math.md',
+      anchorId: 'src/math.ts::ghost',
+      content: 'x',
+    };
+    await expect(
+      reattachOrphan({ orphan, targetAnchorId: 'src/math.ts::ghost', config, cwd: dir }),
+    ).rejects.toThrow(/not found/);
   });
 });

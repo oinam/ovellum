@@ -1,8 +1,16 @@
 import path from 'node:path';
+import { confirm, input, select } from '@inquirer/prompts';
 import { defineCommand } from 'citty';
-import { ConfigError, loadOvellumConfig } from '@ovellum/core';
-import { collectAnchorIds, readProjectIR } from '../dev/ir.js';
-import { loadOrphans, summarizeOrphans, type OrphanSummary } from '../dev/orphans.js';
+import { ConfigError, loadOvellumConfig, type OvellumConfig } from '@ovellum/core';
+import { collectAnchorIds, collectNodes, readProjectIR } from '../dev/ir.js';
+import {
+  deleteOrphan,
+  loadOrphans,
+  reattachOrphan,
+  suggestReattachTarget,
+  summarizeOrphans,
+  type OrphanSummary,
+} from '../dev/orphans.js';
 
 export const orphansCommand = defineCommand({
   meta: {
@@ -27,6 +35,11 @@ export const orphansCommand = defineCommand({
       type: 'boolean',
       description: 'Emit the orphan list as JSON (for CI / tooling).',
     },
+    reattach: {
+      type: 'boolean',
+      description:
+        'Interactively reattach each orphan to a present-again / renamed anchor, delete it, or skip.',
+    },
   },
   async run({ args }) {
     const cwd = path.resolve(args.cwd ?? process.cwd());
@@ -44,6 +57,12 @@ export const orphansCommand = defineCommand({
     const { config } = loaded;
 
     const orphanDir = path.resolve(cwd, config.protect.orphanDir);
+
+    if (args.reattach === true) {
+      await reattachFlow({ config, cwd, orphanDir });
+      return;
+    }
+
     const records = await loadOrphans(orphanDir);
 
     const snapshot = readProjectIR(cwd);
@@ -91,6 +110,98 @@ export const orphansCommand = defineCommand({
     process.exit(0);
   },
 });
+
+/** Interactive `--reattach`: walk each orphan and reattach / delete / skip. */
+async function reattachFlow(opts: { config: OvellumConfig; cwd: string; orphanDir: string }): Promise<void> {
+  const { config, cwd, orphanDir } = opts;
+  const records = await loadOrphans(orphanDir);
+  const orphanDirRel = path.relative(cwd, orphanDir).replace(/\\/g, '/');
+  if (records.length === 0) {
+    process.stdout.write(`ovellum orphans — none to reattach in ${orphanDirRel}/.\n`);
+    process.exit(0);
+  }
+
+  const snapshot = readProjectIR(cwd);
+  if (!snapshot) {
+    process.stderr.write(
+      'no IR snapshot at .ovellum/ir.json — run `ovellum build` first so reattach knows the current anchors.\n',
+    );
+    process.exit(1);
+  }
+  const nodes = collectNodes(snapshot.project);
+  const anchorIds = new Set(nodes.map((n) => n.id));
+
+  if (!process.stdin.isTTY) {
+    process.stderr.write('`ovellum orphans --reattach` is interactive — run it in a terminal.\n');
+    process.exit(1);
+  }
+
+  let reattached = 0;
+  let deleted = 0;
+  let skipped = 0;
+  try {
+    for (const orphan of records) {
+      const suggestion = suggestReattachTarget(orphan, nodes);
+      const preview = orphan.content.split('\n')[0]?.slice(0, 72) ?? '';
+      process.stdout.write(
+        `\n${orphan.anchorId}\n  from: ${orphan.sourceFile}\n  text: ${preview}${preview.length >= 72 ? '…' : ''}\n`,
+      );
+
+      const choices: Array<{ name: string; value: string }> = [];
+      if (suggestion) {
+        const tag = suggestion.reason === 'present' ? 'anchor is back' : `likely rename, ${Math.round(suggestion.confidence * 100)}%`;
+        choices.push({ name: `Reattach to ${suggestion.anchorId}  (${tag})`, value: 'suggested' });
+      }
+      choices.push(
+        { name: 'Reattach to a different anchor…', value: 'other' },
+        { name: 'Delete this orphan', value: 'delete' },
+        { name: 'Skip', value: 'skip' },
+      );
+
+      const choice = await select({ message: 'Action', choices, default: 'skip' });
+
+      try {
+        if (choice === 'suggested' && suggestion) {
+          const r = await reattachOrphan({ orphan, targetAnchorId: suggestion.anchorId, config, cwd });
+          process.stdout.write(`  ✓ ${r.action} into ${r.doc}\n`);
+          reattached++;
+        } else if (choice === 'other') {
+          const target = await input({
+            message: 'Anchor id to reattach under',
+            validate: (v) => anchorIds.has(v.trim()) || 'Not a known anchor in the current snapshot.',
+          });
+          const r = await reattachOrphan({ orphan, targetAnchorId: target.trim(), config, cwd });
+          process.stdout.write(`  ✓ ${r.action} into ${r.doc}\n`);
+          reattached++;
+        } else if (choice === 'delete') {
+          const sure = await confirm({ message: 'Delete this orphan permanently?', default: false });
+          if (sure) {
+            await deleteOrphan(orphan);
+            process.stdout.write('  ✓ deleted\n');
+            deleted++;
+          } else {
+            skipped++;
+          }
+        } else {
+          skipped++;
+        }
+      } catch (err) {
+        process.stderr.write(`  ! ${(err as Error).message}\n`);
+        skipped++;
+      }
+    }
+  } catch (err) {
+    // @inquirer throws ExitPromptError on Ctrl-C — treat as a clean abort.
+    if (err instanceof Error && err.name === 'ExitPromptError') {
+      process.stdout.write(`\nStopped. reattached ${reattached}, deleted ${deleted}, skipped ${skipped}.\n`);
+      process.exit(130);
+    }
+    throw err;
+  }
+
+  process.stdout.write(`\nDone — reattached ${reattached}, deleted ${deleted}, skipped ${skipped}.\n`);
+  process.exit(0);
+}
 
 /** Render an orphan summary list as the human-readable stdout block. */
 export function formatOrphans(

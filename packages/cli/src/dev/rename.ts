@@ -56,8 +56,9 @@ function editDistance(a: string, b: string): number {
   return row[n]!;
 }
 
-/** Name similarity in [0,1] (1 = identical). */
-function nameSimilarity(a: string, b: string): number {
+/** Name similarity in [0,1] (1 = identical). Exported so the orphan reattach
+ *  suggester can score an orphan's symbol name against current anchors. */
+export function nameSimilarity(a: string, b: string): number {
   if (a === b) return 1;
   const max = Math.max(a.length, b.length);
   return max === 0 ? 1 : 1 - editDistance(a, b) / max;

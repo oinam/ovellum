@@ -66,8 +66,10 @@ copy the body into the new symbol's Markdown section as a
 When a block is orphaned by a rename, the build often spots it for you —
 "did `formatDate` become `formatDateUTC`?" — and
 [`ovellum diff`](/docs/reference/cli/#ovellum-diff) pairs the two as a likely
-rename. Performing the re-attach is still a copy-paste step; an interactive
-flow is planned.
+rename. To do the re-attach,
+[`ovellum orphans --reattach`](/docs/reference/cli/#reattaching---reattach) walks
+each orphan and offers to splice it back under the suggested (or a chosen)
+anchor as a protected zone, then removes the archive — no copy-paste.
 
 ### 2. Delete it
 
@@ -113,5 +115,6 @@ ovellum orphans
 ovellum orphans --stale --json
 ```
 
-Reattaching (move the prose back under the matching anchor) and deleting are
-still done by hand for now.
+To act on them, `ovellum orphans --reattach` walks each one interactively and
+reattaches it under the suggested anchor, deletes it, or skips — see
+[Reattaching](/docs/reference/cli/#reattaching---reattach).

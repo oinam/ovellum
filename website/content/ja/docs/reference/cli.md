@@ -1,7 +1,7 @@
 ---
 title: CLI リファレンス
 description: ovellum CLI のすべてのサブコマンドとフラグ。
-sourceHash: '08306edfa32ba05e'
+sourceHash: '6f0914477988f26e'
 ---
 
 # CLI リファレンス
@@ -578,7 +578,7 @@ ovellum upgrade [--dry-run] [--yes]
 ### 構文
 
 ```
-ovellum orphans [--cwd <dir>] [--config <path>] [--stale] [--json]
+ovellum orphans [--cwd <dir>] [--config <path>] [--stale] [--json] [--reattach]
 ```
 
 ### フラグ
@@ -589,6 +589,7 @@ ovellum orphans [--cwd <dir>] [--config <path>] [--stale] [--json]
 | `--config <path>` | path | auto-discovered | 自動検出をスキップし、このファイルを直接読み込みます。                            |
 | `--stale`     | boolean | `false`         | [`protect.orphanRetention`](/ja/docs/reference/config/#protect) 日（デフォルト `90`）より古い孤立だけを表示します — 四半期レビュー向けのフィルタです。 |
 | `--json`      | boolean | `false`         | 一覧を JSON（`{ orphanDir, retentionDays, hasSnapshot, count, orphans[] }`）で出力します（CI / ツール向け）。 |
+| `--reattach`  | boolean | `false`         | **対話的に** 孤立を 1 件ずつ確認し、再アタッチ・削除・スキップします（下記参照）。ターミナルが必要です。 |
 
 ### 出力
 
@@ -604,8 +605,19 @@ ovellum orphans — 1 orphan in .ovellum/orphans/
     file:       .ovellum/orphans/2026-06-24_src-math.ts-add.md
 ```
 
-孤立の再アタッチ（文章を一致するアンカーの下へ戻す）や削除（アーカイブファイルを消す）は、
-今のところ手作業です。対話的な `reattach` / `delete` フローは計画中です。
+### 再アタッチ（`--reattach`）
+
+`ovellum orphans --reattach` はアーカイブを 1 件ずつ巡回し、各孤立について次を行えます:
+
+- 提案されたアンカーへ **再アタッチ** します — シンボルがソースに戻っていれば同じアンカー、
+  リネームされた可能性が高ければ名前が近いアンカー（別のアンカー id を入力することもできます）。
+  文章はそのアンカーの下の `@manual` 保護ゾーンに書き込まれるので次回のビルドでも保持され、
+  アーカイブファイルは削除されます。
+- 孤立を **削除**（確認あり）、または **スキップ** します。
+
+現在のアンカーは直前のビルドの [IR スナップショット](#ovellum-build)から読み取るため、先に
+`ovellum build` を実行してください。再アタッチ先はビルド済みドキュメントなので、変更は再ビルドが
+保持するのとまったく同じ場所に入ります。
 
 ### 終了コード
 

@@ -585,7 +585,7 @@ the source** (so the block could be reattached by hand) or **gone**.
 ### Synopsis
 
 ```
-ovellum orphans [--cwd <dir>] [--config <path>] [--stale] [--json]
+ovellum orphans [--cwd <dir>] [--config <path>] [--stale] [--json] [--reattach]
 ```
 
 ### Flags
@@ -596,6 +596,7 @@ ovellum orphans [--cwd <dir>] [--config <path>] [--stale] [--json]
 | `--config <path>` | path | auto-discovered | Skip discovery and load this file directly.                        |
 | `--stale`     | boolean | `false`         | Show only orphans older than [`protect.orphanRetention`](/docs/reference/config/#protect) days (default `90`) — the quarterly-review filter. |
 | `--json`      | boolean | `false`         | Emit the list as JSON (`{ orphanDir, retentionDays, hasSnapshot, count, orphans[] }`) for CI / tooling. |
+| `--reattach`  | boolean | `false`         | **Interactively** walk each orphan and reattach it, delete it, or skip (see below). Requires a terminal. |
 
 ### Output
 
@@ -611,9 +612,21 @@ ovellum orphans — 1 orphan in .ovellum/orphans/
     file:       .ovellum/orphans/2026-06-24_src-math.ts-add.md
 ```
 
-Reattaching or deleting orphans is still done by hand (move the prose back under
-the matching anchor in the doc, or delete the archive file); an interactive
-`reattach` / `delete` flow is planned.
+### Reattaching (`--reattach`)
+
+`ovellum orphans --reattach` walks the archive one orphan at a time and, for
+each, offers to:
+
+- **Reattach** it to a suggested anchor — the same anchor if the symbol is back
+  in the source, or a name-similar one if it was likely renamed (you can also
+  type a different anchor id). The prose is written into a `@manual` protected
+  zone under that anchor, so the next build preserves it, and the archive file is
+  removed.
+- **Delete** the orphan (with a confirmation), or **skip** it.
+
+It reads the current anchors from the last build's
+[IR snapshot](#ovellum-build), so run `ovellum build` first. The reattach target
+is a built doc, so the change lands exactly where a rebuild would keep it.
 
 ### Exit codes
 
