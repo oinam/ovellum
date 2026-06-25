@@ -132,7 +132,7 @@ Anchor IDs: done `{relativeFilePath}::{symbolPath}` per [`DESIGN.md` §8.3](./DE
 | Orphan quarantine                                                           | done     | Writes `.ovellum/orphans/{YYYY-MM-DD}_{slug}.md`.   |
 | `OrphanRecord` metadata (orphaned, source_file, anchor_id, manual_block_id) | done     |                                                     |
 | Anchor last-seen timestamp on orphans                                       | deferred | IR now persisted (A1, `.ovellum/ir.json`); last-seen wiring is A4. |
-| `@preserve` auto-wrapping in generator                                      | deferred | IR carries `isPreserved`; generator wiring pending. |
+| `@preserve` auto-wrapping in generator                                      | done     | **A5 (2026-06-25).** Hybrid build wraps a `@preserve` symbol's generated body in a `@manual` zone keyed by the node id (`templates.ts` `wrapPreserved`, gated `config.mode === 'hybrid'` in `generate.ts`; top-level nodes + method members; properties/table excluded). Merger strips generated-side seed zones when splicing the author's copy (`merge.ts` `stripGeneratedBlocks`) so there's no duplication. First build seeds; edits survive; deletion orphans. Pinned by generator `preserve.test.ts` (3) + cli `preserve.test.ts` (3, full cycle) + merge-survival unaffected. |
 
 **Tests:** 8 vitest cases.
 

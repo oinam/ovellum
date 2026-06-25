@@ -210,9 +210,9 @@ dropped — including `data:` on `<img>` because
 
 ### `@preserve`
 
-JSDoc tag (the default inline tag) on a source comment that asks the
-generator to wrap the comment's description in a protected zone
-automatically — so user edits to that description survive regeneration.
+JSDoc tag (the default inline tag) on a source comment that makes the
+hybrid generator wrap that symbol's generated section in a protected zone
+automatically — so edits to it survive regeneration.
 
 ### Topbar nav
 

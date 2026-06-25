@@ -5,10 +5,9 @@ description: The tagging contract that lets auto-generated and hand-written cont
 
 # Anchors and protected zones
 
-Hybrid mode (and a future `@preserve`-aware auto mode) works because
-Ovellum and the author agree on two kinds of marker. Together they form a
-contract: the author owns whatever's inside protected zones, the tool owns
-everything else.
+Hybrid mode works because Ovellum and the author agree on two kinds of
+marker. Together they form a contract: the author owns whatever's inside
+protected zones, the tool owns everything else.
 
 ## Anchors
 
@@ -106,14 +105,17 @@ export function formatDate(date: Date): string {
 }
 ```
 
-When `@preserve` appears in a source comment, Ovellum will (eventually —
-this is on the roadmap) auto-wrap the description in a protected zone in
-the generated Markdown so your handwritten note survives the same way as
-manually authored zones.
+When `@preserve` appears in a source comment, the **hybrid** build auto-wraps
+that symbol's generated section in a `@manual` protected zone (keyed by the
+symbol's anchor id). The first build seeds the zone with the generated content;
+from then on, anything you edit inside it survives regeneration exactly like a
+hand-authored zone — and if the symbol is deleted or renamed, the prose is
+[orphaned](/docs/concepts/orphans/) rather than lost.
 
-The IR currently captures the flag (`DocNode.isPreserved`); the
-auto-wrapping in the generator is tracked in the
-[code-side TODO](https://github.com/oinam/ovellum/blob/main/docs/internal/TODO.md).
+It's a hybrid-mode feature: `auto` mode regenerates fully every build, so it
+emits no zones (nothing would preserve them). The anchor comment stays outside
+the zone, so reattachment and orphan tracking keep working. Members (class
+methods) are wrapped too; properties — rendered as a table — are not.
 
 ## Configuring the tags
 

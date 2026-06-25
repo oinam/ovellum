@@ -1,50 +1,73 @@
 import type { DocNode, DocParam } from '@ovellum/core';
 
+export interface RenderOptions {
+  /**
+   * When true, a `@preserve`-tagged symbol's body is wrapped in a `@manual`
+   * protected zone so the hybrid merge engine keeps it across regeneration
+   * (A5). Only meaningful in hybrid mode — auto rebuilds fully each time, so
+   * the wrap would be misleading there.
+   */
+  wrapPreserved?: boolean;
+}
+
 /** Render a single top-level node + any children to markdown. */
-export function renderNode(node: DocNode): string {
+export function renderNode(node: DocNode, opts: RenderOptions = {}): string {
   const parts: string[] = [];
   parts.push(headingFor(node));
   parts.push(anchorComment(node));
-  parts.push(signatureBlock(node));
 
+  const body: string[] = [];
+  body.push(signatureBlock(node));
   if (node.deprecated) {
-    parts.push(`> **Deprecated.** ${escapeInline(node.deprecated)}`);
+    body.push(`> **Deprecated.** ${escapeInline(node.deprecated)}`);
   }
   if (node.description) {
-    parts.push(node.description.trim());
+    body.push(node.description.trim());
   }
   if (node.since) {
-    parts.push(`*Since: ${escapeInline(node.since)}*`);
+    body.push(`*Since: ${escapeInline(node.since)}*`);
   }
-
   if (node.params && node.params.length > 0) {
-    parts.push('**Parameters**');
-    parts.push(paramsTable(node.params));
+    body.push('**Parameters**');
+    body.push(paramsTable(node.params));
   }
-
   if (node.returns && node.returns.type && node.returns.type !== 'void') {
     const desc = node.returns.description ? ` - ${node.returns.description}` : '';
-    parts.push(`**Returns** \`${node.returns.type}\`${desc}`);
+    body.push(`**Returns** \`${node.returns.type}\`${desc}`);
   }
-
   if (node.throws && node.throws.length > 0) {
-    parts.push('**Throws**');
-    for (const t of node.throws) parts.push(`- ${escapeInline(t)}`);
+    body.push('**Throws**');
+    for (const t of node.throws) body.push(`- ${escapeInline(t)}`);
   }
-
   if (node.examples && node.examples.length > 0) {
-    parts.push('**Example**');
-    for (const ex of node.examples) parts.push(fence(ex.trim(), 'typescript'));
+    body.push('**Example**');
+    for (const ex of node.examples) body.push(fence(ex.trim(), 'typescript'));
   }
+  parts.push(wrapPreserved(node, body, opts));
 
   if (node.children && node.children.length > 0) {
-    parts.push(renderChildren(node));
+    parts.push(renderChildren(node, opts));
   }
 
   return parts.filter(Boolean).join('\n\n');
 }
 
-function renderChildren(parent: DocNode): string {
+/**
+ * Join a node's body parts, wrapping them in a `@manual` protected zone keyed
+ * by the node's anchor id when the symbol is `@preserve`-tagged and wrapping is
+ * enabled. The zone seeds the generated content on first build; thereafter the
+ * merge engine keeps whatever the author edited inside it.
+ */
+function wrapPreserved(node: DocNode, body: string[], opts: RenderOptions): string {
+  const joined = body.filter(Boolean).join('\n\n');
+  if (!joined) return '';
+  if (opts.wrapPreserved && node.isPreserved) {
+    return `<!-- @manual:start id="${node.id}" -->\n${joined}\n<!-- @manual:end -->`;
+  }
+  return joined;
+}
+
+function renderChildren(parent: DocNode, opts: RenderOptions): string {
   const buckets = {
     method: [] as DocNode[],
     property: [] as DocNode[],
@@ -61,26 +84,28 @@ function renderChildren(parent: DocNode): string {
     sections.push(`#### Properties\n\n${membersTable(buckets.property)}`);
   }
   if (buckets.method.length) {
-    sections.push(`#### Methods\n\n${buckets.method.map(renderMember).join('\n\n')}`);
+    sections.push(`#### Methods\n\n${buckets.method.map((m) => renderMember(m, opts)).join('\n\n')}`);
   }
   if (buckets.other.length) {
-    sections.push(buckets.other.map(renderMember).join('\n\n'));
+    sections.push(buckets.other.map((m) => renderMember(m, opts)).join('\n\n'));
   }
   return sections.join('\n\n');
 }
 
-function renderMember(node: DocNode): string {
+function renderMember(node: DocNode, opts: RenderOptions): string {
   const parts: string[] = [];
   parts.push(`##### \`${node.name}\``);
   parts.push(anchorComment(node));
-  parts.push(fence(node.signature, 'typescript'));
-  if (node.description) parts.push(node.description.trim());
+  const body: string[] = [];
+  body.push(fence(node.signature, 'typescript'));
+  if (node.description) body.push(node.description.trim());
   if (node.params && node.params.length > 0) {
-    parts.push(paramsTable(node.params));
+    body.push(paramsTable(node.params));
   }
   if (node.returns && node.returns.type && node.returns.type !== 'void') {
-    parts.push(`Returns \`${node.returns.type}\``);
+    body.push(`Returns \`${node.returns.type}\``);
   }
+  parts.push(wrapPreserved(node, body, opts));
   return parts.filter(Boolean).join('\n\n');
 }
 

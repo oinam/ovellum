@@ -1,7 +1,7 @@
 import type { DocFile, DocProject, OvellumConfig } from '@ovellum/core';
 import { buildFrontmatter } from './frontmatter.js';
 import { outputPathFor } from './path.js';
-import { renderNode } from './templates.js';
+import { renderNode, type RenderOptions } from './templates.js';
 
 export interface GenerateResult {
   /** Output path (relative to project root) → markdown body. */
@@ -22,16 +22,19 @@ export function generateDocs(project: DocProject, config: OvellumConfig): Genera
   const files = new Map<string, string>();
   const warnings: string[] = [];
 
+  // Only hybrid mode merges, so only there does wrapping `@preserve` symbols in
+  // a protected zone actually preserve anything (A5).
+  const wrapPreserved = config.mode === 'hybrid';
   for (const file of project.files) {
     const outputPath = outputPathFor(file.filePath, config);
-    const body = renderFile(file, project.generatedAt);
+    const body = renderFile(file, project.generatedAt, { wrapPreserved });
     files.set(outputPath, body);
   }
 
   return { files, warnings };
 }
 
-function renderFile(file: DocFile, generatedAt: string): string {
+function renderFile(file: DocFile, generatedAt: string, opts: RenderOptions): string {
   const parts: string[] = [buildFrontmatter(file, generatedAt)];
 
   if (file.description) {
@@ -39,7 +42,7 @@ function renderFile(file: DocFile, generatedAt: string): string {
   }
 
   for (const node of file.nodes) {
-    parts.push(renderNode(node));
+    parts.push(renderNode(node, opts));
   }
 
   return parts.filter(Boolean).join('\n\n') + '\n';

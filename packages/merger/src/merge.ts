@@ -84,12 +84,19 @@ export function merge(
     const anchor = anchors[i]!;
     const sectionEnd = findSectionEnd(generated, anchor.endIndex);
 
-    pieces.push(generated.slice(cursor, sectionEnd));
-
+    const section = generated.slice(cursor, sectionEnd);
     const blocks = anchorToBlocks.get(anchor.id);
     if (blocks && blocks.length > 0) {
+      // The author-owned blocks for this anchor replace any generated seed
+      // zones in the section (e.g. an `@preserve` auto-wrapped body, A5) so the
+      // edited content wins instead of duplicating the freshly-generated seed.
+      pieces.push(stripGeneratedBlocks(section));
       pieces.push(renderBlocks(blocks));
       anchorToBlocks.delete(anchor.id);
+    } else {
+      // No incoming block — keep the section as generated (this is what seeds a
+      // brand-new `@preserve` zone on the first build that produces one).
+      pieces.push(section);
     }
 
     cursor = sectionEnd;
@@ -119,6 +126,19 @@ function findSectionEnd(content: string, from: number): number {
   re.lastIndex = from;
   const m = re.exec(content);
   return m ? m.index + 1 : content.length;
+}
+
+/** Generated seed protected zones to drop when an author block replaces them. */
+const GENERATED_BLOCK_RE = /[ \t]*<!--\s*@manual:start\b[\s\S]*?<!--\s*@manual:end\s*-->\n*/g;
+
+/**
+ * Remove `@manual` zones from a freshly-generated section. Every `@manual` zone
+ * in generated output is a seed (the author's real zones live in the previous
+ * file, not here), so this is safe — and necessary so an `@preserve` seed isn't
+ * duplicated alongside the author's edited copy when the latter is spliced in.
+ */
+function stripGeneratedBlocks(section: string): string {
+  return section.replace(GENERATED_BLOCK_RE, '');
 }
 
 function renderBlocks(blocks: ProtectedBlock[]): string {

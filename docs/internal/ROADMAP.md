@@ -103,10 +103,14 @@ A1 unlocks A2–A4.
       2026-06-25:** `--reattach` walks each orphan interactively and reattaches
       (via `suggestReattachTarget` → `applyWriteZone` → delete archive),
       deletes, or skips — closes A3's `--reattach` too.
-- [ ] **A5 (S)** **`@preserve` auto-wrapping** — generator emits
-      `@manual:start/end` around `@preserve`-tagged JSDoc content; merger
-      already treats them uniformly. IR flag (`isPreserved`) exists; this is
-      generator wiring.
+- [x] **A5 (S)** **`@preserve` auto-wrapping** — generator emits
+      `@manual:start/end` around `@preserve`-tagged content. **Done 2026-06-25:**
+      `templates.ts` `wrapPreserved` wraps a preserved node's body in a
+      `@manual` zone keyed by the node id (hybrid only, via `generate.ts`).
+      Note: the merger did *not* "treat them uniformly" — it appends, which would
+      duplicate the seed; added `stripGeneratedBlocks` in `merge.ts` so the
+      author's copy replaces the generated seed. Seeds on first build; edits
+      survive; deletion orphans.
 - [x] **A6 (M)** **Validation mode** (`ovellum check --strict`): warn on
       positional-fallback zones (no `id=`), anchors pointing at no-longer-existing
       symbols, required frontmatter fields. **Done 2026-06-25:** `--strict` adds

@@ -119,14 +119,15 @@ per-feature detail. ROADMAP **Tier A**:
 + the `--reattach` write side (uncommitted, in flight for 0.14.0; changeset
 `orphans-reattach.md`, minor; `dev/orphans.ts` `suggestReattachTarget`/
 `reattachOrphan`/`deleteOrphan` + `commands/orphans.ts` `reattachFlow`; 119 cli
-tests). **Still open:** A5 `@preserve` auto-wrap, A7 incremental watch; **U4**
-`--verbose`; B8 warning-severity (would enrich `--json`); `ovellum_search_docs`
-MCP tool (Pagefind); and the larger untouched **Tier B** (plugin API, versioned
-docs, composable landing) + **Tier D** (programmatic `build()`, lifecycle
-hooks). **Next release 0.14.0** — 2 changesets staged: `orphans-reattach` (A4/A3
-write side), `check-strict` (A6); both minor. (A6 `check --strict` done
-2026-06-25: positional-zone / stale-anchor / missing-frontmatter; off by
-default; website is strict-clean.)
+tests). **Tier A COMPLETE except A7** (incremental watch, L). **Still open:** A7;
+**U4** `--verbose`; B8 warning-severity (would enrich `--json`);
+`ovellum_search_docs` MCP tool (Pagefind); and the larger untouched **Tier B**
+(plugin API, versioned docs, composable landing) + **Tier D** (programmatic
+`build()`, lifecycle hooks). **Next release 0.14.0** — 3 changesets staged:
+`orphans-reattach` (A4/A3 write side), `check-strict` (A6), `preserve-autowrap`
+(A5); all minor. (A5 done 2026-06-25: hybrid generator wraps `@preserve` symbols
+in a `@manual` seed zone — `templates.ts` `wrapPreserved` + merger
+`stripGeneratedBlocks` to avoid duplicating the seed.)
 
 - **0.12.0 — AI-Ready output + portable deploy-anywhere build (343 tests).**
   **C1:** `site.ai` config (`{enabled?,llmsTxt?,fullText?,mdMirror?}`) → `/llms.txt`
