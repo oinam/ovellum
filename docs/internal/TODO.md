@@ -32,10 +32,21 @@ Legend: `[ ]` not started · `[~]` in progress · `[x]` done · `[!]` blocked
 
 ## Current state (2026-06-14)
 
-**Publish state (read this first):** **`ovellum@0.13.0` is live on npm**
+**Publish state (read this first):** **`ovellum@0.14.0` is live on npm**
 (2026-06-25), matches local. Tree clean on `main`, fully pushed; tag
-`ovellum@0.13.0` (signed) pushed + GitHub release published; no pending
-changesets. Tags `ovellum@0.7.0`…`0.13.0` all up.
+`ovellum@0.14.0` (signed) pushed + GitHub release published; **no pending
+changesets**. Tags `ovellum@0.7.0`…`0.14.0` all up.
+
+**0.14.0 (2026-06-25) — Tier A hybrid-moat completion + CLI polish (5
+changesets):** A4/A3 write side `ovellum orphans --reattach` (interactive
+reattach/delete; `dev/orphans.ts` `suggestReattachTarget`/`reattachOrphan`); A5
+`@preserve` auto-wrap (generator `wrapPreserved` + merger `stripGeneratedBlocks`,
+hybrid only); A6 `ovellum check --strict` (positional-zone / stale-anchor /
+missing-frontmatter); A7 incremental watch builds (`createIncrementalParser` warm
+ts-morph Project + `runIncrementalBuild`; full & incremental share
+`buildProjectDocs`); U4 `--verbose` on build/check/diff (stderr `onLog`,
+composes with `--json`). **Tier A now COMPLETE (A1–A7).** 130 cli tests + 17
+parser; docs en+ja 1:1.
 
 **Shipped in 0.13.0 (2026-06-25, this session — big AI-Ready + hybrid-moat +
 security batch).** The per-bullet `(committed …)` / `(uncommitted)` status tags
@@ -114,26 +125,21 @@ per-feature detail. ROADMAP **Tier A**:
   `security-hardening.md` (patch). Tests: dev-server symlink-escape +
   `init-validate.test.ts`.
 
-**0.13.0 is published.** Tier C COMPLETE (C1–C5); security slice COMPLETE
-(S1–S6); **Tier A hybrid moat effectively complete** — A1–A4 + rename detection
-+ the `--reattach` write side (uncommitted, in flight for 0.14.0; changeset
-`orphans-reattach.md`, minor; `dev/orphans.ts` `suggestReattachTarget`/
-`reattachOrphan`/`deleteOrphan` + `commands/orphans.ts` `reattachFlow`; 119 cli
-tests). **Tier A COMPLETE (A1–A7); U4 done.** **Still open:** B8 warning-severity
-(would enrich `--json`); `ovellum_search_docs` MCP tool (Pagefind); U1
-troubleshooting, U2 migration, U3 init protected-zone example, U5–U7; and the
-larger untouched **Tier B** (plugin API, versioned docs, composable landing) +
-**Tier D** (programmatic `build()`, lifecycle hooks). **Next release 0.14.0** —
-5 changesets staged: `orphans-reattach` (A4/A3), `check-strict` (A6),
-`preserve-autowrap` (A5), `incremental-watch` (A7), `verbose-flag` (U4); all
-minor. (U4 done 2026-06-25: `--verbose` on build/check/diff → stderr via `onLog`
-threaded through runBuild/buildProjectDocs; composes with `--json`.) (A7 done 2026-06-25: `createIncrementalParser` warm ts-morph Project
-+ `runIncrementalBuild`; full & incremental share `buildProjectDocs` in
-`run-build.ts` → parity. Known limit by design: re-extracts whole project each
-change so cross-file ripples are correct, but startup parses twice — once in the
-initial `runBuild`, once seeding the warm parser. Acceptable; could unify later.) (A5 done 2026-06-25: hybrid generator wraps `@preserve` symbols
-in a `@manual` seed zone — `templates.ts` `wrapPreserved` + merger
-`stripGeneratedBlocks` to avoid duplicating the seed.)
+**Tiers DONE through 0.14.0:** Tier A (A1–A7, the hybrid moat — persistence,
+diff, orphans+reattach, rename detection, `@preserve` auto-wrap, `check
+--strict`, incremental watch); Tier C (C1–C5, AI-Ready); security slice (S1–S6);
+U4 (`--verbose` + `--json`). **A7 known limit by design:** the warm parser
+re-extracts the whole project each change (cross-file ripples stay correct) but
+startup parses twice — initial `runBuild` + seeding the warm parser; acceptable,
+could unify later.
+
+**Still open (pick next from `ROADMAP.md`):** B8 build-output severity levels
+(would enrich `--json`); `ovellum_search_docs` MCP tool (Pagefind); usability —
+U1 troubleshooting page, U2 migration guide, U3 init protected-zone example,
+U5–U7; and the larger untouched **Tier B** (B1 plugin/extension API, B6
+versioned docs, B5 composable landing, B2 MDX, B3 wire `links.ts`, B4 fonts, B9
+images) + **Tier D** (D2 programmatic `build()` API, D3 lifecycle hooks, D5
+recipes). No changesets pending; next feature starts a fresh 0.15.0 batch.
 
 - **0.12.0 — AI-Ready output + portable deploy-anywhere build (343 tests).**
   **C1:** `site.ai` config (`{enabled?,llmsTxt?,fullText?,mdMirror?}`) → `/llms.txt`
