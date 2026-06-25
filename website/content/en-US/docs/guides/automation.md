@@ -24,6 +24,10 @@ ovellum check --json
 ovellum diff --json
 ```
 
+Add `--verbose` to any of them for config-resolution and per-stage / file-I/O
+detail. It goes to **stderr**, so it composes cleanly with `--json` (stdout stays
+pure JSON).
+
 ### `build --json`
 
 ```json

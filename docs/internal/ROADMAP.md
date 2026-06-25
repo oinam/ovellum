@@ -444,8 +444,12 @@ machine-readable-CLI groundwork (C3 ≈ D1).
 - [ ] **U3 (S)** **Init scaffolds a protected-zone example** in hybrid mode
       ("Add your own notes here — this block survives every rebuild") +
       document the `--yes` fast path in the development guide.
-- [ ] **U4 (M)** **`--verbose` global flag** (config-resolution path, file
-      I/O detail) and **`--json` output** on `build`/`check`/`diff` for CI.
+- [x] **U4 (M)** **`--verbose` flag** (config-resolution path, file I/O detail)
+      and **`--json` output** on `build`/`check`/`diff` for CI. `--json` done with
+      C3; **`--verbose` done 2026-06-25** on `build`/`check`/`diff` — logs config
+      resolution + per-stage / file-I/O detail to **stderr** (threaded as an
+      `onLog` through `runBuild`/`buildProjectDocs`), so it composes with `--json`
+      (stdout stays pure).
 - [ ] **U5 (S)** **Better small messages**: registry-failure hint in
       `upgrade`, drop the internal "TODO.md Phase 6" reference from the `dev`
       mode error, optional request log on the dev server, relative paths in

@@ -68,6 +68,10 @@ export const checkCommand = defineCommand({
       description:
         'Add stricter validations: positional (id-less) protected zones, doc anchors pointing at gone symbols, and pages with no resolvable title.',
     },
+    verbose: {
+      type: 'boolean',
+      description: 'Print config-resolution and scan detail to stderr.',
+    },
   },
   async run({ args }) {
     const cwd = path.resolve(args.cwd ?? process.cwd());
@@ -85,6 +89,13 @@ export const checkCommand = defineCommand({
     const { config, configFile } = loaded;
 
     const asJson = args.json === true;
+    const vlog = args.verbose === true ? (m: string) => process.stderr.write(`verbose: ${m}\n`) : undefined;
+    vlog?.(`cwd ${cwd}`);
+    vlog?.(`config ${configFile ?? '(defaults)'}`);
+    vlog?.(`mode ${config.mode}`);
+    if ((config.site.locales?.length ?? 0) > 1) {
+      vlog?.(`locales ${config.site.locales!.map((l) => l.code).join(', ')}`);
+    }
 
     // Stamping mode is a dedicated, write-only path: refresh the stored source
     // hashes and exit, rather than reporting staleness.
@@ -129,6 +140,7 @@ export const checkCommand = defineCommand({
       throw err;
     }
     const { issues, files } = run;
+    vlog?.(`scanned ${files.length} file(s), found ${issues.length} issue(s)`);
 
     const elapsed = Date.now() - startedAt;
     const counts = countIssues(issues);

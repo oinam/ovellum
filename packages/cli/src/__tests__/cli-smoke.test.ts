@@ -133,6 +133,22 @@ describe('ovellum build (manual)', () => {
     expect(parsed.pages[0]).toHaveProperty('url');
     expect(Array.isArray(parsed.warnings)).toBe(true);
   });
+
+  it('--verbose logs stage detail to stderr, leaving stdout the normal summary', async () => {
+    const { code, stdout, stderr } = await runCli(['build', '--verbose'], { cwd: dir });
+    expect(code).toBe(0);
+    expect(stderr).toContain('verbose: config');
+    expect(stderr).toMatch(/verbose: mode manual/);
+    expect(stdout).toContain('ovellum build complete'); // summary still on stdout
+    expect(stdout).not.toContain('verbose:');
+  });
+
+  it('--json --verbose keeps stdout pure JSON (verbose on stderr)', async () => {
+    const { code, stdout, stderr } = await runCli(['build', '--json', '--verbose'], { cwd: dir });
+    expect(code).toBe(0);
+    expect(() => JSON.parse(stdout)).not.toThrow();
+    expect(stderr).toContain('verbose:');
+  });
 });
 
 describe('ovellum check', () => {

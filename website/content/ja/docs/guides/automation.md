@@ -1,7 +1,7 @@
 ---
 title: 自動化と AI エージェント
 description: スクリプト・CI ジョブ・AI エージェントから Ovellum を操作する — 機械可読な --json 出力、安定した終了コード、MCP サーバー。
-sourceHash: 'ae2f8292d93873e5'
+sourceHash: '1380e02ef7303446'
 ---
 
 # 自動化と AI エージェント
@@ -24,6 +24,9 @@ ovellum build --json
 ovellum check --json
 ovellum diff --json
 ```
+
+いずれにも `--verbose` を付けると、設定解決と各ステージ / ファイル I/O の詳細が出ます。
+出力先は **stderr** なので、`--json` ときれいに併用できます（stdout は純粋な JSON のままです）。
 
 ### `build --json`
 

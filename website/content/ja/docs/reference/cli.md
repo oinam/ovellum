@@ -1,7 +1,7 @@
 ---
 title: CLI リファレンス
 description: ovellum CLI のすべてのサブコマンドとフラグ。
-sourceHash: '66441359e72d4bea'
+sourceHash: '8bd41704af8649a8'
 ---
 
 # CLI リファレンス
@@ -98,6 +98,7 @@ ovellum build [--cwd <dir>] [--config <path>] [--drafts] [--out <dir>] [--base <
 | `--base <path>`   | path | `site.basePath` | サイトを配信する**ベースパスを上書き**します（例: `/docs`）。`site.basePath` と同じ効果を呼び出しごとに与えます。 |
 | `--manifest`      | flag | off             | `<output>/.ovellum/manifest.json` を書き出します — ビルドされた全ファイルのハッシュ付きインベントリ（パス・バイト数・sha256）。デプロイツールが変更分だけをプッシュし、完全性を検証できます。 |
 | `--json`          | flag | off             | ビルドサマリーを JSON で出力します（CI / ツール向け）。装飾的な出力はありません。[自動化](/ja/docs/guides/automation/)を参照。 |
+| `--verbose`       | flag | off             | 設定解決と各ステージ / ファイル I/O の詳細を **stderr** に出力します（stdout は変わらないため `--json` と併用できます）。 |
 
 ### モードごとの挙動
 
@@ -227,6 +228,7 @@ ovellum diff [--cwd <dir>] [--config <path>] [--json] [--exit-code]
 | `--config <path>` | path | auto-discovered | 自動検出をスキップし、このファイルを直接読み込みます。                                 |
 | `--json`       | boolean | `false`         | 差分を JSON（`{ baselineGeneratedAt, added, removed, changed, renames, docs, hasChanges }`）で出力します（CI / ツール向け）。 |
 | `--exit-code`  | boolean | `false`         | 変更が見つかったら `1` で終了します（git-diff スタイル）。指定しない場合、`diff` は常に `0` で終了するため情報表示として実行できます。 |
+| `--verbose`    | boolean | `false`         | 設定解決とスナップショットの詳細を **stderr** に出力します。 |
 
 ### 出力
 
@@ -407,6 +409,7 @@ ovellum check [--cwd <dir>] [--config <path>] [--update-translations] [--json] [
 | `--update-translations`   | boolean | `false`    | 各翻訳ページの `sourceHash` を現在のソースにスタンプして終了します。下記参照。  |
 | `--json`                  | boolean | `false`    | 結果（またはスタンプ結果）を JSON で出力します。終了コードは変わりません。[自動化](/ja/docs/guides/automation/)を参照。 |
 | `--strict`                | boolean | `false`    | [追加の検証](#strict-モード--strict)を実行します（デフォルトはオフ）。strict の問題も他と同様に `1` で終了します。 |
+| `--verbose`               | boolean | `false`    | 設定解決とスキャンの詳細を **stderr** に出力します。 |
 
 ### strict モード（`--strict`）
 

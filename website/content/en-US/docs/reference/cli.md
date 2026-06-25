@@ -97,6 +97,7 @@ ovellum build [--cwd <dir>] [--config <path>] [--drafts] [--out <dir>] [--base <
 | `--base <path>`   | path | `site.basePath` | **Override the base path** the site is served from (e.g. `/docs`). Same effect as `site.basePath`, per-invocation. |
 | `--manifest`      | flag | off             | Write `<output>/.ovellum/manifest.json` — a hashed inventory of every built file (path, bytes, sha256) so a deploy tool can push only what changed and verify completeness. |
 | `--json`          | flag | off             | Emit the build summary as JSON (for CI / tooling); no decorative output. See [Automation](/docs/guides/automation/). |
+| `--verbose`       | flag | off             | Print config-resolution and per-stage / file-I/O detail to **stderr** (stdout is unchanged, so it composes with `--json`). |
 
 ### Behavior by mode
 
@@ -228,6 +229,7 @@ ovellum diff [--cwd <dir>] [--config <path>] [--json] [--exit-code]
 | `--config <path>` | path | auto-discovered | Skip discovery and load this file directly.                                |
 | `--json`       | boolean | `false`         | Emit the diff as JSON (`{ baselineGeneratedAt, added, removed, changed, renames, docs, hasChanges }`) for CI / tooling. |
 | `--exit-code`  | boolean | `false`         | Exit `1` when changes are found (git-diff style). Without it, `diff` always exits `0` so it can be run informationally. |
+| `--verbose`    | boolean | `false`         | Print config-resolution and snapshot detail to **stderr**. |
 
 ### Output
 
@@ -408,6 +410,7 @@ ovellum check [--cwd <dir>] [--config <path>] [--update-translations] [--json] [
 | `--update-translations`  | boolean | `false` | Stamp each translated page's `sourceHash` to the current source, then exit. See below.        |
 | `--json`                 | boolean | `false` | Emit results (or stamping outcome) as JSON; exit code unchanged. See [Automation](/docs/guides/automation/). |
 | `--strict`               | boolean | `false` | Run [extra validations](#strict-mode) — off by default. Any strict issue exits `1` like the rest. |
+| `--verbose`              | boolean | `false` | Print config-resolution and scan detail to **stderr**. |
 
 ### Strict mode (`--strict`)
 

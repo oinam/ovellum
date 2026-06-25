@@ -37,10 +37,16 @@ export const buildCommand = defineCommand({
       type: 'boolean',
       description: 'Emit the build summary as JSON (for CI / tooling); no decorative output.',
     },
+    verbose: {
+      type: 'boolean',
+      description: 'Print config-resolution and per-stage / file-I/O detail to stderr.',
+    },
   },
   async run({ args }) {
     const cwd = path.resolve(args.cwd ?? process.cwd());
     const asJson = args.json === true;
+    const verbose = args.verbose === true;
+    const onLog = verbose ? (m: string) => process.stderr.write(`verbose: ${m}\n`) : undefined;
     let loaded;
     try {
       loaded = await loadOvellumConfig({ cwd, configFile: args.config });
@@ -60,6 +66,7 @@ export const buildCommand = defineCommand({
     }
 
     const { config, configFile } = loaded;
+    onLog?.(`config ${configFile ?? '(defaults)'}`);
 
     if (config.mode !== 'auto' && config.mode !== 'hybrid' && config.mode !== 'manual') {
       if (asJson) {
@@ -79,6 +86,7 @@ export const buildCommand = defineCommand({
       outDir: typeof args.out === 'string' ? args.out : undefined,
       basePath: typeof args.base === 'string' ? args.base : undefined,
       manifest: args.manifest === true,
+      onLog,
     });
 
     if (asJson) {

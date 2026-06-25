@@ -22,7 +22,13 @@ export interface RunBuildInput {
   basePath?: string;
   /** Write `<output>/.ovellum/manifest.json` after the build (CLI `--manifest`). */
   manifest?: boolean;
+  /** Optional stage/I-O logger for `--verbose` (messages, no prefix). */
+  onLog?: (message: string) => void;
 }
+
+/** A no-op logger so the build internals can always call `log(...)`. */
+type Logger = (message: string) => void;
+const noopLog: Logger = () => {};
 
 /** Apply per-invocation CLI overrides (`--out`, `--base`) to the loaded config. */
 function applyOverrides(config: OvellumConfig, input: RunBuildInput): OvellumConfig {
@@ -73,7 +79,11 @@ export async function runBuild(input: RunBuildInput): Promise<BuildSummary> {
   const startedAt = Date.now();
   const config = applyOverrides(input.config, input);
 
-  const summary = await runBuildForMode(config, cwd, input, startedAt);
+  const log = input.onLog ?? noopLog;
+  log(`cwd ${cwd}`);
+  log(`mode ${config.mode}`);
+
+  const summary = await runBuildForMode(config, cwd, input, startedAt, log);
 
   // Deploy manifest — an inventory of the built output a host tool can use to
   // deploy anywhere (atomic / incremental uploads), independent of any host.
@@ -81,6 +91,7 @@ export async function runBuild(input: RunBuildInput): Promise<BuildSummary> {
     const outputAbs = path.resolve(cwd, config.output);
     const manifestPath = await writeDeployManifest({ outputAbs, generatedAt: new Date() });
     summary.manifestPath = path.relative(cwd, manifestPath).replace(/\\/g, '/');
+    log(`wrote ${summary.manifestPath}`);
   }
   return summary;
 }
@@ -90,9 +101,12 @@ async function runBuildForMode(
   cwd: string,
   input: RunBuildInput,
   startedAt: number,
+  log: Logger,
 ): Promise<BuildSummary> {
   if (config.mode === 'manual') {
+    log('building site (manual)…');
     const result = await buildSite({ config, cwd, includeDrafts: input.includeDrafts });
+    log(`built ${result.pages.length} page(s) → ${result.outputDir}/ (landing: ${result.landingRendered})`);
     return {
       mode: 'manual',
       elapsedMs: Date.now() - startedAt,
@@ -104,7 +118,10 @@ async function runBuildForMode(
   }
 
   // auto / hybrid — full parse, then build every output.
-  return buildProjectDocs(parseProject({ config, cwd }), config, cwd, startedAt);
+  const parseStart = Date.now();
+  const project = parseProject({ config, cwd });
+  log(`parsed ${project.files.length} source file(s) in ${Date.now() - parseStart}ms`);
+  return buildProjectDocs(project, config, cwd, startedAt, { log });
 }
 
 /**
@@ -119,8 +136,9 @@ async function buildProjectDocs(
   config: OvellumConfig,
   cwd: string,
   startedAt: number,
-  opts: { onlyFiles?: Set<string> } = {},
+  opts: { onlyFiles?: Set<string>; log?: Logger } = {},
 ): Promise<BuildSummary> {
+  const log = opts.log ?? noopLog;
   // Read the previous IR snapshot *before* we overwrite it, so a freshly
   // orphaned block can record when its anchor was last seen — the timestamp of
   // the last build that still contained it (A4 / `ovellum orphans`).
@@ -132,7 +150,9 @@ async function buildProjectDocs(
   const scoped = opts.onlyFiles
     ? { ...project, files: project.files.filter((f) => opts.onlyFiles!.has(f.filePath)) }
     : project;
+  if (opts.onlyFiles) log(`affected: ${scoped.files.length} of ${project.files.length} file(s)`);
   const { files, warnings } = generateDocs(scoped, config);
+  log(`generated ${files.size} output(s)`);
 
   const orphanRecords: OrphanRecord[] = [];
   const mergedFiles: string[] = [];
@@ -150,11 +170,13 @@ async function buildProjectDocs(
         orphanRecords.push(...result.orphans);
         warnings.push(...result.warnings);
         mergedFiles.push(relOut);
+        log(`merged ${relOut} (${result.orphans.length} orphan(s))`);
       }
     }
 
     await mkdir(path.dirname(abs), { recursive: true });
     await writeFile(abs, finalBody, 'utf8');
+    log(`wrote ${relOut}`);
   }
 
   const quarantined: string[] = [];
@@ -194,6 +216,7 @@ async function buildProjectDocs(
   // Persist the parsed IR as build state for diff / rename / last-seen.
   const irAbs = await writeProjectIR(project, { cwd });
   const irPath = path.relative(cwd, irAbs).replace(/\\/g, '/');
+  log(`wrote ${irPath}`);
 
   return {
     mode: config.mode,

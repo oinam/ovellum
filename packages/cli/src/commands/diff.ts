@@ -29,9 +29,14 @@ export const diffCommand = defineCommand({
       type: 'boolean',
       description: 'Exit 1 when changes are found (git-diff style); default exits 0.',
     },
+    verbose: {
+      type: 'boolean',
+      description: 'Print config-resolution and snapshot detail to stderr.',
+    },
   },
   async run({ args }) {
     const cwd = path.resolve(args.cwd ?? process.cwd());
+    const vlog = args.verbose === true ? (m: string) => process.stderr.write(`verbose: ${m}\n`) : undefined;
     let loaded;
     try {
       loaded = await loadOvellumConfig({ cwd, configFile: args.config });
@@ -76,8 +81,14 @@ export const diffCommand = defineCommand({
       process.exit(1);
     }
 
+    vlog?.(`config ${loaded.configFile ?? '(defaults)'}`);
+    vlog?.(`snapshot .ovellum/ir.json (built ${persisted.project.generatedAt}, ${persisted.project.files.length} file(s))`);
     const current = parseProject({ config, cwd });
+    vlog?.(`parsed ${current.files.length} current source file(s)`);
     const diff = diffProjects(persisted.project, current, config);
+    vlog?.(
+      `+${diff.added.length} -${diff.removed.length} ~${diff.changed.length} →${diff.renames.length}`,
+    );
 
     if (args.json === true) {
       process.stdout.write(
