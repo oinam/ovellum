@@ -1,5 +1,163 @@
 # ovellum
 
+## 0.13.0
+
+### Minor Changes
+
+- 7b31133: Tell AI agents how to use Ovellum: scaffolded `AGENTS.md` + a Claude Skill.
+  - `ovellum init` now scaffolds an **`AGENTS.md`** at the project root — the
+    cross-tool convention for "instructions to coding agents." It's mode-aware:
+    hybrid and auto projects lead with the protected-zone contract (what survives
+    regeneration, what gets overwritten, where orphans go) so an agent edits in
+    the right place; manual projects lead with "edit the Markdown, never the
+    output." Written only if one doesn't already exist.
+  - A ready-to-use **Claude Skill** ("set up and maintain Ovellum docs") ships in
+    the repo at `skills/ovellum-docs/`. Copy it into `.claude/skills/` and Claude
+    Code can scaffold, build, and safely edit Ovellum docs on request.
+
+  Also fixed a stale protected-zone marker in the `init` next-steps hint
+  (`<!-- ovellum:manual:start -->` → `<!-- @manual:start -->`).
+
+- a0a4c54: Machine-readable CLI: `--json` on `build` and `check`.
+
+  An agent or CI job shouldn't have to scrape human-formatted output. `build` and
+  `check` now take `--json` (joining `diff`, which already had it): stdout becomes
+  a single JSON object, with no decorative output and nothing on stderr on
+  success.
+  - `build --json` → `{ ok, command, mode, durationMs, config, warnings, … }`
+    (mode-specific fields for auto/hybrid vs manual).
+  - `check --json` → `{ ok, mode, pages, counts, issues[] }`, where each issue is
+    `{ file, line, kind, message }`.
+
+  Exit codes are stable across commands — `0` success, `1` issues/build error,
+  `3` config error (emitted as `{ ok: false, error, hint }` on the JSON path) — so
+  a script can branch without parsing text.
+
+  A new [Automation & AI agents](https://ovellum.oss.oinam.com/docs/guides/automation/)
+  guide documents the JSON schemas, exit codes, the MCP server, and the
+  AI-friendly output. The `ovellum mcp` server also gains an `ovellum_check` tool,
+  sharing the same check implementation.
+
+- 89e817f: Add `ovellum mcp` — drive Ovellum from an AI agent over MCP.
+
+  `ovellum mcp` runs Ovellum as a [Model Context
+  Protocol](https://modelcontextprotocol.io) server over stdio, so an agent can
+  use it as a first-class tool. It's built into the CLI — no extra dependency to
+  install.
+
+  Tools exposed:
+  - `ovellum_query_symbol` — look up a symbol by anchor id or name in the IR
+    snapshot (signature, source location, params, returns).
+  - `ovellum_diff` — added / removed / changed / renamed symbols vs the last
+    build, and which docs would change.
+  - `ovellum_list_orphans` — quarantined manual blocks, with reattachability.
+  - `ovellum_get_page` — the built Markdown for one page (the AI-friendly mirror).
+  - `ovellum_build` — run a build and return its summary.
+  - `ovellum_write_zone` — **write Markdown into a protected `@manual` zone** under
+    an anchor id. The hybrid merge engine preserves it across the next
+    regeneration — the one thing no other docs server offers: an agent's prose
+    that survives rebuilds instead of being overwritten. Supports `dryRun`.
+
+  Add it to a client, e.g. Claude Code:
+
+  ```bash
+  claude mcp add ovellum -- npx ovellum mcp --cwd /path/to/project
+  ```
+
+- 90d0424: Add `ovellum orphans` — review quarantined manual blocks.
+
+  When a protected `@manual` block's anchor disappears during a hybrid build, its
+  prose is moved to `.ovellum/orphans/` instead of being lost. `ovellum orphans`
+  is how you review what's accumulated, without writing anything:
+  - Default: lists each orphan's anchor id, the doc it came from, when it was
+    orphaned (and how long ago), the last build that still saw the anchor, and —
+    when an IR snapshot exists — whether that anchor is **back in the source**
+    (reattachable) or **gone**.
+  - `--stale` shows only orphans older than `protect.orphanRetention` days
+    (default 90) — the quarterly-review filter.
+  - `--json` emits the list for CI and tooling.
+
+  Builds also now record when an anchor was last seen: a freshly-orphaned block is
+  stamped with the timestamp of the last build that still contained its anchor,
+  read from the persisted IR snapshot.
+
+  Reattaching and deleting orphans is still done by hand; an interactive flow is
+  planned.
+
+- d41de1f: Add `ovellum diff` — preview what a rebuild would change.
+
+  `ovellum diff` parses your current source and compares it against the IR
+  snapshot from the last build (`.ovellum/ir.json`), reporting added, removed, and
+  changed symbols plus which output docs they'd touch — without writing anything.
+  - Matches symbols by their stable anchor id, so a rename surfaces as a removed
+    symbol plus an added one (dedicated rename detection comes later).
+  - Ignores edits that only shift line numbers; a change is reported only when the
+    documented surface actually differs (signature, params, return, description,
+    deprecation, JSDoc tags, export/visibility), including nested class and
+    interface members.
+  - `--json` emits a machine-readable diff for CI and tooling.
+  - `--exit-code` makes it exit `1` when changes are found (git-diff style); by
+    default it always exits `0` so it can be run informationally.
+
+  Auto/hybrid only — manual builds parse no source and keep no IR. Run
+  `ovellum build` first to record the baseline snapshot.
+
+- d9478d9: Persist the parsed IR after every auto/hybrid build.
+
+  `ovellum build` (and `watch`) now write the parsed `DocProject` to
+  `<project>/.ovellum/ir.json` on every `auto` / `hybrid` build — a snapshot of
+  the symbols, anchors, and signatures Ovellum just read from your source. The
+  file is a small JSON envelope (`{ generator, format, version, project }`) and is
+  reported as a new `ir:` line in the build summary.
+
+  It's build _state_, not deploy output: it lives at the project root beside
+  `.ovellum/orphans/`, stays there regardless of `--out`, and `.ovellum/` is
+  gitignored by the default scaffold. This is the foundation for upcoming
+  source-diff, rename detection, and anchor last-seen tracking — and you can read
+  it yourself for any tooling that wants a structured view of your API surface.
+
+  Manual-mode builds parse no source and write no IR.
+
+- 8f047ac: Detect likely renames instead of orphaning blindly (suggest-only).
+
+  Refactors are the #1 cause of orphaned manual blocks: rename a symbol and the
+  prose tied to its old anchor has nowhere to go. Ovellum now spots this.
+
+  When an anchor disappears and a similar symbol appears the same build — same
+  kind, similar name, matching signature shape — the two are paired as a likely
+  rename:
+  - `ovellum diff` shows a **likely renames** section (with a confidence score),
+    lifting the pair out of the raw added/removed lists, and includes `renames` in
+    its `--json` output.
+  - At build time, when a protected block is orphaned but its anchor probably just
+    moved, the build warns: `did src/date.ts::formatDate become
+src/date.ts::formatDateUTC? a protected block was orphaned — reattach it under
+the new anchor`.
+
+  This is suggest-only — performing the re-attach is still a manual step.
+
+### Patch Changes
+
+- fce6ba4: Security hardening (defense-in-depth; none were exploitable).
+  - **Upgrade spawn** — `ovellum upgrade` now runs the package-manager command as
+    an argv array **without a shell** on macOS/Linux (the command was already
+    built from a fixed allowlist; this removes the shell entirely so a future
+    refactor can't reintroduce injection). Windows keeps a shell because its
+    `.cmd` shims require one.
+  - **Dev/serve server** — `resolveFilePath` now resolves symlinks and re-verifies
+    the result stays under the served root (closes a symlink escape on top of the
+    existing `..` containment check). Added request/headers timeouts; binding
+    stays localhost-only by default.
+  - **Site build** — passthrough asset copy skips any path containing `..` or a
+    symlink that resolves outside the content directory, with a warning.
+  - **`site.headExtra`** — documented as a trust boundary (it's injected verbatim
+    by design): admin-only, never derived from untrusted input. Strengthened the
+    type JSDoc and the security reference page.
+  - **`ovellum init`** — validates prompted content/output directories, rejecting
+    absolute paths and `..` segments.
+  - **Update check** — the version cache is written with `0o600`; the registry
+    fetch uses `redirect: 'error'` and bails on an unexpectedly large response.
+
 ## 0.12.0
 
 ### Minor Changes
