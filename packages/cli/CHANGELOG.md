@@ -1,5 +1,79 @@
 # ovellum
 
+## 0.18.0
+
+### Minor Changes
+
+- 0f48fa3: Add `:::code-group` (tabbed code blocks) and treat `.mdx` files as Markdown.
+  - **`:::code-group`** turns a set of fenced code blocks into a tabbed switcher
+    (the common npm / pnpm / yarn picker). Each tab is labeled by the fence's
+    language, or by a `title="…"` on the info string:
+
+    ````markdown
+    :::code-group
+
+    ```bash
+    npm install -D ovellum
+    ```
+
+    ```bash title="pnpm"
+    pnpm add -D ovellum
+    ```
+
+    :::
+    ````
+
+  - **`.mdx` files** are now picked up, routed, and rendered exactly like `.md` —
+    all Markdown features and directives work. There is no JSX evaluation; an
+    `.mdx` file is just Markdown with a different extension.
+
+- 7975940: Add Markdown-native component directives: callouts, steps, cards, and tabs.
+
+  Author rich content blocks with the `:::` directive syntax — plain Markdown, no
+  JSX or MDX, so your source stays portable:
+
+  ```markdown
+  :::note{title="Heads up"}
+  Ovellum sanitizes all Markdown before rendering.
+  :::
+
+  ::::tabs
+  :::tab{label="npm"}
+  `npm install -D ovellum`
+  :::
+  :::tab{label="pnpm"}
+  `pnpm add -D ovellum`
+  :::
+  ::::
+  ```
+
+  - **Callouts** — `:::note | tip | important | warning | caution`, optional
+    `{title="…"}`. (The GitHub `> [!NOTE]` alert syntax still works too.)
+  - **Steps** — `::::steps` with `:::step{title="…"}` items; auto-numbered.
+  - **Cards** — `::::cards` with `:::card{title="…" href="…"}`; a card with `href`
+    becomes a link.
+  - **Tabs** — `::::tabs` with `:::tab{label="…"}`; keyboard-navigable, and with
+    JavaScript off every panel is shown in full.
+
+  Components that contain other directives use one extra colon (`::::steps` around
+  `:::step`). See the Components guide.
+
+- d16c7b8: Add Mermaid diagrams and per-page "use with an LLM" actions.
+  - **Mermaid** — a ` ```mermaid ` code block renders as a diagram. The runtime is
+    lazy-loaded on the client and **only on pages that contain a diagram**, so the
+    default site ships no extra JavaScript. Configure with `site.mermaid`:
+    `{ enabled: false }` to turn it off, or `{ url: '/mermaid.min.mjs' }` to
+    self-host the runtime instead of using the (pinned) CDN. With no JS/network the
+    diagram source stays visible as a fallback.
+  - **Per-page LLM actions** — when the `.md` mirror is enabled (the default), each
+    doc page shows a small row: **Copy page** (copies the page's Markdown), **View
+    as Markdown**, and — when `site.baseUrl` is set — **Open in ChatGPT** / **Open
+    in Claude** (hand the page to that assistant).
+
+### Patch Changes
+
+- c76eaa2: Widen the landing hero title so a longer tagline settles into two balanced lines. The hero `<h1>` cap was tuned for a short headline (16ch); it's now 30ch with `text-wrap: balance`, a better default for any hero copy.
+
 ## 0.17.0
 
 ### Minor Changes
