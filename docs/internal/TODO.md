@@ -32,14 +32,31 @@ Legend: `[ ]` not started · `[~]` in progress · `[x]` done · `[!]` blocked
 
 ## Current state (2026-06-14)
 
-**Publish state (read this first):** **`ovellum@0.16.0` is live on npm**
-(2026-06-26). Signed tag `ovellum@0.16.0` pushed + GitHub release published;
-**no pending changesets**. Tags `ovellum@0.7.0`…`0.16.0` all up. **Ovellum's
-MCP server is now LIVE in the official MCP Registry** as `io.github.oinam/ovellum`
-(status active) — the whole AI-Native MCP arc (M1–M3 + registry) is shipped.
-**One un-pushed commit:** `0e225a4 fix(mcp): trim server.json description to
-registry's 100-char limit` (post-release repo fix; `server.json` isn't in the
-npm tarball so no republish needed — just `git push origin main`).
+**Publish state (read this first):** **`ovellum@0.17.0` is live on npm**
+(2026-06-26). Signed tag `ovellum@0.17.0` pushed + GitHub release published;
+**no pending changesets**. Tags `ovellum@0.7.0`…`0.17.0` all up. **MCP Registry
+shows `io.github.oinam/ovellum@0.17.0`** (latest; 0.16.0 also listed) with the
+new tagline. Tree clean, fully pushed.
+
+**0.17.0 (2026-06-26) — landing feature links + description sync (2 changesets):**
+**B-tier slice** `site.landing.features[].href` → linkable feature cards
+(locale-aware; core type + validator + renderer + CSS; the site's 6 cards now
+link into `/docs`, AI-Native + MCP highlighted). **Description sync** — the
+canonical tagline + extended description flow from the **root README** to npm
+`package.json`, CLI `--help`, `server.json`, SEO `site.description`, and the
+landing hero (en+ja). Tagline now **"Auto, manual, or hybrid docs that never fall
+out of sync."** Also this cycle (not in the npm package): **`publish.sh`** release
+script (push→npm→tag→GitHub release→MCP registry, idempotent, auto re-login to the
+registry on expired token; `--npmotp`/`--skip-npm`/`--skip-registry`/`--login`/
+`--dry-run`; documented in `RELEASE.md`); **README trimmed** to essentials +
+**`TODO-Human.md` relocated to repo-root `TODO.md`** (refs repointed); three
+**product decisions** codified (clean `--orphans`, class `@preserve` scope,
+absolute-black/white theme policy); **`COMPETITIVE.md`** competitive study added.
+147 cli tests.
+
+**Release runbook note:** prep now also bumps **`server.json`** version (the MCP
+manifest) alongside the badge — `publish.sh` refuses to run if it doesn't match
+the package version. `./publish.sh --npmotp=<code>` does the whole publish.
 
 **0.16.0 (2026-06-26) — MCP Registry listing (1 changeset):** package gains
 `mcpName: io.github.oinam/ovellum`; repo-root `server.json` manifest (npm

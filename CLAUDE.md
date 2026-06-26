@@ -27,8 +27,11 @@ ask only when a decision is genuinely the maintainer's to make.
   `SITE.md`, `STYLES.md`, `DEPLOY.md` (this repo's own CI wiring), `FEATURES.md`,
   `ROADMAP.md` (the prioritized 10x plan — features/security/usability; pick
   next work from here), `RELEASE.md` (the npm publish runbook — run top to
-  bottom when shipping), `TODO.md`, `TODO-Human.md`. CLI/config/glossary/security
-  now live on the site.
+  bottom when shipping), `COMPETITIVE.md` (study of the leading commercial docs
+  platform — what to adopt vs. skip; never name the competitor in shipped
+  surfaces), `TODO.md`. Human-only tasks now live in the repo-root `TODO.md`
+  (relocated from `docs/internal/TODO-Human.md`). CLI/config/glossary/security
+  live on the site.
 
 ## Commands
 

@@ -8,6 +8,16 @@ This is the prioritized plan to make Ovellum 10x better on **features**,
 
 Legend: effort **S**mall (≤half day) / **M**edium (1–3 days) / **L**arge (multi-day, needs a design pass).
 
+> **Competitive input:** [`COMPETITIVE.md`](./COMPETITIVE.md) studies the leading
+> commercial docs platform. Its "adopt" list reinforces **B2** (reframed as
+> Markdown-native **component directives** — callouts/tabs/steps/cards/code-groups,
+> the biggest authoring gap), **B6** (versioning), and **U2** (a "switch from the
+> incumbent" migration path), and adds two new candidates: **Mermaid diagrams**
+> and a **"copy page as Markdown / open in ChatGPT"** per-page affordance (we
+> already emit the `.md` mirror). The SaaS surface (hosting, web editor, auth,
+> analytics dashboard) is deliberately out of scope for the free tool — it's the
+> future commercial tier (post-`v1.0.0`).
+
 ---
 
 ## Where we are (verified strengths — don't break these)
