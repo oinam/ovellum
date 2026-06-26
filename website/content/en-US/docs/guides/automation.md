@@ -129,8 +129,9 @@ For agents, `ovellum mcp` runs Ovellum as a
 [Model Context Protocol](https://modelcontextprotocol.io) server over stdio —
 the universal AI runtime interface (Claude Code, Cursor, Windsurf, Cline, VS
 Code, and more all speak it). It exposes Ovellum as **tools** (query a symbol,
-diff, check, list orphans, get a page, build, and **write into a protected zone
-that survives regeneration**), **resources** (`ovellum://llms.txt`,
+diff, check, list orphans, get a page, search the docs, build, reattach an
+orphan, and **write into a protected zone that survives regeneration**),
+**resources** (`ovellum://llms.txt`, `ovellum://llms-full.txt`,
 `ovellum://page/{path}`, `ovellum://ir`, `ovellum://orphans`), and **prompts**
 (`set-up-ovellum`, `document-symbol`, `review-doc-drift`). See the
 [`ovellum mcp` reference](/docs/reference/cli/#ovellum-mcp) for the full list.

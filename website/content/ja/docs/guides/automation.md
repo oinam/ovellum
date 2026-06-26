@@ -1,7 +1,7 @@
 ---
 title: 自動化と AI エージェント
 description: スクリプト・CI ジョブ・AI エージェントから Ovellum を操作する — 機械可読な --json 出力、安定した終了コード、MCP サーバー。
-sourceHash: '2b46632fa135cbc5'
+sourceHash: 'f84792cf3ab437b4'
 ---
 
 # 自動化と AI エージェント
@@ -129,10 +129,10 @@ await watcher.close();
 [Model Context Protocol](https://modelcontextprotocol.io) サーバーとして stdio 上で
 起動します — これは AI の普遍的なランタイムインターフェースです（Claude Code、Cursor、
 Windsurf、Cline、VS Code などがすべて話します）。Ovellum を**ツール**（シンボルの検索、
-diff、check、孤立の一覧、ページの取得、ビルド、そして**再生成を生き延びる保護ゾーンへの
-書き込み**）、**リソース**（`ovellum://llms.txt`、`ovellum://page/{path}`、`ovellum://ir`、
-`ovellum://orphans`）、**プロンプト**（`set-up-ovellum`、`document-symbol`、
-`review-doc-drift`）として公開します。完全な一覧は
+diff、check、孤立の一覧、ページの取得、ドキュメントの全文検索、ビルド、孤立の再アタッチ、
+そして**再生成を生き延びる保護ゾーンへの書き込み**）、**リソース**（`ovellum://llms.txt`、
+`ovellum://llms-full.txt`、`ovellum://page/{path}`、`ovellum://ir`、`ovellum://orphans`）、
+**プロンプト**（`set-up-ovellum`、`document-symbol`、`review-doc-drift`）として公開します。完全な一覧は
 [`ovellum mcp` リファレンス](/ja/docs/reference/cli/#ovellum-mcp)を参照してください。
 
 ### お使いの AI ツールへのインストール
