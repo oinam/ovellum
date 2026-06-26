@@ -24,9 +24,12 @@ It derives the version, tag, and MCP registry name itself and runs, in order and
 **idempotently**: push `main` → `npm publish` → signed tag → GitHub release →
 MCP Registry publish. Re-run it safely after any mid-way failure — a step whose
 result already exists (version on npm, tag pushed, release cut, registry version
-present) is detected and skipped. The GPG pinentry (signed tag) and
-`mcp-publisher login` (registry) prompts still happen interactively in your
-terminal. Flags: `--skip-npm`, `--skip-registry`, `--dry-run`, `--help`.
+present) is detected and skipped. It also **re-authenticates automatically** if
+the registry token has expired (runs `mcp-publisher login github` and retries),
+so an expired session no longer needs a manual fix — the GPG pinentry (signed
+tag) and the device-code authorization both happen interactively in your
+terminal. Flags: `--skip-npm`, `--skip-registry`, `--login`, `--dry-run`,
+`--help`.
 
 The numbered **routine flow** below is the manual reference the script encodes —
 read it to understand a step or to run one by hand.
@@ -152,8 +155,9 @@ This reads `server.json` and submits it as `io.github.oinam/ovellum@<version>`.
 The registry verifies `mcpName` against the just-published npm package, so run it
 **after** step 4. If it errors with `duplicate version`, that version is already
 listed (immutable) — it's a no-op, move on. Auth errors → `mcp-publisher login
-github`, then retry. (`publish.sh` does all of this, including the duplicate /
-not-installed handling.)
+github`, then retry. (`publish.sh` does all of this — duplicate handling,
+not-installed skip, and auto re-login + retry on an expired token, plus a
+`--login` flag to force a fresh login.)
 
 ## Failure modes
 

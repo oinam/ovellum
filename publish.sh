@@ -29,6 +29,9 @@
 #   --npmotp=CODE     npm one-time password (2FA). Omit only with --skip-npm.
 #   --skip-npm        don't publish to npm (e.g. it's already up).
 #   --skip-registry   don't publish to the MCP Registry.
+#   --login           run 'mcp-publisher login github' before the registry step.
+#                     (The script also logs in automatically if the token has
+#                     expired, so you rarely need this.)
 #   --dry-run         print each step without running it.
 #   -h, --help        show this help.
 #
@@ -40,14 +43,16 @@ set -euo pipefail
 OTP=""
 SKIP_NPM=0
 SKIP_REGISTRY=0
+LOGIN=0
 DRY_RUN=0
 for arg in "$@"; do
   case "$arg" in
     --npmotp=*)     OTP="${arg#*=}" ;;
     --skip-npm)     SKIP_NPM=1 ;;
     --skip-registry) SKIP_REGISTRY=1 ;;
+    --login)        LOGIN=1 ;;
     --dry-run)      DRY_RUN=1 ;;
-    -h|--help)      sed -n '2,40p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
+    -h|--help)      awk 'NR==1{next} /^#/{sub(/^# ?/,"");print;next} {exit}' "$0"; exit 0 ;;
     *) echo "unknown flag: $arg (try --help)" >&2; exit 2 ;;
   esac
 done
@@ -145,24 +150,45 @@ echo
 
 # --- 5. MCP Registry -----------------------------------------------------
 bold "5/5  MCP Registry publish"
+# Try to publish; classify the outcome. Sets REG_ERR on failure.
+#   0 = published (or already listed — the registry is immutable per name+version,
+#       so a re-publish of the same version returns 'duplicate version')
+#   1 = failed (REG_ERR holds the output for the caller to inspect)
+REG_ERR=""
+registry_publish() {
+  local out
+  if out="$(mcp-publisher publish 2>&1)"; then
+    info "published ${MCP_NAME}@${VERSION} to the MCP Registry."; return 0
+  elif printf '%s' "$out" | grep -qiE 'duplicate version'; then
+    info "${MCP_NAME}@${VERSION} already in the registry — skipping."; return 0
+  fi
+  REG_ERR="$out"; return 1
+}
+# Does REG_ERR look like an auth/expired-token problem we can fix by logging in?
+is_auth_error() { printf '%s' "$REG_ERR" | grep -qiE 'unauthorized|jwt|expired|\b401\b|not logged in|please log in'; }
+
 if [ "$SKIP_REGISTRY" = 1 ]; then
   info "skipped (--skip-registry)."
 elif ! command -v mcp-publisher >/dev/null; then
   info "mcp-publisher not installed — skipping. To do it later:"
   info "  brew install mcp-publisher && mcp-publisher login github && mcp-publisher publish"
+elif [ "$DRY_RUN" = 1 ]; then
+  [ "$LOGIN" = 1 ] && printf '\033[2m$ mcp-publisher login github\033[0m\n'
+  printf '\033[2m$ mcp-publisher publish   (auto: login github + retry on an expired token)\033[0m\n'
 else
-  # The registry is immutable per (name, version): if ${MCP_NAME}@${VERSION} is
-  # already listed, publish returns a 'duplicate version' error — treat as done.
-  # Needs a prior 'mcp-publisher login github' (device-code flow).
-  if [ "$DRY_RUN" = 1 ]; then
-    printf '\033[2m$ mcp-publisher publish\033[0m\n'
-  elif out="$(mcp-publisher publish 2>&1)"; then
-    info "published ${MCP_NAME}@${VERSION} to the MCP Registry."
-  elif printf '%s' "$out" | grep -qi 'duplicate version'; then
-    info "${MCP_NAME}@${VERSION} already in the registry — skipping."
-  else
-    printf '%s\n' "$out" >&2
-    die "mcp-publisher failed. If it's an auth error: 'mcp-publisher login github', then re-run ./publish.sh (earlier steps are idempotent and will be skipped)."
+  # Explicit --login, or an opt-in fresh auth, happens first.
+  [ "$LOGIN" = 1 ] && { info "logging in (authorize as oinam)…"; mcp-publisher login github; }
+  if ! registry_publish; then
+    if is_auth_error; then
+      # The device-code flow is interactive: it prints a URL + code and waits
+      # for you to authorize in the browser (as oinam, the namespace owner).
+      info "registry token expired — running 'mcp-publisher login github' (authorize as oinam)…"
+      mcp-publisher login github
+      registry_publish || { printf '%s\n' "$REG_ERR" >&2; die "mcp-publisher still failing after login — see output above."; }
+    else
+      printf '%s\n' "$REG_ERR" >&2
+      die "mcp-publisher failed (not an auth error) — see output above."
+    fi
   fi
 fi
 echo
