@@ -1,7 +1,7 @@
 ---
 title: コントリビューション
 description: リポジトリをセットアップし、テストを実行し、プルリクエストを送る。
-sourceHash: '1762b9a0bd083982'
+sourceHash: 'bd8bfd3688ad3665'
 ---
 
 # コントリビューション
@@ -84,6 +84,30 @@ examples/      デモフィクスチャ。
 website/       このサイト。
 docs/internal/ 設計ドキュメント（DESIGN、SITE、STYLES、TODO、FEATURES、…）。
 ```
+
+## AI を使ったコントリビュート
+
+Ovellum は AI ネイティブであり、AI アシスタントを使ったコントリビュートを歓迎します。
+リポジトリには [`AGENTS.md`](https://github.com/oinam/ovellum/blob/main/AGENTS.md)
+（エージェントが従うべき規約）と、Ovellum 自身の
+[MCP サーバー](/ja/docs/guides/automation/#mcp-server)が同梱されているので、
+アシスタントはシンボルの検索、ソースとドキュメントの diff、ドキュメントの全文検索、
+保護ゾーンへの安全な書き込みができます。Claude Code プラグイン
+（`/plugin marketplace add oinam/ovellum`）か、任意の MCP クライアントの
+`npx ovellum mcp` 設定で導入してください。
+
+AI 支援の作業も他と同じ基準を満たす必要があります — エージェントが最も見落としがちな点:
+
+- **ドキュメントは 2 言語。** ユーザー向けの変更は `website/content/en-US/**` と、
+  その 1:1 ミラーである `website/content/ja/**` の両方を更新し、
+  `ovellum check --cwd website --update-translations` を実行します。
+- **CLI に見える変更には changeset が必要**（`pnpm changeset`）。
+- **[hybrid の契約](/ja/docs/concepts/anchors-and-zones/)を尊重する** — 生成された
+  領域は手で編集しない。文章は `@manual` ゾーンの中だけが生き残ります。
+- プッシュ前に `pnpm build && pnpm typecheck && pnpm lint && pnpm test` を実行。
+
+提出物には責任を持ってください: 差分を読み、テストが通ることを確認し、PR は 1 つの
+目的に絞ってください。
 
 ## issue のトリアージ
 

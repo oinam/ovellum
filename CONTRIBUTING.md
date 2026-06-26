@@ -39,6 +39,26 @@ pnpm test       # vitest
 
 Turborepo caches task outputs, so subsequent runs are fast. Use `pnpm <task> --filter <package>` to target a single package, e.g. `pnpm test --filter @ovellum/parser`.
 
+## Using AI to contribute
+
+Ovellum is AI-native, and contributing with an AI assistant is a first-class, encouraged path. The repo ships everything an agent needs to work here well:
+
+- **`AGENTS.md`** (repo root) — the conventions an agent must follow in this codebase. Most AI coding tools read it automatically.
+- **`CLAUDE.md`** — project instructions for Claude Code specifically (layout, commands, working agreements).
+- **The Ovellum MCP server** — the project documents itself with its own tooling. Install it so your assistant can query symbols, diff the docs against the source, search the docs, and write into protected zones safely:
+  - Claude Code: `/plugin marketplace add oinam/ovellum` then `/plugin install ovellum@ovellum`.
+  - Other MCP clients (Cursor, Windsurf, Cline, VS Code): add `{ "command": "npx", "args": ["-y", "ovellum", "mcp"] }`.
+  - See the [Automation & AI agents guide](https://ovellum.oss.oinam.com/docs/guides/automation/).
+
+Whatever tool you use, a contribution must clear the same bar as a hand-written one — these are the things agents most often miss:
+
+- **Docs are bilingual.** Every user-facing change updates the English docs under `website/content/en-US/**` **and** the 1:1 Japanese mirror under `website/content/ja/**`, then runs `ovellum check --cwd website --update-translations` to re-stamp. A PR that touches docs in only one language will not be merged.
+- **CLI-visible changes need a changeset** (`pnpm changeset`) — see below.
+- **Respect the hybrid contract.** In generated/merged docs, hand-written prose only survives inside `@manual` protected zones; never hand-edit a generated region. (`AGENTS.md` spells this out.)
+- **Green before you push:** `pnpm build && pnpm typecheck && pnpm lint && pnpm test`.
+
+You are responsible for everything you submit, AI-assisted or not: read the diff, make sure the tests genuinely pass, and keep the PR to one focused change. Don't paste machine output you haven't verified.
+
 ## Branches and pull requests
 
 - `main` is the stable branch. CI must be green before any merge.

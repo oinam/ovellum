@@ -85,6 +85,30 @@ website/       This site.
 docs/internal/ Planning docs (DESIGN, SITE, STYLES, TODO, FEATURES, …).
 ```
 
+## Using AI to contribute
+
+Ovellum is AI-native, and contributing with an AI assistant is encouraged. The
+repo ships an [`AGENTS.md`](https://github.com/oinam/ovellum/blob/main/AGENTS.md)
+(the conventions agents must follow) and its own
+[MCP server](/docs/guides/automation/#mcp-server), so your assistant can query
+symbols, diff the docs against the source, search the docs, and write into
+protected zones safely. Install it via the Claude Code plugin
+(`/plugin marketplace add oinam/ovellum`) or the `npx ovellum mcp` config in any
+MCP client.
+
+AI-assisted work clears the same bar as anything else — and these are the things
+agents most often miss:
+
+- **Docs are bilingual.** Every user-facing change updates `website/content/en-US/**`
+  **and** the 1:1 mirror under `website/content/ja/**`, then runs
+  `ovellum check --cwd website --update-translations`.
+- **CLI-visible changes need a changeset** (`pnpm changeset`).
+- **Respect the [hybrid contract](/docs/concepts/anchors-and-zones/)** — never
+  hand-edit a generated region; prose only survives inside `@manual` zones.
+- Run `pnpm build && pnpm typecheck && pnpm lint && pnpm test` before pushing.
+
+You own what you submit: review the diff, confirm tests pass, keep the PR focused.
+
 ## Issue triage
 
 Open issues at <https://github.com/oinam/ovellum/issues>. Before filing:
