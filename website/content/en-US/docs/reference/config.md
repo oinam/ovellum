@@ -244,7 +244,7 @@ interface OvellumLandingConfig {
     subtitle?: string;
     ctas: Array<{ label: string; href: string; style?: 'primary' | 'secondary' }>;
   };
-  features: Array<{ icon?: string; title: string; description: string }>;
+  features: Array<{ icon?: string; title: string; description: string; href?: string }>;
   install?: Array<{ title: string; code: string; lang?: string }>;
   trustStrip?: {
     label?: string;
@@ -298,6 +298,7 @@ never the folded-in title comment.
 | `icon`        | `string?` | Optional monochrome inline SVG or short text. Rendered as-is. Omit for no icon. |
 | `title`       | `string`  | Card title.                                                                     |
 | `description` | `string`  | Card body. One short sentence works best.                                       |
+| `href`        | `string?` | If set, the whole card becomes a link. A site-relative path (e.g. `/docs/concepts/modes/`, locale-prefixed automatically on i18n sites) or an absolute URL (opens in a new tab). |
 
 ### `trustStrip`
 

@@ -125,6 +125,12 @@ export interface OvellumLandingFeature {
   icon?: string;
   title: LocalizedString;
   description: LocalizedString;
+  /**
+   * Optional link target for the whole card. A site-relative path
+   * (e.g. `/docs/concepts/modes/`, locale-prefixed automatically) or an
+   * absolute URL. When set, the card renders as a link.
+   */
+  href?: string;
 }
 
 export interface OvellumLandingInstall {

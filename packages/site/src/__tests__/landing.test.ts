@@ -82,6 +82,38 @@ describe('renderLanding', () => {
     expect(html.match(/class="ov-feature-icon"/g)?.length).toBe(1);
   });
 
+  it('renders a feature with href as a link card; plain entries stay <article>', () => {
+    const html = renderLanding({
+      site: SITE,
+      landing: landingConfig({
+        features: [
+          { title: 'Linked', description: 'Goes to docs.', href: '/docs/concepts/modes/' },
+          { title: 'External', description: 'Off-site.', href: 'https://example.com/x' },
+          { title: 'Plain', description: 'No link.' },
+        ],
+      }),
+      generatedAt: '2026-05-16T00:00:00.000Z',
+    });
+    // Internal href → anchor card pointing at the site-relative URL.
+    expect(html).toContain('<a class="ov-card ov-feature-card ov-feature-card-link" href="/docs/concepts/modes/"');
+    // External href → opens safely in a new tab.
+    expect(html).toContain('href="https://example.com/x" target="_blank" rel="noopener noreferrer"');
+    // The plain entry stays a non-link article.
+    expect(html).toContain('<article class="ov-card ov-feature-card">');
+  });
+
+  it('locale-prefixes internal feature hrefs', () => {
+    const html = renderLanding({
+      site: SITE,
+      localePrefix: '/ja',
+      landing: landingConfig({
+        features: [{ title: 'Linked', description: 'D', href: '/docs/concepts/modes/' }],
+      }),
+      generatedAt: '2026-05-16T00:00:00.000Z',
+    });
+    expect(html).toContain('href="/ja/docs/concepts/modes/"');
+  });
+
   it('includes the pitch section when pitchHtml is provided, omits it otherwise', () => {
     const withPitch = renderLanding({
       site: SITE,

@@ -489,6 +489,9 @@ function validateFeature(value: unknown, path: string): void {
   if (f.icon !== undefined && typeof f.icon !== 'string') {
     throw new ConfigError(`\`${path}.icon\` must be a string.`);
   }
+  if (f.href !== undefined && typeof f.href !== 'string') {
+    throw new ConfigError(`\`${path}.href\` must be a string.`);
+  }
 }
 
 function validateInstall(value: unknown, path: string): void {

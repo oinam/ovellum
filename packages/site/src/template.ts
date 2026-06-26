@@ -806,7 +806,7 @@ export function renderLanding(input: RenderLandingInput): string {
     basePath,
   );
   const install = renderInstall(input.install ?? []);
-  const featuresHtml = renderFeatures(features);
+  const featuresHtml = renderFeatures(features, basePath, input.localePrefix ?? '');
   const pitch = input.pitchHtml
     ? `<section class="ov-pitch"><div class="ov-pitch-inner">${input.pitchHtml}</div></section>`
     : '';
@@ -924,16 +924,27 @@ function renderInstall(install: Array<{ html: string }>): string {
 
 // Labels already resolved to plain strings by `renderLanding`.
 function renderFeatures(
-  features: Array<{ icon?: string; title: string; description: string }>,
+  features: Array<{ icon?: string; title: string; description: string; href?: string }>,
+  basePath: string,
+  localePrefix: string,
 ): string {
   if (features.length === 0) return '';
   const cards = features
     .map((f) => {
       const icon = f.icon ? `<div class="ov-feature-icon" aria-hidden="true">${f.icon}</div>` : '';
-      return `<article class="ov-card ov-feature-card">
-        ${icon}
+      const inner = `${icon}
         <h3 class="ov-feature-title">${escapeHtml(f.title)}</h3>
-        <p class="ov-feature-description">${escapeHtml(f.description)}</p>
+        <p class="ov-feature-description">${escapeHtml(f.description)}</p>`;
+      if (f.href) {
+        const external = /^https?:\/\//i.test(f.href);
+        const url = external ? f.href : siteUrl(localizeHref(f.href, localePrefix), basePath);
+        const attrs = external ? ' target="_blank" rel="noopener noreferrer"' : '';
+        return `<a class="ov-card ov-feature-card ov-feature-card-link" href="${escapeAttr(url)}"${attrs}>
+        ${inner}
+      </a>`;
+      }
+      return `<article class="ov-card ov-feature-card">
+        ${inner}
       </article>`;
     })
     .join('\n      ');

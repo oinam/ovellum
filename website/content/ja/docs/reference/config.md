@@ -1,7 +1,7 @@
 ---
 title: 設定
 description: ovellum.config.{json,ts,js} のすべてのフィールドと、その型・デフォルト値・効果。
-sourceHash: 'b1f274b85edd2464'
+sourceHash: '7212835c5f2097b1'
 ---
 
 # 設定
@@ -244,7 +244,7 @@ interface OvellumLandingConfig {
     subtitle?: string;
     ctas: Array<{ label: string; href: string; style?: 'primary' | 'secondary' }>;
   };
-  features: Array<{ icon?: string; title: string; description: string }>;
+  features: Array<{ icon?: string; title: string; description: string; href?: string }>;
   install?: Array<{ title: string; code: string; lang?: string }>;
   trustStrip?: {
     label?: string;
@@ -298,6 +298,7 @@ JS/TS 系の言語では `// …`）。コメントのプレフィックスは `
 | `icon`        | `string?` | 任意のモノクロインライン SVG または短いテキスト。そのままレンダリングされます。アイコンなしにするには省略します。 |
 | `title`       | `string`  | カードのタイトル。                                                                     |
 | `description` | `string`  | カードの本文。短い 1 文がもっとも効果的です。                                       |
+| `href`        | `string?` | 設定すると、カード全体がリンクになります。サイト相対パス（例: `/docs/concepts/modes/`。i18n サイトでは自動的にロケールが前置されます）または絶対 URL（新しいタブで開きます）。 |
 
 ### `trustStrip`
 

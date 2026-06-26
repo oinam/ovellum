@@ -94,6 +94,7 @@ export default {
       features: [
         {
           title: { 'en-US': 'A Merge Engine', ja: 'マージエンジン' },
+          href: '/docs/concepts/anchors-and-zones/',
           description: {
             'en-US':
               'Tag sections of your Markdown as human-owned with a single comment pair. Ovellum updates the auto-generated parts around them; your prose survives every rebuild.',
@@ -101,7 +102,26 @@ export default {
           },
         },
         {
+          title: { 'en-US': 'AI-Native', ja: 'AI ネイティブ' },
+          href: '/docs/concepts/ai-ready/',
+          description: {
+            'en-US':
+              'Every build emits `llms.txt` and per-page Markdown mirrors, so agents read your docs without scraping HTML. AI-ready out of the box.',
+            ja: 'ビルドごとに `llms.txt` とページ単位の Markdown ミラーを出力するので、エージェントは HTML をスクレイピングせずにドキュメントを読めます。最初から AI 対応です。',
+          },
+        },
+        {
+          title: { 'en-US': 'Drive It Over MCP', ja: 'MCP で操作' },
+          href: '/docs/guides/automation/',
+          description: {
+            'en-US':
+              'Ovellum ships a Model Context Protocol server: agents query symbols, search, and diff — and write prose into protected zones that survive regeneration.',
+            ja: 'Ovellum は Model Context Protocol サーバーを同梱します。エージェントはシンボルの検索・全文検索・diff、そして再生成を生き延びる保護ゾーンへの文章の書き込みができます。',
+          },
+        },
+        {
           title: { 'en-US': 'Three Modes', ja: '3 つのモード' },
+          href: '/docs/concepts/modes/',
           description: {
             'en-US':
               '`auto` regenerates from source. `manual` builds a static site from Markdown. `hybrid` (default) merges the two. Switch per-project or per-file.',
@@ -110,10 +130,20 @@ export default {
         },
         {
           title: { 'en-US': 'Orphans Quarantined', ja: '孤立ブロックを隔離' },
+          href: '/docs/concepts/orphans/',
           description: {
             'en-US':
               'When you rename or delete a documented symbol, any hand-written prose tied to it gets archived to `.ovellum/orphans/`. Reviewable in PRs, recoverable any time.',
             ja: 'ドキュメント化されたシンボルの名前を変更・削除すると、それに結びついた手書きの文章は `.ovellum/orphans/` にアーカイブされます。PR でレビューでき、いつでも復元できます。',
+          },
+        },
+        {
+          title: { 'en-US': 'Deploy Anywhere', ja: 'どこへでもデプロイ' },
+          href: '/docs/guides/deploy/',
+          description: {
+            'en-US':
+              '`ovellum build` produces a self-contained folder — HTML, CSS, ~2 KB of JS. Host it on anything static, or embed it in another build.',
+            ja: '`ovellum build` は自己完結したフォルダ（HTML・CSS・約 2KB の JS）を生成します。任意の静的ホストに置くか、別のビルドに埋め込めます。',
           },
         },
       ],
