@@ -386,6 +386,29 @@ describe('component directives (B2)', () => {
     expect(html).toContain('id="ovtabs-0-panel-0"');
   });
 
+  it('renders :::code-group as tabs labeled by language or title', async () => {
+    const { html } = await renderMarkdown(
+      [
+        ':::code-group',
+        '```bash',
+        'npm i ovellum',
+        '```',
+        '```bash title="pnpm"',
+        'pnpm add ovellum',
+        '```',
+        ':::',
+      ].join('\n'),
+    );
+    expect(html).toContain('ov-code-group');
+    expect(html).toContain('class="ov-tablist"');
+    expect(html.match(/role="tab"/g)).toHaveLength(2);
+    // First tab labeled by language, second by its title="…".
+    expect(html).toContain('>bash</button>');
+    expect(html).toContain('>pnpm</button>');
+    // The code is still highlighted (shiki runs after the tabs upgrade).
+    expect(html).toContain('<pre');
+  });
+
   it('does not leak ::: markers and drops unknown directives safely', async () => {
     const { html } = await renderMarkdown([':::mystery', 'Body.', ':::'].join('\n'));
     expect(html).not.toContain(':::');

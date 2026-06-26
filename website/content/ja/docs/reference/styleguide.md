@@ -2,7 +2,7 @@
 title: スタイルガイド
 description: Ovellum がレンダリングするタイポグラフィ、スケール、リズム、カラー、コンテンツ要素――すべての Markdown ページがどう見えるか、そしてこのシステムがどう構築されているか。
 tags: [styleguide, typography, design, theme]
-sourceHash: '415c0035bdf47aa8'
+sourceHash: '9c4cc9e149044a1e'
 ---
 
 # スタイルガイド
@@ -152,6 +152,17 @@ Markdown から静的サイトを構築します。
 `pnpm add -D ovellum`
 :::
 ::::
+
+コードグループ:
+
+:::code-group
+```bash
+npm install -D ovellum
+```
+```bash title="pnpm"
+pnpm add -D ovellum
+```
+:::
 
 ## リスト
 

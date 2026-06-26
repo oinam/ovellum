@@ -54,6 +54,15 @@ registry on expired token; `--npmotp`/`--skip-npm`/`--skip-registry`/`--login`/
 absolute-black/white theme policy); **`COMPETITIVE.md`** competitive study added.
 147 cli tests.
 
+**Dev gotcha (build cache):** the published `ovellum` CLI **bundles `@ovellum/site`
+source** via tsup, but turbo's cli-task hash doesn't track that source — so after
+editing `packages/site/src/**`, a plain `pnpm -w build` can serve a **stale CLI
+bundle** (a new site feature renders in vitest from source but NOT in
+`node packages/cli/dist/index.js build`). Workaround:
+`npx turbo run build --filter=ovellum --force` before building the website. CI is
+unaffected (cold cache). Real fix (future): widen the cli build inputs in
+`turbo.json` to include the workspace `src`.
+
 **Release runbook note:** prep now also bumps **`server.json`** version (the MCP
 manifest) alongside the badge — `publish.sh` refuses to run if it doesn't match
 the package version. `./publish.sh --npmotp=<code>` does the whole publish.

@@ -50,7 +50,15 @@ export const COMPONENT_CLASSES = [
   'ov-tabs',
   'ov-tab',
   'ov-tab-label',
+  'ov-code-group',
 ];
+
+/** Read `title="…"` (or single-quoted) from a fenced code block's info string. */
+function titleFromMeta(meta: unknown): string | undefined {
+  if (typeof meta !== 'string') return undefined;
+  const m = /title="([^"]*)"|title='([^']*)'/.exec(meta);
+  return m ? (m[1] ?? m[2]) : undefined;
+}
 
 const CALLOUT_LABELS: Record<string, string> = {
   note: 'Note',
@@ -108,6 +116,24 @@ export function remarkComponents() {
           ? { className: ['ov-card', 'ov-component-card', 'ov-component-card-link'], href }
           : { className: ['ov-card', 'ov-component-card'] };
         if (title) n.children.unshift(labelNode('ov-component-card-title', title));
+      } else if (name === 'code-group') {
+        // Tabbed code blocks: each fenced child becomes a tab whose label is the
+        // fence's `title="…"` (or its language). Reuses the `.ov-tabs` machinery
+        // — rehypeTabs upgrades it, shiki highlights the code afterward. `:::`
+        // (not `::::`) is fine here: the children are code fences, not directives.
+        n.data.hName = 'div';
+        n.data.hProperties = { className: ['ov-tabs', 'ov-code-group'] };
+        n.children = n.children.map((child) => {
+          const c = child as { type?: string; lang?: string | null; meta?: string | null };
+          if (c.type !== 'code') return child;
+          const label =
+            titleFromMeta(c.meta) ?? (typeof c.lang === 'string' && c.lang ? c.lang : 'code');
+          return {
+            type: 'ovTab',
+            data: { hName: 'div', hProperties: { className: ['ov-tab'] } },
+            children: [labelNode('ov-tab-label', label), child],
+          };
+        });
       } else if (name === 'tabs') {
         n.data.hName = 'div';
         n.data.hProperties = { className: ['ov-tabs'] };

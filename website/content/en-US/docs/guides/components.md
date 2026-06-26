@@ -90,9 +90,39 @@ The first tab is shown by default; the tablist is keyboard-navigable (arrow
 keys). With JavaScript disabled, every panel is shown in full, so no content is
 ever hidden from a reader or a crawler.
 
+## Code groups
+
+Tabbed code blocks — the common "npm / pnpm / yarn" switcher. Wrap fenced blocks
+in `:::code-group`; each tab is labeled by the fence's language, or by a
+`title="…"` on the info string:
+
+````markdown
+:::code-group
+```bash
+npm install -D ovellum
+```
+
+```bash title="pnpm"
+pnpm add -D ovellum
+```
+:::
+````
+
+`:::code-group` uses a single `:::` (not `::::`) even though it wraps blocks —
+its children are code fences, not directives, so there's no nesting to
+disambiguate.
+
+## Using `.mdx` files
+
+Ovellum treats `.mdx` files as Markdown — they're picked up, routed, and rendered
+just like `.md`. There's **no JSX evaluation**: an `.mdx` file is a Markdown file
+with a different extension, so all the directives above work, but a JSX
+`<Component />` is not executed. Use `.mdx` if your editor or tooling expects it;
+plain `.md` is otherwise identical.
+
 ## Nesting rule
 
 A component that **contains other directives** (steps, cards, tabs) must use one
 more colon than its children — `::::steps` around `:::step`. This is how the
-parser tells an outer block from an inner one. Callouts hold ordinary Markdown,
-so they just use `:::`.
+parser tells an outer block from an inner one. Callouts and code groups hold
+ordinary Markdown / code, so they just use `:::`.

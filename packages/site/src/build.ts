@@ -897,7 +897,7 @@ export async function* walkContent(dirAbs: string, opts: WalkOpts): AsyncGenerat
 }
 
 function isMarkdown(p: string): boolean {
-  return /\.(md|markdown)$/i.test(p);
+  return /\.(md|markdown|mdx)$/i.test(p);
 }
 
 /**
@@ -983,7 +983,7 @@ async function isInsideDir(file: string, dir: string): Promise<boolean> {
 }
 
 function urlFor(relFromInput: string): string {
-  const noExt = relFromInput.replace(/\.(md|markdown)$/i, '');
+  const noExt = relFromInput.replace(/\.(md|markdown|mdx)$/i, '');
   const parts = noExt.split('/').filter(Boolean);
   if (parts.length === 0) return '/';
   if (parts[parts.length - 1] === 'index') parts.pop();

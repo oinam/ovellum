@@ -150,9 +150,10 @@ A1 unlocks A2–A4.
       authoring gap). Shipped: callouts/steps/cards/tabs via `remark-directive`
       (`packages/site/src/directives.ts`; `remarkComponents` + post-sanitize
       `rehypeTabs`), theme-styled + accessible, sanitize-safe (component classes
-      whitelisted; `a` className rule rebuilt). 193 site tests; `guides/components`
-      en+ja. **B2.2 still open:** `:::code-group` + `.mdx`-as-Markdown files.
-      Original spec:
+      whitelisted; `a` className rule rebuilt). `guides/components` en+ja.
+      **B2.2 DONE 2026-06-26:** `:::code-group` (tabbed code, reuses the tabs
+      path) + `.mdx`-as-Markdown (widened `isMarkdown`/`stem`/`urlFor` to
+      `md|markdown|mdx`; no JSX eval). **B2 COMPLETE.** Original spec:
       Markdown-native block components via **`remark-directive`** (`:::name`),
       **not** JSX/MDX (keeps output portable Markdown, no React/lock-in). All
       theme-styled, sanitize-safe. **Slice 1 (building now):** `:::note|tip|

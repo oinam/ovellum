@@ -149,6 +149,17 @@ Tabs:
 :::
 ::::
 
+Code groups:
+
+:::code-group
+```bash
+npm install -D ovellum
+```
+```bash title="pnpm"
+pnpm add -D ovellum
+```
+:::
+
 ## Lists
 
 Unordered lists use a quiet marker in a subdued color, and nest with reduced

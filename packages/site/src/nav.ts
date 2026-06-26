@@ -363,11 +363,11 @@ function slugOf(node: NavNode): string {
 }
 
 function isMarkdown(name: string): boolean {
-  return /\.(md|markdown)$/i.test(name);
+  return /\.(md|markdown|mdx)$/i.test(name);
 }
 
 function stem(name: string): string {
-  return name.replace(/\.(md|markdown)$/i, '');
+  return name.replace(/\.(md|markdown|mdx)$/i, '');
 }
 
 function ensureTrailingSlash(p: string): string {
