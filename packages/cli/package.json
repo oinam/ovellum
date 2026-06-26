@@ -1,6 +1,6 @@
 {
   "name": "ovellum",
-  "version": "0.15.0",
+  "version": "0.16.0",
   "mcpName": "io.github.oinam/ovellum",
   "description": "An open-source documentation tool for TypeScript and JavaScript — auto-generated API docs and hand-written prose, in the same files, without conflict.",
   "keywords": [
