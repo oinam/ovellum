@@ -738,8 +738,9 @@ claude mcp add ovellum -- npx ovellum mcp --cwd /path/to/project
 
 Removes auto-generated files (identified by `ovellum: true` frontmatter)
 while preserving manual files. Dry-run by default; `--confirm` actually
-deletes. Does **not** touch `.ovellum/orphans/` (those are committed
-manual writing).
+deletes. **Preserves `.ovellum/orphans/` by default** (those are committed
+manual writing); pass `--orphans` to also remove the orphan archive. Deleting
+hand-written prose must be deliberate, so it never happens without the flag.
 
 ## Common flags
 

@@ -114,8 +114,13 @@ hand-authored zone — and if the symbol is deleted or renamed, the prose is
 
 It's a hybrid-mode feature: `auto` mode regenerates fully every build, so it
 emits no zones (nothing would preserve them). The anchor comment stays outside
-the zone, so reattachment and orphan tracking keep working. Members (class
-methods) are wrapped too; properties — rendered as a table — are not.
+the zone, so reattachment and orphan tracking keep working.
+
+`@preserve` is **per-symbol**. On a class, it protects only the class-level
+documentation block — each method is independent, and a method's section is
+wrapped only if that method carries its own `@preserve`. So a single
+hand-written class note never freezes the docs for every method. (Properties,
+rendered as a table, are never wrapped.)
 
 ## Configuring the tags
 

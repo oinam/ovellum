@@ -66,6 +66,11 @@ topbar appearance control (persisted in `localStorage`, applied before paint).
 Code-block syntax themes are independent and selectable via
 [`site.codeTheme`](#code-block-themes).
 
+Ovellum's own palettes (**Ovellum**, **E-ink**) deliberately avoid absolute
+black or white for backgrounds and text — pure `#000` on `#fff` is harsh — while
+the standard palettes (**Flexoki**, **Nord**, **Solarized**) reproduce their
+published values faithfully.
+
 ## Typography
 
 ### Fonts

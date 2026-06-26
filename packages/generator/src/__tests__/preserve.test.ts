@@ -48,4 +48,47 @@ describe('renderNode — @preserve wrapping', () => {
     const plain: DocNode = { ...preserved, id: 'src/thing.ts::sub', name: 'sub', isPreserved: false };
     expect(renderNode(plain, { wrapPreserved: true })).not.toContain('@manual:start');
   });
+
+  it('on a class, @preserve protects only the class-level block — methods stay independent', () => {
+    // A class is `@preserve`d; one method carries its own `@preserve`, the other
+    // does not. Only the class-level block and the self-preserved method get a
+    // zone — a class note must never freeze every method's docs.
+    const klass: DocNode = {
+      ...base,
+      id: 'src/thing.ts::Widget',
+      kind: 'class',
+      name: 'Widget',
+      signature: 'class Widget',
+      description: 'A widget.',
+      isPreserved: true,
+      children: [
+        {
+          ...base,
+          id: 'src/thing.ts::Widget.render',
+          kind: 'method',
+          name: 'render',
+          signature: 'render(): void',
+          description: 'Render it.',
+          isPreserved: true,
+        },
+        {
+          ...base,
+          id: 'src/thing.ts::Widget.reset',
+          kind: 'method',
+          name: 'reset',
+          signature: 'reset(): void',
+          description: 'Reset it.',
+          isPreserved: false,
+        },
+      ],
+    };
+    const md = renderNode(klass, { wrapPreserved: true });
+    // Class-level block + the self-preserved method are wrapped, keyed by their
+    // own ids; the non-preserved method is not.
+    expect(md).toContain('<!-- @manual:start id="src/thing.ts::Widget" -->');
+    expect(md).toContain('<!-- @manual:start id="src/thing.ts::Widget.render" -->');
+    // `reset` still gets an anchor comment (always emitted), but NOT a zone.
+    expect(md).not.toContain('@manual:start id="src/thing.ts::Widget.reset"');
+    expect(md.match(/@manual:start/g)?.length).toBe(2);
+  });
 });

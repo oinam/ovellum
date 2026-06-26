@@ -335,6 +335,23 @@ In practice: trust `--leading-*` to keep headings looking right; use `--space-*`
 
 Modern Safari, Chrome, Firefox all support OKLCH. No fallback is provided - if the browser doesn't know `oklch()`, the user has bigger problems than our color palette.
 
+### 6.1a Policy: absolute black & white (2026-06-26 decision)
+
+**Our own palettes never use absolute black (`oklch(0% …)`) or absolute white
+(`oklch(100% …)`) for `bg`/`fg`.** `default` bottoms out around `gray-950`
+(`oklch(14.5%)`) and `eink` around `oklch(17.8%)`; the light ends are tinted
+paper, not `#fff`. Pure black on pure white is harsh and causes halation — the
+editorial-calm direction rejects it.
+
+**Third-party "standard" palettes follow their published spec.** `nord`,
+`solarized`, and `flexoki` reproduce upstream values faithfully — if a standard
+*did* specify absolute black/white we'd keep it, because fidelity to a known
+palette is the point of shipping it. (In practice none of them do; their
+backgrounds are tinted too.)
+
+Absolute `oklch(0% 0 0 …)` is still fine for **shadow alpha** and the **`@media
+print`** override (ink on paper) — those aren't theme `bg`/`fg`.
+
 ### 6.2 Primitives — the neutral ramp
 
 > **Note (2026-06-06):** Per-theme color *values* now live in the theme's

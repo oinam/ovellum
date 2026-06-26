@@ -175,13 +175,23 @@ cross-tool install snippets + `mcp` in notifier skip list. Changesets
 **AI-Native MCP arc COMPLETE (M1–M3).** Only remaining MCP item is the human
 registry submission (TODO-Human).
 
+**Product decisions (2026-06-26, from TODO-Human — documented + applied):**
+(1) **`ovellum clean --orphans`** — when `clean` is implemented, it must PRESERVE
+`.ovellum/orphans/` by default and only remove it behind an explicit `--orphans`
+flag (spec now in `cli.md` clean section, en+ja). (2) **class `@preserve` scope**
+— already the behavior (per-symbol, no cascade); now pinned by `preserve.test.ts`
+"class … methods stay independent" + documented in anchors-and-zones. (3)
+**absolute black/white** — our palettes (default, eink) avoid pure `#000`/`#fff`;
+standard palettes (nord/solarized/flexoki) follow their spec; policy in
+`STYLES.md` §6.1a + themes guide.
+
 **Still open (pick next from `ROADMAP.md`):** B8 build-output severity levels
-(would enrich `--json`); `ovellum_search_docs` MCP tool (Pagefind); usability —
-U1 troubleshooting page, U2 migration guide, U3 init protected-zone example,
-U5–U7; and the larger untouched **Tier B** (B1 plugin/extension API, B6
-versioned docs, B5 composable landing, B2 MDX, B3 wire `links.ts`, B4 fonts, B9
-images) + **Tier D** (D2 programmatic `build()` API, D3 lifecycle hooks, D5
-recipes). No changesets pending; next feature starts a fresh 0.15.0 batch.
+(would enrich `--json`); the **`clean`** command itself (honor `--orphans` per
+above); usability — U1 troubleshooting page, U2 migration guide, U3 init
+protected-zone example, U5–U7; and the larger untouched **Tier B** (B1
+plugin/extension API, B6 versioned docs, B5 composable landing, B2 MDX, B3 wire
+`links.ts`, B4 fonts, B9 images) + **Tier D** (D3 lifecycle hooks, w/ B1). One
+changeset pending (`landing-feature-links`, minor) → next 0.17.0 batch.
 
 - **0.12.0 — AI-Ready output + portable deploy-anywhere build (343 tests).**
   **C1:** `site.ai` config (`{enabled?,llmsTxt?,fullText?,mdMirror?}`) → `/llms.txt`

@@ -1,7 +1,7 @@
 ---
 title: CLI リファレンス
 description: ovellum CLI のすべてのサブコマンドとフラグ。
-sourceHash: '76888c0bfd42c512'
+sourceHash: 'a1273157bdf4d2c8'
 ---
 
 # CLI リファレンス
@@ -726,7 +726,9 @@ claude mcp add ovellum -- npx ovellum mcp --cwd /path/to/project
 
 手動ファイルを保持したまま、自動生成ファイル（`ovellum: true` フロントマターで
 識別）を削除します。デフォルトはドライランで、`--confirm` で実際に削除します。
-`.ovellum/orphans/` には**触れません**（あれはコミット済みの手書きの文章です）。
+**`.ovellum/orphans/` はデフォルトで保持します**（あれはコミット済みの手書きの文章
+です）。孤立アーカイブも削除するには `--orphans` を渡します。手書きの文章の削除は
+意図的でなければならないため、このフラグなしには決して起きません。
 
 ## 共通フラグ
 
