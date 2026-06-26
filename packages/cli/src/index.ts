@@ -18,7 +18,7 @@ const main = defineCommand({
   meta: {
     name: 'ovellum',
     version: __OVELLUM_VERSION__,
-    description: 'Ovellum - documentation tool for TypeScript and JavaScript projects.',
+    description: 'Write what matters, generate the rest; documentation tool where both live together.',
   },
   subCommands: {
     init: initCommand,

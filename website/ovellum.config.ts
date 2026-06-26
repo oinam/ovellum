@@ -16,7 +16,7 @@ export default {
     favicon: '/ovellum-logo.svg',
     version: 'v0.16.0',
     description:
-      'Markdown documentation for TypeScript and JavaScript projects. A merge engine that lets auto-generated API docs and hand-written prose coexist in the same files, plus a Jekyll-style static-site builder for purely manual docs.',
+      'Ovellum is an open-source documentation tool for TypeScript and JavaScript. It lets auto-generated API docs and hand-written narrative live together in the same files, without conflict.',
     baseUrl: 'https://ovellum.oss.oinam.com',
     // Languages (BCP 47). en-US is canonical (served at root); ja is a full
     // 1:1 translation. Content lives in content/<code>/.
@@ -57,13 +57,13 @@ export default {
       docsHref: '/docs/',
       hero: {
         title: {
-          'en-US': "Documentation that doesn't drift.",
-          ja: 'ドリフトしないドキュメント。',
+          'en-US': 'Write what matters, generate the rest; documentation tool where both live together.',
+          ja: '大切なことを書き、残りは生成する。両方が共存するドキュメントツール。',
         },
         subtitle: {
           'en-US':
-            'Ovellum is an open-source documentation tool for TypeScript and JavaScript. Auto-generate from source, hand-write narrative pages, or mix both in the same file. Your prose never gets silently overwritten.',
-          ja: 'Ovellum は TypeScript と JavaScript のためのオープンソースのドキュメントツールです。ソースから自動生成し、説明的なページを手で書き、あるいは同じファイルで両方を混在させられます。あなたの文章が知らぬ間に上書きされることはありません。',
+            'Ovellum is an open-source documentation tool for TypeScript and JavaScript. It lets auto-generated API docs and hand-written narrative live together in the same files, without conflict.',
+          ja: 'Ovellum は TypeScript と JavaScript のためのオープンソースのドキュメントツールです。自動生成された API ドキュメントと手書きのナラティブを、競合なく同じファイルの中で共存させます。',
         },
         ctas: [
           { label: { 'en-US': 'Get started', ja: 'はじめる' }, href: '/docs/', style: 'primary' },
