@@ -57,8 +57,8 @@ export default {
       docsHref: '/docs/',
       hero: {
         title: {
-          'en-US': 'Write what matters, generate the rest; documentation tool where both live together.',
-          ja: '大切なことを書き、残りは生成する。両方が共存するドキュメントツール。',
+          'en-US': 'Auto, manual, or hybrid docs that never fall out of sync.',
+          ja: '自動・手動・ハイブリッド、決して同期がずれないドキュメント。',
         },
         subtitle: {
           'en-US':

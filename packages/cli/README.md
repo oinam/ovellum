@@ -1,6 +1,6 @@
 # ovellum
 
-> Write what matters, generate the rest; documentation tool where both live together.
+> Auto, manual, or hybrid docs that never fall out of sync.
 
 Ovellum is an open-source documentation tool for TypeScript and JavaScript. It lets auto-generated API docs and hand-written narrative live together in the same files, without conflict.
 

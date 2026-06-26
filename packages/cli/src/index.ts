@@ -18,7 +18,7 @@ const main = defineCommand({
   meta: {
     name: 'ovellum',
     version: __OVELLUM_VERSION__,
-    description: 'Write what matters, generate the rest; documentation tool where both live together.',
+    description: 'Auto, manual, or hybrid docs that never fall out of sync.',
   },
   subCommands: {
     init: initCommand,
