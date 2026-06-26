@@ -188,7 +188,7 @@ The high-level shape of the project lives in:
   — design tokens (palette, type / space scales).
 - [`docs/internal/TODO.md`](https://github.com/oinam/ovellum/blob/main/docs/internal/TODO.md)
   — code-side checklist; what's done and what's deferred.
-- [`docs/internal/TODO-Human.md`](https://github.com/oinam/ovellum/blob/main/docs/internal/TODO-Human.md)
+- [`TODO.md`](https://github.com/oinam/ovellum/blob/main/TODO.md)
   — human-only items: prose authorship, product decisions, releases.
 
 Pull requests that close a TODO item are welcome — link the relevant

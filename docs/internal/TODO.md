@@ -4,7 +4,7 @@ Living checklist for code / automation work. Update in place as work progresses.
 Last updated: 2026-06-14 (0.7.0 → **0.12.0** shipped — see Current state). Previous: 2026-06-12 (full audit → [`ROADMAP.md`](./ROADMAP.md); 0.3.0 live). Older: 2026-05-24 (Chrome split — width unified via `--chrome-max` (topbar + footer never jump width between landing and docs), but **only the footer is chrome-tinted**; topbar reverted to body color with a 1px border-bottom after two passes proving a tinted topbar fights Safari URL-bar sampling and reads noisy against the body. Meta `theme-color` now tracks `--color-bg`, not `--color-bg-chrome`. Also (2026-05-25): auto-theme toggle icon reverted eclipse → monitor (eclipse read weird; monitor is the least-bad option so far). Landing hero imagery removed — `hero.media` dropped from the site config; feature code kept dormant for a later, better imagery pass. Then (2026-05-25, follow-up): **fixed a latent rhythm bug** — `--space-2xl` / `--space-3xl` were referenced by the hero padding + feature-grid margin + 6 other rules but never defined in `style.css` (only in STYLES.md), so those `clamp(var(--space-2xl)…)` declarations were invalid and collapsed to 0. With imagery gone (which had given the hero height via `min-block-size`) the no-media hero went cramped against the topbar — defining the two tokens restores the intended hero top/bottom padding and the hero→body gap. Also **removed the hero's dotted-noise + accent-spotlight pseudo-layers** entirely and **neutralized the background hue site-wide**: `--color-bg` + `--color-bg-chrome` are now pure-neutral grays (chroma 0) in both themes, dropping the faint bluish tint ahead of a planned blended background image. `theme-color` meta hex neutralized to match (#f4f4f4 / #101010).)
 
 > Manual items — prose, decisions, releases, things only a human can do —
-> live in [`TODO-Human.md`](./TODO-Human.md). When in doubt: if the work
+> live in [`TODO.md`](../../TODO.md). When in doubt: if the work
 > needs `git`, `pnpm`, or a code edit, it belongs here; if it needs a brain,
 > an account, or a real-world action, it goes there.
 
@@ -24,7 +24,7 @@ Still-internal docs:
 - [`FEATURES.md`](./FEATURES.md) — what works **right now**, status per item, links to where each feature lives. Keep current alongside code.
 - Design intent stays in [`DESIGN.md`](./DESIGN.md), [`SITE.md`](./SITE.md),
   [`STYLES.md`](./STYLES.md); CI/deploy wiring in [`DEPLOY.md`](./DEPLOY.md);
-  human-only tasks in [`TODO-Human.md`](./TODO-Human.md).
+  human-only tasks in [`TODO.md`](../../TODO.md).
 
 Legend: `[ ]` not started · `[~]` in progress · `[x]` done · `[!]` blocked
 
@@ -967,7 +967,7 @@ deploy design in [`DEPLOY.md`](./DEPLOY.md).
 
 Code-side scaffolding for self-hosting. The actual prose authorship for
 `README.md`, `CONTRIBUTING.md`, and the `docs/*.md` pages lives in
-[`TODO-Human.md`](./TODO-Human.md).
+[`TODO.md`](../../TODO.md).
 
 - [ ] Wire `ovellum build` against the repo itself: root `ovellum.config.ts` pointing at `packages/*/src/`, output to `docs/api/`
 - [ ] Verify `ovellum build` on itself produces clean output (CI step)
@@ -979,7 +979,7 @@ Code-side scaffolding for self-hosting. The actual prose authorship for
 ## Phase 9 - Pre-release Polish
 
 Automated polish only. Manual smoke-tests, release notes, npm publish, and
-announcements are in [`TODO-Human.md`](./TODO-Human.md).
+announcements are in [`TODO.md`](../../TODO.md).
 
 - [ ] Full lint pass across all packages
 - [ ] Full typecheck with `--strict` across all packages
@@ -1017,7 +1017,7 @@ announcements are in [`TODO-Human.md`](./TODO-Human.md).
 
 Code-affecting design questions. Product decisions that block specific
 tickets here (clean behavior, watch reload, `@preserve` semantics,
-output-in-VCS default) live in [`TODO-Human.md`](./TODO-Human.md) under
+output-in-VCS default) live in [`TODO.md`](../../TODO.md) under
 "Product decisions". This section will reflect their outcomes once decided.
 
 - [x] Confirm npm package name availability before Phase 0 is done

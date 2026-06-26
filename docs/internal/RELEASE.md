@@ -198,6 +198,6 @@ not-installed handling.)
 
 ---
 
-See also: [`TODO-Human.md`](./TODO-Human.md) for other human-only / launch
+See also: [`TODO.md`](../../TODO.md) for other human-only / launch
 tasks, and the manual end-to-end smoke tests worth running before a release
 (`npx ovellum init` / `build` on the examples, `npm pack` tarball check).

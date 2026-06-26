@@ -5,7 +5,7 @@ change that adds or modifies a user-visible feature.
 
 For the original design vision see [`DESIGN.md`](./DESIGN.md). For roadmap and
 deferred items see [`TODO.md`](./TODO.md). For human-only tasks (writing prose,
-product decisions, release) see [`TODO-Human.md`](./TODO-Human.md). For
+product decisions, release) see [`TODO.md`](../../TODO.md). For
 terminology see the [glossary](https://ovellum.oss.oinam.com/docs/reference/glossary/).
 
 Last updated: 2026-06-26 (0.15.0 shipped; D2 programmatic API + D5 deploy recipes + AI-Native MCP M1–M3: resources/prompts, Claude Code plugin, search_docs/reattach)

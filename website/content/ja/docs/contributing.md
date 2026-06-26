@@ -1,7 +1,7 @@
 ---
 title: コントリビューション
 description: リポジトリをセットアップし、テストを実行し、プルリクエストを送る。
-sourceHash: 'bd8bfd3688ad3665'
+sourceHash: '440899fb1437d430'
 ---
 
 # コントリビューション
@@ -185,7 +185,7 @@ pnpm changeset
   — デザイントークン（パレット、タイプ / スペーススケール）。
 - [`docs/internal/TODO.md`](https://github.com/oinam/ovellum/blob/main/docs/internal/TODO.md)
   — コード側のチェックリスト。完了済みと先送りの項目。
-- [`docs/internal/TODO-Human.md`](https://github.com/oinam/ovellum/blob/main/docs/internal/TODO-Human.md)
+- [`TODO.md`](https://github.com/oinam/ovellum/blob/main/TODO.md)
   — 人間専用の項目: 文章の執筆、プロダクトの意思決定、リリース。
 
 TODO 項目をクローズするプルリクエストを歓迎します。PR の説明で該当のセクションに
