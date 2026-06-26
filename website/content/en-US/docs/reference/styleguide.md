@@ -160,6 +160,13 @@ pnpm add -D ovellum
 ```
 :::
 
+Diagram (Mermaid — loaded on demand):
+
+```mermaid
+graph LR
+  Source --> Parser --> Generator --> Merger --> Docs
+```
+
 ## Lists
 
 Unordered lists use a quiet marker in a subdued color, and nest with reduced

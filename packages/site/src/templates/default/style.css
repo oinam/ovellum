@@ -1819,6 +1819,21 @@ a.ov-nav-group--link.is-active::before {
 .ov-prose .ov-tabpanel > :last-child {
   margin-block-end: 0;
 }
+
+/* Mermaid diagrams. Pre-render the source reads as a normal code block (the
+   no-JS / offline fallback); once Mermaid swaps in the SVG (data-processed),
+   drop the box chrome and center the figure. */
+.ov-prose pre.mermaid[data-processed] {
+  background: none;
+  border: 0;
+  padding: 0;
+  text-align: center;
+  overflow-x: auto;
+}
+.ov-prose pre.mermaid[data-processed] svg {
+  max-width: 100%;
+  height: auto;
+}
 .ov-prose ul,
 .ov-prose ol {
   padding-inline-start: var(--space-m);
@@ -2223,6 +2238,42 @@ a.ov-nav-group--link.is-active::before {
 .ov-page-meta-sep {
   opacity: 0.4;
   padding-inline: 0.5em;
+}
+
+/* "Use this page with an LLM" actions — a quiet row of chips under the page
+   meta: copy the Markdown, view it, or hand it to ChatGPT / Claude. */
+.ov-page-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2xs);
+  margin: 0 0 var(--space-m);
+}
+.ov-page-action {
+  appearance: none;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-3xs, 0.25rem);
+  padding: 0.2em 0.6em;
+  font: inherit;
+  font-size: 0.78em;
+  line-height: 1.4;
+  color: var(--color-fg-muted);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  text-decoration: none;
+  cursor: pointer;
+  transition:
+    color 0.12s ease,
+    border-color 0.12s ease;
+}
+.ov-page-action:hover {
+  color: var(--color-fg);
+  border-color: var(--color-border-strong);
+}
+.ov-page-action:focus-visible {
+  outline: 2px solid var(--color-border-focus);
+  outline-offset: 2px;
 }
 
 /* Edit-this-page link */

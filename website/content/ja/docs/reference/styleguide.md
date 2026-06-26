@@ -2,7 +2,7 @@
 title: スタイルガイド
 description: Ovellum がレンダリングするタイポグラフィ、スケール、リズム、カラー、コンテンツ要素――すべての Markdown ページがどう見えるか、そしてこのシステムがどう構築されているか。
 tags: [styleguide, typography, design, theme]
-sourceHash: '9c4cc9e149044a1e'
+sourceHash: '0bb670f1b18b2d18'
 ---
 
 # スタイルガイド
@@ -163,6 +163,13 @@ npm install -D ovellum
 pnpm add -D ovellum
 ```
 :::
+
+図（Mermaid — オンデマンドで読み込み）:
+
+```mermaid
+graph LR
+  Source --> Parser --> Generator --> Merger --> Docs
+```
 
 ## リスト
 

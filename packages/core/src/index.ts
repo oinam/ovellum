@@ -14,6 +14,7 @@ export type {
   ProtectConfig,
   OvellumSiteConfig,
   OvellumAiConfig,
+  OvellumMermaidConfig,
   OvellumSiteSearchConfig,
   OvellumLandingConfig,
   OvellumLandingHero,

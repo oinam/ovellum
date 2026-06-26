@@ -636,6 +636,15 @@ async function renderOne(input: RenderOneInput): Promise<RenderOneResult | null>
     ? (pinnedDate ?? (await lastModifiedISO({ absPath: input.absInput, cwd: input.cwd })))
     : undefined;
 
+  // The `.md` mirror URL (when one is emitted) powers the page's LLM actions —
+  // same conditions as the mirror write below: mdMirror on, not a draft, not 404.
+  const aiCfg = resolveAiConfig(input.site.ai);
+  const mirrorRel = mdMirrorPath(input.url);
+  const markdownUrl =
+    aiCfg.mdMirror && !input.draft && input.url !== '/404/' && mirrorRel
+      ? siteUrl('/' + mirrorRel, normaliseBasePath(input.site.basePath))
+      : undefined;
+
   const html = renderPage({
     site: input.site,
     nav: input.nav,
@@ -651,6 +660,7 @@ async function renderOne(input: RenderOneInput): Promise<RenderOneResult | null>
     next: input.next,
     breadcrumbs: input.breadcrumbs,
     editUrl,
+    markdownUrl,
     readingMinutes: readingMin,
     lastModified,
     bodyClass: input.url === '/404/' ? 'ov-body-404' : undefined,

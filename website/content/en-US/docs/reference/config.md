@@ -99,6 +99,7 @@ interface OvellumSiteConfig {
   locales?: { code: string; label: string; strings?: Record<string, string> }[];
   defaultLocale?: string;
   ai?: { enabled?: boolean; llmsTxt?: boolean; fullText?: boolean; mdMirror?: boolean };
+  mermaid?: { enabled?: boolean; url?: string };
   defaultTheme: 'auto' | 'light' | 'dark';
   palette: 'default' | 'nord' | 'flexoki' | 'solarized' | 'eink';
   accent?: string;
@@ -134,6 +135,7 @@ interface OvellumSiteConfig {
 | `locales`        | `{ code, label, strings? }[]?`      | `undefined`                   | **Opt-in i18n.** Each entry is a language: `code` is a BCP 47 tag (`'en-US'`, `'ja'`, `'zh-Hans'`) and also the `content/<code>/` folder name + `<html lang>`; `label` is the picker text (use the autonym, e.g. `'日本語'`). The optional `strings` map overrides the template's built-in UI chrome for that locale (keys like `tocTitle`, `editedLabel`, `backToTop`; merged over the built-ins, English fills any gap) — built-in chrome ships for English + Japanese, and RTL languages get `<html dir="rtl">`. When set, content moves into per-locale subtrees, a language picker appears in the topbar, and pages get `hreflang`. **Config-driven labels/copy** (`topbarNav`/`footerNav` labels, and the `landing` hero/CTA/feature/install/trust text) accept a per-locale `{ code: string }` map in place of a plain string, resolved to the current locale. Unset = single-language (no migration needed). See the [i18n guide](/docs/guides/i18n/). |
 | `defaultLocale`  | `string?`                           | first of `locales`            | Which `locales[].code` is served at the **root** (no URL prefix); the rest serve under `/<code>/`. Ignored when `locales` is unset.                                                                                              |
 | `ai`             | `{ enabled?, llmsTxt?, fullText?, mdMirror? }` | see [`ai`](#ai)    | **AI-friendly output** — `llms.txt`, `llms-full.txt`, and per-page `.md` mirrors emitted alongside the HTML so agents/LLMs read the docs cleanly. `llmsTxt` + `mdMirror` default **on**, `fullText` **off**. Set `enabled: false` to opt out entirely. The HTML is unchanged; these are additive files (per-locale on i18n sites). |
+| `mermaid`        | `{ enabled?, url? }`                | see [`mermaid`](#mermaid) | **Mermaid diagrams** — ```mermaid blocks render as diagrams, lazy-loaded only on pages that contain one. `enabled` defaults **on**; `url` overrides the (pinned CDN) runtime source for self-hosting. |
 | `defaultTheme`   | `'auto' \| 'light' \| 'dark'`       | `'auto'`                      | Initial light/dark mode before user preference loads. Visitors can change it from the topbar appearance control (persisted in `localStorage`).                                                                                  |
 | `palette`        | `'default' \| 'nord' \| 'flexoki' \| 'solarized' \| 'eink'` | `'default'`  | Initial page-wide color palette before user preference loads (`'default'` displays as "Ovellum" in the picker). Every palette ships light **and** dark variants; the mode choice stays independent. Visitors can switch palettes from the topbar appearance control.            |
 | `accent`         | `string?`                           | `undefined`                   | Default primary color — any CSS color value (`'#3b82f6'`, `'oklch(57% 0.16 255)'`, …). Drives the CTA buttons plus links, focus rings, and the ToC indicator; hover states are mixed automatically. Unset = each palette's own primary. Visitors can override it from the appearance control ("Color"). |
@@ -226,6 +228,25 @@ export default defineConfig({
 // Or add the whole-corpus file (off by default):
 export default defineConfig({
   site: { ai: { fullText: true } },
+});
+```
+
+### `mermaid`
+
+`{ enabled?: boolean, url?: string }`. Controls ```mermaid diagram rendering. The
+runtime is lazy-loaded **only on pages that contain a diagram**, so diagram-free
+pages (and the default site) ship no extra JavaScript. See the
+[Components guide](/docs/guides/components/#diagrams-mermaid).
+
+| Field     | Type       | Default                                   | Notes                                                                                                                |
+| --------- | ---------- | ----------------------------------------- | ------------------------------------------------------------------------------------------------------------------ |
+| `enabled` | `boolean?` | `true`                                    | When `false`, ```mermaid blocks render as plain code.                                                               |
+| `url`     | `string?`  | a pinned jsDelivr build                   | Where the Mermaid ESM bundle loads from. Point it at a self-hosted copy (e.g. a file in `publicDir`) to avoid the third-party request. |
+
+```typescript
+// Self-host the runtime (no third-party request):
+export default defineConfig({
+  site: { mermaid: { url: '/mermaid.min.mjs' } },
 });
 ```
 

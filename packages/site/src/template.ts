@@ -6,6 +6,10 @@ import { formatEditedDate } from './page-meta.js';
 import { DEFAULT_STRINGS, localize, type UiStrings } from './strings.js';
 import { assetsPrefix as assetsPrefixFor, normaliseBasePath, siteUrl } from './url.js';
 
+/** Pinned Mermaid ESM build, lazy-loaded on diagram pages (overridable via
+ *  `site.mermaid.url` to self-host). Pin the major so it can't shift under us. */
+const DEFAULT_MERMAID_URL = 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs';
+
 export interface ShellOptions {
   site: OvellumSiteConfig & { title: string };
   /** Full <title> for the page (already composed upstream). */
@@ -114,8 +118,16 @@ function renderShell(opts: ShellOptions): string {
           .join('\n  ')
       : '';
   const dirAttr = opts.dir === 'rtl' ? ' dir="rtl"' : '';
+  // Mermaid: unless disabled, expose the lazy-load URL so script.js can fetch
+  // the runtime on pages that actually contain a diagram. Pinned jsDelivr build
+  // by default; `site.mermaid.url` points it at a self-hosted copy.
+  const mermaid = opts.site.mermaid;
+  const mermaidAttr =
+    mermaid?.enabled === false
+      ? ''
+      : ` data-ov-mermaid="${escapeAttr(mermaid?.url ?? DEFAULT_MERMAID_URL)}"`;
   return `<!doctype html>
-<html lang="${escapeAttr(opts.lang ?? 'en')}"${dirAttr} data-theme="${escapeAttr(opts.site.defaultTheme)}" data-palette="${escapeAttr(palette)}" data-font="${escapeAttr(opts.site.font ?? 'sans')}"${accentAttrs}>
+<html lang="${escapeAttr(opts.lang ?? 'en')}"${dirAttr} data-theme="${escapeAttr(opts.site.defaultTheme)}" data-palette="${escapeAttr(palette)}" data-font="${escapeAttr(opts.site.font ?? 'sans')}"${accentAttrs}${mermaidAttr}>
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -650,6 +662,12 @@ export interface RenderPageInput {
   editUrl?: string;
   /** Breadcrumb trail, root-first. The current page is the last entry. */
   breadcrumbs?: Array<{ title: string; url: string; page?: boolean }>;
+  /**
+   * Site-relative URL of this page's `.md` mirror, when one was emitted
+   * (`site.ai.mdMirror` on, real page). Drives the "Copy page / open in an LLM"
+   * actions; omitted = no actions rendered.
+   */
+  markdownUrl?: string;
   /** Reading-time estimate in whole minutes (already computed and rounded). */
   readingMinutes?: number;
   /** ISO-8601 timestamp of the source file's last modification. */
@@ -699,6 +717,7 @@ export function renderPage(input: RenderPageInput): string {
   const editLink = input.editUrl
     ? `<p class="ov-edit-page"><a class="ov-edit-link" href="${escapeAttr(input.editUrl)}" rel="noopener" target="_blank">${escapeHtml(strings.editThisPage)}</a></p>`
     : '';
+  const pageActions = renderPageActions(input.markdownUrl, input.site, strings);
 
   const body = `<div class="ov-layout">
     <aside class="ov-sidebar" aria-label="${escapeAttr(strings.siteNav)}">${sidebar}</aside>
@@ -706,6 +725,7 @@ export function renderPage(input: RenderPageInput): string {
       <div class="ov-content-card">
         ${breadcrumbs}
         ${pageMeta}
+        ${pageActions}
         <article class="ov-prose">${input.bodyHtml}</article>
         ${editLink}
       </div>
@@ -1066,6 +1086,36 @@ function renderBreadcrumbs(
       ${items}
     </ol>
   </nav>`;
+}
+
+/**
+ * The "use this page with an LLM" actions, rendered when the page has a `.md`
+ * mirror (`markdownUrl`). "Copy page" grabs the Markdown (client-side fetch);
+ * "View as Markdown" links to the mirror; and — only when `site.baseUrl` is set,
+ * so the link is absolute and an agent can fetch it — "Open in ChatGPT/Claude"
+ * deep-link to those tools with a prompt pointing at the mirror.
+ */
+function renderPageActions(
+  markdownUrl: string | undefined,
+  site: OvellumSiteConfig,
+  strings: UiStrings,
+): string {
+  if (!markdownUrl) return '';
+  const actions = [
+    `<button class="ov-page-action" type="button" data-ov-copy-md="${escapeAttr(markdownUrl)}" data-ov-copied="${escapeAttr(strings.copied)}">${escapeHtml(strings.copyPage)}</button>`,
+    `<a class="ov-page-action" href="${escapeAttr(markdownUrl)}">${escapeHtml(strings.viewMarkdown)}</a>`,
+  ];
+  if (site.baseUrl) {
+    const absMd = join(site.baseUrl, markdownUrl);
+    const prompt = encodeURIComponent(`Read ${absMd} — I have questions about this documentation page.`);
+    actions.push(
+      `<a class="ov-page-action" href="https://chatgpt.com/?q=${prompt}" target="_blank" rel="noopener">${escapeHtml(strings.askChatGpt)}</a>`,
+    );
+    actions.push(
+      `<a class="ov-page-action" href="https://claude.ai/new?q=${prompt}" target="_blank" rel="noopener">${escapeHtml(strings.askClaude)}</a>`,
+    );
+  }
+  return `<div class="ov-page-actions">${actions.join('')}</div>`;
 }
 
 function renderPageMeta(

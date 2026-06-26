@@ -1,7 +1,7 @@
 ---
 title: 設定
 description: ovellum.config.{json,ts,js} のすべてのフィールドと、その型・デフォルト値・効果。
-sourceHash: '7212835c5f2097b1'
+sourceHash: '802d11453f02e63c'
 ---
 
 # 設定
@@ -99,6 +99,7 @@ interface OvellumSiteConfig {
   locales?: { code: string; label: string; strings?: Record<string, string> }[];
   defaultLocale?: string;
   ai?: { enabled?: boolean; llmsTxt?: boolean; fullText?: boolean; mdMirror?: boolean };
+  mermaid?: { enabled?: boolean; url?: string };
   defaultTheme: 'auto' | 'light' | 'dark';
   palette: 'default' | 'nord' | 'flexoki' | 'solarized' | 'eink';
   accent?: string;
@@ -134,6 +135,7 @@ interface OvellumSiteConfig {
 | `locales`        | `{ code, label, strings? }[]?`      | `undefined`                   | **オプトインの i18n。** 各エントリが 1 つの言語です。`code` は BCP 47 タグ（`'en-US'`、`'ja'`、`'zh-Hans'`）であり、同時に `content/<code>/` フォルダ名と `<html lang>` でもあります。`label` はピッカーに表示するテキストです（自称表記を使ってください。例: `'日本語'`）。任意の `strings` マップは、そのロケールについてテンプレート組み込みの UI クロムを上書きします（`tocTitle`、`editedLabel`、`backToTop` などのキー。組み込みの上にマージされ、不足分は英語が埋めます） — 組み込みクロムは英語と日本語で出荷され、RTL 言語には `<html dir="rtl">` が付きます。設定すると、コンテンツがロケールごとのサブツリーに移り、トップバーに言語ピッカーが現れ、各ページに `hreflang` が付きます。**config 由来のラベル／コピー**（`topbarNav`/`footerNav` のラベル、および `landing` のヒーロー／CTA／機能／install／トラストのテキスト）は、プレーンな文字列の代わりにロケールごとの `{ code: string }` マップを受け取り、現在のロケールに解決されます。未設定 = 単一言語（移行不要）。[i18n ガイド](/ja/docs/guides/i18n/)を参照。 |
 | `defaultLocale`  | `string?`                           | `locales` の最初の要素            | どの `locales[].code` を**ルート**（URL プレフィックスなし）で配信するか。残りは `/<code>/` 配下で配信されます。`locales` が未設定の場合は無視されます。                                                                                              |
 | `ai`             | `{ enabled?, llmsTxt?, fullText?, mdMirror? }` | [`ai`](#ai) を参照     | **AI フレンドリーな出力** — `llms.txt`・`llms-full.txt`・各ページの `.md` ミラーを HTML と並べて出力し、エージェントや LLM がドキュメントをクリーンに読めるようにします。`llmsTxt` と `mdMirror` はデフォルト**オン**、`fullText` は**オフ**。`enabled: false` で全体を無効化します。HTML 出力は変わりません。これらは追加されるファイルです（i18n サイトではロケールごと）。 |
+| `mermaid`        | `{ enabled?, url? }`                | [`mermaid`](#mermaid) を参照 | **Mermaid 図** — ```mermaid ブロックを図としてレンダリングします。図を含むページでのみ遅延読み込みされます。`enabled` はデフォルト**オン**。`url` は（ピン留め CDN の）ランタイムの取得元を上書きし、セルフホストできます。 |
 | `defaultTheme`   | `'auto' \| 'light' \| 'dark'`       | `'auto'`                      | ユーザーの設定が読み込まれる前の初期ライト／ダークモード。閲覧者はトップバーの外観コントロールから変更できます（`localStorage` に保存）。                                                                                  |
 | `palette`        | `'default' \| 'nord' \| 'flexoki' \| 'solarized' \| 'eink'` | `'default'`  | ユーザーの設定が読み込まれる前の初期のページ全体のカラーパレット（`'default'` はピッカーでは「Ovellum」と表示）。すべてのパレットはライト**と**ダークの両方のバリアントを備え、モードの選択とは独立しています。閲覧者はトップバーの外観コントロールからパレットを切り替えられます。            |
 | `accent`         | `string?`                           | `undefined`                   | デフォルトのプライマリカラー。任意の CSS カラー値（`'#3b82f6'`、`'oklch(57% 0.16 255)'` など）。CTA ボタンに加え、リンク、フォーカスリング、目次インジケーターを制御します。ホバー状態は自動的にブレンドされます。未設定 = 各パレット固有のプライマリ。閲覧者は外観コントロール（「Color」）から上書きできます。 |
@@ -226,6 +228,25 @@ export default defineConfig({
 // または全文ファイルを追加する（デフォルトはオフ）:
 export default defineConfig({
   site: { ai: { fullText: true } },
+});
+```
+
+### `mermaid`
+
+`{ enabled?: boolean, url?: string }`。```mermaid の図のレンダリングを制御します。
+ランタイムは**図を含むページでのみ**遅延読み込みされるので、図のないページ
+（およびデフォルトのサイト）は余分な JavaScript を出荷しません。
+[コンポーネントガイド](/ja/docs/guides/components/#図mermaid)を参照してください。
+
+| Field     | Type       | Default                         | 備考                                                                                          |
+| --------- | ---------- | ------------------------------- | --------------------------------------------------------------------------------------------- |
+| `enabled` | `boolean?` | `true`                          | `false` のとき、```mermaid ブロックはプレーンなコードとしてレンダリングされます。              |
+| `url`     | `string?`  | ピン留めされた jsDelivr ビルド   | Mermaid の ESM バンドルの取得元。セルフホストのコピー（例: `publicDir` 内のファイル）に向けると、第三者へのリクエストを避けられます。 |
+
+```typescript
+// ランタイムをセルフホストする（第三者へのリクエストなし）:
+export default defineConfig({
+  site: { mermaid: { url: '/mermaid.min.mjs' } },
 });
 ```
 

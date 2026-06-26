@@ -1,7 +1,7 @@
 ---
 title: コンポーネント
 description: 'コールアウト・ステップ・カード・タブ — プレーンな Markdown のディレクティブ構文で書くリッチなコンテンツブロック。'
-sourceHash: '8a3927b9284dc09b'
+sourceHash: 'c36861d1448b1f27'
 ---
 
 # コンポーネント
@@ -111,6 +111,26 @@ pnpm add -D ovellum
 
 `:::code-group` はブロックを包みますが、単一の `:::`（`::::` ではない）を使います —
 その子はディレクティブではなくコードフェンスなので、曖昧さを解消するネストがありません。
+
+## 図（Mermaid）
+
+` ```mermaid ` コードブロックは [Mermaid](https://mermaid.js.org) の図として
+レンダリングされます:
+
+````markdown
+```mermaid
+graph LR
+  Source --> Parser --> Generator --> Merger --> Docs
+```
+````
+
+Mermaid のランタイムは**遅延読み込みされ、図を含むページでのみ**読み込まれます —
+そのため、デフォルトのサイト（および図のない全ページ）は余分な JavaScript を一切
+出荷しません。ピン留めされた CDN から読み込まれ、ページがそこに到達できない場合は、
+図のソースが読みやすいフォールバックとして表示されたままになります。第三者への
+リクエストを避けるには、ランタイムをセルフホストして
+[`site.mermaid.url`](/ja/docs/reference/config/#mermaid) をそこに向けるか、
+`site.mermaid.enabled: false` で図を完全に無効にします。
 
 ## `.mdx` ファイルを使う
 

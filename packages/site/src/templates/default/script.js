@@ -542,4 +542,61 @@
       });
     });
   })();
+
+  // "Copy page" action: fetch the page's `.md` mirror and copy it to the
+  // clipboard, flashing a confirmation. The link/ChatGPT/Claude actions are
+  // plain anchors and need no JS.
+  (function copyPage() {
+    document.querySelectorAll('[data-ov-copy-md]').forEach(function (btn) {
+      var href = btn.getAttribute('data-ov-copy-md');
+      var label = btn.textContent;
+      var done = btn.getAttribute('data-ov-copied') || 'Copied';
+      btn.addEventListener('click', function () {
+        fetch(href)
+          .then(function (r) {
+            return r.text();
+          })
+          .then(function (md) {
+            return navigator.clipboard.writeText(md);
+          })
+          .then(function () {
+            btn.textContent = done;
+            setTimeout(function () {
+              btn.textContent = label;
+            }, 1600);
+          })
+          .catch(function () {
+            /* fetch/clipboard blocked — the "View as Markdown" link still works. */
+          });
+      });
+    });
+  })();
+
+  // Mermaid diagrams: lazy-load the runtime from the URL on <html data-ov-mermaid>
+  // — and ONLY when the page actually contains a `pre.mermaid` block, so pages
+  // (and the whole site by default) pay nothing. If JS or the network fails, the
+  // readable diagram source stays on screen as the fallback.
+  (function mermaid() {
+    var src = document.documentElement.getAttribute('data-ov-mermaid');
+    if (!src) return;
+    var blocks = document.querySelectorAll('pre.mermaid');
+    if (!blocks.length) return;
+
+    // Match the diagram theme to the resolved page theme at load time.
+    var mode = document.documentElement.getAttribute('data-theme') || 'auto';
+    if (mode === 'auto') {
+      mode = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+    }
+    var theme = mode === 'dark' ? 'dark' : 'default';
+
+    import(src)
+      .then(function (mod) {
+        var mermaid = mod.default || mod;
+        mermaid.initialize({ startOnLoad: false, theme: theme, securityLevel: 'strict' });
+        return mermaid.run({ nodes: blocks });
+      })
+      .catch(function () {
+        /* offline or blocked — the source text remains visible. */
+      });
+  })();
 })();

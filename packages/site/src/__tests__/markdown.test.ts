@@ -409,6 +409,14 @@ describe('component directives (B2)', () => {
     expect(html).toContain('<pre');
   });
 
+  it('turns a ```mermaid fence into a pre.mermaid for client rendering', async () => {
+    const { html } = await renderMarkdown(['```mermaid', 'graph TD; A-->B;', '```'].join('\n'));
+    expect(html).toContain('<pre class="mermaid">');
+    expect(html).toContain('graph TD; A-->B;');
+    // It is NOT left as a highlighted/code block.
+    expect(html).not.toContain('language-mermaid');
+  });
+
   it('does not leak ::: markers and drops unknown directives safely', async () => {
     const { html } = await renderMarkdown([':::mystery', 'Body.', ':::'].join('\n'));
     expect(html).not.toContain(':::');

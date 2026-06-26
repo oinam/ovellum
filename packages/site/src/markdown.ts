@@ -12,7 +12,7 @@ import { visit } from 'unist-util-visit';
 import { createHighlighter, type Highlighter } from 'shiki';
 import type { Root, Element, ElementContent } from 'hast';
 import type { OvellumCodeTheme } from '@ovellum/core';
-import { remarkComponents, rehypeTabs, COMPONENT_CLASSES } from './directives.js';
+import { remarkComponents, rehypeTabs, rehypeMermaid, COMPONENT_CLASSES } from './directives.js';
 
 export interface Heading {
   depth: number;
@@ -256,6 +256,9 @@ export async function renderMarkdown(
     // Upgrade `:::tabs` structure into an accessible tablist + panels. Post-
     // sanitize (like rehypeCallouts) so the role/aria/button markup is trusted.
     .use(rehypeTabs)
+    // Turn ```mermaid fences into `<pre class="mermaid">` for client-side lazy
+    // rendering. Before highlightCodeBlocks (shiki skips `mermaid` regardless).
+    .use(rehypeMermaid)
     // Narrow <iframe> to known video hosts and wrap survivors in a responsive
     // 16:9 frame. Runs post-sanitize so the schema is the outer guard and this
     // is the host allowlist — see SANITIZE_SCHEMA / IFRAME_ALLOWED_HOSTS above.

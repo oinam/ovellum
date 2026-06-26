@@ -301,6 +301,22 @@ export interface OvellumAiConfig {
   mdMirror?: boolean;
 }
 
+export interface OvellumMermaidConfig {
+  /**
+   * Render ```mermaid fenced blocks as diagrams. The Mermaid runtime is
+   * lazy-loaded on the client, and **only** on pages that actually contain a
+   * diagram. Default `true`. When `false`, mermaid blocks stay plain code.
+   */
+  enabled?: boolean;
+  /**
+   * URL the Mermaid ESM bundle is loaded from (on diagram pages only). Defaults
+   * to a pinned jsDelivr build. Point it at a self-hosted copy
+   * (e.g. `'/mermaid.min.mjs'` placed in `publicDir`) to avoid the third-party
+   * request entirely.
+   */
+  url?: string;
+}
+
 export interface OvellumSiteConfig {
   /** Site title. Defaults to `OvellumConfig.name` or `'Ovellum site'`. */
   title?: string;
@@ -369,6 +385,8 @@ export interface OvellumSiteConfig {
   defaultLocale?: string;
   /** AI-friendly output (`llms.txt`, `llms-full.txt`, per-page `.md` mirrors). */
   ai?: OvellumAiConfig;
+  /** Mermaid diagram rendering (lazy-loaded on diagram pages). */
+  mermaid?: OvellumMermaidConfig;
   /** Initial theme before user preference loads. */
   defaultTheme: OvellumDefaultTheme;
   /**

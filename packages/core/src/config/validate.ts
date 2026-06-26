@@ -248,6 +248,17 @@ export function validateUserConfig(input: unknown): OvellumUserConfig {
         }
       }
     }
+    if (s.mermaid !== undefined) {
+      if (!isPlainObject(s.mermaid)) {
+        throw new ConfigError('`site.mermaid` must be an object.');
+      }
+      if (s.mermaid.enabled !== undefined && typeof s.mermaid.enabled !== 'boolean') {
+        throw new ConfigError('`site.mermaid.enabled` must be a boolean.');
+      }
+      if (s.mermaid.url !== undefined && typeof s.mermaid.url !== 'string') {
+        throw new ConfigError('`site.mermaid.url` must be a string.');
+      }
+    }
     if (s.topbarNav !== undefined) {
       if (!Array.isArray(s.topbarNav)) {
         throw new ConfigError('`site.topbarNav` must be an array.');

@@ -112,6 +112,25 @@ pnpm add -D ovellum
 its children are code fences, not directives, so there's no nesting to
 disambiguate.
 
+## Diagrams (Mermaid)
+
+A ` ```mermaid ` code block renders as a [Mermaid](https://mermaid.js.org)
+diagram:
+
+````markdown
+```mermaid
+graph LR
+  Source --> Parser --> Generator --> Merger --> Docs
+```
+````
+
+The Mermaid runtime is **lazy-loaded, and only on pages that contain a diagram**
+— so the default site (and every diagram-free page) ships zero extra JavaScript.
+It loads from a pinned CDN; if a page can't reach it, the diagram source stays
+visible as a readable fallback. To avoid the third-party request, self-host the
+runtime and point [`site.mermaid.url`](/docs/reference/config/#mermaid) at it, or
+set `site.mermaid.enabled: false` to turn diagrams off entirely.
+
 ## Using `.mdx` files
 
 Ovellum treats `.mdx` files as Markdown — they're picked up, routed, and rendered

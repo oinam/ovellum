@@ -45,12 +45,12 @@ components**; everything else is incremental.
    `:::note` / `:::tabs`), theme-styled — **not** React/MDX components (that's
    their lock-in; ours must stay portable Markdown). Reframes ROADMAP **B2**.
    *Highest-impact item on this list.*
-2. **Mermaid diagrams.** Popular, expected, lazy-loadable. New. Pairs with #1.
+2. **Mermaid diagrams.** ✅ **Done 2026-06-26** — ` ```mermaid ` → lazy-loaded
+   (CDN, on diagram pages only), `site.mermaid` to self-host/disable.
 3. **Reusable snippets / includes (partials).** Author-once, include-many. New.
-4. **"Copy page as Markdown" + "Open in ChatGPT/Claude" affordance.** They have a
-   per-page contextual menu; we already *emit* the `.md` mirror, so this is just
-   a small per-page UI control (copy-markdown button + open-in-LLM links).
-   High-signal, low-cost, on-brand for our AI-native story. New U-item.
+4. **"Copy page as Markdown" + "Open in ChatGPT/Claude" affordance.** ✅ **Done
+   2026-06-26** — a per-page `.ov-page-actions` row (Copy page / View as Markdown
+   / Open in ChatGPT / Open in Claude), gated on the `.md` mirror being enabled.
 5. **Versioning.** They have it; we have ROADMAP **B6**. Reinforce.
 6. **"Switch from the incumbent" migration path.** A guide + lightweight importer
    (their config/components → ours). Direct acquisition play for people leaving a

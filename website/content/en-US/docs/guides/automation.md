@@ -188,3 +188,12 @@ A build also emits machine-readable companions next to the HTML — `/llms.txt`,
 `/llms-full.txt`, and a `.md` mirror of every page — so an agent can read your
 docs without scraping HTML. These are on by default; see
 [`site.ai`](/docs/reference/config/#ai).
+
+### Per-page LLM actions
+
+When the `.md` mirror is enabled (the default), each doc page carries a small
+row of actions: **Copy page** (copies the page's Markdown to the clipboard),
+**View as Markdown** (the raw `.md`), and — when `site.baseUrl` is set so the
+link is absolute — **Open in ChatGPT** / **Open in Claude**, which hand the page
+to that assistant. No config beyond `site.ai.mdMirror`; they disappear if it's
+off.

@@ -245,3 +245,28 @@ export function rehypeTabs() {
     });
   };
 }
+
+/**
+ * Post-sanitize: turn ```mermaid fences into `<pre class="mermaid">` holding the
+ * raw diagram source. The client lazy-loads Mermaid (from a pinned CDN) only on
+ * pages that contain one; with no JS/network the readable source stays visible
+ * as the fallback. Runs before shiki, which skips `mermaid` anyway.
+ */
+export function rehypeMermaid() {
+  return (tree: HastRoot): void => {
+    visit(tree, 'element', (node: Element, index, parent) => {
+      if (node.tagName !== 'pre' || !parent || typeof index !== 'number') return;
+      const code = node.children.find(
+        (c): c is Element => c.type === 'element' && c.tagName === 'code',
+      );
+      if (!code || !classNames(code).includes('language-mermaid')) return;
+      const pre: Element = {
+        type: 'element',
+        tagName: 'pre',
+        properties: { className: ['mermaid'] },
+        children: [{ type: 'text', value: textOf(code) }],
+      };
+      (parent.children as ElementContent[])[index] = pre;
+    });
+  };
+}
