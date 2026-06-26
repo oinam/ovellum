@@ -349,7 +349,7 @@ differentiator no other docs tool can make.
       cross-linked to the real feature. Chose a docs concept page over a landing
       section (landing redesign is queued; don't pre-empt it).
 
-#### AI-Native MCP — NEXT (full plan: [`AI-NATIVE-MCP.md`](./AI-NATIVE-MCP.md))
+#### AI-Native MCP — NEXT (full plan: [`MCP.md`](./MCP.md))
 
 Make the MCP server a first-class citizen (it's the universal AI runtime
 interface) and adoption one-step, leaning on the `write_zone` moat. C1–C5 shipped

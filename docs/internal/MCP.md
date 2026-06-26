@@ -1,8 +1,9 @@
-# AI-Native MCP — the next task (plan)
+# Model Context Protocol (MCP)
 
-> Status: **planned** (design, not yet built). Captured 2026-06-25 after
-> shipping the AI-Ready surfaces (C1–C5) + the programmatic API (D2). Pick the
-> slices from [`ROADMAP.md`](./ROADMAP.md) "Tier C — AI-Native MCP (next)".
+> Status: **shipped** (M1–M3 + registry, as of `ovellum@0.16.0`, 2026-06-26).
+> This started as a plan (captured 2026-06-25 after the AI-Ready surfaces C1–C5 +
+> the programmatic API D2); it's kept here as the design record + slice history.
+> The server is live in the MCP Registry as `io.github.oinam/ovellum`.
 
 ## Where we already are
 

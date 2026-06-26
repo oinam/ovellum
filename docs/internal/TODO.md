@@ -56,7 +56,7 @@ from the CLI bin (`main`/`exports["."]` → `dist/api.js`, `bin` → `dist/index
 **ESM-only** (pagefind is ESM-only); self-contained `.d.ts` via tsup
 `dts:{resolve:[@ovellum]}` + `tsconfig.dts.json` (private `@ovellum/*` inlined, not
 flipped). **D5** deploy guide "embedding in another build" recipes. **AI-Native
-MCP (M1–M3, plan in `AI-NATIVE-MCP.md`):** M1 Resources (`ovellum://llms.txt`,
+MCP (M1–M3, plan in `MCP.md`):** M1 Resources (`ovellum://llms.txt`,
 `…/page/{path}`, `…/ir`, `…/orphans`) + Prompts (`set-up-ovellum`,
 `document-symbol`, `review-doc-drift`) — `dev/mcp/{resources,prompts}.ts`,
 `capabilities:{tools,resources,prompts}`; M2 Claude Code plugin (`plugins/ovellum/`
@@ -163,7 +163,7 @@ re-extracts the whole project each change (cross-file ripples stay correct) but
 startup parses twice — initial `runBuild` + seeding the warm parser; acceptable,
 could unify later.
 
-**AI-Native MCP (plan: `AI-NATIVE-MCP.md`):** **M1 + M2 done 2026-06-25.** M1 —
+**AI-Native MCP (plan: `MCP.md`):** **M1 + M2 done 2026-06-25.** M1 —
 MCP Resources + Prompts (`dev/mcp/resources.ts` + `prompts.ts`). M2 — Claude Code
 plugin `plugins/ovellum/` (manifest + `.mcp.json` + bundled `ovellum-docs` skill,
 moved from old `skills/`) + repo-root `.claude-plugin/marketplace.json` +
