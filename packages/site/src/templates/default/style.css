@@ -2826,10 +2826,13 @@ body.ov-body-landing {
 .ov-hero-title {
   position: relative;
   font-size: clamp(var(--font-size-4), 7vw, var(--font-size-5, 3.5rem));
-  line-height: 1.02;
+  line-height: 1.06;
   letter-spacing: -0.035em;
   margin: 0 auto var(--space-s);
-  max-inline-size: 16ch;
+  /* Wide enough to settle the ~57-char tagline into two lines on desktop;
+     `balance` evens the two lines, and the viewport caps it on small screens. */
+  max-inline-size: 30ch;
+  text-wrap: balance;
   font-weight: 700;
 }
 .ov-hero-subtitle {
