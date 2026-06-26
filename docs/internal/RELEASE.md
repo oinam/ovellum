@@ -11,6 +11,40 @@ be run by the maintainer in an interactive terminal — `npm publish` (npm
 session + OTP) and the signed `git tag` (GPG passphrase prompt) — so an agent
 can prep everything else but cannot complete a release on its own.
 
+## Quick path — `./publish.sh`
+
+Once the version bump is committed to `main` (see **Prep** below) and the tree
+is clean, the whole publish sequence is one command from the repo root:
+
+```sh
+./publish.sh --npmotp=123456
+```
+
+It derives the version, tag, and MCP registry name itself and runs, in order and
+**idempotently**: push `main` → `npm publish` → signed tag → GitHub release →
+MCP Registry publish. Re-run it safely after any mid-way failure — a step whose
+result already exists (version on npm, tag pushed, release cut, registry version
+present) is detected and skipped. The GPG pinentry (signed tag) and
+`mcp-publisher login` (registry) prompts still happen interactively in your
+terminal. Flags: `--skip-npm`, `--skip-registry`, `--dry-run`, `--help`.
+
+The numbered **routine flow** below is the manual reference the script encodes —
+read it to understand a step or to run one by hand.
+
+## Prep (produces the `chore: version packages` commit)
+
+A release starts from one commit on `main` that bundles all of:
+
+- `pnpm changeset version` — bumps `packages/cli/package.json` + writes
+  `CHANGELOG.md`.
+- **`site.version`** in `website/ovellum.config.ts` (the badge) → `v<version>`.
+- **`version`** and **`packages[0].version`** in `server.json` → `<version>`
+  (the MCP Registry manifest — `publish.sh` refuses to run if these don't match
+  the package version).
+- `pnpm -w build` + `npm test` green.
+
+An agent can do all of the prep; `publish.sh` then handles the human-only steps.
+
 ## Prerequisites (one-time)
 
 - **npm**: logged in as `oinam` (`npm whoami` → `oinam`). Publish uses this
@@ -20,6 +54,13 @@ can prep everything else but cannot complete a release on its own.
   `git tag <name>` fails with `fatal: no tag message?` — release tags must be
   signed-annotated, which triggers a **pinentry passphrase prompt**. Run the
   tag step in an interactive terminal (not a script/agent).
+- **MCP Registry** (for the registry step): `mcp-publisher` installed
+  (`brew install mcp-publisher`) and authenticated once via
+  `mcp-publisher login github` (device-code flow; auth as `oinam` so the
+  `io.github.oinam/*` namespace is allowed). The registry does **not** sync from
+  npm — it keeps its own copy of `server.json`'s metadata, and `(name, version)`
+  is immutable, so each release must `mcp-publisher publish` a bumped
+  `server.json`. Skip with `--skip-registry` if not shipping a registry update.
 - A clean working tree on `main`.
 
 ## The routine flow
@@ -97,6 +138,22 @@ New release at <https://github.com/oinam/ovellum/releases/new>, attach the
 `ovellum@x.y.z` tag, and paste the matching `## x.y.z` section from
 `packages/cli/CHANGELOG.md`. The **Full diff** link format is
 `https://github.com/oinam/ovellum/compare/ovellum@<prev>...ovellum@<new>`.
+
+### 8. MCP Registry publish
+
+Refresh the registry listing from the (already version-matched, see Prep)
+`server.json`:
+
+```sh
+mcp-publisher publish
+```
+
+This reads `server.json` and submits it as `io.github.oinam/ovellum@<version>`.
+The registry verifies `mcpName` against the just-published npm package, so run it
+**after** step 4. If it errors with `duplicate version`, that version is already
+listed (immutable) — it's a no-op, move on. Auth errors → `mcp-publisher login
+github`, then retry. (`publish.sh` does all of this, including the duplicate /
+not-installed handling.)
 
 ## Failure modes
 
