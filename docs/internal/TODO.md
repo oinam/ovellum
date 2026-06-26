@@ -32,10 +32,22 @@ Legend: `[ ]` not started · `[~]` in progress · `[x]` done · `[!]` blocked
 
 ## Current state (2026-06-14)
 
-**Publish state (read this first):** **`ovellum@0.15.0` is live on npm**
-(2026-06-26), matches local. Tree clean on `main`, fully pushed; tag
-`ovellum@0.15.0` (signed) pushed + GitHub release published; **no pending
-changesets**. Tags `ovellum@0.7.0`…`0.15.0` all up.
+**Publish state (read this first):** **`ovellum@0.16.0` is live on npm**
+(2026-06-26). Signed tag `ovellum@0.16.0` pushed + GitHub release published;
+**no pending changesets**. Tags `ovellum@0.7.0`…`0.16.0` all up. **Ovellum's
+MCP server is now LIVE in the official MCP Registry** as `io.github.oinam/ovellum`
+(status active) — the whole AI-Native MCP arc (M1–M3 + registry) is shipped.
+**One un-pushed commit:** `0e225a4 fix(mcp): trim server.json description to
+registry's 100-char limit` (post-release repo fix; `server.json` isn't in the
+npm tarball so no republish needed — just `git push origin main`).
+
+**0.16.0 (2026-06-26) — MCP Registry listing (1 changeset):** package gains
+`mcpName: io.github.oinam/ovellum`; repo-root `server.json` manifest (npm
+`ovellum`, stdio, `packageArguments:["mcp"]`); `plugin.test.ts` guards
+name↔mcpName↔identifier (147 cli tests). Registry caps `description` at 100 chars
+(hit it on first publish; trimmed). The MCP registry treats (name,version) as
+immutable — re-`publish` of a live version returns 400 "duplicate"; bump
+`server.json` version (to match a published npm version) for any future re-submit.
 
 **0.15.0 (2026-06-26) — embeddable + AI-native MCP (4 changesets):** **D2**
 programmatic API — `import { build, watch, loadConfig, defineConfig } from
