@@ -335,3 +335,60 @@ describe('renderMarkdown — footnotes (GFM)', () => {
     expect(html).not.toContain('onerror');
   });
 });
+
+describe('component directives (B2)', () => {
+  it('renders callout directives with a default or custom label', async () => {
+    const { html, headings } = await renderMarkdown(
+      [':::note', 'Body.', ':::', '', ':::warning{title="Careful"}', 'Risky.', ':::'].join('\n'),
+    );
+    expect(html).toContain('<div class="ov-callout ov-callout--note">');
+    expect(html).toContain('<div class="ov-callout-label">Note</div>');
+    expect(html).toContain('<div class="ov-callout ov-callout--warning">');
+    expect(html).toContain('<div class="ov-callout-label">Careful</div>');
+    // Labels are <div>, never headings — they must not pollute the ToC.
+    expect(headings).toHaveLength(0);
+  });
+
+  it('renders steps with per-step titles', async () => {
+    const { html } = await renderMarkdown(
+      ['::::steps', ':::step{title="Install"}', 'Run it.', ':::', ':::step{title="Build"}', 'Build it.', ':::', '::::'].join('\n'),
+    );
+    expect(html).toContain('<div class="ov-steps">');
+    expect(html.match(/class="ov-step"/g)).toHaveLength(2);
+    expect(html).toContain('<div class="ov-step-title">Install</div>');
+    expect(html).not.toContain(':::');
+  });
+
+  it('renders a card grid; a card with href becomes a link', async () => {
+    const { html } = await renderMarkdown(
+      ['::::cards', ':::card{title="Guide" href="/docs/guide/"}', 'Read it.', ':::', ':::card{title="Plain"}', 'No link.', ':::', '::::'].join('\n'),
+    );
+    expect(html).toContain('<div class="ov-cards">');
+    expect(html).toContain('<a class="ov-card ov-component-card ov-component-card-link" href="/docs/guide/">');
+    expect(html).toContain('<div class="ov-component-card-title">Guide</div>');
+    // The plain card (no href) stays a div.
+    expect(html).toContain('<div class="ov-card ov-component-card">');
+  });
+
+  it('upgrades :::tabs into an accessible tablist + panels', async () => {
+    const { html } = await renderMarkdown(
+      ['::::tabs', ':::tab{label="npm"}', '`npm i ovellum`', ':::', ':::tab{label="pnpm"}', '`pnpm add ovellum`', ':::', '::::'].join('\n'),
+    );
+    expect(html).toContain('class="ov-tablist"');
+    expect(html).toContain('role="tablist"');
+    expect(html.match(/role="tab"/g)).toHaveLength(2);
+    expect(html.match(/role="tabpanel"/g)).toHaveLength(2);
+    // First tab is selected; the label text survives.
+    expect(html).toContain('aria-selected="true"');
+    expect(html).toContain('>npm</button>');
+    // ids wire the button to its panel.
+    expect(html).toContain('aria-controls="ovtabs-0-panel-0"');
+    expect(html).toContain('id="ovtabs-0-panel-0"');
+  });
+
+  it('does not leak ::: markers and drops unknown directives safely', async () => {
+    const { html } = await renderMarkdown([':::mystery', 'Body.', ':::'].join('\n'));
+    expect(html).not.toContain(':::');
+    expect(html).toContain('Body.');
+  });
+});

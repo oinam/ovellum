@@ -502,4 +502,44 @@
       window.scrollTo({ top: 0 });
     });
   })();
+
+  // Component tabs (`:::tabs`): show one panel at a time, wire ARIA + keyboard.
+  // Progressive enhancement — the server renders all panels visible, so with JS
+  // off the content is complete; here we hide inactive panels and add toggling.
+  (function tabs() {
+    document.querySelectorAll('.ov-tabs').forEach(function (group) {
+      var btns = Array.prototype.slice.call(group.querySelectorAll('[role="tab"]'));
+      var panels = Array.prototype.slice.call(group.querySelectorAll('[role="tabpanel"]'));
+      if (!btns.length || btns.length !== panels.length) return;
+
+      function select(i) {
+        btns.forEach(function (b, j) {
+          var on = j === i;
+          b.setAttribute('aria-selected', on ? 'true' : 'false');
+          b.tabIndex = on ? 0 : -1;
+          panels[j].hidden = !on;
+        });
+      }
+
+      // Start from whichever button the server marked selected (the first).
+      var start = btns.findIndex(function (b) {
+        return b.getAttribute('aria-selected') === 'true';
+      });
+      select(start < 0 ? 0 : start);
+
+      btns.forEach(function (btn, i) {
+        btn.addEventListener('click', function () {
+          select(i);
+        });
+        btn.addEventListener('keydown', function (e) {
+          var dir = e.key === 'ArrowRight' ? 1 : e.key === 'ArrowLeft' ? -1 : 0;
+          if (!dir) return;
+          e.preventDefault();
+          var t = (i + dir + btns.length) % btns.length;
+          select(t);
+          btns[t].focus();
+        });
+      });
+    });
+  })();
 })();

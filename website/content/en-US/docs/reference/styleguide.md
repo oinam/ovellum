@@ -107,6 +107,48 @@ GitHub-style alert blockquotes become tinted callout panels:
 > [!CAUTION]
 > A risk of data loss or a hard-to-reverse action.
 
+### Component directives
+
+The `:::` directives (see the [Components guide](/docs/guides/components/))
+rendered live. Callout with a custom label:
+
+:::tip{title="Shortcut"}
+The same panels are reachable via `:::note` / `:::warning` directives.
+:::
+
+Steps:
+
+::::steps
+:::step{title="Install"}
+`npm install -D ovellum`
+:::
+:::step{title="Initialize"}
+Run `npx ovellum init`.
+:::
+::::
+
+Cards:
+
+::::cards
+:::card{title="Manual mode" href="/docs/guides/manual-mode/"}
+Build a static site from Markdown.
+:::
+:::card{title="Components" href="/docs/guides/components/"}
+The full directive reference.
+:::
+::::
+
+Tabs:
+
+::::tabs
+:::tab{label="npm"}
+`npm install -D ovellum`
+:::
+:::tab{label="pnpm"}
+`pnpm add -D ovellum`
+:::
+::::
+
 ## Lists
 
 Unordered lists use a quiet marker in a subdued color, and nest with reduced

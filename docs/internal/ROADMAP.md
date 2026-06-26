@@ -145,10 +145,30 @@ A1 unlocks A2–A4.
       "bring your own template directory", not a component system). This is
       the single most-requested-shaped gap; everything custom today requires
       forking. Needs its own design pass (already flagged in TODO).
-- [ ] **B2 (S)** **MDX tier 1** — treat `.mdx` as Markdown: widen the two
-      `isMarkdown` regexes (`nav.ts`, `build.ts`) + reader extension list. No
-      JSX evaluation; ships `.mdx` authoring immediately. (Tier 2 full
-      `remark-mdx` stays deferred.)
+- [x] **B2 (M) — Slice 1 DONE 2026-06-26.** **Component directives** (reframed
+      from "MDX tier 1" per [`COMPETITIVE.md`](./COMPETITIVE.md) — the one real
+      authoring gap). Shipped: callouts/steps/cards/tabs via `remark-directive`
+      (`packages/site/src/directives.ts`; `remarkComponents` + post-sanitize
+      `rehypeTabs`), theme-styled + accessible, sanitize-safe (component classes
+      whitelisted; `a` className rule rebuilt). 193 site tests; `guides/components`
+      en+ja. **B2.2 still open:** `:::code-group` + `.mdx`-as-Markdown files.
+      Original spec:
+      Markdown-native block components via **`remark-directive`** (`:::name`),
+      **not** JSX/MDX (keeps output portable Markdown, no React/lock-in). All
+      theme-styled, sanitize-safe. **Slice 1 (building now):** `:::note|tip|
+      important|warning|caution` callout directives (alias the existing
+      `.ov-callout` styles; `{title="…"}` overrides the label — complements the
+      GFM `> [!NOTE]` alert syntax we already ship); `:::steps` + `:::step{title}`
+      (CSS-counter stepper); `:::cards` + `:::card{title,href}` (responsive grid;
+      `href` → linkable card); `:::tabs` + `:::tab{label}` (accessible tablist —
+      built post-sanitize like `rehypeCallouts`, with a small `script.js` toggle;
+      no-JS shows all panels). Architecture: a `remark` transform sets
+      `hName`/`hProperties` for the CSS-only ones (flow through sanitize as
+      div/a+class); `tabs` get upgraded by a **post-sanitize** rehype pass so
+      button/role/aria/data survive. Labels render as `<div>` (not headings) to
+      stay out of the ToC. **Deferred to B2.2:** `:::code-group` (tabbed code),
+      and `.mdx`-as-Markdown file support (the original B2 — widen the
+      `isMarkdown` regexes + reader extensions; no JSX eval).
 - [ ] **B3 (S)** **Wire `links.ts` into the build** — `extractMarkdownLinks()`
       exists, is exported, and is never called. Surface broken internal links
       as build warnings (and let `check` share the implementation).

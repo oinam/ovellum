@@ -1,4 +1,16 @@
 {
   "title": "Guides",
-  "order": ["manual-mode", "hybrid-mode", "development", "drafts", "assets", "themes", "i18n", "search", "deploy", "automation"]
+  "order": [
+    "manual-mode",
+    "hybrid-mode",
+    "development",
+    "drafts",
+    "assets",
+    "components",
+    "themes",
+    "i18n",
+    "search",
+    "deploy",
+    "automation"
+  ]
 }

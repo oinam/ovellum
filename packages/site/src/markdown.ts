@@ -1,6 +1,7 @@
 import { unified } from 'unified';
 import remarkParse from 'remark-parse';
 import remarkGfm from 'remark-gfm';
+import remarkDirective from 'remark-directive';
 import remarkRehype from 'remark-rehype';
 import rehypeRaw from 'rehype-raw';
 import rehypeSanitize, { defaultSchema, type Options as Schema } from 'rehype-sanitize';
@@ -11,6 +12,7 @@ import { visit } from 'unist-util-visit';
 import { createHighlighter, type Highlighter } from 'shiki';
 import type { Root, Element, ElementContent } from 'hast';
 import type { OvellumCodeTheme } from '@ovellum/core';
+import { remarkComponents, rehypeTabs, COMPONENT_CLASSES } from './directives.js';
 
 export interface Heading {
   depth: number;
@@ -100,6 +102,24 @@ const SANITIZE_SCHEMA: Schema = {
   tagNames: [...(defaultSchema.tagNames ?? []), 'video', 'audio', 'source', 'track', 'iframe'],
   attributes: {
     ...defaultSchema.attributes,
+    // Component directives (`:::note` / `:::tabs` / …) are emitted in the REMARK
+    // phase as class-tagged <div>/<a>, so their classes must survive the
+    // sanitizer. Whitelist *exactly* our component class tokens on every element
+    // (value-restricted via the `[attr, ...allowed]` tuple — authors still can't
+    // inject arbitrary classes), on top of the default `*` attrs. Tabs are then
+    // upgraded post-sanitize by `rehypeTabs` (button/role/aria are trusted).
+    '*': [...(defaultSchema.attributes?.['*'] ?? []), ['className', ...COMPONENT_CLASSES]],
+    // `a` carries its OWN className allowlist in the default schema (footnote
+    // backrefs), and an element-specific list OVERRIDES the `*` one for that
+    // attribute — so a linked `:::card` (`<a class="ov-card …">`) would lose its
+    // classes. Rebuild `a`: keep the default attrs, but replace the className
+    // tuple with one that allows the footnote backref AND the card classes.
+    a: [
+      ...(defaultSchema.attributes?.a ?? []).filter(
+        (attr) => !(Array.isArray(attr) && attr[0] === 'className'),
+      ),
+      ['className', 'data-footnote-backref', 'ov-card', 'ov-component-card', 'ov-component-card-link'],
+    ],
     // Authors writing raw <code> blocks should keep their language class
     // so shiki picks them up on the next pass; defaultSchema already permits
     // `className`, but we widen `code` explicitly to be defensive.
@@ -214,6 +234,12 @@ export async function renderMarkdown(
     // GFM enables tables, strikethrough, task lists, and literal autolinks
     // — Markdown features people expect, none of which CommonMark includes.
     .use(remarkGfm)
+    // Component directives: remark-directive parses `:::name`, then
+    // remarkComponents maps our known directives (callouts/steps/cards/tabs) to
+    // class-tagged elements. Runs in the remark phase so the structure flows
+    // through sanitize (its classes are whitelisted in SANITIZE_SCHEMA).
+    .use(remarkDirective)
+    .use(remarkComponents)
     .use(remarkRehype, { allowDangerousHtml: true })
     // rehype-raw parses `raw` HAST nodes (the literal HTML that survived
     // remark-rehype because of allowDangerousHtml) into real element nodes
@@ -227,6 +253,9 @@ export async function renderMarkdown(
     // post-sanitize so the className we add is trusted — the HAST we emit
     // here doesn't go back through sanitization.
     .use(rehypeCallouts)
+    // Upgrade `:::tabs` structure into an accessible tablist + panels. Post-
+    // sanitize (like rehypeCallouts) so the role/aria/button markup is trusted.
+    .use(rehypeTabs)
     // Narrow <iframe> to known video hosts and wrap survivors in a responsive
     // 16:9 frame. Runs post-sanitize so the schema is the outer guard and this
     // is the host allowlist — see SANITIZE_SCHEMA / IFRAME_ALLOWED_HOSTS above.
