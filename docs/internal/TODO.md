@@ -32,11 +32,34 @@ Legend: `[ ]` not started · `[~]` in progress · `[x]` done · `[!]` blocked
 
 ## Current state (2026-06-14)
 
-**Publish state (read this first):** **`ovellum@0.17.0` is live on npm**
-(2026-06-26). Signed tag `ovellum@0.17.0` pushed + GitHub release published;
-**no pending changesets**. Tags `ovellum@0.7.0`…`0.17.0` all up. **MCP Registry
-shows `io.github.oinam/ovellum@0.17.0`** (latest; 0.16.0 also listed) with the
-new tagline. Tree clean, fully pushed.
+**Publish state (read this first):** **`ovellum@0.18.0` is live on npm**
+(2026-06-26). Signed tag `ovellum@0.18.0` pushed + GitHub release published;
+**no pending changesets**. Tags `ovellum@0.7.0`…`0.18.0` all up. **MCP Registry
+shows `io.github.oinam/ovellum@0.18.0`** (latest; 0.16.0/0.17.0 also listed).
+Tree clean, fully pushed. Released via `./publish.sh --npmotp=<code>`.
+
+**0.18.0 (2026-06-26) — Mermaid + Copy-for-LLM + B2/B2.2 (4 changesets):**
+**Component directives** (B2) — `:::note|tip|important|warning|caution`,
+`::::steps`/`:::step`, `::::cards`/`:::card{href}`, `::::tabs`/`:::tab` via
+`remark-directive` (`packages/site/src/directives.ts`: `remarkComponents` +
+post-sanitize `rehypeTabs`; component classes whitelisted in `SANITIZE_SCHEMA`;
+nested containers need one extra colon). **B2.2** — `:::code-group` (tabbed code,
+reuses tabs path) + `.mdx`-as-Markdown (widened `isMarkdown`/`stem`/`urlFor`).
+**Mermaid** — ```mermaid → `<pre class="mermaid">` (`rehypeMermaid`); runtime
+lazy-loaded client-side **only on diagram pages** from a pinned CDN
+(`<html data-ov-mermaid>`); `site.mermaid:{enabled?,url?}` to disable/self-host;
+no-JS = source fallback. **Copy-for-LLM** — per-page `.ov-page-actions` (Copy
+page / View as Markdown / Open in ChatGPT|Claude when `site.baseUrl` set);
+`renderPageActions`, build passes `markdownUrl`, i18n strings. Hero `<h1>` widened
+to 30ch + `text-wrap:balance` (0.17.x carryover). 195 site + 147 cli tests; docs
+en+ja; live examples in styleguide. **Closes COMPETITIVE adopt #1 (components),
+#2 (mermaid), #4 (copy-for-LLM).**
+
+**Recurring dev gotcha (still unfixed):** the CLI bundles `@ovellum/site` source;
+turbo's cli hash misses site `src` changes → after editing `packages/site/src/**`,
+run `npx turbo run build --filter=ovellum --force` before building the website
+(else stale bundle: feature passes vitest but doesn't render in the built site).
+Real fix queued = widen cli build inputs in `turbo.json` (small tech-debt item).
 
 **0.17.0 (2026-06-26) — landing feature links + description sync (2 changesets):**
 **B-tier slice** `site.landing.features[].href` → linkable feature cards
