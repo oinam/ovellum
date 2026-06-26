@@ -8,6 +8,7 @@ Technical identifier: `ovellum` - for npm, CLI, folders, and domains.
 
 - Site https://ovellum.oss.oinam.com
 - Source https://github.com/oinam/ovellum
+- MCP Registry https://registry.modelcontextprotocol.io (listed as `io.github.oinam/ovellum`)
 
 ---
 
