@@ -163,6 +163,10 @@ The server runs in your project directory, so install `ovellum` there (or pass
 `--cwd`). (VS Code's `.vscode/mcp.json` uses a `"servers"` key instead of
 `"mcpServers"`; the value is the same.)
 
+Ovellum is also listed in the
+[MCP Registry](https://registry.modelcontextprotocol.io) as
+`io.github.oinam/ovellum`, so clients that browse the registry can discover it.
+
 ## Telling agents how to use Ovellum
 
 Two artifacts meet agents where they look:

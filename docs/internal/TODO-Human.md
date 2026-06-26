@@ -8,19 +8,7 @@ Legend: `[ ]` not started · `[~]` in progress · `[x]` done · `[!]` blocked
 
 ---
 
-## Prose & content
-
-Public-facing writing. Voice matters; better drafted by a person and refined
-rather than generated.
-
-### `CONTRIBUTING.md` (final)
-
-- [ ] Expand the scaffolded CONTRIBUTING.md with:
-  - Dev setup (clone, `pnpm install`, `pnpm -w run demo`)
-  - How to run tests (`pnpm exec turbo run test --filter='@ovellum/*'`)
-  - PR process: branch naming, commit cadence, review expectations
-  - Release process (changesets workflow)
-  - Code of conduct pointer
+If people are contributing, they will be using an AI. Update `CONTRIBUTING.md` listing out how to use AI tools to contribute. Ovellum should be AI-Native by default.
 
 ### Self-hosted `docs/` (Ovellum documenting itself, hybrid mode)
 
@@ -91,12 +79,21 @@ GitHub notes, plus failure modes and changeset gotchas).
 
 ### MCP distribution (M2 follow-up)
 
-- [ ] **Submit the MCP server to the registry / connector directories.** The
-  Claude Code plugin + marketplace (`plugins/ovellum/`, `.claude-plugin/
-  marketplace.json`) and the `npx ovellum mcp` config ship in the repo, but
-  listing in the public MCP registry / Cursor & Windsurf directories is an
-  account/submission action only a human can do. Server command:
-  `npx -y ovellum mcp`.
+- [ ] **Submit the MCP server to the official registry.** Everything in-repo is
+  ready as of 0.16.0: `packages/cli/package.json` has `mcpName:
+  io.github.oinam/ovellum`, and repo-root `server.json` is the manifest
+  (registry `https://registry.modelcontextprotocol.io`, in preview). **Steps
+  (run after `ovellum@0.16.0` is live on npm — the registry verifies `mcpName`
+  from the published package):**
+  1. `brew install mcp-publisher`
+  2. `mcp-publisher login github` (device-code flow; auth as `oinam` so the
+     `io.github.oinam/*` namespace is allowed)
+  3. `mcp-publisher publish --dry-run` (validates `server.json` incl. the `mcp`
+     packageArgument), then `mcp-publisher publish`
+  4. Verify: `curl "https://registry.modelcontextprotocol.io/v0.1/servers?search=io.github.oinam/ovellum"`
+  - **On each future re-publish:** bump `server.json` `version` + `packages[].version`
+    to the new npm version first (the repo test guards name/identifier, not version).
+  - Optional later: Cursor / Windsurf connector directories (separate submissions).
 
 ### v0.1.0 / launch backlog
 

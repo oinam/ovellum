@@ -370,8 +370,11 @@ the three surfaces (read / drive / know); these deepen *drive* + distribution.
       `/plugin marketplace add oinam/ovellum` + `/plugin install`. Cross-tool
       install snippets (Cursor/Windsurf/Cline/VS Code) in the Automation guide.
       `mcp` added to the notifier skip list (headless-clean). Pinned by
-      `plugin.test.ts`. **Remaining (human / external):** submit to the MCP
-      registry / connector directories (TODO-Human).
+      `plugin.test.ts`. **Registry manifest done 2026-06-26 (0.16.0):** package
+      `mcpName` `io.github.oinam/ovellum` + repo-root `server.json` (npm
+      `ovellum`, `packageArguments:["mcp"]`); `plugin.test.ts` guards
+      name↔mcpName↔identifier. **Remaining (human):** run `mcp-publisher login
+      github` + `publish` after 0.16.0 is on npm (TODO-Human).
 - [x] **M3 (M)** **Round out tools + moat.** **Done 2026-06-25:**
       `ovellum_search_docs` — in-process term-frequency search over the built
       `.md` (`dev/mcp/search.ts`); **not** Pagefind (its query runtime is

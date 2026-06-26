@@ -45,3 +45,26 @@ describe('Claude Code plugin (M2)', () => {
     expect(existsSync(path.join(repoRoot, 'skills/ovellum-docs/SKILL.md'))).toBe(false);
   });
 });
+
+describe('MCP registry manifest (server.json)', () => {
+  const server = readJson('server.json');
+  const pkg = readJson('packages/cli/package.json');
+
+  it('server name matches the package mcpName (registry ownership check)', () => {
+    expect(server.name).toBe('io.github.oinam/ovellum');
+    expect(pkg.mcpName).toBe(server.name);
+  });
+
+  it('points at the published npm package and passes the `mcp` subcommand', () => {
+    const packages = server.packages as Array<{
+      registryType: string;
+      identifier: string;
+      transport: { type: string };
+      packageArguments?: Array<{ type: string; value: string }>;
+    }>;
+    const npm = packages.find((p) => p.registryType === 'npm');
+    expect(npm?.identifier).toBe(pkg.name); // 'ovellum'
+    expect(npm?.transport.type).toBe('stdio');
+    expect(npm?.packageArguments?.some((a) => a.value === 'mcp')).toBe(true);
+  });
+});

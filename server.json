@@ -1,0 +1,23 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "io.github.oinam/ovellum",
+  "title": "Ovellum",
+  "description": "Documentation for TypeScript/JavaScript that AI agents can read and safely edit — query symbols, diff, search, and write into protected zones that survive regeneration.",
+  "websiteUrl": "https://ovellum.oss.oinam.com",
+  "repository": {
+    "url": "https://github.com/oinam/ovellum",
+    "source": "github"
+  },
+  "version": "0.16.0",
+  "packages": [
+    {
+      "registryType": "npm",
+      "identifier": "ovellum",
+      "version": "0.16.0",
+      "transport": { "type": "stdio" },
+      "packageArguments": [
+        { "type": "positional", "value": "mcp" }
+      ]
+    }
+  ]
+}
