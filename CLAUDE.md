@@ -3,7 +3,7 @@
 Ovellum is an open-source documentation tool for TypeScript and JavaScript: a
 merge engine that lets auto-generated API docs and hand-written prose live in
 the same files, plus a Jekyll-style static-site builder for purely manual docs.
-TypeScript monorepo, pnpm + turbo. Published package: `ovellum` (**0.18.0**,
+TypeScript monorepo, pnpm + turbo. Published package: `ovellum` (**0.19.0**,
 live on npm). Site: <https://ovellum.oss.oinam.com>.
 
 ## Your role

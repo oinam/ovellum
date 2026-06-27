@@ -32,11 +32,38 @@ Legend: `[ ]` not started · `[~]` in progress · `[x]` done · `[!]` blocked
 
 ## Current state (2026-06-14)
 
-**Publish state (read this first):** **`ovellum@0.18.0` is live on npm**
-(2026-06-26). Signed tag `ovellum@0.18.0` pushed + GitHub release published;
-**no pending changesets**. Tags `ovellum@0.7.0`…`0.18.0` all up. **MCP Registry
-shows `io.github.oinam/ovellum@0.18.0`** (latest; 0.16.0/0.17.0 also listed).
-Tree clean, fully pushed. Released via `./publish.sh --npmotp=<code>`.
+**Publish state (read this first):** **`ovellum@0.19.0` is live on npm**
+(2026-06-27). Signed tag `ovellum@0.19.0` pushed + GitHub release published;
+**no pending changesets**. Tags `ovellum@0.7.0`…`0.19.0` all up. **MCP Registry
+shows `io.github.oinam/ovellum@0.19.0`** (latest; 0.16.0–0.18.0 also listed).
+Tree clean, fully pushed. Released via `./publish.sh --npmotp=<code>`. **Release
+gotcha (hit 0.19.0):** `npm publish` failed `E404 PUT /ovellum` — that's npm's
+misleading code for an **expired auth token** (it 404s instead of 401 on publish
+to avoid leaking existence). Fix: `npm login` (the `--npmotp` is only the 2FA
+code for the publish, not a login). publish.sh is idempotent — it had already
+pushed main, so re-running after `npm login` resumed cleanly from `npm publish`.
+
+**0.19.0 (2026-06-27) — versioned docs + composable landing + custom fonts +
+per-locale RSS + CLI polish (6 changesets):** **B6 versioned docs** —
+`site.versions:[{id,label?,latest?}]`, directory-per-version (`content/<id>/`),
+latest at root + others `/<id>/`, topbar version picker; built by generalizing
+`resolveLocaleSpecs` → spec per (version × locale), version = outer prefix, so
+sitemap/RSS/llms/404 follow free; `buildVersionAlternates` (cross-version, same
+locale) + locale picker filtered to same version; composes with i18n; unversioned
+= byte-identical. **B5 composable landing** — `site.landing.sections[]` typed
+blocks (hero|install|features|trust|scene|prose|custom-html); flat config = the
+data source/shorthand; unset = byte-identical. **B4 custom fonts** — `site.font`
+accepts `{body,mono?,source?,label?}`; `[data-font="custom"]` rule + source
+`<link>` + picker entry. **Per-locale RSS** — `/<code>/feed.xml` per locale
+(`generateRss` `localePrefix`). **U5** `dev --verbose` request log + clearer
+upgrade/dev/init messages. **U3** init scaffolds a `@manual` example in hybrid.
+204 site + 149 cli tests; docs en+ja (incl. new versioning guide). **B6 slice-2
+deferred:** old-version noindex/sitemap-exclusion, "old version" banner, a
+`version snapshot` command. **Also this session (no release needed):** fixed the
+recurring **turbo stale-CLI-bundle gotcha** (`packages/cli/turbo.json` widens
+build inputs to `$TURBO_ROOT$/packages/*/src/**` — no more `--force` after site
+src edits); resolved **B3** (extractMarkdownLinks already wired into `check`;
+build-time link warnings deliberately declined); **U6** docs quick-wins.
 
 **0.18.0 (2026-06-26) — Mermaid + Copy-for-LLM + B2/B2.2 (4 changesets):**
 **Component directives** (B2) — `:::note|tip|important|warning|caution`,
