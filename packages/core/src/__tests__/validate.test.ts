@@ -85,6 +85,21 @@ describe('validateUserConfig', () => {
     expect(() => validateUserConfig({ site: { font: 'comic-sans' } })).toThrow(/site\.font/);
   });
 
+  it('accepts a custom site.font object and rejects malformed ones', () => {
+    const ok = { site: { font: { body: "'Brand', system-ui", mono: 'Menlo', source: ['/f.css'], label: 'Brand' } } };
+    expect(validateUserConfig(ok)).toEqual(ok);
+    expect(validateUserConfig({ site: { font: { body: 'Brand' } } })).toEqual({ site: { font: { body: 'Brand' } } });
+    // body is required and non-empty.
+    expect(() => validateUserConfig({ site: { font: {} } })).toThrow(/site\.font\.body/);
+    expect(() => validateUserConfig({ site: { font: { body: '  ' } } })).toThrow(/site\.font\.body/);
+    // CSS-breaking characters in family values are rejected.
+    expect(() => validateUserConfig({ site: { font: { body: 'Brand}x' } } })).toThrow(/< > \{ \} ;/);
+    // Dangerous source schemes are rejected.
+    expect(() => validateUserConfig({ site: { font: { body: 'Brand', source: 'javascript:alert(1)' } } })).toThrow(
+      /site\.font\.source/,
+    );
+  });
+
   it('accepts site.dateFormat humanized/iso and rejects an unknown one', () => {
     for (const dateFormat of ['humanized', 'iso']) {
       expect(validateUserConfig({ site: { dateFormat } })).toEqual({ site: { dateFormat } });

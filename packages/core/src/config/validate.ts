@@ -182,8 +182,38 @@ export function validateUserConfig(input: unknown): OvellumUserConfig {
     if (s.accent !== undefined && (typeof s.accent !== 'string' || s.accent.trim() === '')) {
       throw new ConfigError('`site.accent` must be a non-empty CSS color string.');
     }
-    if (s.font !== undefined && !FONTS.includes(s.font as (typeof FONTS)[number])) {
-      throw new ConfigError(`\`site.font\` must be one of: ${FONTS.join(', ')}.`);
+    if (s.font !== undefined) {
+      if (isPlainObject(s.font)) {
+        // Custom font object: `body` required; `mono`/`label` optional strings;
+        // `source` an optional string or string[]. Reject CSS-breaking chars in
+        // the family values (defense-in-depth; they're injected into a <style>).
+        const f = s.font;
+        if (typeof f.body !== 'string' || f.body.trim() === '') {
+          throw new ConfigError('`site.font.body` must be a non-empty font-family string.');
+        }
+        for (const key of ['body', 'mono', 'label'] as const) {
+          const v = f[key];
+          if (v !== undefined && typeof v !== 'string') {
+            throw new ConfigError(`\`site.font.${key}\` must be a string.`);
+          }
+          if (typeof v === 'string' && /[<>{};]/.test(v)) {
+            throw new ConfigError(`\`site.font.${key}\` must not contain \`< > { } ;\`.`);
+          }
+        }
+        const sources = f.source === undefined ? [] : Array.isArray(f.source) ? f.source : [f.source];
+        for (const src of sources) {
+          if (typeof src !== 'string' || src.trim() === '') {
+            throw new ConfigError('`site.font.source` must be a stylesheet URL or an array of URLs.');
+          }
+          if (/^\s*(javascript|data|vbscript):/i.test(src)) {
+            throw new ConfigError('`site.font.source` must be an http(s) or relative URL.');
+          }
+        }
+      } else if (!FONTS.includes(s.font as (typeof FONTS)[number])) {
+        throw new ConfigError(
+          `\`site.font\` must be one of: ${FONTS.join(', ')} — or a { body, mono?, source?, label? } object.`,
+        );
+      }
     }
     if (
       s.dateFormat !== undefined &&

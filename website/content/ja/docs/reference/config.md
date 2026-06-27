@@ -1,7 +1,7 @@
 ---
 title: 設定
 description: ovellum.config.{json,ts,js} のすべてのフィールドと、その型・デフォルト値・効果。
-sourceHash: '29759d7135b58804'
+sourceHash: 'ca6180364c2b081e'
 ---
 
 # 設定
@@ -103,7 +103,8 @@ interface OvellumSiteConfig {
   defaultTheme: 'auto' | 'light' | 'dark';
   palette: 'default' | 'nord' | 'flexoki' | 'solarized' | 'eink';
   accent?: string;
-  font: 'sans' | 'serif' | 'inter' | 'geist';
+  font: 'sans' | 'serif' | 'inter' | 'geist'
+    | { body: string; mono?: string; source?: string | string[]; label?: string };
   dateFormat: 'humanized' | 'iso';
   codeTheme: 'github' | 'nord' | 'solarized';
   footer: string;
@@ -139,7 +140,7 @@ interface OvellumSiteConfig {
 | `defaultTheme`   | `'auto' \| 'light' \| 'dark'`       | `'auto'`                      | ユーザーの設定が読み込まれる前の初期ライト／ダークモード。閲覧者はトップバーの外観コントロールから変更できます（`localStorage` に保存）。                                                                                  |
 | `palette`        | `'default' \| 'nord' \| 'flexoki' \| 'solarized' \| 'eink'` | `'default'`  | ユーザーの設定が読み込まれる前の初期のページ全体のカラーパレット（`'default'` はピッカーでは「Ovellum」と表示）。すべてのパレットはライト**と**ダークの両方のバリアントを備え、モードの選択とは独立しています。閲覧者はトップバーの外観コントロールからパレットを切り替えられます。            |
 | `accent`         | `string?`                           | `undefined`                   | デフォルトのプライマリカラー。任意の CSS カラー値（`'#3b82f6'`、`'oklch(57% 0.16 255)'` など）。CTA ボタンに加え、リンク、フォーカスリング、目次インジケーターを制御します。ホバー状態は自動的にブレンドされます。未設定 = 各パレット固有のプライマリ。閲覧者は外観コントロール（「Color」）から上書きできます。 |
-| `font`           | `'sans' \| 'serif' \| 'inter' \| 'geist'` | `'sans'`                | 初期の本文フォント、およびページ内の **Font** ピッカーのデフォルト。`'sans'` / `'serif'` はシステムフォントスタックです（ウェブフォントなし — 初回描画が即座）。`'inter'` / `'geist'` は**テンプレートにバンドルされた**ウェブフォントで（`/assets/fonts/` から配信）、実際にページで使われたときだけ読み込まれます。コードは常に等幅のままです。閲覧者は外観コントロールからフォントをライブで変更でき、読みやすさのための **Text size**（5 段階）も調整できます。どちらも `localStorage` に保存されます。 |
+| `font`           | `'sans' \| 'serif' \| 'inter' \| 'geist'` またはカスタムフォントオブジェクト | `'sans'`                | 初期の本文フォント、およびページ内の **Font** ピッカーのデフォルト。`'sans'` / `'serif'` はシステムフォントスタックです（ウェブフォントなし — 初回描画が即座）。`'inter'` / `'geist'` は**テンプレートにバンドルされた**ウェブフォントで（`/assets/fonts/` から配信）、実際にページで使われたときだけ読み込まれます。**`{ body, mono?, source?, label? }`** オブジェクトを渡すと、自前のセルフホストフォントを使えます — 下記の[カスタムフォント](#custom-fonts)を参照。`mono` を設定しない限りコードは等幅のままです。閲覧者は外観コントロールからフォントをライブで変更でき、読みやすさのための **Text size**（5 段階）も調整できます。どちらも `localStorage` に保存されます。 |
 | `dateFormat`     | `'humanized' \| 'iso'`              | `'humanized'`                 | ページの **Edited** 行の日付の表示方法。`'humanized'` → 最近の編集は `today` / `yesterday`（ビルド時点を基準）、それ以外は親しみやすい `Jun 14, 2026`。`'iso'` → 生の `2026-06-14`。いずれの場合も、機械可読な日付は常に `<time datetime>` 属性に入ります。 |
 | `codeTheme`      | `'github' \| 'nord' \| 'solarized'` | `'github'`                    | フェンス付きコードブロック用の Shiki テーマペア。ペアの両方が CSS 変数で出力されるため、1 回のビルドでライトとダークの両方を配信します。`github` → github-light + github-dark、`nord` → min-light + nord（nord はダーク専用）、`solarized` → solarized-light + solarized-dark。 |
 | `footer`         | `string`                            | `''`                          | フッターのテキスト（例: 著作権表示。ビルド日付とともにレンダリングされます）。空文字列にするとフッターテキストは表示されません。 |
@@ -166,6 +167,25 @@ interface OvellumSiteConfig {
 | `href`     | `string`  | 内部パス（`/guides/themes/`）または絶対 URL。                                                                               |
 | `icon`     | `string?` | レジストリのアイコン名（`github`、`package`、`rss`、`mail` など）。デスクトップではアイコンのみ、モバイルのシートではアイコン + ラベルでレンダリングされます。      |
 | `external` | `boolean?`| 外部リンクの扱いを強制します（新しいタブ + `rel="noopener"`）。`href` が `http://` または `https://` で始まる場合は自動的に true になります。           |
+
+### カスタムフォント <a id="custom-fonts"></a>
+
+`site.font` を（`'sans' | 'serif' | 'inter' | 'geist'` のキーワードではなく）
+オブジェクトに設定すると、自前のセルフホストフォントを使えます。Ovellum はそれを
+デフォルトにし（`<html data-font="custom">`）、あなたの `@font-face` スタイルシートを
+`<head>` にリンクし、読者の **Font** ピッカーに（そのフォント自身で
+プレビューして）追加します — 閲覧者はバンドルフォントへ切り替えることもできます。
+詳しい手順は[テーマガイド](/ja/docs/guides/themes/#bringing-your-own-font)を参照してください。
+
+| Field    | Type                   | Notes                                                                                                                  |
+| -------- | ---------------------- | --------------------------------------------------------------------------------------------------------------------- |
+| `body`   | `string`               | **必須。** 本文・見出し・プロース用の `font-family` スタック（`--font-body` を駆動）。フォールバックを含めてください。 |
+| `mono`   | `string?`              | コード用の `font-family` スタック（`--font-mono`）。省略するとシステム等幅のままです。                                |
+| `source` | `string \| string[]?` | `@font-face` 規則を持つスタイルシートの URL（複数可）— 通常は `publicDir` 内のファイル（`'/fonts.css'`）。`<link rel="stylesheet">` として追加されます。FOUT 制御には `font-display: swap` を使ってください。 |
+| `label`  | `string?`              | ピッカーでのこのフォントのラベル。デフォルトは `'Custom'`。                                                             |
+
+`font-family` の値に `< > { } ;` は使えません（`<style>` に注入されるため）。
+`source` は `http(s)` または相対 URL でなければなりません。
 
 ### `search`
 

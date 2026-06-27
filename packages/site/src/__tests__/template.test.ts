@@ -338,6 +338,58 @@ describe('renderPage', () => {
     expect(html).toContain('data-font="sans"');
   });
 
+  it('supports a custom site.font object (B4): source link, scoped vars, picker entry', () => {
+    const html = renderPage({
+      site: {
+        title: 'X',
+        defaultTheme: 'auto',
+        footer: '',
+        font: {
+          body: "'Brand Sans', system-ui",
+          mono: 'Menlo, monospace',
+          source: '/fonts.css',
+          label: 'Brand',
+        },
+      },
+      nav: NAV,
+      url: '/',
+      title: 'X',
+      bodyHtml: '',
+      headings: [],
+      generatedAt: '2026-06-12T00:00:00.000Z',
+    });
+    // Default font is the custom one; readers can still switch via the picker.
+    expect(html).toContain('data-font="custom"');
+    expect(html).toContain('<link rel="stylesheet" href="/fonts.css">');
+    expect(html).toContain(
+      `[data-font="custom"]{ --font-body: 'Brand Sans', system-ui; --font-mono: Menlo, monospace; }`,
+    );
+    // Picker gains a "Brand"-labelled custom entry, previewed in its own family.
+    expect(html).toContain('data-ov-font="custom"');
+    expect(html).toContain('style="font-family:&#39;Brand Sans&#39;, system-ui"');
+    expect(html).toContain('Brand');
+  });
+
+  it('sanitizes CSS-breaking characters; absolute source URLs pass through', () => {
+    // Belt-and-braces: even if validation were bypassed, the family is sanitized.
+    const html = renderPage({
+      site: {
+        title: 'X',
+        defaultTheme: 'auto',
+        footer: '',
+        font: { body: 'Brand} body{display:none', source: 'http://cdn.test/f.css' },
+      },
+      nav: NAV,
+      url: '/',
+      title: 'X',
+      bodyHtml: '',
+      headings: [],
+      generatedAt: '2026-06-12T00:00:00.000Z',
+    });
+    expect(html).not.toContain('body{display:none');
+    expect(html).toContain('<link rel="stylesheet" href="http://cdn.test/f.css">');
+  });
+
   it('renders the language picker, <html lang>, and hreflang for i18n pages', () => {
     const html = renderPage({
       site: { title: 'X', defaultTheme: 'auto', footer: '', baseUrl: 'https://x.test' },

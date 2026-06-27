@@ -103,7 +103,8 @@ interface OvellumSiteConfig {
   defaultTheme: 'auto' | 'light' | 'dark';
   palette: 'default' | 'nord' | 'flexoki' | 'solarized' | 'eink';
   accent?: string;
-  font: 'sans' | 'serif' | 'inter' | 'geist';
+  font: 'sans' | 'serif' | 'inter' | 'geist'
+    | { body: string; mono?: string; source?: string | string[]; label?: string };
   dateFormat: 'humanized' | 'iso';
   codeTheme: 'github' | 'nord' | 'solarized';
   footer: string;
@@ -139,7 +140,7 @@ interface OvellumSiteConfig {
 | `defaultTheme`   | `'auto' \| 'light' \| 'dark'`       | `'auto'`                      | Initial light/dark mode before user preference loads. Visitors can change it from the topbar appearance control (persisted in `localStorage`).                                                                                  |
 | `palette`        | `'default' \| 'nord' \| 'flexoki' \| 'solarized' \| 'eink'` | `'default'`  | Initial page-wide color palette before user preference loads (`'default'` displays as "Ovellum" in the picker). Every palette ships light **and** dark variants; the mode choice stays independent. Visitors can switch palettes from the topbar appearance control.            |
 | `accent`         | `string?`                           | `undefined`                   | Default primary color — any CSS color value (`'#3b82f6'`, `'oklch(57% 0.16 255)'`, …). Drives the CTA buttons plus links, focus rings, and the ToC indicator; hover states are mixed automatically. Unset = each palette's own primary. Visitors can override it from the appearance control ("Color"). |
-| `font`           | `'sans' \| 'serif' \| 'inter' \| 'geist'` | `'sans'`                | Initial body font, and the default for the in-page **Font** picker. `'sans'` / `'serif'` are system-font stacks (no webfont — instant first paint). `'inter'` / `'geist'` are webfonts **bundled with the template** (served from `/assets/fonts/`) that load only when a page actually uses them. Code always stays monospace. Visitors can change the font live from the appearance control; they can also bump the reading **Text size** (a five-step scale). Both persist in `localStorage`. |
+| `font`           | `'sans' \| 'serif' \| 'inter' \| 'geist'` or a custom-font object | `'sans'`                | Initial body font, and the default for the in-page **Font** picker. `'sans'` / `'serif'` are system-font stacks (no webfont — instant first paint). `'inter'` / `'geist'` are webfonts **bundled with the template** (served from `/assets/fonts/`) that load only when a page actually uses them. Pass a **`{ body, mono?, source?, label? }`** object to bring your own self-hosted family — see [custom fonts](#custom-fonts) below. Code always stays monospace unless you set `mono`. Visitors can change the font live from the appearance control; they can also bump the reading **Text size** (a five-step scale). Both persist in `localStorage`. |
 | `dateFormat`     | `'humanized' \| 'iso'`              | `'humanized'`                 | How the page **Edited** line renders its date. `'humanized'` → `today` / `yesterday` (relative to build time) for recent edits, otherwise a friendly `Jun 14, 2026`. `'iso'` → the raw `2026-06-14`. The machine-readable date is always in the `<time datetime>` attribute regardless. |
 | `codeTheme`      | `'github' \| 'nord' \| 'solarized'` | `'github'`                    | Shiki theme pair for fenced code blocks. Both halves of the pair are emitted via CSS variables so a single build serves both light and dark. `github` → github-light + github-dark; `nord` → min-light + nord (nord ships dark-only); `solarized` → solarized-light + solarized-dark. |
 | `footer`         | `string`                            | `''`                          | Footer text, e.g. a copyright line (rendered with the build date). Empty string shows no footer text. |
@@ -166,6 +167,25 @@ interface OvellumSiteConfig {
 | `href`     | `string`  | Internal path (`/guides/themes/`) or absolute URL.                                                                               |
 | `icon`     | `string?` | Registry icon name (`github`, `package`, `rss`, `mail`, …). Renders icon-only on desktop; icon + label in the mobile sheet.      |
 | `external` | `boolean?`| Force the external treatment (new tab + `rel="noopener"`). Auto-true when `href` starts with `http://` or `https://`.           |
+
+### Custom fonts
+
+Set `site.font` to an object (instead of a `'sans' | 'serif' | 'inter' | 'geist'`
+keyword) to use your own self-hosted family. Ovellum makes it the default
+(`<html data-font="custom">`), links your `@font-face` stylesheet in the
+`<head>`, and adds it to the reader's **Font** picker (previewed in its own
+family) — so visitors can still switch to the built-ins. See the
+[themes guide](/docs/guides/themes/#bringing-your-own-font) for the full walkthrough.
+
+| Field    | Type                   | Notes                                                                                                                  |
+| -------- | ---------------------- | --------------------------------------------------------------------------------------------------------------------- |
+| `body`   | `string`               | **Required.** `font-family` stack for body, headings, and prose (drives `--font-body`). Include fallbacks.             |
+| `mono`   | `string?`              | `font-family` stack for code (`--font-mono`). Omit to keep the system monospace.                                       |
+| `source` | `string \| string[]?` | Stylesheet URL(s) holding the `@font-face` rules — typically a file in `publicDir` (`'/fonts.css'`). Added as `<link rel="stylesheet">`. Use `font-display: swap` in it to control FOUT. |
+| `label`  | `string?`              | Picker label for this font. Defaults to `'Custom'`.                                                                    |
+
+Family values may not contain `< > { } ;` (they're injected into a `<style>`),
+and `source` must be an `http(s)` or relative URL.
 
 ### `search`
 

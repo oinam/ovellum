@@ -177,10 +177,19 @@ A1 unlocks A2–A4.
       would re-run the per-locale link scan on every `build` (slower, noisier) and
       crosses the build/check separation — `check` is the lint gate (run it in CI
       next to `build`). No code change; closing the item.
-- [ ] **B4 (M)** **Custom fonts via config** — `site.font` accepts an object
-      (`{ body, mono, source }`); the website's self-hosted Geist setup is the
-      working blueprint (`data-typeface` + pre-paint script + `@font-face` in
-      userland CSS). Includes the FOUT/opt-out story per STYLES.md §1.3.
+- [x] **B4 (M) — DONE 2026-06-27.** **Custom fonts via config** — `site.font`
+      accepts `{ body, mono?, source?, label? }` (alongside the
+      `'sans'|'serif'|'inter'|'geist'` keywords). Build sets
+      `<html data-font="custom">`, injects a `[data-font="custom"]` rule mapping
+      `--font-body`/`--font-mono` (after the base CSS so it wins, under
+      `[data-font]` so the picker still overrides), `<link>`s the `source`
+      stylesheet(s), and adds a custom entry to the reader's Font picker
+      (previewed in its own family). FOUT = the author's `font-display` call
+      (STYLES.md §1.3); docs recommend `swap`/`optional`. Family values
+      sanitized + validated (no `< > { } ;`); `source` must be http(s)/relative.
+      Core `OvellumCustomFont` type + validation; `template.ts`
+      `renderCustomFontHead`; themes + config docs rewritten (en+ja). Pinned by
+      template (2) + validate (1) tests.
 - [ ] **B5 (M)** **Composable landing** — `site.landing.sections: [...]`
       ordered typed blocks (hero | features | install | prose | trust |
       scene | custom-html); current flat config stays as shorthand. First

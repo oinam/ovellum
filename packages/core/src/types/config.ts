@@ -40,6 +40,31 @@ export type OvellumDefaultTheme = 'auto' | 'light' | 'dark';
 export type OvellumFont = 'sans' | 'serif' | 'inter' | 'geist';
 
 /**
+ * A custom (typically self-hosted) body font, supplied to `site.font` instead of
+ * one of the built-in {@link OvellumFont} keywords. Brings your brand typeface to
+ * the default template with no `headExtra` hacking: the build sets the font as
+ * the default, loads your `@font-face` stylesheet, and still offers it (plus the
+ * built-ins) in the reader's font picker.
+ */
+export interface OvellumCustomFont {
+  /**
+   * `font-family` stack for body text, headings, and prose (drives
+   * `--font-body`). Include fallbacks, e.g. `"'Brand Sans', system-ui, sans-serif"`.
+   */
+  body: string;
+  /** Optional `font-family` stack for code (`--font-mono`). Defaults to the built-in mono. */
+  mono?: string;
+  /**
+   * Stylesheet URL(s) holding the `@font-face` declarations — typically a small
+   * CSS file in `publicDir` (e.g. `'/fonts.css'`). Each is added as a
+   * `<link rel="stylesheet">`. Use `font-display: swap` in it to control FOUT.
+   */
+  source?: string | string[];
+  /** Label for this font in the reader's picker. Defaults to `'Custom'`. */
+  label?: string;
+}
+
+/**
  * How dates render (today, the page "Edited" line). `'humanized'` (default)
  * shows `today` / `yesterday` / `Jun 14, 2026`; `'iso'` shows the raw
  * `2026-06-14`. The relative words (`today`/`yesterday`) are computed against
@@ -403,8 +428,12 @@ export interface OvellumSiteConfig {
    * appearance control.
    */
   accent?: string;
-  /** Body font family for the whole site. Defaults to `'sans'`. */
-  font: OvellumFont;
+  /**
+   * Body font for the whole site. A built-in keyword (`'sans'` default,
+   * `'serif'`, or the bundled `'inter'` / `'geist'`), or an
+   * {@link OvellumCustomFont} object to bring your own self-hosted typeface.
+   */
+  font: OvellumFont | OvellumCustomFont;
   /**
    * Date display style — drives the page "Edited" line. `'humanized'`
    * (default) → `today` / `yesterday` / `Jun 14, 2026`; `'iso'` → `2026-06-14`.

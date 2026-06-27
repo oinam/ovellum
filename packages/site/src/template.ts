@@ -1,4 +1,9 @@
-import type { OvellumDateFormat, OvellumLandingConfig, OvellumSiteConfig } from '@ovellum/core';
+import type {
+  OvellumCustomFont,
+  OvellumDateFormat,
+  OvellumLandingConfig,
+  OvellumSiteConfig,
+} from '@ovellum/core';
 import { ICONS, renderIcon, type IconName } from './icons.js';
 import type { Heading } from './markdown.js';
 import type { NavNode } from './nav.js';
@@ -9,6 +14,29 @@ import { assetsPrefix as assetsPrefixFor, normaliseBasePath, siteUrl } from './u
 /** Pinned Mermaid ESM build, lazy-loaded on diagram pages (overridable via
  *  `site.mermaid.url` to self-host). Pin the major so it can't shift under us. */
 const DEFAULT_MERMAID_URL = 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs';
+
+/**
+ * `<head>` markup for a custom `site.font`: the `@font-face` source stylesheet
+ * link(s) plus a `[data-font="custom"]` rule mapping `--font-body` (and
+ * optionally `--font-mono`). The rule sits after the base stylesheet so it wins
+ * by source order, yet stays under `[data-font]` so a reader's picker choice
+ * (e.g. `sans`) still overrides it. Family values are stripped of CSS-breaking
+ * characters (also rejected by config validation).
+ */
+function renderCustomFontHead(font: OvellumCustomFont, basePath: string): string {
+  const sources = font.source === undefined ? [] : Array.isArray(font.source) ? font.source : [font.source];
+  const links = sources
+    .map((src) => {
+      const href = /^https?:\/\//i.test(src) ? src : siteUrl(src, basePath);
+      return `<link rel="stylesheet" href="${escapeAttr(href)}">`;
+    })
+    .join('\n  ');
+  const cssValue = (v: string): string => v.replace(/[<>{};]/g, '').trim();
+  const decls = [`--font-body: ${cssValue(font.body)};`];
+  if (font.mono) decls.push(`--font-mono: ${cssValue(font.mono)};`);
+  const style = `<style>[data-font="custom"]{ ${decls.join(' ')} }</style>`;
+  return links ? `${links}\n  ${style}` : style;
+}
 
 export interface ShellOptions {
   site: OvellumSiteConfig & { title: string };
@@ -126,8 +154,15 @@ function renderShell(opts: ShellOptions): string {
     mermaid?.enabled === false
       ? ''
       : ` data-ov-mermaid="${escapeAttr(mermaid?.url ?? DEFAULT_MERMAID_URL)}"`;
+  // Custom font (B4): a `{ body, mono?, source? }` object sets the default font
+  // to a self-hosted family. `data-font="custom"` + an injected
+  // `[data-font="custom"]` rule (after the base CSS, so it wins) + the source
+  // stylesheet link(s). Readers can still switch to the built-ins via the picker.
+  const customFont = typeof opts.site.font === 'object' ? opts.site.font : null;
+  const fontKey = typeof opts.site.font === 'object' ? 'custom' : (opts.site.font ?? 'sans');
+  const customFontHead = customFont ? renderCustomFontHead(customFont, basePath) : '';
   return `<!doctype html>
-<html lang="${escapeAttr(opts.lang ?? 'en')}"${dirAttr} data-theme="${escapeAttr(opts.site.defaultTheme)}" data-palette="${escapeAttr(palette)}" data-font="${escapeAttr(opts.site.font ?? 'sans')}"${accentAttrs}${mermaidAttr}>
+<html lang="${escapeAttr(opts.lang ?? 'en')}"${dirAttr} data-theme="${escapeAttr(opts.site.defaultTheme)}" data-palette="${escapeAttr(palette)}" data-font="${escapeAttr(fontKey)}"${accentAttrs}${mermaidAttr}>
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -150,6 +185,7 @@ function renderShell(opts: ShellOptions): string {
   ${hreflang}
   <link rel="icon" href="${escapeAttr(siteUrl(opts.site.favicon ?? '/favicon.ico', basePath))}">
   <link rel="stylesheet" href="${escapeAttr(assets)}assets/ovellum.css">
+  ${customFontHead}
   ${searchHead}
   ${opts.site.headExtra ?? ''}
   <script>
@@ -336,7 +372,7 @@ function renderTopbarLinks(
  * swatches. Pure markup — script.js wires the behavior, CSS carries the
  * pressed/active states off aria attributes so every instance stays in sync.
  */
-function renderAppearancePanel(strings: UiStrings): string {
+function renderAppearancePanel(strings: UiStrings, customFont?: OvellumCustomFont | null): string {
   const modes = [
     { id: 'auto', label: strings.modeAuto, icon: 'monitor' as IconName },
     { id: 'light', label: strings.modeLight, icon: 'sun' as IconName },
@@ -380,12 +416,20 @@ function renderAppearancePanel(strings: UiStrings): string {
   // Body font family. 'sans'/'serif' are system stacks (no webfont); 'inter'/
   // 'geist' are bundled webfonts that load only when picked (the preview text
   // in this panel is what pulls them, and only once the panel is opened).
-  const fonts = [
+  const fonts: Array<{ id: string; label: string; family?: string }> = [
     { id: 'sans', label: strings.fontSans },
     { id: 'serif', label: strings.fontSerif },
     { id: 'inter', label: 'Inter' },
     { id: 'geist', label: 'Geist' },
   ];
+  // A configured custom font leads the picker, previewed in its own family.
+  if (customFont) {
+    fonts.unshift({
+      id: 'custom',
+      label: customFont.label ?? 'Custom',
+      family: customFont.body.replace(/[<>{};]/g, '').trim(),
+    });
+  }
   const modeButtons = modes
     .map(
       (m) => `<button type="button" class="ov-appearance-mode" data-ov-mode="${m.id}"
@@ -412,7 +456,7 @@ function renderAppearancePanel(strings: UiStrings): string {
     .join('\n          ');
   const fontButtons = fonts
     .map(
-      (f) => `<button type="button" class="ov-appearance-font" data-ov-font="${f.id}"
+      (f) => `<button type="button" class="ov-appearance-font" data-ov-font="${f.id}"${f.family ? ` style="font-family:${escapeAttr(f.family)}"` : ''}
             aria-pressed="false"><span class="ov-appearance-font-name">${escapeHtml(f.label)}</span>${renderIcon('check', { size: 14, class: 'ov-appearance-check' })}</button>`,
     )
     .join('\n          ');
@@ -514,13 +558,14 @@ function renderTopbar(
   // inlined in the mobile sheet. State lives on <html> (data-theme /
   // data-palette / --ov-accent); script.js wires every instance and keeps
   // their pressed states in sync, so duplicates can't drift.
+  const customFont = typeof site.font === 'object' ? site.font : null;
   const appearancePopover = `<div class="ov-appearance" data-ov-appearance>
       <button class="ov-theme-toggle" type="button"
         aria-label="${escapeAttr(strings.appearance)}" title="${escapeAttr(strings.appearance)}"
         aria-haspopup="true" aria-expanded="false" data-ov-appearance-toggle>
         ${renderIcon('palette', { size: 18 })}
       </button>
-      ${renderAppearancePanel(strings)}
+      ${renderAppearancePanel(strings, customFont)}
     </div>`;
   const versionBadge = site.version
     ? `<span class="ov-brand-version" aria-label="Stable version ${escapeAttr(site.version)}">${escapeHtml(site.version)}</span>`
@@ -559,7 +604,7 @@ function renderTopbar(
         ${mobileLinks}
         ${langPicker ? `<div class="ov-mobile-lang">${langPicker}</div>` : ''}
         <div class="ov-mobile-theme" data-ov-appearance>
-          ${renderAppearancePanel(strings)}
+          ${renderAppearancePanel(strings, customFont)}
         </div>
       </nav>
     </div>

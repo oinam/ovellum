@@ -105,11 +105,13 @@ can serve them with no licensing concern.
 
 #### Bringing your own font
 
-For a family beyond the bundled two, override the token — it's just a
-CSS-variable change. **Self-hosting is recommended** over a Google Fonts link:
-it avoids the third-party connection and the privacy/GDPR concern of sending
-visitor IPs to a font CDN, and the old "shared browser cache" argument no longer
-holds (browsers partition their cache per-site).
+For a family beyond the bundled two, point [`site.font`](/docs/reference/config/)
+at an **object** instead of a keyword. Ovellum makes it the default, loads your
+`@font-face` stylesheet, and adds it to the reader's picker — no `headExtra`
+needed. **Self-hosting is recommended** over a Google Fonts link: it avoids the
+third-party connection and the privacy/GDPR concern of sending visitor IPs to a
+font CDN, and the old "shared browser cache" argument no longer holds (browsers
+partition their cache per-site).
 
 > **Check the license first.** Self-hosting means *you* serve the font file, so
 > only use one whose license permits web embedding. Open-font-licensed (OFL)
@@ -117,37 +119,47 @@ holds (browsers partition their cache per-site).
 > fonts are free to embed on your own site but **may not be redistributed**;
 > those are fine to self-host yourself, the responsibility is just yours.
 
-1. Drop the font (and a small stylesheet) into the
+1. Drop the font (and a small `@font-face` stylesheet) into the
    [`publicDir`](/docs/reference/config/) — `content/public/` is copied to the
    **output root**, so `content/public/fonts/…` is served at `/fonts/…` and
-   `content/public/site.css` at `/site.css`.
-2. In that stylesheet, referenced from `site.headExtra`, `@font-face` it and
-   override `--font-sans`. If your family ships a matching monospace, override
-   `--font-mono` too; otherwise leave it on the system stack:
+   `content/public/fonts.css` at `/fonts.css`:
 
-```css
-/* content/public/site.css → served at /site.css */
-@font-face {
-  font-family: 'My Font';
-  src: url('/fonts/my-font.woff2') format('woff2');
-  font-weight: 100 900; /* variable weight axis */
-  font-display: swap;
-}
-:root {
-  --font-sans: 'My Font', ui-sans-serif, system-ui, sans-serif;
-}
-```
+   ```css
+   /* content/public/fonts.css → served at /fonts.css */
+   @font-face {
+     font-family: 'My Font';
+     src: url('/fonts/my-font.woff2') format('woff2');
+     font-weight: 100 900; /* variable weight axis */
+     font-display: swap;   /* FOUT control — show fallback text immediately, swap when ready */
+   }
+   ```
 
-```html
-<!-- site.headExtra (ovellum.config.*) -->
-<link rel="preload" href="/fonts/my-font.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="stylesheet" href="/site.css">
-```
+2. Point `site.font` at it:
 
-Body, headings, and prose pick up `--font-sans` automatically. The `headExtra`
-stylesheet loads after the theme's CSS, so its `:root` override wins; the
-`preload` warms the fetch. (A token override like this overrides the picker
-default — your font, not the system stack, becomes the baseline.)
+   ```ts
+   site: {
+     font: {
+       body: "'My Font', ui-sans-serif, system-ui, sans-serif",
+       mono: "'My Mono', ui-monospace, monospace", // optional — omit to keep system mono
+       source: '/fonts.css',                       // your @font-face stylesheet (or an array)
+       label: 'My Font',                           // optional — picker label (defaults to "Custom")
+     },
+   },
+   ```
+
+Ovellum sets your font as the default (`<html data-font="custom">`), links
+`source` in the `<head>`, and maps `--font-body` (and `--font-mono` when you give
+one). It also adds a custom entry to the appearance **Font** picker, previewed in
+its own family — so readers can still switch to the built-ins and back. The
+`font-display` descriptor in *your* `@font-face` owns the FOUT/opt-out story:
+`swap` paints fallback text instantly then swaps; `optional` avoids a late swap
+on slow links. Want to warm the fetch? Add a `<link rel="preload" as="font" …>`
+via `site.headExtra`.
+
+**Lower-level alternative.** You can still override the `--font-sans` /
+`--font-mono` tokens directly from a `headExtra` stylesheet if you'd rather not
+touch the picker — the `site.font` object is simply the ergonomic path that also
+wires it.
 
 ### Reading text size
 

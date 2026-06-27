@@ -7,6 +7,7 @@ export type {
   OrphanStrategy,
   OvellumDefaultTheme,
   OvellumFont,
+  OvellumCustomFont,
   OvellumDateFormat,
   OvellumLocale,
   OvellumCodeTheme,

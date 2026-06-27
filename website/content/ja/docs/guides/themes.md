@@ -1,7 +1,7 @@
 ---
 title: テーマ設定
 description: デフォルトテーマの構成、オーバーライドの方法、そしてトップバー・ヒーロー・アイコンシステムが標準で提供するもの。
-sourceHash: '510c8c8e9142b422'
+sourceHash: 'fd519d5aab6e863a'
 ---
 
 # テーマ設定
@@ -63,33 +63,38 @@ Inter と Geist は**テンプレートの中に**同梱されており（`/asse
 
 #### 自分のフォントを持ち込む
 
-バンドルされた 2 つ以外のファミリーを使うには、トークンを上書きするだけです — 単なる CSS 変数の変更です。Google Fonts のリンクよりも**セルフホスティングを推奨**します。第三者への接続を避けられ、訪問者の IP をフォント CDN に送るというプライバシー / GDPR の懸念も避けられます。そして昔の「共有ブラウザキャッシュ」の論拠はもはや成り立ちません（ブラウザはキャッシュをサイトごとに分割するようになりました）。
+バンドルされた 2 つ以外のファミリーを使うには、[`site.font`](/ja/docs/reference/config/) をキーワードではなく**オブジェクト**に設定します。Ovellum はそれをデフォルトにし、あなたの `@font-face` スタイルシートを読み込み、読者のピッカーに追加します — `headExtra` は不要です。Google Fonts のリンクよりも**セルフホスティングを推奨**します。第三者への接続を避けられ、訪問者の IP をフォント CDN に送るというプライバシー / GDPR の懸念も避けられます。そして昔の「共有ブラウザキャッシュ」の論拠はもはや成り立ちません（ブラウザはキャッシュをサイトごとに分割するようになりました）。
 
 > **まずライセンスを確認してください。** セルフホスティングとは*あなた*がフォントファイルを配信するということなので、ライセンスがウェブ埋め込みを許可しているものだけを使ってください。Open Font License（OFL）のファミリー — バンドルされている Inter や Geist のような — は常に安全です。一部の「無料」フォントは自分のサイトに埋め込むのは無料でも、**再配布が許可されていない**場合があります。それらを自分でセルフホストするのは構いませんが、責任はあなたにあります。
 
-1. フォント（と小さなスタイルシート）を [`publicDir`](/ja/docs/reference/config/) に置きます — `content/public/` は**出力ルート**にコピーされるので、`content/public/fonts/…` は `/fonts/…` で、`content/public/site.css` は `/site.css` で配信されます。
-2. そのスタイルシート（`site.headExtra` から参照）の中で、`@font-face` を定義して `--font-sans` を上書きします。ファミリーに対応する等幅フォントが付属していれば `--font-mono` も上書きします。なければシステムスタックのままにしておきます。
+1. フォント（と小さな `@font-face` スタイルシート）を [`publicDir`](/ja/docs/reference/config/) に置きます — `content/public/` は**出力ルート**にコピーされるので、`content/public/fonts/…` は `/fonts/…` で、`content/public/fonts.css` は `/fonts.css` で配信されます。
 
-```css
-/* content/public/site.css → served at /site.css */
-@font-face {
-  font-family: 'My Font';
-  src: url('/fonts/my-font.woff2') format('woff2');
-  font-weight: 100 900; /* variable weight axis */
-  font-display: swap;
-}
-:root {
-  --font-sans: 'My Font', ui-sans-serif, system-ui, sans-serif;
-}
-```
+   ```css
+   /* content/public/fonts.css → served at /fonts.css */
+   @font-face {
+     font-family: 'My Font';
+     src: url('/fonts/my-font.woff2') format('woff2');
+     font-weight: 100 900; /* variable weight axis */
+     font-display: swap;   /* FOUT 制御 — フォールバックを即時表示し、準備でき次第差し替え */
+   }
+   ```
 
-```html
-<!-- site.headExtra (ovellum.config.*) -->
-<link rel="preload" href="/fonts/my-font.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="stylesheet" href="/site.css">
-```
+2. `site.font` をそれに向けます:
 
-本文・見出し・プローズは `--font-sans` を自動的に拾います。`headExtra` のスタイルシートはテーマの CSS の後に読み込まれるので、その `:root` の上書きが勝ちます。`preload` は取得をウォームアップします。（このようなトークンの上書きはピッカーのデフォルトを上書きします — システムスタックではなく、あなたのフォントがベースラインになります。）
+   ```ts
+   site: {
+     font: {
+       body: "'My Font', ui-sans-serif, system-ui, sans-serif",
+       mono: "'My Mono', ui-monospace, monospace", // 任意 — 省略するとシステム等幅のまま
+       source: '/fonts.css',                       // あなたの @font-face スタイルシート（配列も可）
+       label: 'My Font',                           // 任意 — ピッカーのラベル（デフォルトは "Custom"）
+     },
+   },
+   ```
+
+Ovellum はあなたのフォントをデフォルトにし（`<html data-font="custom">`）、`source` を `<head>` にリンクし、`--font-body`（`mono` を指定すれば `--font-mono` も）をマップします。外観の **Font** ピッカーにはそのフォント自身でプレビューしたカスタム項目が加わるので、読者はバンドルフォントへ切り替えてまた戻せます。FOUT / オプトアウトの挙動は*あなたの* `@font-face` の `font-display` 記述子が握ります。`swap` はフォールバックを即時描画してから差し替え、`optional` は低速回線での遅い差し替えを避けます。取得をウォームアップしたい場合は、`site.headExtra` 経由で `<link rel="preload" as="font" …>` を加えてください。
+
+**より低レベルな代替手段。** ピッカーに触れたくない場合は、`headExtra` のスタイルシートから `--font-sans` / `--font-mono` トークンを直接上書きすることも引き続きできます — `site.font` オブジェクトは、それに加えてピッカーも配線してくれる人間工学的な道です。
 
 ### 読みやすいテキストサイズ
 

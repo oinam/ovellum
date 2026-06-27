@@ -313,7 +313,8 @@ ${descLine}
     defaultTheme: ${q(a.defaultTheme)}, // 'auto' | 'light' | 'dark'
     // palette: 'default',       // 'default' | 'nord' | 'flexoki' | 'solarized' | 'eink'
     // accent: 'oklch(57% 0.16 255)', // primary color (CTA buttons, links, focus); any CSS color
-    // font: 'sans',             // 'sans' | 'serif' (system) | 'inter' | 'geist' (bundled webfonts, lazy)
+    // font: 'sans',             // 'sans' | 'serif' (system) | 'inter' | 'geist' (bundled, lazy)
+    //                           //   …or bring your own: { body: "'Brand', system-ui", mono?, source: '/fonts.css', label? }
     // dateFormat: 'humanized',  // 'humanized' (today / Jun 14, 2026) | 'iso' (2026-06-14)
     // footer: 'Your Name',      // footer text / copyright line
     // credit: true,             // 'Built with Ovellum' footer link; set false to remove
