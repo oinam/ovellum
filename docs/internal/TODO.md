@@ -55,11 +55,17 @@ to 30ch + `text-wrap:balance` (0.17.x carryover). 195 site + 147 cli tests; docs
 en+ja; live examples in styleguide. **Closes COMPETITIVE adopt #1 (components),
 #2 (mermaid), #4 (copy-for-LLM).**
 
-**Recurring dev gotcha (still unfixed):** the CLI bundles `@ovellum/site` source;
-turbo's cli hash misses site `src` changes → after editing `packages/site/src/**`,
-run `npx turbo run build --filter=ovellum --force` before building the website
-(else stale bundle: feature passes vitest but doesn't render in the built site).
-Real fix queued = widen cli build inputs in `turbo.json` (small tech-debt item).
+**Stale-CLI-bundle gotcha — FIXED 2026-06-27.** The CLI bundles `@ovellum/*`
+source (tsup `noExternal`), but the root `build` task had no `inputs`, so turbo
+only tracked the cli's own files + dependency `.d.ts` outputs — template (CSS/JS)
+edits and signature-stable site `src` edits didn't bust the cli cache (stale
+bundle: feature passed vitest but didn't render in the built site; needed
+`--force`). Fix: `packages/cli/turbo.json` (package config, `extends: ["//"]`)
+adds `inputs: ["$TURBO_DEFAULT$", "$TURBO_ROOT$/packages/*/src/**",
+"$TURBO_ROOT$/scripts/cli-copy-templates.mjs"]` so any bundled-package src or the
+template-copy script invalidates the cli build. Verified: a `style.css` touch now
+cache-misses `ovellum:build`; an unchanged build is still FULL TURBO. No more
+`--force` needed.
 
 **0.17.0 (2026-06-26) — landing feature links + description sync (2 changesets):**
 **B-tier slice** `site.landing.features[].href` → linkable feature cards
