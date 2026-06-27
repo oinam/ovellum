@@ -872,26 +872,60 @@ export function renderLanding(input: RenderLandingInput): string {
   );
   const install = renderInstall(input.install ?? []);
   const featuresHtml = renderFeatures(features, basePath, input.localePrefix ?? '');
-  const pitch = input.pitchHtml
-    ? `<section class="ov-pitch"><div class="ov-pitch-inner">${input.pitchHtml}</div></section>`
-    : '';
+  const proseBlock = (html?: string): string => {
+    const inner = html ?? input.pitchHtml ?? '';
+    return inner
+      ? `<section class="ov-pitch"><div class="ov-pitch-inner">${inner}</div></section>`
+      : '';
+  };
+  const pitch = proseBlock();
   const trust = renderTrustStrip(trustStrip);
 
-  // Interleave scenes between the rendered sections, in order. With three
-  // sections after the hero, three scenes fill all three gaps; extras fall
-  // through after the last section.
-  const sections = [hero, install, featuresHtml, pitch, trust].filter((s) => s !== '');
-  const scenes = input.landing.scenes ?? [];
-  const interleaved: string[] = [];
-  sections.forEach((section, i) => {
-    interleaved.push(section);
-    if (i < sections.length - 1 && scenes[i]) {
-      interleaved.push(renderScene(scenes[i], i, basePath));
-    }
-  });
-  scenes.slice(Math.max(0, sections.length - 1)).forEach((sc, j) => {
-    interleaved.push(renderScene(sc, sections.length - 1 + j, basePath));
-  });
+  let interleaved: string[];
+  const composed = input.landing.sections;
+  if (composed && composed.length > 0) {
+    // Composable mode (B5): render blocks in the author's order. The flat config
+    // supplies hero/install/features/trust; prose/custom-html/scene carry inline
+    // content. `custom-html` is author-trusted (not sanitized — like headExtra).
+    interleaved = composed
+      .map((sec, i) => {
+        switch (sec.type) {
+          case 'hero':
+            return hero;
+          case 'install':
+            return install;
+          case 'features':
+            return featuresHtml;
+          case 'trust':
+            return trust;
+          case 'scene':
+            return renderScene(sec.scene, i, basePath);
+          case 'prose':
+            return proseBlock(sec.html);
+          case 'custom-html':
+            return sec.html ? `<section class="ov-landing-html">${sec.html}</section>` : '';
+          default:
+            return '';
+        }
+      })
+      .filter((s) => s !== '');
+  } else {
+    // Shorthand: the flat config in the default order, scenes interleaved between
+    // the rendered sections. With three sections after the hero, three scenes
+    // fill all three gaps; extras fall through after the last section.
+    const sections = [hero, install, featuresHtml, pitch, trust].filter((s) => s !== '');
+    const scenes = input.landing.scenes ?? [];
+    interleaved = [];
+    sections.forEach((section, i) => {
+      interleaved.push(section);
+      if (i < sections.length - 1 && scenes[i]) {
+        interleaved.push(renderScene(scenes[i], i, basePath));
+      }
+    });
+    scenes.slice(Math.max(0, sections.length - 1)).forEach((sc, j) => {
+      interleaved.push(renderScene(sc, sections.length - 1 + j, basePath));
+    });
+  }
 
   const body = `<main class="ov-landing">
     ${interleaved.join('\n    ')}

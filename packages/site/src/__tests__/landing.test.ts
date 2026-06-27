@@ -407,4 +407,67 @@ describe('renderLanding', () => {
     expect(html).toContain('Plain Title');
     expect(html).toContain('Click');
   });
+
+  describe('composable sections (B5)', () => {
+    it('renders blocks in the configured order, including prose and custom-html', () => {
+      const html = renderLanding({
+        site: SITE,
+        landing: landingConfig({
+          hero: { title: 'Hi', ctas: [] },
+          features: [{ title: 'F1', description: 'd1' }],
+          trustStrip: { items: [{ name: 'Acme' }] },
+          sections: [
+            { type: 'custom-html', html: '<div class="my-banner">Banner</div>' },
+            { type: 'hero' },
+            { type: 'prose', html: '<p>Inline pitch.</p>' },
+            { type: 'features' },
+            { type: 'trust' },
+          ],
+        }),
+        generatedAt: '2026-05-16T00:00:00.000Z',
+      });
+      // custom-html is emitted, wrapped in its section.
+      expect(html).toContain('<section class="ov-landing-html"><div class="my-banner">Banner</div></section>');
+      // Inline prose lands in the pitch shell.
+      expect(html).toContain('<section class="ov-pitch"><div class="ov-pitch-inner"><p>Inline pitch.</p></div></section>');
+      // Order is honored: banner before the hero.
+      expect(html.indexOf('my-banner')).toBeLessThan(html.indexOf('ov-hero'));
+      // Flat config still feeds the referenced blocks.
+      expect(html).toContain('F1');
+      expect(html).toContain('Acme');
+    });
+
+    it('a prose block with no html falls back to the _landing.md body', () => {
+      const html = renderLanding({
+        site: SITE,
+        landing: landingConfig({ hero: { ctas: [] }, sections: [{ type: 'prose' }, { type: 'hero' }] }),
+        pitchHtml: '<p>From the markdown body.</p>',
+        generatedAt: '2026-05-16T00:00:00.000Z',
+      });
+      expect(html).toContain('From the markdown body.');
+    });
+
+    it('places an inline scene block', () => {
+      const html = renderLanding({
+        site: SITE,
+        landing: landingConfig({
+          hero: { ctas: [] },
+          sections: [{ type: 'hero' }, { type: 'scene', scene: { light: '/scene.svg', alt: 'art' } }],
+        }),
+        generatedAt: '2026-05-16T00:00:00.000Z',
+      });
+      expect(html).toContain('/scene.svg');
+    });
+
+    it('without sections, the flat config renders in the default order (shorthand)', () => {
+      const cfg = landingConfig({
+        hero: { title: 'Hi', ctas: [] },
+        features: [{ title: 'F1', description: 'd1' }],
+      });
+      const html = renderLanding({ site: SITE, landing: cfg, generatedAt: '2026-05-16T00:00:00.000Z' });
+      // Hero precedes features in the default order.
+      expect(html.indexOf('ov-hero')).toBeLessThan(html.indexOf('F1'));
+      expect(html).not.toContain('ov-landing-html');
+    });
+  });
 });

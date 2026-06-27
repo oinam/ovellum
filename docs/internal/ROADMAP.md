@@ -190,10 +190,16 @@ A1 unlocks A2–A4.
       Core `OvellumCustomFont` type + validation; `template.ts`
       `renderCustomFontHead`; themes + config docs rewritten (en+ja). Pinned by
       template (2) + validate (1) tests.
-- [ ] **B5 (M)** **Composable landing** — `site.landing.sections: [...]`
-      ordered typed blocks (hero | features | install | prose | trust |
-      scene | custom-html); current flat config stays as shorthand. First
-      thing every custom-landing author hits today.
+- [x] **B5 (M) — DONE 2026-06-27.** **Composable landing** —
+      `site.landing.sections: OvellumLandingSection[]` (discriminated union:
+      `hero | install | features | trust | scene | prose | custom-html`). When
+      set, replaces the fixed `hero→install→features→prose→trust` order
+      (scenes auto-interleaved); flat config stays the data source for the
+      reference blocks (shorthand) so unset = byte-identical default. `prose`
+      takes inline `html` or falls back to the `_landing.md` body; `custom-html`
+      is author-trusted raw HTML (headExtra boundary, `.ov-landing-html`). Core
+      type + validation; `renderLanding` switch; docs en+ja. Tests: landing (4)
+      + validate (1).
 - [ ] **B6 (L)** **Versioned docs** — directory-per-version + version
       selector in the topbar. Table-stakes for libraries with maintained
       majors.

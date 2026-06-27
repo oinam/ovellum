@@ -270,6 +270,39 @@ describe('validateUserConfig', () => {
     ).toThrow(/site\.landing\.hero\.media\.light/);
   });
 
+  it('accepts composable landing.sections and rejects malformed ones', () => {
+    const ok = {
+      site: {
+        landing: {
+          sections: [
+            { type: 'hero' },
+            { type: 'prose', html: '<p>x</p>' },
+            { type: 'prose' },
+            { type: 'custom-html', html: '<div></div>' },
+            { type: 'scene', scene: { light: '/s.svg' } },
+          ],
+        },
+      },
+    };
+    expect(validateUserConfig(ok)).toEqual(ok);
+    // sections must be an array.
+    expect(() => validateUserConfig({ site: { landing: { sections: {} } } })).toThrow(
+      /site\.landing\.sections/,
+    );
+    // unknown type.
+    expect(() => validateUserConfig({ site: { landing: { sections: [{ type: 'nope' }] } } })).toThrow(
+      /\.type/,
+    );
+    // custom-html requires a non-empty html string.
+    expect(() => validateUserConfig({ site: { landing: { sections: [{ type: 'custom-html' }] } } })).toThrow(
+      /\.html/,
+    );
+    // scene requires a scene object.
+    expect(() => validateUserConfig({ site: { landing: { sections: [{ type: 'scene' }] } } })).toThrow(
+      /\.scene/,
+    );
+  });
+
   it('rejects non-string alt on hero.media', () => {
     expect(() =>
       validateUserConfig({

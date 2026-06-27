@@ -292,6 +292,12 @@ interface OvellumLandingConfig {
     label?: string;
     items: Array<{ name: string; href?: string; image?: string }>;
   };
+  sections?: Array<
+    | { type: 'hero' | 'install' | 'features' | 'trust' }
+    | { type: 'scene'; scene: { light: string; dark?: string; alt?: string } }
+    | { type: 'prose'; html?: string }
+    | { type: 'custom-html'; html: string }
+  >;
 }
 ```
 
@@ -303,6 +309,46 @@ interface OvellumLandingConfig {
 | `features`   | `OvellumLandingFeature[]`   | `[]`               | Feature cards in document order; replaced wholesale on merge.                                     |
 | `install`    | `OvellumLandingInstall[]?`  | omitted            | Install snippets rendered after the hero CTAs and before the feature grid; the title becomes a leading comment inside each code block. Install snippets render without a language label and get an icon copy button vertically centered on the right edge; doc code blocks elsewhere are unaffected (they keep their language eyebrow + text copy button). |
 | `trustStrip` | `OvellumLandingTrustStrip?` | omitted            | Rendered last when present and `items` is non-empty.                                              |
+| `sections`   | `OvellumLandingSection[]?`  | omitted            | Compose the landing in an explicit order instead of the default — see [composable sections](#composable-sections). |
+
+### Composable sections
+
+By default the landing renders in a fixed order — `hero → install → features →
+prose → trust`, with any [`scenes`](#scene) interleaved between. Set
+`landing.sections` to an array of typed blocks to take over that order: arrange
+blocks however you like, repeat them, and drop in free-form `prose` or
+`custom-html` anywhere. The flat fields above (`hero`, `install`, `features`,
+`trustStrip`) stay the **data source** for the matching block types, so they
+double as shorthand — when `sections` is unset, you get the default order.
+
+| `type`        | Renders                                                                                              |
+| ------------- | --------------------------------------------------------------------------------------------------- |
+| `hero`        | The `landing.hero` block.                                                                            |
+| `install`     | The `landing.install` snippets.                                                                      |
+| `features`    | The `landing.features` grid.                                                                         |
+| `trust`       | The `landing.trustStrip`.                                                                            |
+| `scene`       | An ambient visual: `{ type: 'scene', scene: { light, dark?, alt? } }`.                               |
+| `prose`       | `{ type: 'prose', html? }` — inline `html`, or (when omitted) the `_landing.md` body, in the centered pitch style. |
+| `custom-html` | `{ type: 'custom-html', html }` — a raw HTML section. **Author-trusted and not sanitized**, same boundary as [`headExtra`](#site-manual-mode). Keep it to your own markup. |
+
+```ts
+landing: {
+  enabled: true,
+  hero: { title: 'Ovellum', ctas: [{ label: 'Get started', href: '/docs/' }] },
+  features: [/* … */],
+  sections: [
+    { type: 'hero' },
+    { type: 'custom-html', html: '<section class="my-strip">…</section>' },
+    { type: 'features' },
+    { type: 'prose', html: '<p>Why we built this.</p>' },
+    { type: 'trust' },
+  ],
+}
+```
+
+> Inline `prose`/`custom-html` text is not localized — it renders the same in
+> every locale. Use the flat blocks (`hero`/`features`/`trust`), whose labels
+> accept per-locale maps, for translated copy.
 
 ### `hero.ctas[]`
 

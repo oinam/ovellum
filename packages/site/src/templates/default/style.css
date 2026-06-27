@@ -3025,6 +3025,11 @@ body.ov-body-landing {
   padding-block: var(--space-l);
   border-block-start: 1px solid var(--color-border);
 }
+/* Composable landing `custom-html` block (B5): a bare flow section that keeps
+   the page's vertical rhythm. The author's markup owns its own internals. */
+.ov-landing-html {
+  margin-block: var(--space-l);
+}
 .ov-pitch-inner {
   max-inline-size: 60ch;
   margin-inline: auto;

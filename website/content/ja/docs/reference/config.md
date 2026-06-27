@@ -1,7 +1,7 @@
 ---
 title: 設定
 description: ovellum.config.{json,ts,js} のすべてのフィールドと、その型・デフォルト値・効果。
-sourceHash: 'ca6180364c2b081e'
+sourceHash: 'a47e270cfbd72b8e'
 ---
 
 # 設定
@@ -292,6 +292,12 @@ interface OvellumLandingConfig {
     label?: string;
     items: Array<{ name: string; href?: string; image?: string }>;
   };
+  sections?: Array<
+    | { type: 'hero' | 'install' | 'features' | 'trust' }
+    | { type: 'scene'; scene: { light: string; dark?: string; alt?: string } }
+    | { type: 'prose'; html?: string }
+    | { type: 'custom-html'; html: string }
+  >;
 }
 ```
 
@@ -303,6 +309,46 @@ interface OvellumLandingConfig {
 | `features`   | `OvellumLandingFeature[]`   | `[]`               | ドキュメント順のフィーチャーカード。マージ時にまるごと置き換えられます。                                     |
 | `install`    | `OvellumLandingInstall[]?`  | 省略               | ヒーローの CTA の後・フィーチャーグリッドの前にレンダリングされるインストールスニペット。タイトルは各コードブロック内の先頭コメントになります。インストールスニペットは言語ラベルなしでレンダリングされ、右端に垂直方向で中央寄せされたアイコン式コピーボタンが付きます。他の場所のドキュメントコードブロックには影響しません（言語のラベルとテキスト式コピーボタンは保持されます）。 |
 | `trustStrip` | `OvellumLandingTrustStrip?` | 省略               | 存在し、かつ `items` が空でない場合に最後にレンダリングされます。                                              |
+| `sections`   | `OvellumLandingSection[]?`  | 省略               | デフォルトの代わりに、明示的な順序でランディングを構成します — [構成可能なセクション](#composable-sections)を参照。 |
+
+### 構成可能なセクション <a id="composable-sections"></a>
+
+デフォルトでは、ランディングは固定の順序 — `hero → install → features → prose →
+trust`、その間に [`scenes`](#scene) を挟む — でレンダリングされます。
+`landing.sections` に型付きブロックの配列を設定すると、その順序を上書きできます。
+ブロックを好きなように並べ、繰り返し、自由形式の `prose` や `custom-html` を
+どこにでも差し込めます。上記のフラットなフィールド（`hero`、`install`、`features`、
+`trustStrip`）は対応するブロック種別の**データソース**であり続けるので、ショート
+ハンドとしても機能します — `sections` を設定しなければデフォルトの順序になります。
+
+| `type`        | レンダリング内容                                                                                      |
+| ------------- | --------------------------------------------------------------------------------------------------- |
+| `hero`        | `landing.hero` ブロック。                                                                            |
+| `install`     | `landing.install` スニペット。                                                                       |
+| `features`    | `landing.features` グリッド。                                                                        |
+| `trust`       | `landing.trustStrip`。                                                                               |
+| `scene`       | アンビジュアル: `{ type: 'scene', scene: { light, dark?, alt? } }`。                                 |
+| `prose`       | `{ type: 'prose', html? }` — インラインの `html`、または（省略時）`_landing.md` の本文を、中央寄せのピッチスタイルで表示。 |
+| `custom-html` | `{ type: 'custom-html', html }` — 生の HTML セクション。**作者が信頼するもので、サニタイズされません**（[`headExtra`](#site-manual-mode) と同じ境界）。自分のマークアップに限定してください。 |
+
+```ts
+landing: {
+  enabled: true,
+  hero: { title: 'Ovellum', ctas: [{ label: 'Get started', href: '/docs/' }] },
+  features: [/* … */],
+  sections: [
+    { type: 'hero' },
+    { type: 'custom-html', html: '<section class="my-strip">…</section>' },
+    { type: 'features' },
+    { type: 'prose', html: '<p>Why we built this.</p>' },
+    { type: 'trust' },
+  ],
+}
+```
+
+> インラインの `prose`/`custom-html` のテキストはローカライズされません — すべての
+> ロケールで同じものが表示されます。翻訳が必要なコピーには、ラベルがロケールごとの
+> マップを受け取るフラットなブロック（`hero`/`features`/`trust`）を使ってください。
 
 ### `hero.ctas[]`
 

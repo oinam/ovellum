@@ -490,6 +490,36 @@ function validateLanding(value: unknown): void {
       ts.items.forEach((it, i) => validateTrustItem(it, `site.landing.trustStrip.items[${i}]`));
     }
   }
+  if (l.sections !== undefined) {
+    if (!Array.isArray(l.sections)) {
+      throw new ConfigError('`site.landing.sections` must be an array.');
+    }
+    l.sections.forEach((sec, i) => validateLandingSection(sec, `site.landing.sections[${i}]`));
+  }
+}
+
+const LANDING_SECTION_TYPES = ['hero', 'install', 'features', 'trust', 'scene', 'prose', 'custom-html'];
+
+function validateLandingSection(value: unknown, path: string): void {
+  if (!isPlainObject(value)) {
+    throw new ConfigError(`\`${path}\` must be an object.`);
+  }
+  const sec = value;
+  if (typeof sec.type !== 'string' || !LANDING_SECTION_TYPES.includes(sec.type)) {
+    throw new ConfigError(`\`${path}.type\` must be one of: ${LANDING_SECTION_TYPES.join(', ')}.`);
+  }
+  if (sec.type === 'scene') {
+    if (sec.scene === undefined) {
+      throw new ConfigError(`\`${path}.scene\` is required for a 'scene' section.`);
+    }
+    validateScene(sec.scene, `${path}.scene`);
+  }
+  if (sec.type === 'custom-html' && (typeof sec.html !== 'string' || sec.html.length === 0)) {
+    throw new ConfigError(`\`${path}.html\` (non-empty string) is required for a 'custom-html' section.`);
+  }
+  if (sec.type === 'prose' && sec.html !== undefined && typeof sec.html !== 'string') {
+    throw new ConfigError(`\`${path}.html\` must be a string.`);
+  }
 }
 
 function validateHeroMedia(value: unknown): void {

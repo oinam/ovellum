@@ -292,7 +292,32 @@ export interface OvellumLandingConfig {
   scenes: OvellumLandingScene[];
   /** Trust strip rendered after the prose body, if any. */
   trustStrip?: OvellumLandingTrustStrip;
+  /**
+   * Explicit, ordered landing blocks. When set, this **replaces** the default
+   * `hero → install → features → prose → trust` order (with auto-interleaved
+   * {@link OvellumLandingScene | scenes}): compose blocks in any order, repeat
+   * them, and drop in `prose` / `custom-html` / `scene` wherever you like. The
+   * flat fields above stay the data source for `hero` / `install` / `features` /
+   * `trust` blocks, so they double as shorthand. Unset = the default order.
+   */
+  sections?: OvellumLandingSection[];
 }
+
+/**
+ * One block in a composed landing ({@link OvellumLandingConfig.sections}).
+ * `hero` / `install` / `features` / `trust` render the matching flat-config data;
+ * `scene` places an ambient visual; `prose` renders the `_landing.md` body (or
+ * inline `html`); `custom-html` injects a raw HTML section (author-trusted, not
+ * sanitized — same boundary as `site.headExtra`).
+ */
+export type OvellumLandingSection =
+  | { type: 'hero' }
+  | { type: 'install' }
+  | { type: 'features' }
+  | { type: 'trust' }
+  | { type: 'scene'; scene: OvellumLandingScene }
+  | { type: 'prose'; html?: string }
+  | { type: 'custom-html'; html: string };
 
 /**
  * AI-friendly documentation output. When the docs build, Ovellum can emit

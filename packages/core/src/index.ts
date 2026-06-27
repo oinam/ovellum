@@ -18,6 +18,7 @@ export type {
   OvellumMermaidConfig,
   OvellumSiteSearchConfig,
   OvellumLandingConfig,
+  OvellumLandingSection,
   OvellumLandingHero,
   OvellumLandingHeroMedia,
   OvellumLandingCta,
