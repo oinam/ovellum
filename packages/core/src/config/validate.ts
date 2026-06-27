@@ -254,6 +254,40 @@ export function validateUserConfig(input: unknown): OvellumUserConfig {
     } else if (s.defaultLocale !== undefined) {
       throw new ConfigError('`site.defaultLocale` is set but `site.locales` is not.');
     }
+    if (s.versions !== undefined) {
+      if (!Array.isArray(s.versions) || s.versions.length === 0) {
+        throw new ConfigError('`site.versions` must be a non-empty array of { id, label?, latest? }.');
+      }
+      const ids = new Set<string>();
+      let latestCount = 0;
+      for (let i = 0; i < s.versions.length; i++) {
+        const v = s.versions[i] as { id?: unknown; label?: unknown; latest?: unknown };
+        if (!isPlainObject(v)) {
+          throw new ConfigError(`\`site.versions[${i}]\` must be an object { id, label?, latest? }.`);
+        }
+        if (typeof v.id !== 'string' || !/^[A-Za-z0-9._-]+$/.test(v.id)) {
+          throw new ConfigError(
+            `\`site.versions[${i}].id\` must be a URL/folder-safe string (letters, digits, '.', '_', '-').`,
+          );
+        }
+        if (ids.has(v.id)) {
+          throw new ConfigError(`\`site.versions\` has a duplicate id '${v.id}'.`);
+        }
+        ids.add(v.id);
+        if (v.label !== undefined && typeof v.label !== 'string') {
+          throw new ConfigError(`\`site.versions[${i}].label\` must be a string.`);
+        }
+        if (v.latest !== undefined) {
+          if (typeof v.latest !== 'boolean') {
+            throw new ConfigError(`\`site.versions[${i}].latest\` must be a boolean.`);
+          }
+          if (v.latest) latestCount++;
+        }
+      }
+      if (latestCount > 1) {
+        throw new ConfigError('`site.versions` may mark at most one entry as `latest`.');
+      }
+    }
     if (
       s.codeTheme !== undefined &&
       !CODE_THEMES.includes(s.codeTheme as (typeof CODE_THEMES)[number])

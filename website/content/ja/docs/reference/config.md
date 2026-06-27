@@ -1,7 +1,7 @@
 ---
 title: 設定
 description: ovellum.config.{json,ts,js} のすべてのフィールドと、その型・デフォルト値・効果。
-sourceHash: 'a47e270cfbd72b8e'
+sourceHash: 'd8a950d6fb761d5a'
 ---
 
 # 設定
@@ -98,6 +98,7 @@ interface OvellumSiteConfig {
   basePath?: string;
   locales?: { code: string; label: string; strings?: Record<string, string> }[];
   defaultLocale?: string;
+  versions?: { id: string; label?: string; latest?: boolean }[];
   ai?: { enabled?: boolean; llmsTxt?: boolean; fullText?: boolean; mdMirror?: boolean };
   mermaid?: { enabled?: boolean; url?: string };
   defaultTheme: 'auto' | 'light' | 'dark';
@@ -135,6 +136,7 @@ interface OvellumSiteConfig {
 | `basePath`       | `string?`                           | `''`                          | Jekyll 風のサブパス。先頭にスラッシュ、末尾にスラッシュなし（例: `'/ovellum'`）。すべての内部 URL、アセットパス、canonical リンク、サイトマップエントリの前に付加されます。作者はルート相対リンクを書き続けられ、ビルドがプレフィックスを追加します。 |
 | `locales`        | `{ code, label, strings? }[]?`      | `undefined`                   | **オプトインの i18n。** 各エントリが 1 つの言語です。`code` は BCP 47 タグ（`'en-US'`、`'ja'`、`'zh-Hans'`）であり、同時に `content/<code>/` フォルダ名と `<html lang>` でもあります。`label` はピッカーに表示するテキストです（自称表記を使ってください。例: `'日本語'`）。任意の `strings` マップは、そのロケールについてテンプレート組み込みの UI クロムを上書きします（`tocTitle`、`editedLabel`、`backToTop` などのキー。組み込みの上にマージされ、不足分は英語が埋めます） — 組み込みクロムは英語と日本語で出荷され、RTL 言語には `<html dir="rtl">` が付きます。設定すると、コンテンツがロケールごとのサブツリーに移り、トップバーに言語ピッカーが現れ、各ページに `hreflang` が付きます。**config 由来のラベル／コピー**（`topbarNav`/`footerNav` のラベル、および `landing` のヒーロー／CTA／機能／install／トラストのテキスト）は、プレーンな文字列の代わりにロケールごとの `{ code: string }` マップを受け取り、現在のロケールに解決されます。未設定 = 単一言語（移行不要）。[i18n ガイド](/ja/docs/guides/i18n/)を参照。 |
 | `defaultLocale`  | `string?`                           | `locales` の最初の要素            | どの `locales[].code` を**ルート**（URL プレフィックスなし）で配信するか。残りは `/<code>/` 配下で配信されます。`locales` が未設定の場合は無視されます。                                                                                              |
+| `versions`       | `{ id, label?, latest? }[]?`        | `undefined`                   | **オプトインのバージョン管理。** 各エントリは `content/<id>/` サブツリーに対応します。`latest` が指定された（またはなければ最初の）バージョンがルートで、残りは `/<id>/` 配下で配信されます。トップバーにバージョンピッカーが現れます（切り替えると、存在する限り同じページに移動します）。`locales` と組み合わせ可能です（`content/<id>/<locale>/`）。未設定 = バージョンなし。[バージョン](#versions)と[バージョン管理ガイド](/ja/docs/guides/versioning/)を参照。 |
 | `ai`             | `{ enabled?, llmsTxt?, fullText?, mdMirror? }` | [`ai`](#ai) を参照     | **AI フレンドリーな出力** — `llms.txt`・`llms-full.txt`・各ページの `.md` ミラーを HTML と並べて出力し、エージェントや LLM がドキュメントをクリーンに読めるようにします。`llmsTxt` と `mdMirror` はデフォルト**オン**、`fullText` は**オフ**。`enabled: false` で全体を無効化します。HTML 出力は変わりません。これらは追加されるファイルです（i18n サイトではロケールごと）。 |
 | `mermaid`        | `{ enabled?, url? }`                | [`mermaid`](#mermaid) を参照 | **Mermaid 図** — ```mermaid ブロックを図としてレンダリングします。図を含むページでのみ遅延読み込みされます。`enabled` はデフォルト**オン**。`url` は（ピン留め CDN の）ランタイムの取得元を上書きし、セルフホストできます。 |
 | `defaultTheme`   | `'auto' \| 'light' \| 'dark'`       | `'auto'`                      | ユーザーの設定が読み込まれる前の初期ライト／ダークモード。閲覧者はトップバーの外観コントロールから変更できます（`localStorage` に保存）。                                                                                  |
@@ -167,6 +169,49 @@ interface OvellumSiteConfig {
 | `href`     | `string`  | 内部パス（`/guides/themes/`）または絶対 URL。                                                                               |
 | `icon`     | `string?` | レジストリのアイコン名（`github`、`package`、`rss`、`mail` など）。デスクトップではアイコンのみ、モバイルのシートではアイコン + ラベルでレンダリングされます。      |
 | `external` | `boolean?`| 外部リンクの扱いを強制します（新しいタブ + `rel="noopener"`）。`href` が `http://` または `https://` で始まる場合は自動的に true になります。           |
+
+### バージョン <a id="versions"></a>
+
+ドキュメントの複数のバージョンを並べて公開します。`versions` の各エントリは
+`content/<id>/` サブツリーです。`latest` が指定された（またはなければ最初の）
+バージョンが**ルート**で、残りは `/<id>/` 配下で配信されます。トップバーの
+バージョンピッカーがそれらを切り替え、存在する限り対象バージョンの**同じページ**に
+移動します（なければそのバージョンのホーム）。
+
+| Field    | Type       | Notes                                                                            |
+| -------- | ---------- | -------------------------------------------------------------------------------- |
+| `id`     | `string`   | URL セグメント + `content/<id>/` フォルダ名。英数字、`.`、`_`、`-`。              |
+| `label`  | `string?`  | ピッカーでの表示名。デフォルトは `id`。                                          |
+| `latest` | `boolean?` | このバージョンをルートで配信します。指定できるのは最大 1 つ。なければ最初のエントリ。 |
+
+```ts
+site: {
+  versions: [
+    { id: 'v2', label: 'v2 (latest)', latest: true }, // / で配信
+    { id: 'v1', label: 'v1' },                         // /v1/ で配信
+  ],
+}
+```
+
+```
+content/
+  v2/                ← ルートで配信
+    index.md
+    guides/install.md
+  v1/                ← /v1/ で配信
+    index.md
+    guides/install.md
+```
+
+**[`locales`](#site-manual-mode) と組み合わせ可能:** 両方を設定すると、コンテンツは
+`content/<id>/<locale>/` に置かれ、URL は `/<id>/<locale>/…` のようにネストします
+（最新バージョン + デフォルトロケールはルートのまま）。サイトマップ、RSS、`llms.txt`
+はバージョンごとに出力されます。詳しい手順は
+[バージョン管理ガイド](/ja/docs/guides/versioning/)にあります。
+
+> `versions` を有効にすると、コンテンツが `content/<id>/` フォルダに移動します —
+> 一度きりの移行です。バージョンなしのサイトには `content/<id>/` フォルダは不要で、
+> 挙動は変わりません。
 
 ### カスタムフォント <a id="custom-fonts"></a>
 

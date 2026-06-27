@@ -90,6 +90,21 @@ export interface OvellumLocale {
 }
 
 /**
+ * One documentation version (see {@link OvellumSiteConfig.versions}). Each maps
+ * to a `content/<id>/` subtree; the version marked `latest` is served at the
+ * site root, the rest under `/<id>/`. Composes with locales: when both are set,
+ * content lives at `content/<id>/<locale>/`.
+ */
+export interface OvellumVersion {
+  /** URL segment + `content/<id>/` folder name (e.g. `'v2'`, `'next'`). */
+  id: string;
+  /** Display name in the version picker. Defaults to `id`. */
+  label?: string;
+  /** Serve this version at the site root (instead of `/<id>/`). Exactly one version may set it; defaults to the first. */
+  latest?: boolean;
+}
+
+/**
  * Named color palette for the whole site (page chrome, surfaces, text —
  * not just code blocks). Every palette ships a light and a dark variant;
  * the light/dark/auto mode choice stays independent (`defaultTheme`).
@@ -433,6 +448,15 @@ export interface OvellumSiteConfig {
    * the first entry of `locales`. Ignored when `locales` is unset.
    */
   defaultLocale?: string;
+  /**
+   * Documentation versions (**opt-in**). Each entry maps to a `content/<id>/`
+   * subtree; the version marked `latest` (or the first) is served at the root,
+   * the rest under `/<id>/`. A version picker appears in the topbar. Composes
+   * with `locales` (content at `content/<id>/<locale>/`). **Leave unset for an
+   * unversioned site** — behavior is unchanged and no `content/<id>/` folder is
+   * needed. See {@link OvellumVersion}.
+   */
+  versions?: OvellumVersion[];
   /** AI-friendly output (`llms.txt`, `llms-full.txt`, per-page `.md` mirrors). */
   ai?: OvellumAiConfig;
   /** Mermaid diagram rendering (lazy-loaded on diagram pages). */

@@ -33,7 +33,7 @@ import {
 } from './llms.js';
 import { generateRss } from './rss.js';
 import { generateSitemap } from './sitemap.js';
-import { renderLanding, renderPage, type LocaleAlternate } from './template.js';
+import { renderLanding, renderPage, type LocaleAlternate, type VersionAlternate } from './template.js';
 import { isRtl, localize, resolveStrings, type UiStrings } from './strings.js';
 import { normaliseBasePath, siteUrl } from './url.js';
 
@@ -242,6 +242,7 @@ export async function buildSite(options: BuildSiteOptions): Promise<BuildSiteRes
   for (const spec of specs) {
     const homeUrl = spec.urlPrefix ? spec.urlPrefix + '/' : '/';
     const alternates = (key: string) => buildLocaleAlternates(specs, spec, key);
+    const versionAlts = (key: string) => buildVersionAlternates(specs, spec, key);
     // Tracks whether this locale's content walk produced its /404/ page.
     let notFoundRendered = false;
     // Non-draft, non-404 pages for this locale's llms.txt / llms-full.txt.
@@ -279,6 +280,7 @@ export async function buildSite(options: BuildSiteOptions): Promise<BuildSiteRes
         url: homeUrl,
         lang: spec.lang,
         localeAlternates: alternates('/'),
+        versionAlternates: versionAlts('/'),
         localePrefix: spec.urlPrefix,
         strings: spec.strings,
         dir: spec.dir,
@@ -343,6 +345,7 @@ export async function buildSite(options: BuildSiteOptions): Promise<BuildSiteRes
           sourceRelFromCwd,
           lang: spec.lang,
           localeAlternates: alternates(stripLocalePrefix(url, spec.urlPrefix)),
+          versionAlternates: versionAlts(stripLocalePrefix(url, spec.urlPrefix)),
           localePrefix: spec.urlPrefix,
           includeDrafts,
           draft: spec.draftBySource.has(sourceRelFromCwd),
@@ -440,6 +443,7 @@ export async function buildSite(options: BuildSiteOptions): Promise<BuildSiteRes
         bodyClass: 'ov-body-404',
         lang: spec.lang,
         localeAlternates: alternates('/404/'),
+        versionAlternates: versionAlts('/404/'),
         localePrefix: spec.urlPrefix,
         strings: spec.strings,
         dir: spec.dir,
@@ -577,6 +581,8 @@ interface RenderOneInput {
   lang?: string;
   /** Language-picker entries (i18n sites); empty for single-language sites. */
   localeAlternates?: LocaleAlternate[];
+  /** Version-picker entries (versioned sites); empty for unversioned sites. */
+  versionAlternates?: VersionAlternate[];
   /** Current locale's URL prefix (`'/ja'`, or `''`) — localizes config nav links. */
   localePrefix?: string;
   /** Whether this build includes drafts (dev). Production excludes them. */
@@ -679,6 +685,7 @@ async function renderOne(input: RenderOneInput): Promise<RenderOneResult | null>
     bodyClass: input.url === '/404/' ? 'ov-body-404' : undefined,
     lang: input.lang,
     localeAlternates: input.localeAlternates,
+    versionAlternates: input.versionAlternates,
     localePrefix: input.localePrefix,
     draft: input.draft,
     strings: input.strings,
@@ -766,9 +773,15 @@ interface LocaleSpec {
   lang: string | undefined;
   /** Absolute content dir for this locale (`content/` or `content/<code>`). */
   inputAbs: string;
-  /** URL prefix: `''` for the default/single locale, `'/ja'` for others. */
+  /** URL prefix: version prefix + locale prefix (`''`, `'/ja'`, `'/v1'`, `'/v1/ja'`). */
   urlPrefix: string;
   isDefault: boolean;
+  /** Version id, or null for an unversioned site. */
+  version: string | null;
+  /** Version display label (defaults to the id); undefined when unversioned. */
+  versionLabel: string | undefined;
+  /** True for the version served at the site root. */
+  isLatestVersion: boolean;
   // Filled in Phase A:
   nav: NavNode;
   sidebarNav: NavNode;
@@ -784,7 +797,40 @@ interface LocaleSpec {
   dir: 'ltr' | 'rtl';
 }
 
+interface VersionMeta {
+  version: string | null;
+  versionLabel: string | undefined;
+  versionPrefix: string;
+  isLatestVersion: boolean;
+  inputAbs: string;
+}
+
+/**
+ * Resolve the full set of build specs — one per (version × locale). Versions are
+ * the outer dimension: each maps to a `content/<id>/` subtree, the `latest` one
+ * served at the root, the rest under `/<id>/`. Unversioned + single-language is
+ * a single unprefixed spec rooted at the content dir, so its output stays
+ * byte-for-byte identical to before either feature existed.
+ */
 function resolveLocaleSpecs(site: OvellumSiteConfig, inputAbs: string): LocaleSpec[] {
+  const versionMetas: VersionMeta[] =
+    site.versions && site.versions.length > 0
+      ? (() => {
+          const latest = site.versions.find((v) => v.latest) ?? site.versions[0]!;
+          return site.versions.map((v) => ({
+            version: v.id,
+            versionLabel: v.label ?? v.id,
+            versionPrefix: v.id === latest.id ? '' : '/' + v.id,
+            isLatestVersion: v.id === latest.id,
+            inputAbs: path.join(inputAbs, v.id),
+          }));
+        })()
+      : [{ version: null, versionLabel: undefined, versionPrefix: '', isLatestVersion: true, inputAbs }];
+
+  return versionMetas.flatMap((vm) => localeSpecsForVersion(site, vm));
+}
+
+function localeSpecsForVersion(site: OvellumSiteConfig, vm: VersionMeta): LocaleSpec[] {
   const placeholders = {
     nav: { title: '', url: '/', children: [] } as NavNode,
     sidebarNav: { title: '', url: '/', children: [] } as NavNode,
@@ -792,18 +838,23 @@ function resolveLocaleSpecs(site: OvellumSiteConfig, inputAbs: string): LocaleSp
     draftBySource: new Set<string>(),
     keys: new Map<string, string>(),
   };
-  // No i18n → one unprefixed spec rooted at the content dir (legacy behavior).
-  // `resolveStrings(undefined)` is exactly DEFAULT_STRINGS, so the rendered
-  // output stays byte-for-byte identical to the pre-i18n template.
+  const vFields = {
+    version: vm.version,
+    versionLabel: vm.versionLabel,
+    isLatestVersion: vm.isLatestVersion,
+  };
+  // No i18n → one spec rooted at the version's content dir, prefixed only by the
+  // version (empty for the latest). Unversioned + no-i18n = `''` = legacy output.
   if (!site.locales || site.locales.length === 0) {
     return [
       {
         locale: null,
         code: null,
         lang: undefined,
-        inputAbs,
-        urlPrefix: '',
+        inputAbs: vm.inputAbs,
+        urlPrefix: vm.versionPrefix,
         isDefault: true,
+        ...vFields,
         ...placeholders,
         urlBySource: new Map(),
         draftBySource: new Set(),
@@ -818,9 +869,10 @@ function resolveLocaleSpecs(site: OvellumSiteConfig, inputAbs: string): LocaleSp
     locale: l,
     code: l.code,
     lang: l.code,
-    inputAbs: path.join(inputAbs, l.code),
-    urlPrefix: l.code === def ? '' : '/' + l.code,
+    inputAbs: path.join(vm.inputAbs, l.code),
+    urlPrefix: vm.versionPrefix + (l.code === def ? '' : '/' + l.code),
     isDefault: l.code === def,
+    ...vFields,
     ...placeholders,
     urlBySource: new Map(),
     draftBySource: new Set(),
@@ -862,18 +914,45 @@ function buildLocaleAlternates(
   key: string,
 ): LocaleAlternate[] {
   if (!current.locale) return [];
-  return specs.map((s) => {
-    const translatedUrl = s.keys.get(key);
-    const homeUrl = s.urlPrefix ? s.urlPrefix + '/' : '/';
-    return {
-      code: s.code!,
-      label: s.locale!.label,
-      url: translatedUrl ?? homeUrl,
-      current: s === current,
-      translated: translatedUrl !== undefined,
-      isDefault: s.isDefault,
-    };
-  });
+  // Stay within the current version — the language picker switches locale, not
+  // version (the version picker handles the other axis).
+  return specs
+    .filter((s) => s.version === current.version)
+    .map((s) => {
+      const translatedUrl = s.keys.get(key);
+      const homeUrl = s.urlPrefix ? s.urlPrefix + '/' : '/';
+      return {
+        code: s.code!,
+        label: s.locale!.label,
+        url: translatedUrl ?? homeUrl,
+        current: s === current,
+        translated: translatedUrl !== undefined,
+        isDefault: s.isDefault,
+      };
+    });
+}
+
+/** Cross-version links for the topbar version picker, within the current locale.
+ *  Maps to the same page in each version (falling back to that version's home). */
+function buildVersionAlternates(
+  specs: LocaleSpec[],
+  current: LocaleSpec,
+  key: string,
+): VersionAlternate[] {
+  if (!current.version) return [];
+  return specs
+    .filter((s) => s.code === current.code)
+    .map((s) => {
+      const url = s.keys.get(key);
+      const homeUrl = s.urlPrefix ? s.urlPrefix + '/' : '/';
+      return {
+        id: s.version!,
+        label: s.versionLabel ?? s.version!,
+        url: url ?? homeUrl,
+        current: s === current,
+        isLatest: s.isLatestVersion,
+      };
+    });
 }
 
 interface WalkOpts {

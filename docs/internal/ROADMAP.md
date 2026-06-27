@@ -200,9 +200,19 @@ A1 unlocks A2–A4.
       is author-trusted raw HTML (headExtra boundary, `.ov-landing-html`). Core
       type + validation; `renderLanding` switch; docs en+ja. Tests: landing (4)
       + validate (1).
-- [ ] **B6 (L)** **Versioned docs** — directory-per-version + version
-      selector in the topbar. Table-stakes for libraries with maintained
-      majors.
+- [x] **B6 (L) — DONE 2026-06-27.** **Versioned docs** — `site.versions:
+      { id, label?, latest? }[]`, directory-per-version (`content/<id>/`), latest
+      at root + others under `/<id>/`, topbar version picker. **Composes with
+      i18n** by generalizing `resolveLocaleSpecs` → specs per (version × locale):
+      version is the outer URL/dir prefix, so sitemap/RSS/llms/404 follow for
+      free (everything keys off `spec.urlPrefix`/`inputAbs`). Picker maps to the
+      same page across versions (home fallback) via `buildVersionAlternates`
+      (same locale); language picker filtered to same version. Unversioned output
+      byte-identical. Core type + validation; `VersionAlternate` +
+      `renderVersionPicker` (reuses `.ov-lang`); `versionLabel` string en+ja;
+      config + versioning guide en+ja. Tests: template (2) + validate (1).
+      **Deferred polish (slice 2):** old-version noindex/sitemap exclusion, an
+      "you're viewing an old version" banner, a `version snapshot` command.
 - [x] **B7 (L)** **i18n / multi-language — SHIPPED (v0.8.0 + v0.11.0).** Full
       engine + English↔Japanese 1:1 site; chrome-string localization + RTL;
       per-locale `check` + translation-staleness. **Per-locale RSS — DONE

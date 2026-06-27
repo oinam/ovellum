@@ -20,6 +20,7 @@ export interface UiStrings {
   yesterday: string;
   docsLink: string;
   languageLabel: string;
+  versionLabel: string;
   previous: string;
   next: string;
   pageNav: string;
@@ -83,6 +84,7 @@ export const DEFAULT_STRINGS: UiStrings = {
   yesterday: 'yesterday',
   docsLink: 'Docs',
   languageLabel: 'Language',
+  versionLabel: 'Version',
   previous: 'Previous',
   next: 'Next',
   pageNav: 'Page navigation',
@@ -152,6 +154,7 @@ export const BUILTIN_STRINGS: Record<string, Partial<UiStrings>> = {
     yesterday: '昨日',
     docsLink: 'ドキュメント',
     languageLabel: '言語',
+    versionLabel: 'バージョン',
     previous: '前へ',
     next: '次へ',
     pageNav: 'ページナビゲーション',

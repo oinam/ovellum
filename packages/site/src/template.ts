@@ -62,6 +62,8 @@ export interface ShellOptions {
   lang?: string;
   /** Language-picker entries (i18n sites); empty/undefined = no picker. */
   localeAlternates?: LocaleAlternate[];
+  /** Version-picker entries (versioned sites); empty/undefined = no picker. */
+  versionAlternates?: VersionAlternate[];
   /** Current locale's URL prefix (`'/ja'`, or `''`) — localizes config nav links. */
   localePrefix?: string;
   /** Render the draft ribbon (dev builds only — drafts never reach production). */
@@ -87,6 +89,20 @@ export interface LocaleAlternate {
   translated: boolean;
   /** Whether this locale is the site's default (served at root) — for x-default. */
   isDefault: boolean;
+}
+
+export interface VersionAlternate {
+  /** Version id (e.g. `'v2'`). */
+  id: string;
+  /** Display label (defaults to the id). */
+  label: string;
+  /** Where switching to this version goes — the same page, or that version's
+   *  home when this page doesn't exist there. Raw (no basePath). */
+  url: string;
+  /** Whether this is the page's current version. */
+  current: boolean;
+  /** Whether this version is served at the site root (the latest). */
+  isLatest: boolean;
 }
 
 function renderShell(opts: ShellOptions): string {
@@ -250,7 +266,7 @@ ${i18nScript(strings)}</head>
 <body${opts.bodyClass ? ` class="${escapeAttr(opts.bodyClass)}${opts.draft ? ' ov-has-draft' : ''}"` : opts.draft ? ' class="ov-has-draft"' : ''}>
   ${opts.draft ? `<div class="ov-draft-ribbon" role="status"><strong>${escapeHtml(strings.draftLabel)}</strong> — ${escapeHtml(strings.draftRibbonNote)}.</div>` : ''}
   ${renderFrame()}
-  ${renderTopbar(opts.site, assets, opts.docsHref ? siteUrl(opts.docsHref, basePath) : undefined, searchEnabled, basePath, strings, opts.localeAlternates, opts.localePrefix ?? '', opts.lang, opts.site.defaultLocale)}
+  ${renderTopbar(opts.site, assets, opts.docsHref ? siteUrl(opts.docsHref, basePath) : undefined, searchEnabled, basePath, strings, opts.localeAlternates, opts.localePrefix ?? '', opts.lang, opts.site.defaultLocale, opts.versionAlternates)}
   ${opts.body}
   ${backToTop}
   ${renderFooter(opts.site, opts.generatedAt, basePath, strings, opts.localePrefix ?? '', opts.lang, opts.site.defaultLocale)}
@@ -526,6 +542,31 @@ function renderLangPicker(
       </details>`;
 }
 
+/** Topbar version picker (versioned sites). Mirrors the language picker and
+ *  reuses its `.ov-lang` styling; no globe glyph (label + caret only). */
+function renderVersionPicker(
+  alternates: VersionAlternate[] | undefined,
+  basePath: string,
+  versionLabel: string,
+): string {
+  if (!alternates || alternates.length < 2) return '';
+  const current = alternates.find((a) => a.current) ?? alternates[0]!;
+  const options = alternates
+    .map((a) => {
+      const cls = a.current ? 'ov-lang-option is-current' : 'ov-lang-option';
+      const aria = a.current ? ' aria-current="true"' : '';
+      const check = a.current ? renderIcon('check', { size: 14, class: 'ov-lang-check' }) : '';
+      return `<a class="${cls}" href="${escapeAttr(siteUrl(a.url, basePath))}"${aria}><span class="ov-lang-option-label">${escapeHtml(a.label)}</span>${check}</a>`;
+    })
+    .join('\n          ');
+  return `<details class="ov-lang ov-version">
+        <summary class="ov-lang-toggle" aria-label="${escapeAttr(versionLabel)}" title="${escapeAttr(versionLabel)}"><span class="ov-lang-current">${escapeHtml(current.label)}</span>${renderIcon('chevron-down', { size: 14, class: 'ov-lang-caret' })}</summary>
+        <div class="ov-lang-menu" role="menu">
+          ${options}
+        </div>
+      </details>`;
+}
+
 function renderTopbar(
   site: OvellumSiteConfig & { title: string },
   assets: string,
@@ -537,9 +578,11 @@ function renderTopbar(
   localePrefix = '',
   lang?: string,
   defaultLocale?: string,
+  versionAlternates?: VersionAlternate[],
 ): string {
   const items = resolveTopbarItems(site, basePath, localePrefix, lang, defaultLocale);
   const langPicker = renderLangPicker(localeAlternates, basePath, strings.languageLabel);
+  const versionPicker = renderVersionPicker(versionAlternates, basePath, strings.versionLabel);
   // Desktop splits text links from icon links so a divider can sit between
   // them; the mobile sheet keeps them in one labeled list.
   const desktopTextLinks = renderTopbarLinks(items, docsHref, true, strings.docsLink, 'text');
@@ -591,8 +634,9 @@ function renderTopbar(
       <div class="ov-topbar-search">${search}</div>
       <div class="ov-topbar-right">
         <nav class="ov-topbar-nav" aria-label="${escapeAttr(strings.primaryNav)}">${desktopTextLinks}</nav>
+        ${versionPicker}
         ${langPicker}
-        ${desktopTextLinks || langPicker ? '<span class="ov-topbar-divider" aria-hidden="true"></span>' : ''}
+        ${desktopTextLinks || langPicker || versionPicker ? '<span class="ov-topbar-divider" aria-hidden="true"></span>' : ''}
         ${desktopIconLinks ? `<div class="ov-topbar-icons">
           ${desktopIconLinks}
         </div>
@@ -602,6 +646,7 @@ function renderTopbar(
       </div>
       <nav id="ov-mobile-nav" class="ov-mobile-nav" aria-label="${escapeAttr(strings.mobileNav)}">
         ${mobileLinks}
+        ${versionPicker ? `<div class="ov-mobile-lang">${versionPicker}</div>` : ''}
         ${langPicker ? `<div class="ov-mobile-lang">${langPicker}</div>` : ''}
         <div class="ov-mobile-theme" data-ov-appearance>
           ${renderAppearancePanel(strings, customFont)}
@@ -723,6 +768,8 @@ export interface RenderPageInput {
   lang?: string;
   /** Language-picker entries (i18n sites); empty/undefined = no picker. */
   localeAlternates?: LocaleAlternate[];
+  /** Version-picker entries (versioned sites); empty/undefined = no picker. */
+  versionAlternates?: VersionAlternate[];
   /** Current locale's URL prefix (`'/ja'`, or `''`) — localizes config nav links. */
   localePrefix?: string;
   /** Draft page — renders the ribbon (dev only). */
@@ -792,6 +839,7 @@ export function renderPage(input: RenderPageInput): string {
     bodyClass: input.bodyClass,
     lang: input.lang,
     localeAlternates: input.localeAlternates,
+    versionAlternates: input.versionAlternates,
     localePrefix: input.localePrefix,
     draft: input.draft,
     strings,
@@ -824,6 +872,8 @@ export interface RenderLandingInput {
   lang?: string;
   /** Language-picker entries (i18n sites); empty/undefined = no picker. */
   localeAlternates?: LocaleAlternate[];
+  /** Version-picker entries (versioned sites); empty/undefined = no picker. */
+  versionAlternates?: VersionAlternate[];
   /** Current locale's URL prefix (`'/ja'`, or `''`) — localizes config nav links. */
   localePrefix?: string;
   /** Resolved UI-chrome strings. Defaults to English when omitted. */
@@ -943,6 +993,7 @@ export function renderLanding(input: RenderLandingInput): string {
     bodyClass: 'ov-body-landing',
     lang: input.lang,
     localeAlternates: input.localeAlternates,
+    versionAlternates: input.versionAlternates,
     localePrefix: input.localePrefix,
     strings,
     dir: input.dir,

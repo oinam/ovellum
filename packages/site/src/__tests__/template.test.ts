@@ -390,6 +390,41 @@ describe('renderPage', () => {
     expect(html).toContain('<link rel="stylesheet" href="http://cdn.test/f.css">');
   });
 
+  it('renders a version picker from versionAlternates (B6)', () => {
+    const html = renderPage({
+      site: { title: 'X', defaultTheme: 'auto', footer: '' },
+      nav: NAV,
+      url: '/guides/install/',
+      title: 'Install',
+      bodyHtml: '',
+      headings: [],
+      versionAlternates: [
+        { id: 'v2', label: 'v2 (latest)', url: '/guides/install/', current: true, isLatest: true },
+        { id: 'v1', label: 'v1', url: '/v1/guides/install/', current: false, isLatest: false },
+      ],
+      generatedAt: '2026-06-12T00:00:00.000Z',
+    });
+    expect(html).toContain('ov-version');
+    // Current version marked; the other links to the same page in v1.
+    expect(html).toContain('class="ov-lang-option is-current" href="/guides/install/"');
+    expect(html).toContain('href="/v1/guides/install/"');
+    expect(html).toContain('v2 (latest)');
+  });
+
+  it('omits the version picker when there is only one version', () => {
+    const html = renderPage({
+      site: { title: 'X', defaultTheme: 'auto', footer: '' },
+      nav: NAV,
+      url: '/',
+      title: 'X',
+      bodyHtml: '',
+      headings: [],
+      versionAlternates: [{ id: 'v1', label: 'v1', url: '/', current: true, isLatest: true }],
+      generatedAt: '2026-06-12T00:00:00.000Z',
+    });
+    expect(html).not.toContain('ov-version');
+  });
+
   it('renders the language picker, <html lang>, and hreflang for i18n pages', () => {
     const html = renderPage({
       site: { title: 'X', defaultTheme: 'auto', footer: '', baseUrl: 'https://x.test' },

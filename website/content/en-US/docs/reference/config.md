@@ -98,6 +98,7 @@ interface OvellumSiteConfig {
   basePath?: string;
   locales?: { code: string; label: string; strings?: Record<string, string> }[];
   defaultLocale?: string;
+  versions?: { id: string; label?: string; latest?: boolean }[];
   ai?: { enabled?: boolean; llmsTxt?: boolean; fullText?: boolean; mdMirror?: boolean };
   mermaid?: { enabled?: boolean; url?: string };
   defaultTheme: 'auto' | 'light' | 'dark';
@@ -135,6 +136,7 @@ interface OvellumSiteConfig {
 | `basePath`       | `string?`                           | `''`                          | Jekyll-style subpath. Leading slash, no trailing slash (e.g. `'/ovellum'`). Prepended to every internal URL, asset path, canonical link, and sitemap entry. Authors keep writing root-relative links; the build adds the prefix. |
 | `locales`        | `{ code, label, strings? }[]?`      | `undefined`                   | **Opt-in i18n.** Each entry is a language: `code` is a BCP 47 tag (`'en-US'`, `'ja'`, `'zh-Hans'`) and also the `content/<code>/` folder name + `<html lang>`; `label` is the picker text (use the autonym, e.g. `'日本語'`). The optional `strings` map overrides the template's built-in UI chrome for that locale (keys like `tocTitle`, `editedLabel`, `backToTop`; merged over the built-ins, English fills any gap) — built-in chrome ships for English + Japanese, and RTL languages get `<html dir="rtl">`. When set, content moves into per-locale subtrees, a language picker appears in the topbar, and pages get `hreflang`. **Config-driven labels/copy** (`topbarNav`/`footerNav` labels, and the `landing` hero/CTA/feature/install/trust text) accept a per-locale `{ code: string }` map in place of a plain string, resolved to the current locale. Unset = single-language (no migration needed). See the [i18n guide](/docs/guides/i18n/). |
 | `defaultLocale`  | `string?`                           | first of `locales`            | Which `locales[].code` is served at the **root** (no URL prefix); the rest serve under `/<code>/`. Ignored when `locales` is unset.                                                                                              |
+| `versions`       | `{ id, label?, latest? }[]?`        | `undefined`                   | **Opt-in versioned docs.** Each entry maps to a `content/<id>/` subtree; the one marked `latest` (or the first) serves at the root, the rest under `/<id>/`. A version picker appears in the topbar (switching keeps you on the same page where it exists). Composes with `locales` (`content/<id>/<locale>/`). Unset = unversioned. See [versions](#versions) and the [versioning guide](/docs/guides/versioning/). |
 | `ai`             | `{ enabled?, llmsTxt?, fullText?, mdMirror? }` | see [`ai`](#ai)    | **AI-friendly output** — `llms.txt`, `llms-full.txt`, and per-page `.md` mirrors emitted alongside the HTML so agents/LLMs read the docs cleanly. `llmsTxt` + `mdMirror` default **on**, `fullText` **off**. Set `enabled: false` to opt out entirely. The HTML is unchanged; these are additive files (per-locale on i18n sites). |
 | `mermaid`        | `{ enabled?, url? }`                | see [`mermaid`](#mermaid) | **Mermaid diagrams** — ```mermaid blocks render as diagrams, lazy-loaded only on pages that contain one. `enabled` defaults **on**; `url` overrides the (pinned CDN) runtime source for self-hosting. |
 | `defaultTheme`   | `'auto' \| 'light' \| 'dark'`       | `'auto'`                      | Initial light/dark mode before user preference loads. Visitors can change it from the topbar appearance control (persisted in `localStorage`).                                                                                  |
@@ -167,6 +169,49 @@ interface OvellumSiteConfig {
 | `href`     | `string`  | Internal path (`/guides/themes/`) or absolute URL.                                                                               |
 | `icon`     | `string?` | Registry icon name (`github`, `package`, `rss`, `mail`, …). Renders icon-only on desktop; icon + label in the mobile sheet.      |
 | `external` | `boolean?`| Force the external treatment (new tab + `rel="noopener"`). Auto-true when `href` starts with `http://` or `https://`.           |
+
+### Versions
+
+Publish more than one version of the docs side by side. Each `versions` entry is
+a `content/<id>/` subtree; the one marked `latest` (or the first) serves at the
+**root**, the rest under `/<id>/`. A topbar version picker switches between them,
+landing on the **same page** in the target version where it exists (else that
+version's home).
+
+| Field    | Type       | Notes                                                                            |
+| -------- | ---------- | -------------------------------------------------------------------------------- |
+| `id`     | `string`   | URL segment + `content/<id>/` folder name. Letters, digits, `.`, `_`, `-`.       |
+| `label`  | `string?`  | Display name in the picker. Defaults to `id`.                                    |
+| `latest` | `boolean?` | Serve this version at the root. At most one entry may set it; defaults to the first. |
+
+```ts
+site: {
+  versions: [
+    { id: 'v2', label: 'v2 (latest)', latest: true }, // served at /
+    { id: 'v1', label: 'v1' },                         // served at /v1/
+  ],
+}
+```
+
+```
+content/
+  v2/                ← served at the root
+    index.md
+    guides/install.md
+  v1/                ← served at /v1/
+    index.md
+    guides/install.md
+```
+
+**Composes with [`locales`](#site-manual-mode):** when both are set, content lives
+at `content/<id>/<locale>/` and URLs nest as `/<id>/<locale>/…` (the latest
+version + default locale stay at the root). Sitemap, RSS, and `llms.txt` are
+emitted per version. The full walkthrough is in the
+[versioning guide](/docs/guides/versioning/).
+
+> Enabling `versions` moves your content into a `content/<id>/` folder — a
+> one-time migration. Unversioned sites need no `content/<id>/` folder and are
+> unchanged.
 
 ### Custom fonts
 

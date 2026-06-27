@@ -9,6 +9,7 @@
     "components",
     "themes",
     "i18n",
+    "versioning",
     "search",
     "deploy",
     "automation"

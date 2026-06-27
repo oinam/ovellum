@@ -270,6 +270,26 @@ describe('validateUserConfig', () => {
     ).toThrow(/site\.landing\.hero\.media\.light/);
   });
 
+  it('accepts site.versions and rejects malformed ones', () => {
+    const ok = {
+      site: { versions: [{ id: 'v2', label: 'v2 (latest)', latest: true }, { id: 'v1' }] },
+    };
+    expect(validateUserConfig(ok)).toEqual(ok);
+    // must be a non-empty array.
+    expect(() => validateUserConfig({ site: { versions: [] } })).toThrow(/site\.versions/);
+    // id must be URL/folder-safe.
+    expect(() => validateUserConfig({ site: { versions: [{ id: 'v 1' }] } })).toThrow(/\.id/);
+    expect(() => validateUserConfig({ site: { versions: [{ id: 'a/b' }] } })).toThrow(/\.id/);
+    // duplicate ids.
+    expect(() => validateUserConfig({ site: { versions: [{ id: 'v1' }, { id: 'v1' }] } })).toThrow(
+      /duplicate/,
+    );
+    // at most one latest.
+    expect(() =>
+      validateUserConfig({ site: { versions: [{ id: 'a', latest: true }, { id: 'b', latest: true }] } }),
+    ).toThrow(/at most one/);
+  });
+
   it('accepts composable landing.sections and rejects malformed ones', () => {
     const ok = {
       site: {
