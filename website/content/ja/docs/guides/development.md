@@ -1,7 +1,7 @@
 ---
 title: 開発
 description: 日々のループ — 雛形作成、執筆、監視、チェック、ビルド、デプロイ。
-sourceHash: '89fceb6b556d403a'
+sourceHash: 'efe940cea8c6fef4'
 ---
 
 # 開発
@@ -45,6 +45,8 @@ npx ovellum init --yes
 
 - `ovellum.config.json` — 唯一の設定ファイル。
 - `content/index.md` — 開始用のページ（手動モードとハイブリッドモードのみ）。
+  ハイブリッドモードでは `@manual` 保護ゾーンの例が含まれるので、「毎回のリビルドを
+  生き延びる」という契約をすぐに確認できます。
 - `.gitignore` — なければ `dist/` と `.orphans/` が追記されます。
 
 フラグの一覧と終了コードについては

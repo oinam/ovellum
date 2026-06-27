@@ -343,7 +343,27 @@ ${protectBlock}
 `;
 }
 
-function renderStarterIndex(a: InitAnswers): string {
+export function renderStarterIndex(a: InitAnswers): string {
+  // Hybrid mode's headline promise, shown by example: a `@manual` zone whose
+  // prose survives every regeneration. New users meet the moat on day one.
+  const protectedZone =
+    a.mode === 'hybrid'
+      ? `## Your writing is safe
+
+In hybrid mode Ovellum generates docs from your source, then merges your
+hand-written prose back in. Anything inside a \`@manual\` zone survives every
+rebuild — the generator updates *around* it, never *over* it:
+
+<!-- @manual:start id="welcome-note" -->
+
+**Add your own notes here — this block survives every rebuild.** Rename or delete
+the documented symbol and Ovellum quarantines this prose to \`.ovellum/orphans/\`
+instead of dropping it.
+
+<!-- @manual:end -->
+
+`
+      : '';
   return `---
 title: ${a.title}
 description: ${a.description || 'Welcome to ' + a.title + '.'}
@@ -353,7 +373,7 @@ description: ${a.description || 'Welcome to ' + a.title + '.'}
 
 ${a.description || `Welcome to **${a.title}**. This file is \`${a.input}/index.md\` and it becomes the home page when you run \`ovellum build\`.`}
 
-## Next steps
+${protectedZone}## Next steps
 
 - Edit this file and re-run \`ovellum build\` (or \`ovellum watch\` for live rebuilds).
 - Add more \`.md\` files alongside this one — they become pages automatically.

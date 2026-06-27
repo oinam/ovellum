@@ -45,7 +45,9 @@ npx ovellum init --yes
 Files written:
 
 - `ovellum.config.json` — your one config file.
-- `content/index.md` — a starter page (manual + hybrid modes only).
+- `content/index.md` — a starter page (manual + hybrid modes only). In hybrid
+  mode it includes a `@manual` protected-zone example, so you see the
+  survives-every-rebuild contract right away.
 - `.gitignore` — gets `dist/` and `.orphans/` appended if absent.
 
 See the [CLI reference for `init`](/docs/reference/cli/#ovellum-init) for the

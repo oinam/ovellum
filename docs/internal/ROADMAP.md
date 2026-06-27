@@ -513,9 +513,12 @@ machine-readable-CLI groundwork (C3 ≈ D1).
 - [ ] **U2 (M)** **Migration guide** (`/docs/guides/migration/`): from
       TypeDoc, from hand-written-only, with a short capability comparison
       (generation / merge / orphan handling). The skeptical-adopter page.
-- [ ] **U3 (S)** **Init scaffolds a protected-zone example** in hybrid mode
-      ("Add your own notes here — this block survives every rebuild") +
-      document the `--yes` fast path in the development guide.
+- [x] **U3 (S) — DONE 2026-06-27.** **Init scaffolds a protected-zone example**
+      in hybrid mode (`renderStarterIndex` adds a `@manual id="welcome-note"`
+      zone with "Add your own notes here — this block survives every rebuild";
+      manual mode unchanged). `--yes` fast path already documented in the
+      development guide; added a note there that the hybrid starter carries the
+      example (en+ja). Pinned by `init-render.test.ts` (2).
 - [x] **U4 (M)** **`--verbose` flag** (config-resolution path, file I/O detail)
       and **`--json` output** on `build`/`check`/`diff` for CI. `--json` done with
       C3; **`--verbose` done 2026-06-25** on `build`/`check`/`diff` — logs config
