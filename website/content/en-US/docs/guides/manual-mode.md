@@ -7,7 +7,9 @@ description: From a folder of Markdown files to a deployable static site.
 
 Manual mode is the simplest pipeline. You write Markdown; Ovellum produces
 HTML, CSS, and a tiny bit of JavaScript. There's no source parsing, no
-merge engine, no orphan archive — just rendering.
+merge engine, no orphan archive — just rendering. A complete, runnable manual
+site lives in [`examples/`](https://github.com/oinam/ovellum/tree/main/examples)
+if you'd rather read working code.
 
 ## Minimum project
 

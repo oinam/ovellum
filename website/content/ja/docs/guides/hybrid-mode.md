@@ -1,7 +1,7 @@
 ---
 title: 自動と手動を混在させる（ハイブリッドモード）
 description: 1 つのファイル、2 人の著者 — 両者を共存させるマージエンジン。
-sourceHash: '9ee24a89668c1618'
+sourceHash: '4a0c358a8c00a9dc'
 ---
 
 # 自動と手動を混在させる（ハイブリッドモード）
@@ -162,7 +162,12 @@ my-project/
 
 `docs/` は読者が目にするものです。`.ovellum/orphans/` はあなたのセーフティネットです。
 
-## ハイブリッドモードがしないこと
+## 設計上の境界
+
+これらはマージの契約をシンプルで予測可能に保つための意図的な境界であり、いずれ埋める
+べき欠落ではありません。ループ全体を端から端まで見たい場合は、動かせるハイブリッド
+プロジェクトが [`examples/`](https://github.com/oinam/ovellum/tree/main/examples)
+にあります。
 
 - **HTML を直接生成しません。** ハイブリッドの出力は Markdown です。
   [別の設定での `manual` モード](/ja/docs/guides/deploy/#self-hosted)と組み合わせるか、

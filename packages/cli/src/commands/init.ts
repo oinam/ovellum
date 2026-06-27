@@ -50,7 +50,7 @@ export const initCommand = defineCommand({
       .find((p) => existsSync(p));
     if (existingConfig && !force) {
       process.stderr.write(
-        `${path.basename(existingConfig)} already exists at ${existingConfig}.\n` +
+        `${path.relative(cwd, existingConfig) || path.basename(existingConfig)} already exists.\n` +
           `Pass --force to overwrite, or run \`ovellum init\` in a different directory.\n`,
       );
       process.exit(2);

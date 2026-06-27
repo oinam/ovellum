@@ -285,7 +285,7 @@ you want running while writing.
 ### Synopsis
 
 ```
-ovellum dev [--cwd <dir>] [--config <path>] [--port <n>] [--host <addr>] [--no-drafts]
+ovellum dev [--cwd <dir>] [--config <path>] [--port <n>] [--host <addr>] [--no-drafts] [--verbose]
 ```
 
 ### Flags
@@ -297,6 +297,7 @@ ovellum dev [--cwd <dir>] [--config <path>] [--port <n>] [--host <addr>] [--no-d
 | `--port <n>`      | integer | `3000`      | Starting port. If busy, auto-bumps up to 19 ports forward before giving up.          |
 | `--host <addr>`   | string  | `127.0.0.1` | Bind address. Pass `0.0.0.0` to expose on the local network.                         |
 | `--no-drafts`     | flag    | drafts on   | Hide [draft](/docs/guides/drafts/) pages locally, to preview exactly what production publishes. (`watch` takes `--no-drafts` too.) |
+| `--verbose`       | flag    | off         | Log each request served as `METHOD path → status` (handy when debugging routing or 404s). |
 
 ### Behavior
 

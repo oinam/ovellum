@@ -29,7 +29,10 @@ export const upgradeCommand = defineCommand({
 
     const latest = await fetchLatestVersion(5000);
     if (!latest) {
-      process.stderr.write('Could not reach the npm registry to check for updates.\n');
+      process.stderr.write(
+        'Could not reach the npm registry to check for updates.\n' +
+          'hint: check your network/proxy, or upgrade manually with `npm install -D ovellum@latest`.\n',
+      );
       process.exit(1);
     }
 

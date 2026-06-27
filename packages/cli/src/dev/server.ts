@@ -44,6 +44,8 @@ export interface DevServerOptions {
   host: string;
   /** When true, HTML responses get a live-reload client injected. */
   liveReload: boolean;
+  /** When true, log each request as `METHOD path → status` to stderr. */
+  logRequests?: boolean;
 }
 
 export interface DevServer {
@@ -119,6 +121,15 @@ export async function startDevServer(opts: DevServerOptions): Promise<DevServer>
   const startingPort =
     opts.port === 0 ? 0 : await findFreePort(opts.host, opts.port, PORT_RANGE);
   const server: Server = http.createServer((req, res) => {
+    // Opt-in request log (skips the SSE/reload internals to stay quiet).
+    if (opts.logRequests) {
+      const p = (req.url ?? '/').split('?')[0] ?? '/';
+      if (p !== RELOAD_PATH && p !== RELOAD_SCRIPT_PATH) {
+        res.on('finish', () => {
+          process.stderr.write(`  ${req.method ?? 'GET'} ${p} → ${res.statusCode}\n`);
+        });
+      }
+    }
     handler(req, res).catch((err) => {
       process.stderr.write(`dev-server error: ${(err as Error).message}\n`);
       if (!res.headersSent) res.writeHead(500);

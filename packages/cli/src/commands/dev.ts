@@ -34,6 +34,11 @@ export const devCommand = defineCommand({
       default: true,
       description: 'Show draft pages (on by default in dev; use --no-drafts to simulate production)',
     },
+    verbose: {
+      type: 'boolean',
+      default: false,
+      description: 'Log each request served (METHOD path → status)',
+    },
   },
   async run({ args }) {
     const cwd = path.resolve(args.cwd ?? process.cwd());
@@ -52,8 +57,9 @@ export const devCommand = defineCommand({
 
     if (config.mode !== 'manual') {
       process.stderr.write(
-        `'dev' currently supports manual mode only. Got '${config.mode}'. ` +
-          `Auto / hybrid coverage is tracked in TODO.md Phase 6.\n`,
+        `'dev' currently supports manual mode only (got '${config.mode}'). ` +
+          `For auto/hybrid, run 'ovellum watch' to rebuild on every change, ` +
+          `and serve the output yourself (or just 'ovellum build').\n`,
       );
       process.exit(1);
     }
@@ -72,6 +78,7 @@ export const devCommand = defineCommand({
       port,
       host,
       liveReload: true,
+      logRequests: args.verbose === true,
     });
 
     const watcher = await watchAndBuild({

@@ -1,7 +1,7 @@
 ---
 title: CLI リファレンス
 description: ovellum CLI のすべてのサブコマンドとフラグ。
-sourceHash: 'a1273157bdf4d2c8'
+sourceHash: '599a212ad525574a'
 ---
 
 # CLI リファレンス
@@ -284,7 +284,7 @@ npx ovellum diff --exit-code
 ### 構文
 
 ```
-ovellum dev [--cwd <dir>] [--config <path>] [--port <n>] [--host <addr>] [--no-drafts]
+ovellum dev [--cwd <dir>] [--config <path>] [--port <n>] [--host <addr>] [--no-drafts] [--verbose]
 ```
 
 ### フラグ
@@ -296,6 +296,7 @@ ovellum dev [--cwd <dir>] [--config <path>] [--port <n>] [--host <addr>] [--no-d
 | `--port <n>`      | integer | `3000`      | 開始ポート。使用中の場合、最大 19 ポート先まで自動でずらして試し、それでもだめなら諦めます。          |
 | `--host <addr>`   | string  | `127.0.0.1` | バインドアドレス。`0.0.0.0` を渡すとローカルネットワークに公開します。                         |
 | `--no-drafts`     | flag    | drafts on   | [ドラフト](/ja/docs/guides/drafts/)ページをローカルで隠し、本番が公開する内容をそのまま確認します。（`watch` も `--no-drafts` を受け付けます。） |
+| `--verbose`       | flag    | off         | 配信した各リクエストを `METHOD path → status` の形でログ出力します（ルーティングや 404 のデバッグに便利）。 |
 
 ### 挙動
 

@@ -1,7 +1,7 @@
 ---
 title: 設定
 description: ovellum.config.{json,ts,js} のすべてのフィールドと、その型・デフォルト値・効果。
-sourceHash: '802d11453f02e63c'
+sourceHash: '29759d7135b58804'
 ---
 
 # 設定
@@ -155,6 +155,7 @@ interface OvellumSiteConfig {
 | `ignoreFolders`  | `string[]`                          | `[]`                          | manual モードのサイトから完全に除外するフォルダ**名**（任意の深さでマッチ） — サイドバーに出ず、レンダリングもされず、出力にもコピーされません。WIP／プライベートなディレクトリに使います。フォルダは `_meta.json` の `"hidden": true` で自己非表示にもでき、単一ページはフロントマターの `draft: true` で非表示にできます。（`public/` のようなアセット専用フォルダは、すでに自動的にサイドバーから除外されています。） |
 | `ignoreFiles`    | `string[]`                          | `[]`                          | 除外するファイルの **glob** — Markdown ページとパススルーのアセットの両方が対象で、`build` **と** `check` の双方で尊重されます。スラッシュなしのパターンは任意の深さで basename にマッチし（`README.md`、`*.draft.md`）、スラッシュ付きのパターンは `input` を基準とした相対パスにマッチします（`drafts/**`）。`*`、`**`、`?` をサポートします。単一ファイル（例: リポジトリの `README.md`）を、そのファイルに触れずに除外するのに使えます。**常に自動除外**（設定不要）: ドットファイル、`node_modules`、パッケージのマニフェスト／ロックファイル、Ovellum の設定、出力ディレクトリ自身 — これにより `input: "."` でもプロジェクトファイルが漏れません。 |
 | `topbarNav`      | `Array<{label, href, icon?, external?}>` | `[]`                     | 検索ボックスの右側に順に表示されます。`icon` を持つ項目はデスクトップではアイコンのみで表示され（ラベルはスクリーンリーダー用に保持）、モバイルのシート内ではアイコン + ラベルで表示されます。外部リンク（`external: true` または `href` が `http(s)://` で始まるもの）は `rel="noopener"` 付きで新しいタブで開きます。テキスト項目には小さな外部リンクアイコンも付きます。720px 未満では上段はロゴ + バージョン + 検索 + ハンバーガーだけになり、ナビとテーマ切り替えはシートに移ります。 |
+| `footerNav`      | `Array<{label, href, icon?, external?}>` | `[]`                     | フッターに順に表示されるリンク。項目の形は [`topbarNav[]`](#topbarnav) と同じです。 |
 | `landing`        | `OvellumLandingConfig`              | `{ enabled: false, … }`       | 下記参照。                                                                                                                                                                                                                     |
 
 ### `topbarNav[]`

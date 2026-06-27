@@ -165,7 +165,12 @@ my-project/
 
 `docs/` is what your readers see; `.ovellum/orphans/` is your safety net.
 
-## What hybrid mode doesn't do
+## Boundaries (by design)
+
+These are deliberate boundaries that keep the merge contract simple and
+predictable — not gaps waiting to be filled. A runnable hybrid project lives in
+[`examples/`](https://github.com/oinam/ovellum/tree/main/examples) if you want to
+see the whole loop end to end.
 
 - **It doesn't produce HTML directly.** Hybrid output is Markdown; pair
   it with [`manual` mode in a separate config](/docs/guides/deploy/#self-hosted),

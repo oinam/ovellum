@@ -1,7 +1,7 @@
 ---
 title: 手動モードのサイトを構築する
 description: Markdown ファイルのフォルダから、デプロイ可能な静的サイトへ。
-sourceHash: 'ec830eefb886f71c'
+sourceHash: 'b2d7a42e8bf3bc95'
 ---
 
 # 手動モードのサイトを構築する
@@ -9,6 +9,9 @@ sourceHash: 'ec830eefb886f71c'
 手動モードは最もシンプルなパイプラインです。あなたは Markdown を書き、Ovellum は
 HTML、CSS、そしてごくわずかな JavaScript を生成します。ソースの解析も、
 マージエンジンも、孤立ブロックのアーカイブもありません — ただレンダリングするだけです。
+動かせる完全な手動サイトが
+[`examples/`](https://github.com/oinam/ovellum/tree/main/examples) にあります。
+動くコードを読みたい場合はそちらをどうぞ。
 
 ## 最小構成のプロジェクト
 

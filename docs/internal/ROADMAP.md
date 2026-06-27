@@ -525,14 +525,20 @@ machine-readable-CLI groundwork (C3 ≈ D1).
       resolution + per-stage / file-I/O detail to **stderr** (threaded as an
       `onLog` through `runBuild`/`buildProjectDocs`), so it composes with `--json`
       (stdout stays pure).
-- [ ] **U5 (S)** **Better small messages**: registry-failure hint in
-      `upgrade`, drop the internal "TODO.md Phase 6" reference from the `dev`
-      mode error, optional request log on the dev server, relative paths in
-      init errors.
-- [ ] **U6 (S)** **Docs quick wins** (one slice): add `footerNav` to the
-      config-reference interface block; one-sentence mode explainer on the
-      landing above the install snippets; link `examples/` from the
-      manual/hybrid guides; reframe hybrid-mode limits as "what's stable".
+- [x] **U5 (S) — DONE 2026-06-27.** **Better small messages:** `upgrade`
+      registry-failure now hints the manual `npm install -D ovellum@latest` path;
+      the `dev` manual-only error points at `watch`/`build` instead of the
+      internal "TODO.md Phase 6" ref; `init`'s config-exists error prints a
+      relative path; and `ovellum dev --verbose` logs each request
+      (`METHOD path → status`, opt-in via `DevServerOptions.logRequests`).
+- [x] **U6 (S) — DONE 2026-06-27.** **Docs quick wins:** added a `footerNav`
+      row to the config reference table (it was in the interface but undocumented;
+      en+ja); linked [`examples/`](https://github.com/oinam/ovellum/tree/main/examples)
+      from the manual + hybrid guides (en+ja); reframed the hybrid guide's "What
+      hybrid mode doesn't do" → **"Boundaries (by design)"** (deliberate, not
+      gaps; en+ja). Skipped the landing mode-explainer — redundant with the
+      "Three Modes" feature card + hero (adding it would be the kind of chrome
+      the design direction rejects).
 - [ ] **U7 (M)** **"Why hybrid" comparison section** in the hybrid guide —
       before/after regeneration story vs TypeDoc and vs hand-written prose.
 - [x] **U8 (M)** **Drafts — SHIPPED (v0.9.0, "the Editor" slice 1).** Design locked
