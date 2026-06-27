@@ -1,5 +1,27 @@
 # ovellum
 
+## 0.19.0
+
+### Minor Changes
+
+- 2ade2dc: Composable landing pages. `site.landing.sections` takes an ordered array of typed blocks — `hero`, `install`, `features`, `trust`, `scene`, `prose`, and `custom-html` — so you can arrange the landing in any order, repeat blocks, and drop in free-form prose or raw HTML wherever you like. The existing flat config (`hero`, `features`, `install`, `trustStrip`) stays the data source for those block types and the default order, so it doubles as shorthand: leave `sections` unset and nothing changes. `prose` renders inline `html` or the `_landing.md` body; `custom-html` injects an author-trusted raw section.
+- ec8832e: Custom fonts via config. `site.font` now accepts a `{ body, mono?, source?, label? }` object (alongside the `'sans' | 'serif' | 'inter' | 'geist'` keywords) to use your own self-hosted typeface in the default template — no `headExtra` hacking. The build makes it the default, links your `@font-face` stylesheet, maps `--font-body` (and `--font-mono` when given), and adds it to the reader's Font picker (previewed in its own family) so visitors can still switch to the built-ins. Use `font-display` in your `@font-face` to control FOUT.
+- a048674: Clearer CLI messages and an opt-in dev request log.
+  - `ovellum dev --verbose` logs each request it serves as `METHOD path → status`
+    — handy when debugging routing or 404s.
+  - `ovellum upgrade` now suggests the manual `npm install -D ovellum@latest` path
+    when it can't reach the npm registry.
+  - The `ovellum dev` "manual mode only" error points you at `ovellum watch` /
+    `ovellum build` for auto/hybrid (no more internal tracker reference).
+  - `ovellum init`'s "config already exists" error prints a relative path.
+
+- ccd3afa: Per-locale RSS feeds. On a multi-language site each locale now gets its own feed — `/feed.xml` for the default language and `/<code>/feed.xml` for the rest — scoped to that locale's pages, with the channel and self links prefixed accordingly. The sitemap stays a single combined file, and single-language sites are unchanged. Requires `site.baseUrl`.
+- 21847d3: Versioned docs. Set `site.versions: [{ id, label?, latest? }]` to publish multiple versions of your docs side by side — each version is a `content/<id>/` subtree, the one marked `latest` (or the first) serves at the root and the rest under `/<id>/`, and a version picker appears in the topbar that keeps readers on the same page when they switch. Versions compose with i18n (`content/<id>/<locale>/`), and sitemap, RSS, and `llms.txt` are emitted per version. Unversioned sites are unchanged — no `content/<id>/` folder needed.
+
+### Patch Changes
+
+- d8f9981: `ovellum init` now scaffolds a protected-zone example in hybrid mode. The starter `index.md` includes a `@manual` block — "Add your own notes here — this block survives every rebuild" — so new hybrid projects see the merge contract immediately. Manual-mode scaffolds are unchanged.
+
 ## 0.18.0
 
 ### Minor Changes
