@@ -159,4 +159,28 @@ describe('generateRss', () => {
     const itemCount = (xml.match(/<item>/g) ?? []).length;
     expect(itemCount).toBe(5);
   });
+
+  it('localePrefix scopes the channel + self link (per-locale feed)', () => {
+    const xml = generateRss({
+      pages: [
+        {
+          url: '/ja/guides/deploy/',
+          sourcePath: 'content/ja/guides/deploy.md',
+          outputPath: 'dist/ja/guides/deploy/index.html',
+          title: 'デプロイ',
+          lastModified: '2026-05-17T09:00:00.000Z',
+        },
+      ],
+      baseUrl: 'https://ex.com',
+      localePrefix: '/ja',
+      title: 'X',
+      generatedAt: BUILT_AT,
+    })!;
+    // Channel home + atom self-link carry the locale prefix.
+    expect(xml).toContain('<link>https://ex.com/ja</link>');
+    expect(xml).toContain('href="https://ex.com/ja/feed.xml"');
+    // Item link uses the page's own (already locale-prefixed) URL — once, no doubling.
+    expect(xml).toContain('https://ex.com/ja/guides/deploy/');
+    expect(xml).not.toContain('/ja/ja/');
+  });
 });

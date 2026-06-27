@@ -11,6 +11,12 @@ export interface GenerateRssInput {
   description?: string;
   /** URLs to exclude from the feed (e.g. `/404/`, `/`). */
   exclude?: string[];
+  /**
+   * Locale URL prefix (e.g. `/ja`) for an i18n feed. Scopes the channel `<link>`
+   * (the locale home) and the atom self-link (`<prefix>/feed.xml`). Item links
+   * are unaffected — `page.url` already carries the locale prefix. Default `''`.
+   */
+  localePrefix?: string;
   /** Cap on the number of items emitted. Defaults to 20. */
   limit?: number;
   /** Build timestamp used for the channel's `<lastBuildDate>`. */
@@ -36,8 +42,9 @@ export function generateRss(input: GenerateRssInput): string | undefined {
   const limit = input.limit ?? 20;
   const generatedAt = input.generatedAt ?? new Date();
 
-  const homeLink = base + (prefix || '/');
-  const selfLink = base + prefix + '/feed.xml';
+  const loc = input.localePrefix ?? '';
+  const homeLink = base + (prefix + loc || '/');
+  const selfLink = base + prefix + loc + '/feed.xml';
 
   const items = input.pages
     .filter((p) => !exclude.has(p.url))

@@ -170,9 +170,13 @@ A1 unlocks A2–A4.
       stay out of the ToC. **Deferred to B2.2:** `:::code-group` (tabbed code),
       and `.mdx`-as-Markdown file support (the original B2 — widen the
       `isMarkdown` regexes + reader extensions; no JSX eval).
-- [ ] **B3 (S)** **Wire `links.ts` into the build** — `extractMarkdownLinks()`
-      exists, is exported, and is never called. Surface broken internal links
-      as build warnings (and let `check` share the implementation).
+- [x] **B3 (S) — RESOLVED 2026-06-27 (stale premise).** `extractMarkdownLinks()`
+      is no longer dead code — `commands/check.ts` calls it (broken-link +
+      unsafe-scheme validation, per-locale), so the shared-implementation goal is
+      already met. **Deliberately NOT adding build-time link warnings:** that
+      would re-run the per-locale link scan on every `build` (slower, noisier) and
+      crosses the build/check separation — `check` is the lint gate (run it in CI
+      next to `build`). No code change; closing the item.
 - [ ] **B4 (M)** **Custom fonts via config** — `site.font` accepts an object
       (`{ body, mono, source }`); the website's self-hosted Geist setup is the
       working blueprint (`data-typeface` + pre-paint script + `@font-face` in
@@ -186,7 +190,10 @@ A1 unlocks A2–A4.
       majors.
 - [x] **B7 (L)** **i18n / multi-language — SHIPPED (v0.8.0 + v0.11.0).** Full
       engine + English↔Japanese 1:1 site; chrome-string localization + RTL;
-      per-locale `check` + translation-staleness. Only gap left: per-locale RSS.
+      per-locale `check` + translation-staleness. **Per-locale RSS — DONE
+      2026-06-27** (each locale gets `<prefix>/feed.xml` scoped to its pages;
+      `generateRss` gained `localePrefix`; sitemap stays one combined file;
+      single-locale output byte-identical). **i18n now has no known gaps.**
       Design locked
       2026-06-14 (planning session). Scope agreed: build the full engine + a
       **single Japanese demo** on 2–3 pages (landing + getting-started), English

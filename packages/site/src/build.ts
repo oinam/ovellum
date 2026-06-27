@@ -514,16 +514,29 @@ export async function buildSite(options: BuildSiteOptions): Promise<BuildSiteRes
     });
     if (xml) await writeFile(path.join(outputAbs, 'sitemap.xml'), xml, 'utf8');
 
-    const rss = generateRss({
-      pages: publishedPages,
-      baseUrl: site.baseUrl,
-      basePath: site.basePath,
-      title: site.title,
-      description: site.description,
-      exclude: ['/404/', '/'],
-      generatedAt: now,
-    });
-    if (rss) await writeFile(path.join(outputAbs, 'feed.xml'), rss, 'utf8');
+    // The sitemap is one combined file (all locales + hreflang), but RSS is
+    // per-locale: each language gets its own feed at `<prefix>/feed.xml` scoped
+    // to that locale's pages. A single-locale site (one spec, `urlPrefix: ''`)
+    // produces exactly one `feed.xml` over all pages — byte-identical to before.
+    for (const spec of specs) {
+      const homeUrl = spec.urlPrefix ? spec.urlPrefix + '/' : '/';
+      const localePages = publishedPages.filter((p) => localeForUrl(p.url, specs) === spec.urlPrefix);
+      const rss = generateRss({
+        pages: localePages,
+        baseUrl: site.baseUrl,
+        basePath: site.basePath,
+        localePrefix: spec.urlPrefix,
+        title: site.title,
+        description: site.description,
+        exclude: [`${spec.urlPrefix}/404/`, homeUrl],
+        generatedAt: now,
+      });
+      if (rss) {
+        const feedDir = path.join(outputAbs, spec.urlPrefix.replace(/^\//, ''));
+        await mkdir(feedDir, { recursive: true });
+        await writeFile(path.join(feedDir, 'feed.xml'), rss, 'utf8');
+      }
+    }
   } else {
     warnings.push(
       'sitemap.xml and feed.xml not generated: set `site.baseUrl` in your config to enable them.',
@@ -908,6 +921,25 @@ export async function* walkContent(dirAbs: string, opts: WalkOpts): AsyncGenerat
 
 function isMarkdown(p: string): boolean {
   return /\.(md|markdown|mdx)$/i.test(p);
+}
+
+/**
+ * Which locale a page URL belongs to, for per-locale RSS: the longest non-empty
+ * `urlPrefix` the URL sits under (`/ja/guide/` → `/ja`), else `''` (the default
+ * locale, served at the root). Returns the matching `spec.urlPrefix`.
+ */
+function localeForUrl(url: string, specs: ReadonlyArray<{ urlPrefix: string }>): string {
+  let best = '';
+  for (const s of specs) {
+    if (
+      s.urlPrefix &&
+      (url === s.urlPrefix || url.startsWith(s.urlPrefix + '/')) &&
+      s.urlPrefix.length > best.length
+    ) {
+      best = s.urlPrefix;
+    }
+  }
+  return best;
 }
 
 /**
