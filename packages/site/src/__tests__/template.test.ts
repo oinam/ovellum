@@ -766,6 +766,106 @@ describe('renderPage', () => {
     expect(withoutHead).not.toContain(snippet);
   });
 
+  it('injects site.css stylesheet links after the base theme CSS, omits when unset', () => {
+    const html = renderPage({
+      site: {
+        title: 'X',
+        defaultTheme: 'auto',
+        footer: '',
+        css: ['/theme.css', 'https://cdn.example.com/brand.css'],
+      },
+      nav: NAV,
+      url: '/',
+      title: 'X',
+      bodyHtml: '',
+      headings: [],
+      generatedAt: '2026-06-29T00:00:00.000Z',
+    });
+    expect(html).toContain('<link rel="stylesheet" href="/theme.css">');
+    expect(html).toContain('<link rel="stylesheet" href="https://cdn.example.com/brand.css">');
+    // Must come AFTER the base theme stylesheet so token overrides win the cascade.
+    expect(html.indexOf('href="/theme.css"')).toBeGreaterThan(
+      html.indexOf('assets/ovellum.css'),
+    );
+
+    // Single string form.
+    const single = renderPage({
+      site: { title: 'X', defaultTheme: 'auto', footer: '', css: '/one.css' },
+      nav: NAV,
+      url: '/',
+      title: 'X',
+      bodyHtml: '',
+      headings: [],
+      generatedAt: '2026-06-29T00:00:00.000Z',
+    });
+    expect(single).toContain('<link rel="stylesheet" href="/one.css">');
+
+    // Unset → no extra stylesheet link.
+    const none = renderPage({
+      site: { title: 'X', defaultTheme: 'auto', footer: '' },
+      nav: NAV,
+      url: '/',
+      title: 'X',
+      bodyHtml: '',
+      headings: [],
+      generatedAt: '2026-06-29T00:00:00.000Z',
+    });
+    expect(none).not.toContain('href="/theme.css"');
+  });
+
+  it('appearance: inherit follows the host — drops the mode toggle, exposes config, no ovellum-theme read', () => {
+    const html = renderPage({
+      site: {
+        title: 'X',
+        defaultTheme: 'auto',
+        footer: '',
+        appearance: { mode: 'inherit', storageKey: 'theme', darkValue: 'dark', lightValue: 'light' },
+      },
+      nav: NAV,
+      url: '/',
+      title: 'X',
+      bodyHtml: '',
+      headings: [],
+      generatedAt: '2026-06-29T00:00:00.000Z',
+    });
+    // The mode segment is gone from the appearance panel (palette/font remain).
+    expect(html).not.toContain('data-ov-mode');
+    expect(html).toContain('data-ov-palette');
+    // The boot script resolves from the host key, not Ovellum's own mode key.
+    expect(html).toContain('window.__OV_APPEARANCE__');
+    expect(html).toContain('"storageKey":"theme"');
+    expect(html).not.toContain("localStorage.getItem('ovellum-theme')");
+
+    // String shorthand → prefers-color-scheme only (no storageKey in config).
+    const osOnly = renderPage({
+      site: { title: 'X', defaultTheme: 'auto', footer: '', appearance: 'inherit' },
+      nav: NAV,
+      url: '/',
+      title: 'X',
+      bodyHtml: '',
+      headings: [],
+      generatedAt: '2026-06-29T00:00:00.000Z',
+    });
+    expect(osOnly).toContain('window.__OV_APPEARANCE__');
+    expect(osOnly).not.toContain('"storageKey"');
+    expect(osOnly).not.toContain('data-ov-mode');
+  });
+
+  it('appearance unset / control keeps the mode toggle and the default boot script', () => {
+    const html = renderPage({
+      site: { title: 'X', defaultTheme: 'auto', footer: '' },
+      nav: NAV,
+      url: '/',
+      title: 'X',
+      bodyHtml: '',
+      headings: [],
+      generatedAt: '2026-06-29T00:00:00.000Z',
+    });
+    expect(html).toContain('data-ov-mode');
+    expect(html).toContain("localStorage.getItem('ovellum-theme')");
+    expect(html).not.toContain('window.__OV_APPEARANCE__');
+  });
+
   it('localizes UI chrome from a resolved string table (ja)', () => {
     const html = renderPage({
       site: { title: 'X', defaultTheme: 'auto', footer: '' },

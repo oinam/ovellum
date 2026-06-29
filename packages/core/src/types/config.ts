@@ -65,6 +65,37 @@ export interface OvellumCustomFont {
 }
 
 /**
+ * Who owns the light/dark switch. `'control'` (default) — Ovellum's own
+ * appearance panel drives it (auto/light/dark, persisted in `localStorage`).
+ * `'inherit'` — the docs **follow a host project** instead: the mode toggle is
+ * removed from the panel, Ovellum stops persisting its own choice, and light/dark
+ * is resolved from the host's signal (see {@link OvellumAppearanceInherit}). Use
+ * `'inherit'` when Ovellum docs are embedded under a larger app that already has
+ * its own light/dark, so the two don't fight. The string `'inherit'` is shorthand
+ * for `{ mode: 'inherit' }` (follow `prefers-color-scheme` only).
+ */
+export type OvellumAppearance = 'control' | 'inherit' | OvellumAppearanceInherit;
+
+/**
+ * "Follow the host" appearance. By default light/dark tracks
+ * `prefers-color-scheme` (an OS-driven host needs no extra config). To follow a
+ * host whose toggle is a JS choice persisted to **same-origin `localStorage`**
+ * (e.g. next-themes / a Tailwind `class` strategy), point `storageKey` at the
+ * host's key: Ovellum reads it on load and live-updates on cross-document
+ * `storage` events, mapping `darkValue`→dark and `lightValue`→light and falling
+ * back to `prefers-color-scheme` for anything else (e.g. a `'system'` value).
+ */
+export interface OvellumAppearanceInherit {
+  mode: 'inherit';
+  /** Host's `localStorage` key holding its theme choice (e.g. `'theme'`). */
+  storageKey?: string;
+  /** Stored value that means dark. Default `'dark'`. */
+  darkValue?: string;
+  /** Stored value that means light. Default `'light'`. */
+  lightValue?: string;
+}
+
+/**
  * How dates render (today, the page "Edited" line). `'humanized'` (default)
  * shows `today` / `yesterday` / `Jun 14, 2026`; `'iso'` shows the raw
  * `2026-06-14`. The relative words (`today`/`yesterday`) are computed against
@@ -461,6 +492,13 @@ export interface OvellumSiteConfig {
   ai?: OvellumAiConfig;
   /** Mermaid diagram rendering (lazy-loaded on diagram pages). */
   mermaid?: OvellumMermaidConfig;
+  /**
+   * Who owns the light/dark switch. Unset / `'control'` (default) — Ovellum's
+   * appearance panel drives it. `'inherit'` (or `{ mode: 'inherit', … }`) makes
+   * the docs **follow a host project's** light/dark instead (hides the mode
+   * toggle, stops persisting Ovellum's own choice). See {@link OvellumAppearance}.
+   */
+  appearance?: OvellumAppearance;
   /** Initial theme before user preference loads. */
   defaultTheme: OvellumDefaultTheme;
   /**
@@ -586,6 +624,24 @@ export interface OvellumSiteConfig {
    * (the default for end-user docs).
    */
   headExtra?: string;
+  /**
+   * Extra stylesheet URL(s) linked into `<head>` **after** the base theme CSS,
+   * so their rules win the cascade by source order. A single URL or an array,
+   * each added as a `<link rel="stylesheet">`. Relative / root-absolute paths
+   * resolve against the site (and respect `basePath`); `http(s)://` URLs are
+   * used as-is.
+   *
+   * This is the supported hook for **theme inheritance and overrides**: point it
+   * at a stylesheet that re-declares Ovellum's design tokens (`--color-bg`,
+   * `--color-surface`, `--color-fg`, `--color-fg-muted`, `--color-border`,
+   * `--color-primary`/`--color-accent`, `--font-body`/`--font-mono`, the
+   * `--callout-*` set) at `:root` (and `:root[data-theme='dark']` for dark mode)
+   * and the whole template re-skins to match a host project's design system.
+   * Unlike {@link OvellumSiteConfig.headExtra} (raw `<head>` markup), this only
+   * emits stylesheet links — the values are validated, not executable. Unset =
+   * no extra stylesheets.
+   */
+  css?: string | string[];
 }
 
 /**

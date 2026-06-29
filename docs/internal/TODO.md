@@ -275,6 +275,38 @@ plugin/extension API, B6 versioned docs, B5 composable landing, B2 MDX, B3 wire
 `links.ts`, B4 fonts, B9 images) + **Tier D** (D3 lifecycle hooks, w/ B1). One
 changeset pending (`landing-feature-links`, minor) → next 0.17.0 batch.
 
+**B10 theme inheritance (2026-06-28 request).** Maintainer asked whether
+Ovellum docs built into a host project's `/docs` can **inherit the parent's
+theming** (color, auto light/dark, typography). Filed as **ROADMAP B10**, the
+*visual* half of Tier D "embed anywhere."
+  - **B10.1 — DONE 2026-06-29 (unreleased, in next batch).** Shipped `site.css`
+    (`string | string[]`) — author stylesheet URL(s) linked into `<head>` after
+    the base theme CSS so `:root` token re-declarations win the cascade.
+    Validated to stylesheet links only (rejects `javascript:`/`data:`). Themes
+    guide now leads with `site.css` + a "Inheriting a host project's design"
+    token-contract table (`--color-*`/`--font-*`/`--callout-*`, light + dark),
+    en+ja; config ref + FEATURES updated; changeset `site-css-theme-inheritance`
+    (minor). Core type + validation; template (1) + validate (1) tests. 268
+    core+site tests pass; `check --update-translations` re-stamped ja, no broken
+    links.
+  - **B10.2 — DONE 2026-06-29 (unreleased, same batch as B10.1).** Host
+    dark-mode bridge shipped: `site.appearance: 'control' | 'inherit' | { mode:
+    'inherit', storageKey?, darkValue?, lightValue? }` (optional; unset =
+    `'control'`, byte-identical output — verified: website build emits NO
+    `window.__OV_APPEARANCE__` in HTML, default boot script intact in 73 pages).
+    `'inherit'` resolves `data-theme` from the host (boot script): `'auto'`
+    (→ `prefers-color-scheme`) or the host's same-origin `localStorage`
+    `storageKey`; drops the Mode segment from the appearance panel; `script.js`
+    ignores `ovellum-theme` + `storage`-event live-follow. Colors still come from
+    B10.1 `site.css`. Caveat (documented): manual-toggle following needs
+    same-origin + host-persists-to-localStorage; a class-only host with no
+    persisted signal isn't auto-followed. Changeset `site-appearance-inherit`
+    (minor). template (2) + validate (1) tests; docs en+ja. **B10 theme
+    inheritance is functionally complete (B10.1 + B10.2).**
+  - **B10.3 — optional/deferred.** Token-only "bare" mode (no baked palette) so a
+    host stylesheet is the sole color source. Not needed for the core ask;
+    revisit only if someone wants Ovellum structure with zero Ovellum color.
+
 - **0.12.0 — AI-Ready output + portable deploy-anywhere build (343 tests).**
   **C1:** `site.ai` config (`{enabled?,llmsTxt?,fullText?,mdMirror?}`) → `/llms.txt`
   (default on), `/llms-full.txt` (default off), per-page `.md` mirrors at

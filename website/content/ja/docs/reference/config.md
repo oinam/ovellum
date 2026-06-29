@@ -1,7 +1,7 @@
 ---
 title: 設定
 description: ovellum.config.{json,ts,js} のすべてのフィールドと、その型・デフォルト値・効果。
-sourceHash: 'd8a950d6fb761d5a'
+sourceHash: 'dd077646bd32c4ee'
 ---
 
 # 設定
@@ -101,6 +101,8 @@ interface OvellumSiteConfig {
   versions?: { id: string; label?: string; latest?: boolean }[];
   ai?: { enabled?: boolean; llmsTxt?: boolean; fullText?: boolean; mdMirror?: boolean };
   mermaid?: { enabled?: boolean; url?: string };
+  appearance?: 'control' | 'inherit'
+    | { mode: 'inherit'; storageKey?: string; darkValue?: string; lightValue?: string };
   defaultTheme: 'auto' | 'light' | 'dark';
   palette: 'default' | 'nord' | 'flexoki' | 'solarized' | 'eink';
   accent?: string;
@@ -112,6 +114,8 @@ interface OvellumSiteConfig {
   credit: boolean;
   editUrlPattern?: string;
   headExtra?: string;
+  css?: string | string[];
+  assetBaseUrl?: string;
   search: { enabled: boolean };
   pageMeta: { readingTime: boolean; lastModified: boolean };
   sidebar: { collapse: boolean };
@@ -139,7 +143,8 @@ interface OvellumSiteConfig {
 | `versions`       | `{ id, label?, latest? }[]?`        | `undefined`                   | **オプトインのバージョン管理。** 各エントリは `content/<id>/` サブツリーに対応します。`latest` が指定された（またはなければ最初の）バージョンがルートで、残りは `/<id>/` 配下で配信されます。トップバーにバージョンピッカーが現れます（切り替えると、存在する限り同じページに移動します）。`locales` と組み合わせ可能です（`content/<id>/<locale>/`）。未設定 = バージョンなし。[バージョン](#versions)と[バージョン管理ガイド](/ja/docs/guides/versioning/)を参照。 |
 | `ai`             | `{ enabled?, llmsTxt?, fullText?, mdMirror? }` | [`ai`](#ai) を参照     | **AI フレンドリーな出力** — `llms.txt`・`llms-full.txt`・各ページの `.md` ミラーを HTML と並べて出力し、エージェントや LLM がドキュメントをクリーンに読めるようにします。`llmsTxt` と `mdMirror` はデフォルト**オン**、`fullText` は**オフ**。`enabled: false` で全体を無効化します。HTML 出力は変わりません。これらは追加されるファイルです（i18n サイトではロケールごと）。 |
 | `mermaid`        | `{ enabled?, url? }`                | [`mermaid`](#mermaid) を参照 | **Mermaid 図** — ```mermaid ブロックを図としてレンダリングします。図を含むページでのみ遅延読み込みされます。`enabled` はデフォルト**オン**。`url` は（ピン留め CDN の）ランタイムの取得元を上書きし、セルフホストできます。 |
-| `defaultTheme`   | `'auto' \| 'light' \| 'dark'`       | `'auto'`                      | ユーザーの設定が読み込まれる前の初期ライト／ダークモード。閲覧者はトップバーの外観コントロールから変更できます（`localStorage` に保存）。                                                                                  |
+| `appearance`     | `'control' \| 'inherit'` または inherit オブジェクト | `'control'`     | ライト／ダークの切り替えを誰が所有するか。`'control'`（デフォルト）— Ovellum の外観パネルが駆動します。`'inherit'` はドキュメントを**ホストプロジェクトに追従**させます。モードトグルがパネルから削除され、Ovellum は自身の選択を保存しなくなり、ライト／ダークは `prefers-color-scheme` から解決されます。ホストのトグルが**同一オリジンの `localStorage`** に保存される JS の選択（next-themes、Tailwind の `class` 戦略など）の場合は `{ mode: 'inherit', storageKey: 'theme', darkValue?: 'dark', lightValue?: 'light' }` を使います — Ovellum は読み込み時にそのキーを読み、タブ間の `storage` イベントでライブ更新し、`'system'` や不明な値では `prefers-color-scheme` にフォールバックします。[`site.css`](#css)（*色*を継承）と組み合わせます。`appearance` はどのモードがアクティブかを決めます。[テーマ設定ガイド](/docs/guides/themes/#following-the-hosts-lightdark-switch)を参照。 |
+| `defaultTheme`   | `'auto' \| 'light' \| 'dark'`       | `'auto'`                      | ユーザーの設定が読み込まれる前の初期ライト／ダークモード。閲覧者はトップバーの外観コントロールから変更できます（`localStorage` に保存）。[`appearance: 'inherit'`](#appearance) のときは、これは JS なしのフォールバックにすぎません（ライブの値はホストが駆動します）。                                                                                  |
 | `palette`        | `'default' \| 'nord' \| 'flexoki' \| 'solarized' \| 'eink'` | `'default'`  | ユーザーの設定が読み込まれる前の初期のページ全体のカラーパレット（`'default'` はピッカーでは「Ovellum」と表示）。すべてのパレットはライト**と**ダークの両方のバリアントを備え、モードの選択とは独立しています。閲覧者はトップバーの外観コントロールからパレットを切り替えられます。            |
 | `accent`         | `string?`                           | `undefined`                   | デフォルトのプライマリカラー。任意の CSS カラー値（`'#3b82f6'`、`'oklch(57% 0.16 255)'` など）。CTA ボタンに加え、リンク、フォーカスリング、目次インジケーターを制御します。ホバー状態は自動的にブレンドされます。未設定 = 各パレット固有のプライマリ。閲覧者は外観コントロール（「Color」）から上書きできます。 |
 | `font`           | `'sans' \| 'serif' \| 'inter' \| 'geist'` またはカスタムフォントオブジェクト | `'sans'`                | 初期の本文フォント、およびページ内の **Font** ピッカーのデフォルト。`'sans'` / `'serif'` はシステムフォントスタックです（ウェブフォントなし — 初回描画が即座）。`'inter'` / `'geist'` は**テンプレートにバンドルされた**ウェブフォントで（`/assets/fonts/` から配信）、実際にページで使われたときだけ読み込まれます。**`{ body, mono?, source?, label? }`** オブジェクトを渡すと、自前のセルフホストフォントを使えます — 下記の[カスタムフォント](#custom-fonts)を参照。`mono` を設定しない限りコードは等幅のままです。閲覧者は外観コントロールからフォントをライブで変更でき、読みやすさのための **Text size**（5 段階）も調整できます。どちらも `localStorage` に保存されます。 |
@@ -148,7 +153,8 @@ interface OvellumSiteConfig {
 | `footer`         | `string`                            | `''`                          | フッターのテキスト（例: 著作権表示。ビルド日付とともにレンダリングされます）。空文字列にするとフッターテキストは表示されません。 |
 | `credit`         | `boolean`                           | `true`                        | フッターに小さな「Built with Ovellum」のクレジットリンクを表示します（→ <https://ovellum.oss.oinam.com>）。`false` にすると削除されます。クレジットはありがたいですが、決して必須ではありません。 |
 | `editUrlPattern` | `string?`                           | `undefined`                   | `{path}` プレースホルダーを含む URL パターン。`{path}` はページのソースパスで、**ビルドの cwd（`--cwd`）を基準**とします。リポジトリのプレフィックスは自分で含めてください（例: `'https://github.com/owner/repo/edit/main/website/{path}'`）。未設定の場合、「Edit this page」リンクはレンダリングされません。 |
-| `headExtra`      | `string?`                           | `undefined`                   | 全ページの `<head>` に、検索関連の要素の直後・インラインのテーマ初期化スクリプトの直前に、そのまま注入される生の HTML。**エスケープもサニタイズもされません** — 自分で管理しているマークアップのみを設定してください。デフォルトは未設定。主な用途は分析スニペットです（例: `'<script defer src="https://analytics.example.com/script.js" data-website-id="…"></script>'`）。 |
+| `headExtra`      | `string?`                           | `undefined`                   | 全ページの `<head>` に、[`css`](#css) のスタイルシートの直後・インラインのテーマ初期化スクリプトの直前に、そのまま注入される生の HTML。**エスケープもサニタイズもされません** — 自分で管理しているマークアップのみを設定してください。デフォルトは未設定。主な用途は分析スニペットです（例: `'<script defer src="https://analytics.example.com/script.js" data-website-id="…"></script>'`）。 |
+| `css`            | `string \| string[]?`               | `undefined`                   | `<head>` に、ベースのテーマ CSS の**後に**リンクされる追加のスタイルシート URL。単一の URL または配列で、それぞれ `<link rel="stylesheet">` になります。後に置かれるため、ルールはカスケードで優先されます。相対／ルート絶対パスはサイトを基準に解決され（basePath 対応）、`http(s)://` の URL はそのまま使われます。**テーマの継承／オーバーライド**のための正式なフックです — Ovellum の[デザイントークン](/docs/guides/themes/#inheriting-a-host-projects-design)（`--color-bg`、`--color-fg`、`--font-body` など）を再宣言したスタイルシートを指定すれば、テンプレートがホストのデザインシステムに合わせて再スキンされます。生の [`headExtra`](#headextra) と異なり、スタイルシートのリンクのみに検証されます（`javascript:` / `data:` スキームは拒否）。 |
 | `search`         | `{ enabled: boolean }`              | `{ enabled: false }`          | `true` のとき、`ovellum build` は出力ディレクトリに対して Pagefind を実行し、トップバーに検索ボックスが追加されます。ビルドに `dist/pagefind/` が加わります。                                                                                       |
 | `pageMeta`       | `{ readingTime, lastModified }`     | 両方 `true`                   | 記事の上のページごとのメタ行: `N min read · Edited Jun 14, 2026`。`readingTime` はコード／HTML を除いた上で約 200 wpm で推定します。`lastModified` はまず git（`git log --follow --diff-filter=AM` — リネームを追跡し純粋な移動を無視するため、最後に内容を編集した日付を反映）を優先し、なければファイルシステムの mtime にフォールバックします。どちらも解決できなければ行は省略されます。いずれかを `false` にするとその半分が非表示になります。日付の表記は [`dateFormat`](#dateformat) に従います。 |
 | `sidebar`        | `{ collapse: boolean }`             | `{ collapse: true }`          | サイドバーのフォルダの挙動。`collapse: true`（デフォルト）は各フォルダを折りたたみ可能な開閉要素として、初期状態は閉じてレンダリングします。現在のページを含む枝は常に開いたままなので、自分の現在地が分かります。`collapse: false` にするとツリー全体を自動展開してレンダリングします。フォルダの `_meta.json` で `"collapse": false`（常に開く）または `"collapse": true`（常に閉じる）として、フォルダごとに上書きできます。 |

@@ -261,6 +261,85 @@ A1 unlocks A2–A4.
 - [ ] **B9 (M)** **Image optimization** (lazy-import `sharp`, same pattern as
       the planned `site.minify` esbuild gating) and, later, OG-image
       generation per page.
+- [ ] **B10 (M–L)** **Theme inheritance — adopt a parent project's design
+      tokens.** *(maintainer-requested 2026-06-28.)* When Ovellum docs are
+      built into a host project's `/docs` (the Tier D embed story), let the
+      output **inherit the host's existing theming** — colors, auto light/dark,
+      typography — instead of carrying its own palette. Today this is only
+      *partially* possible via escape hatches (`site.headExtra` to `<link>` a
+      parent stylesheet; `site.font` custom object for type), with no contract
+      and a dark-mode conflict. Three layered pieces, smallest-first:
+  - [x] **B10.1 (S) — DONE 2026-06-29.** Shipped `site.css` (`string |
+        string[]`) — author stylesheet URL(s) linked into `<head>` **after** the
+        base theme CSS (after custom-font + search bits, before `headExtra`), so
+        `:root` token re-declarations win the cascade. `renderExtraCss`
+        (`template.ts`) mirrors `renderCustomFontHead` URL handling
+        (`http(s)://` pass-through; relative/root-absolute via `siteUrl`,
+        basePath-aware). Validated to stylesheet links only (rejects
+        `javascript:`/`data:`, same guard as `site.font.source`). Themes guide
+        rewritten — "Customizing the default theme" now leads with `site.css`
+        plus a new **"Inheriting a host project's design"** token-contract table
+        (`--color-*`/`--font-*`/`--callout-*`, light + `:root[data-theme='dark']`),
+        en+ja; config reference + FEATURES updated; changeset
+        `site-css-theme-inheritance` (minor). Core type + validation; template
+        (1) + validate (1) tests. **B10.2 (host dark-mode bridge) is the next
+        slice — colors inherit, the light/dark *switch* does not yet follow the
+        host.** Original spec below.
+        Ovellum's CSS already runs on a 3-tier OKLCH token system
+        (`packages/site/src/templates/default/style.css`): the **applied
+        surface tokens** (`--color-bg`, `--color-surface`, `--color-fg`,
+        `--color-fg-muted`, `--color-border`, the `--callout-*` set) plus
+        typography (`--font-body`, `--font-mono`) are the natural theming API —
+        everything visual references them. Step 1: **document these names as a
+        stable, supported override surface** (new `concepts/theming` or
+        `guides/theming` doc, en+ja) and add a first-class **`site.css`** config
+        field (a real "inject this stylesheet/CSS" hook, distinct from the
+        blunt raw-markup `headExtra`) so a host can re-declare the tokens at
+        `:root` and Ovellum picks them up by cascade. Validate/escape like
+        `site.font.source`. This alone makes "match my brand colors + fonts"
+        a one-liner.
+  - [x] **B10.2 (M) — DONE 2026-06-29 (the real work).** Shipped
+        `site.appearance: 'control' | 'inherit' | { mode: 'inherit', storageKey?,
+        darkValue?, lightValue? }` (optional; unset = `'control'`, byte-identical
+        output). `'inherit'` makes the docs follow a host's light/dark: boot
+        script (`template.ts`) resolves `data-theme` from the host — `'auto'`
+        (→ `prefers-color-scheme` via existing CSS) or the host's same-origin
+        `localStorage` key when `storageKey` is set — and exposes the config via
+        `window.__OV_APPEARANCE__`; appearance panel drops the Mode segment
+        (`renderAppearancePanel` `inheritAppearance` arg; palette/color/text/font
+        stay); `script.js` ignores `ovellum-theme` in inherit mode + a
+        `storage`-event listener live-updates on a host toggle in another tab
+        (`resolveInherited`). `resolveAppearance` normalizer. Colors still come
+        from B10.1 `site.css`; `appearance` picks the mode. Caveats: same-origin
+        + host-persists-to-localStorage for the manual-toggle case (OS hosts need
+        only `'inherit'`); a class-only host with no persisted signal isn't
+        auto-followed (documented). Core types
+        (`OvellumAppearance`/`OvellumAppearanceInherit`) + validation; docs en+ja
+        (themes "Following the host's light/dark switch" + config ref); template
+        (2) + validate (1) tests. Original spec below.
+        Ovellum toggles
+        light/dark via its own `data-theme` attribute + localStorage +
+        appearance panel; a parent app usually toggles via
+        `prefers-color-scheme` or a `.dark`/`[data-theme]` class on `<html>`.
+        Even with colors inherited, the two switches can disagree. Add a
+        **"follow host" appearance mode** (`site.appearance: 'inherit'` or
+        similar) that (a) suppresses Ovellum's own toggle/boot-script
+        localStorage write and (b) lets the host's signal drive — either by
+        honoring `prefers-color-scheme` only, or by reading a configurable
+        host attribute/class. Needs a small design pass on how the boot script
+        and `script.js` panel behave when "inherit" is on (likely: hide the
+        light/dark switch, keep palette/font if still wanted).
+  - **B10.3 (S, optional) — Token-only "bare" mode.** A flag to emit Ovellum
+        layout/structure with **no baked palette** (tokens left `unset` /
+        `inherit`), so a host stylesheet is the *sole* source of color — the
+        cleanest "drop into my app and it just matches" path. Build on B10.1's
+        token contract.
+  - **Cross-refs:** this is the visual half of **Tier D** "embed anywhere"
+        (D1–D5 handle the *build/deploy* contract; B10 handles the *look*
+        contract) and overlaps **B1** (template overrides) and **B4** (custom
+        fonts — already shipped the typography slice). Sequence:
+        B10.1 first (cheap, high leverage, unblocks the common case) → B10.2
+        (dark-mode bridge) → B10.3 (bare mode).
 
 ### Tier C — the AI age ("AI-Ready" theme)
 

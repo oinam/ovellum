@@ -176,6 +176,27 @@ export function validateUserConfig(input: unknown): OvellumUserConfig {
     ) {
       throw new ConfigError(`\`site.defaultTheme\` must be one of: ${THEMES.join(', ')}.`);
     }
+    if (s.appearance !== undefined) {
+      const bad = "`site.appearance` must be 'control', 'inherit', or a { mode: 'inherit', storageKey?, darkValue?, lightValue? } object.";
+      if (typeof s.appearance === 'string') {
+        if (s.appearance !== 'control' && s.appearance !== 'inherit') {
+          throw new ConfigError(bad);
+        }
+      } else if (isPlainObject(s.appearance)) {
+        const ap = s.appearance;
+        if (ap.mode !== 'inherit') {
+          throw new ConfigError("`site.appearance.mode` must be `'inherit'` in the object form.");
+        }
+        for (const key of ['storageKey', 'darkValue', 'lightValue'] as const) {
+          const v = ap[key];
+          if (v !== undefined && (typeof v !== 'string' || v.trim() === '')) {
+            throw new ConfigError(`\`site.appearance.${key}\` must be a non-empty string.`);
+          }
+        }
+      } else {
+        throw new ConfigError(bad);
+      }
+    }
     if (s.palette !== undefined && !PALETTES.includes(s.palette as (typeof PALETTES)[number])) {
       throw new ConfigError(`\`site.palette\` must be one of: ${PALETTES.join(', ')}.`);
     }
@@ -419,6 +440,23 @@ export function validateUserConfig(input: unknown): OvellumUserConfig {
       }
       if (/\s/.test(s.assetBaseUrl)) {
         throw new ConfigError('`site.assetBaseUrl` must not contain whitespace.');
+      }
+    }
+    if (s.css !== undefined) {
+      // One stylesheet URL or an array of them, injected as `<link>`s. Same
+      // scheme guard as `site.font.source` — reject script-bearing schemes;
+      // accept http(s) + relative/root-absolute.
+      const sheets = Array.isArray(s.css) ? s.css : [s.css];
+      if (Array.isArray(s.css) && s.css.length === 0) {
+        throw new ConfigError('`site.css` must be a stylesheet URL or a non-empty array of URLs.');
+      }
+      for (const href of sheets) {
+        if (typeof href !== 'string' || href.trim() === '') {
+          throw new ConfigError('`site.css` must be a stylesheet URL or an array of URLs.');
+        }
+        if (/^\s*(javascript|data|vbscript):/i.test(href)) {
+          throw new ConfigError('`site.css` must be an http(s) or relative URL.');
+        }
       }
     }
     if (s.publicDir !== undefined) {

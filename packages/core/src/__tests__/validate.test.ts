@@ -100,6 +100,32 @@ describe('validateUserConfig', () => {
     );
   });
 
+  it('accepts site.appearance control/inherit/object and rejects malformed', () => {
+    expect(validateUserConfig({ site: { appearance: 'control' } })).toEqual({
+      site: { appearance: 'control' },
+    });
+    expect(validateUserConfig({ site: { appearance: 'inherit' } })).toEqual({
+      site: { appearance: 'inherit' },
+    });
+    const obj = {
+      site: { appearance: { mode: 'inherit', storageKey: 'theme', darkValue: 'dark', lightValue: 'light' } },
+    };
+    expect(validateUserConfig(obj)).toEqual(obj);
+    // `{ mode: 'inherit' }` alone is valid (prefers-color-scheme only).
+    expect(validateUserConfig({ site: { appearance: { mode: 'inherit' } } })).toEqual({
+      site: { appearance: { mode: 'inherit' } },
+    });
+    // Unknown string, wrong object mode, and blank sub-fields are rejected.
+    expect(() => validateUserConfig({ site: { appearance: 'follow' } })).toThrow(/site\.appearance/);
+    expect(() => validateUserConfig({ site: { appearance: { mode: 'control' } } })).toThrow(
+      /site\.appearance\.mode/,
+    );
+    expect(() =>
+      validateUserConfig({ site: { appearance: { mode: 'inherit', storageKey: '  ' } } }),
+    ).toThrow(/site\.appearance\.storageKey/);
+    expect(() => validateUserConfig({ site: { appearance: 42 } })).toThrow(/site\.appearance/);
+  });
+
   it('accepts site.dateFormat humanized/iso and rejects an unknown one', () => {
     for (const dateFormat of ['humanized', 'iso']) {
       expect(validateUserConfig({ site: { dateFormat } })).toEqual({ site: { dateFormat } });
@@ -153,6 +179,23 @@ describe('validateUserConfig', () => {
     expect(() => validateUserConfig({ site: { assetBaseUrl: '' } })).toThrow(/assetBaseUrl/);
     expect(() => validateUserConfig({ site: { assetBaseUrl: 'has space' } })).toThrow(
       /assetBaseUrl/,
+    );
+  });
+
+  it('accepts site.css as a URL or array of URLs, rejects empties and script schemes', () => {
+    expect(validateUserConfig({ site: { css: '/theme.css' } })).toEqual({
+      site: { css: '/theme.css' },
+    });
+    const many = { site: { css: ['/tokens.css', 'https://cdn.example.com/brand.css'] } };
+    expect(validateUserConfig(many)).toEqual(many);
+    // Empty string, empty array, and non-string entries are rejected.
+    expect(() => validateUserConfig({ site: { css: '' } })).toThrow(/site\.css/);
+    expect(() => validateUserConfig({ site: { css: [] } })).toThrow(/site\.css/);
+    expect(() => validateUserConfig({ site: { css: ['/ok.css', '  '] } })).toThrow(/site\.css/);
+    // Dangerous schemes are rejected (same guard as `site.font.source`).
+    expect(() => validateUserConfig({ site: { css: 'javascript:alert(1)' } })).toThrow(/site\.css/);
+    expect(() => validateUserConfig({ site: { css: ['data:text/css,body{}'] } })).toThrow(
+      /site\.css/,
     );
   });
 

@@ -38,6 +38,47 @@ function renderCustomFontHead(font: OvellumCustomFont, basePath: string): string
   return links ? `${links}\n  ${style}` : style;
 }
 
+/**
+ * `<link rel="stylesheet">` tags for `site.css` — author-supplied stylesheets
+ * injected after the base theme CSS so their rules (notably design-token
+ * re-declarations at `:root`) win the cascade by source order. Relative /
+ * root-absolute hrefs resolve against the site (basePath-aware); `http(s)://`
+ * URLs pass through. Mirrors {@link renderCustomFontHead}'s URL handling.
+ */
+function renderExtraCss(css: string | string[], basePath: string): string {
+  const sheets = Array.isArray(css) ? css : [css];
+  return sheets
+    .map((href) => {
+      const resolved = /^https?:\/\//i.test(href) ? href : siteUrl(href, basePath);
+      return `<link rel="stylesheet" href="${escapeAttr(resolved)}">`;
+    })
+    .join('\n  ');
+}
+
+/**
+ * Normalised `site.appearance`. `inherit` flips the docs into "follow the host"
+ * mode (the boot script + `script.js` resolve light/dark from the host instead
+ * of Ovellum's own toggle, which is then dropped from the appearance panel).
+ * Unset / `'control'` → `inherit: false`, and every appearance surface stays
+ * byte-identical to a no-`appearance` build.
+ */
+interface ResolvedAppearance {
+  inherit: boolean;
+  storageKey?: string;
+  darkValue: string;
+  lightValue: string;
+}
+function resolveAppearance(appearance: OvellumSiteConfig['appearance']): ResolvedAppearance {
+  const inherit = appearance === 'inherit' || (typeof appearance === 'object' && appearance.mode === 'inherit');
+  const obj = typeof appearance === 'object' ? appearance : undefined;
+  return {
+    inherit,
+    storageKey: obj?.storageKey,
+    darkValue: obj?.darkValue ?? 'dark',
+    lightValue: obj?.lightValue ?? 'light',
+  };
+}
+
 export interface ShellOptions {
   site: OvellumSiteConfig & { title: string };
   /** Full <title> for the page (already composed upstream). */
@@ -177,6 +218,39 @@ function renderShell(opts: ShellOptions): string {
   const customFont = typeof opts.site.font === 'object' ? opts.site.font : null;
   const fontKey = typeof opts.site.font === 'object' ? 'custom' : (opts.site.font ?? 'sans');
   const customFontHead = customFont ? renderCustomFontHead(customFont, basePath) : '';
+  // Author stylesheets (`site.css`) come last among Ovellum-emitted CSS so they
+  // override the base theme + bundled UI — the theme-inheritance / token hook.
+  const extraCssHead = opts.site.css ? renderExtraCss(opts.site.css, basePath) : '';
+  // Appearance ownership. In `inherit` mode the boot script resolves light/dark
+  // from the host (a `prefers-color-scheme`-tracking `'auto'`, or the host's
+  // `localStorage` key) instead of Ovellum's own `ovellum-theme`, exposes the
+  // config to script.js via `window.__OV_APPEARANCE__`, and the panel drops its
+  // mode toggle. Unset / `'control'` keeps every byte identical to before.
+  const appearance = resolveAppearance(opts.site.appearance);
+  const appearanceGlobal = appearance.inherit
+    ? `\n        window.__OV_APPEARANCE__ = ${JSON.stringify({
+        mode: 'inherit',
+        ...(appearance.storageKey ? { storageKey: appearance.storageKey } : {}),
+        darkValue: appearance.darkValue,
+        lightValue: appearance.lightValue,
+      }).replace(/</g, '\\u003c')};`
+    : '';
+  const modeBoot = appearance.inherit
+    ? `var t = 'auto';
+        var ap = window.__OV_APPEARANCE__;
+        if (ap && ap.storageKey) {
+          var hv = null;
+          try { hv = localStorage.getItem(ap.storageKey); } catch (_e) {}
+          if (hv === ap.darkValue) t = 'dark';
+          else if (hv === ap.lightValue) t = 'light';
+        }
+        d.setAttribute('data-theme', t);`
+    : `var t = localStorage.getItem('ovellum-theme');
+        if (t === 'light' || t === 'dark' || t === 'auto') {
+          d.setAttribute('data-theme', t);
+        } else {
+          t = d.getAttribute('data-theme') || 'auto';
+        }`;
   return `<!doctype html>
 <html lang="${escapeAttr(opts.lang ?? 'en')}"${dirAttr} data-theme="${escapeAttr(opts.site.defaultTheme)}" data-palette="${escapeAttr(palette)}" data-font="${escapeAttr(fontKey)}"${accentAttrs}${mermaidAttr}>
 <head>
@@ -203,17 +277,13 @@ function renderShell(opts: ShellOptions): string {
   <link rel="stylesheet" href="${escapeAttr(assets)}assets/ovellum.css">
   ${customFontHead}
   ${searchHead}
+  ${extraCssHead}
   ${opts.site.headExtra ?? ''}
   <script>
     (function () {
       try {
-        var d = document.documentElement;
-        var t = localStorage.getItem('ovellum-theme');
-        if (t === 'light' || t === 'dark' || t === 'auto') {
-          d.setAttribute('data-theme', t);
-        } else {
-          t = d.getAttribute('data-theme') || 'auto';
-        }
+        var d = document.documentElement;${appearanceGlobal}
+        ${modeBoot}
         // [light, dark] --color-bg hex per palette. Single source for the
         // theme-color meta — script.js reads it back via window.__OV_PALETTE_BG__.
         // Keep in sync with the palette ramps in style.css.
@@ -388,7 +458,11 @@ function renderTopbarLinks(
  * swatches. Pure markup — script.js wires the behavior, CSS carries the
  * pressed/active states off aria attributes so every instance stays in sync.
  */
-function renderAppearancePanel(strings: UiStrings, customFont?: OvellumCustomFont | null): string {
+function renderAppearancePanel(
+  strings: UiStrings,
+  customFont?: OvellumCustomFont | null,
+  inheritAppearance = false,
+): string {
   const modes = [
     { id: 'auto', label: strings.modeAuto, icon: 'monitor' as IconName },
     { id: 'light', label: strings.modeLight, icon: 'sun' as IconName },
@@ -476,14 +550,19 @@ function renderAppearancePanel(strings: UiStrings, customFont?: OvellumCustomFon
             aria-pressed="false"><span class="ov-appearance-font-name">${escapeHtml(f.label)}</span>${renderIcon('check', { size: 14, class: 'ov-appearance-check' })}</button>`,
     )
     .join('\n          ');
-  return `<div class="ov-appearance-panel" data-ov-appearance-panel hidden>
-        <div class="ov-appearance-group">
+  // In `inherit` mode the host owns light/dark, so the mode segment is dropped
+  // entirely (palette / color / text-size / font stay reader-controllable).
+  const modeGroup = inheritAppearance
+    ? ''
+    : `<div class="ov-appearance-group">
           <span class="ov-appearance-label">${escapeHtml(strings.modeLabel)}</span>
           <div class="ov-appearance-modes" role="group" aria-label="${escapeAttr(strings.modeGroup)}">
           ${modeButtons}
           </div>
         </div>
-        <div class="ov-appearance-group">
+        `;
+  return `<div class="ov-appearance-panel" data-ov-appearance-panel hidden>
+        ${modeGroup}<div class="ov-appearance-group">
           <span class="ov-appearance-label">${escapeHtml(strings.themeLabel)}</span>
           <div class="ov-appearance-palettes" role="group" aria-label="${escapeAttr(strings.themeGroup)}">
           ${paletteButtons}
@@ -602,13 +681,14 @@ function renderTopbar(
   // data-palette / --ov-accent); script.js wires every instance and keeps
   // their pressed states in sync, so duplicates can't drift.
   const customFont = typeof site.font === 'object' ? site.font : null;
+  const inheritAppearance = resolveAppearance(site.appearance).inherit;
   const appearancePopover = `<div class="ov-appearance" data-ov-appearance>
       <button class="ov-theme-toggle" type="button"
         aria-label="${escapeAttr(strings.appearance)}" title="${escapeAttr(strings.appearance)}"
         aria-haspopup="true" aria-expanded="false" data-ov-appearance-toggle>
         ${renderIcon('palette', { size: 18 })}
       </button>
-      ${renderAppearancePanel(strings, customFont)}
+      ${renderAppearancePanel(strings, customFont, inheritAppearance)}
     </div>`;
   const versionBadge = site.version
     ? `<span class="ov-brand-version" aria-label="Stable version ${escapeAttr(site.version)}">${escapeHtml(site.version)}</span>`
@@ -649,7 +729,7 @@ function renderTopbar(
         ${versionPicker ? `<div class="ov-mobile-lang">${versionPicker}</div>` : ''}
         ${langPicker ? `<div class="ov-mobile-lang">${langPicker}</div>` : ''}
         <div class="ov-mobile-theme" data-ov-appearance>
-          ${renderAppearancePanel(strings, customFont)}
+          ${renderAppearancePanel(strings, customFont, inheritAppearance)}
         </div>
       </nav>
     </div>

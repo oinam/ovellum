@@ -13,14 +13,35 @@
   var TEXT_SIZE_KEY = 'ovellum-text-size';
   var FONT_KEY = 'ovellum-font';
   var MODES = ['auto', 'light', 'dark'];
+  // `site.appearance: 'inherit'` — the host owns light/dark. The boot script
+  // exposes the config here; when present we never read/write Ovellum's own
+  // mode key (the panel has no mode toggle) and instead mirror the host signal.
+  var APPEARANCE = (typeof window !== 'undefined' && window.__OV_APPEARANCE__) || null;
+  var INHERIT = !!(APPEARANCE && APPEARANCE.mode === 'inherit');
 
   function readMode() {
+    // In inherit mode the live value is whatever the boot script / host resolved
+    // onto <html> — never the stored Ovellum mode (it isn't written here).
+    if (INHERIT) return root.getAttribute('data-theme') || 'auto';
     try {
       var t = localStorage.getItem(MODE_KEY);
       return MODES.indexOf(t) >= 0 ? t : root.getAttribute('data-theme') || 'auto';
     } catch (_) {
       return 'auto';
     }
+  }
+
+  // Resolve light/dark from the host's localStorage key (inherit mode). Falls
+  // back to 'auto' (→ prefers-color-scheme via CSS) for system/unknown values.
+  function resolveInherited() {
+    if (!APPEARANCE || !APPEARANCE.storageKey) return 'auto';
+    var v = null;
+    try {
+      v = localStorage.getItem(APPEARANCE.storageKey);
+    } catch (_) {}
+    if (v === APPEARANCE.darkValue) return 'dark';
+    if (v === APPEARANCE.lightValue) return 'light';
+    return 'auto';
   }
 
   function readAccent() {
@@ -225,6 +246,19 @@
     if (mq.addEventListener) mq.addEventListener('change', onMqChange);
     else if (mq.addListener) mq.addListener(onMqChange);
   } catch (_) {}
+
+  // Inherit mode: follow the host's persisted theme choice live. A `storage`
+  // event fires in THIS document when the host app changes its key in another
+  // tab/document (same origin), so toggling the host's theme re-resolves ours.
+  if (INHERIT && APPEARANCE.storageKey) {
+    try {
+      window.addEventListener('storage', function (e) {
+        if (e.key && e.key !== APPEARANCE.storageKey) return;
+        root.setAttribute('data-theme', resolveInherited());
+        syncThemeColor();
+      });
+    } catch (_) {}
+  }
 
   // Sidebar: bring the active link into view within the (independently
   // scrollable) sidebar on load. Each full-page navigation resets the

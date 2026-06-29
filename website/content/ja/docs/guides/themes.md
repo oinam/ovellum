@@ -1,7 +1,7 @@
 ---
 title: テーマ設定
 description: デフォルトテーマの構成、オーバーライドの方法、そしてトップバー・ヒーロー・アイコンシステムが標準で提供するもの。
-sourceHash: 'fd519d5aab6e863a'
+sourceHash: '10924562f1811d64'
 ---
 
 # テーマ設定
@@ -170,11 +170,21 @@ Ovellum はあなたのフォントをデフォルトにし（`<html data-font="
 
 ## デフォルトテーマのカスタマイズ
 
-今のところ、最もシンプルなオーバーライドは後続のスタイルシートです。CSS ファイルを `content/` に置き（静的アセットとしてそのまま通過します）、ページから参照するか、あるいは — より良いのは — のちにプラグインシステム経由でテンプレートを拡張することです（計画中、未実装）。
+正式なオーバーライドのフックは [`site.css`](/docs/reference/config/) です — 1 つ以上のスタイルシート URL を、Ovellum が自身のテーマ CSS の**後に** `<head>` へリンクするので、ソース順のカスケードであなたのルールが優先されます。あらゆるサーフェス、テキスト、ロールは[トークン](#トークンモデル)なので、いくつかのカスタムプロパティを再宣言したオーバーライドファイルがサイト全体を再スキンします — フォークも、ページごとの配線も不要です。
 
-**ロール**をスキンし直す — リンクとアクセントがどこでもそれに従います（これはグレー以外の色なので light と dark で異なります）。
+1. CSS ファイルを [`publicDir`](/docs/reference/config/) に置きます（出力ルートにコピーされます）: `content/public/theme.css` は `/theme.css` で配信されます。
+2. `site.css` をそれに向けます:
+
+   ```ts
+   site: {
+     css: '/theme.css',          // 単一の URL、またはその配列
+   }
+   ```
+
+これで**ロール**をスキンし直せます — リンクとアクセントがどこでもそれに従います（これはグレー以外の色なので light と dark で異なります）。
 
 ```css
+/* content/public/theme.css → /theme.css で配信 */
 :root {
   --color-accent: oklch(55% 0.20 320); /* magenta */
   --color-accent-fg: var(--color-white);
@@ -199,9 +209,88 @@ Ovellum はあなたのフォントをデフォルトにし（`<html data-font="
 }
 ```
 
-`content/css/override.css` として保存し、各ページのフロントマターから将来の `extraStyles` フィールド（計画中）経由で参照します。
+`site.css` は配列も、ローカルパスに加えて `http(s)://` の URL も受け付けます — なので、CDN 上の共有デザインシステムのスタイルシートを、サイト固有の小さなオーバーライドの前に重ねられます。
 
-> オーバーライドのパターンはまだ正式化の途上です — 今のところ、色の調整以上のことをしたければデフォルトテンプレートをフォークすることを想定してください。プラグイン / テンプレートオーバーライドの API はロードマップに載っています。
+```ts
+site: {
+  css: ['https://cdn.acme.com/brand/tokens.css', '/theme.css'],
+}
+```
+
+これは `<link rel="stylesheet">` タグのみを出力し、`javascript:` / `data:` の URL を拒否します — 任意の `<head>` マークアップ（`<style>` ブロック、preload ヒント、分析）には [`site.headExtra`](/docs/reference/config/) を使ってください。これはあなたの `css` の*後に*注入されるので、必要なら上書きもできます。
+
+### ホストプロジェクトのデザインを継承する
+
+Ovellum のドキュメントを、より大きなプロダクト — たとえば `/docs` のために `ovellum build` を実行し、すでに独自の色・light/dark・タイポグラフィを持つホストアプリ — に組み込む場合、`site.css` を使えばドキュメントは独自のパレットを持つ代わりに**ホストのデザインを採用**できます。その契約が**トークン層**です。これらのプロパティを再宣言すれば、テンプレートがそれに従います。
+
+| トークングループ | オーバーライドするもの                                                                          |
+| ---------------- | ----------------------------------------------------------------------------------------------- |
+| サーフェス       | `--color-bg`、`--color-surface`、`--color-bg-subtle`、`--color-bg-muted`                          |
+| テキスト         | `--color-fg`、`--color-fg-muted`、`--color-fg-subtle`                                            |
+| 罫線             | `--color-border`、`--color-border-strong`                                                        |
+| ブランドロール   | `--color-primary`（+ `-fg`/`-hover`）、`--color-accent`（+ `-fg`/`-hover`）                       |
+| コールアウト     | `--callout-note-bg`/`-fg`、および `tip` / `important` / `warning` / `caution` のペア             |
+| タイポグラフィ   | `--font-body`、`--font-mono`（およびそれらが既定で参照する `--font-sans` / `--font-serif` スタック） |
+
+それぞれをホスト自身の変数（または値）にマッピングし、ダークの変種を `:root[data-theme='dark']` の下で指定します。
+
+```css
+/* host-bridge.css — ドキュメントにホストのデザインシステムのトークンを読ませる */
+:root {
+  --color-bg: var(--app-bg, #fff);
+  --color-surface: var(--app-surface, #fff);
+  --color-fg: var(--app-text, #1a1a1a);
+  --color-fg-muted: var(--app-text-muted, #555);
+  --color-border: var(--app-border, oklch(0% 0 0 / 0.1));
+  --color-primary: var(--app-brand);
+  --color-accent: var(--app-brand);
+  --font-body: var(--app-font-sans);
+  --font-mono: var(--app-font-mono);
+}
+
+:root[data-theme='dark'] {
+  --color-bg: var(--app-bg-dark, #101010);
+  --color-surface: var(--app-surface-dark, #181818);
+  --color-fg: var(--app-text-dark, #f4f4f4);
+  /* …各トークンのダーク側 */
+}
+```
+
+ホストのデザイン変数（上記の `--app-*`）は、生成されたページ上で**スコープに入っている**必要があります — Ovellum は独立した HTML をビルドするので、それらを定義するスタイルシート（共有の `tokens.css`、ホストアプリが読み込むのと同じもの）を、ブリッジファイルの前に `site.css` から参照してください。
+
+#### ホストのモード切り替えに追従する
+
+`site.css` は*色*を継承させますが、ライト／ダークは橋渡しするまで**2 つのスイッチ**のままです。デフォルトでは Ovellum が自身の外観コントロール（`localStorage` に永続化）でモードを所有し、ホストの切り替え方とは独立しています。**[`site.appearance`](/docs/reference/config/)** がそのギャップを埋めます。
+
+```ts
+site: {
+  // Ovellum 自身のライト／ダークトグルを外し、代わりにホストに追従する。
+  appearance: 'inherit',
+}
+```
+
+`appearance: 'inherit'` にすると、Ovellum は:
+
+- 外観パネルから**モード（auto/light/dark）コントロールを削除**します — モードはホストが所有します（テーマ・カラー・テキストサイズ・フォントは引き続き読者が操作できます）。
+- **自身のモードを永続化しなくなる**ので、古い Ovellum の選択が上書きすることはありません。
+- **ライト／ダークを `prefers-color-scheme` から解決**します — これはホストの*自動*ライト／ダークがすでに追従しているものそのものなので、OS 駆動のホストはこれ以上何も要りません。
+
+ホストのトグルが**手動**の選択（`.dark` クラス、next-themes、Tailwind の `class` 戦略）で、**同一オリジンの `localStorage`** に永続化されている場合は、Ovellum にそのキーを指定します — 読み込み時に読み取り、別のタブでホストが切り替えるとライブ更新します。
+
+```ts
+site: {
+  appearance: {
+    mode: 'inherit',
+    storageKey: 'theme',   // ホストアプリ自身の localStorage キー
+    darkValue: 'dark',     // ダークを意味する値（デフォルト 'dark'）
+    lightValue: 'light',   // ライトを意味する値（デフォルト 'light'）
+  },
+}
+```
+
+Ovellum は `darkValue`→ダーク、`lightValue`→ライトにマッピングし、それ以外（`'system'` の値、未設定、不明）は `prefers-color-scheme` にフォールバックします。ドキュメントとホストアプリはオリジンを共有しているので、ホストが他の場所でテーマを切り替えるとドキュメントのページで `storage` イベントが発火し、両者が歩調を合わせます。（これには同一オリジンのホスティングと、ホストが自身の選択を `localStorage` に書き込むことが必要です。永続化される信号なしにクラスを切り替えるだけのホストの場合は、`'inherit'` + `prefers-color-scheme` のままにするか、クラスをキーにミラーしてください。）
+
+> ブリッジスタイルシートでは `:root` と `:root[data-theme='dark']` の両方を引き続きオーバーライドしてください — `appearance: 'inherit'` は*どの*モードがアクティブかを決め、`site.css` は各モードがどう見えるかを決めます。
 
 ## ランディングページのテーマ設定
 
@@ -231,6 +320,8 @@ Ovellum はあなたのフォントをデフォルトにし（`<html data-font="
 
 **現在利用可能:**
 
+- [`site.css`](#デフォルトテーマのカスタマイズ) によるサイト全体の CSS オーバーライド + テーマ継承。
+- [`site.appearance: 'inherit'`](#ホストのモード切り替えに追従する) によるホストプロジェクトのライト／ダークへの追従。
 - デフォルトの light + デフォルトの dark。
 - `prefers-color-scheme` による OS への自動追従。
 - 描画前のテーマスクリプト（ちらつきなし）。
@@ -246,13 +337,8 @@ Ovellum はあなたのフォントをデフォルトにし（`<html data-font="
 **ロードマップ:**
 
 - **ページ**テーマを名前で切り替える `site.theme` config（Nord、Dracula など）。各テーマは[トークンモデル](#トークンモデル)に従い、独自のグレーランプ + ロール値に加え、反転ランプの dark ブロックを同梱します。今日はデフォルトのページテーマのみが同梱されています。`site.codeTheme` はすでにシンタックスパレットを切り替えます。
+- ドキュメントを**ホストプロジェクトの** light/dark スイッチ（`prefers-color-scheme` またはホストの属性）に追従させる `appearance: 'inherit'` モード — [テーマ継承](#ホストプロジェクトのデザインを継承する)の欠けているもう半分。
 - 完全にカスタムなテンプレートのためのプラグイン API。
 - 一度きりのページ固有 CSS のためのページごとの `extraStyles`。
 
-それらが実現するまでは、本格的なカスタマイズの推奨パスは次のとおりです。
-
-1. [`templates/default/`](https://github.com/oinam/ovellum/tree/main/packages/site/src/templates/default) ディレクトリをフォークする。
-2. あなたのフォークを指す独自の `ovellum.config.ts` を実行する。
-3. Ovellum がテンプレートを更新したら、リベースし直す。
-
-これは v1 のための意図的な制約です — カスタマイズの表面が安定すれば、API はよりコミットしやすくなります。
+CSS レベルのカスタマイズ — 色、フォント、トークンのオーバーライド、UI 全体の再スキン、ホストのデザインシステムの継承 — は、今日 [`site.css`](#デフォルトテーマのカスタマイズ) で扱えます。上記のロードマップ項目は CSS を*超えて*テンプレートの**構造**を変えることに関するものです。それらが実現するまでは、その種のより深いカスタマイズは [`templates/default/`](https://github.com/oinam/ovellum/tree/main/packages/site/src/templates/default) ディレクトリをフォークし、独自の `ovellum.config.ts` をそのフォークに向ける（Ovellum がテンプレートを更新したらリベースし直す）ことを意味します。これは v1 のための意図的な制約です — カスタマイズの表面が安定すれば、API はよりコミットしやすくなります。

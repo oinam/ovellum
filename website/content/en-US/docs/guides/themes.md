@@ -274,15 +274,27 @@ Lucide away, so each icon adds roughly 100 bytes to the bundle.
 
 ## Customizing the default theme
 
-Today, the simplest override is a follow-up stylesheet. Drop a CSS file
-in `content/` (it passes through as a static asset), then reference it
-from your pages or — better — extend the template later via a plugin
-system (planned, not built yet).
+The first-class override hook is [`site.css`](/docs/reference/config/) — one or
+more stylesheet URLs that Ovellum links into `<head>` **after** its own theme
+CSS, so your rules win the cascade by source order. Because every surface, text,
+and role is a [token](#token-model), an override file that re-declares a handful
+of custom properties re-skins the whole site — no forking, no per-page wiring.
 
-Re-skin a **role** — links and accents follow it everywhere (light + dark
+1. Drop a CSS file into the [`publicDir`](/docs/reference/config/) (it's copied
+   to the output root): `content/public/theme.css` is served at `/theme.css`.
+2. Point `site.css` at it:
+
+   ```ts
+   site: {
+     css: '/theme.css',          // a single URL, or an array of them
+   }
+   ```
+
+Now re-skin a **role** — links and accents follow it everywhere (light + dark
 differ because this is a non-gray color):
 
 ```css
+/* content/public/theme.css → served at /theme.css */
 :root {
   --color-accent: oklch(55% 0.20 320); /* magenta */
   --color-accent-fg: var(--color-white);
@@ -308,12 +320,118 @@ and (gray) role shifts at once, no per-component edits:
 }
 ```
 
-Save as `content/css/override.css` and reference it from each page's
-frontmatter via a future `extraStyles` field (planned).
+`site.css` accepts an array, and `http(s)://` URLs as well as local paths — so
+you can layer a shared design-system stylesheet from a CDN ahead of a small
+site-specific override:
 
-> The override pattern is still being formalised — for now, expect to
-> fork the default template if you want anything more than color
-> tweaks. Plugin / template-override APIs are on the roadmap.
+```ts
+site: {
+  css: ['https://cdn.acme.com/brand/tokens.css', '/theme.css'],
+}
+```
+
+It only ever emits `<link rel="stylesheet">` tags and rejects `javascript:` /
+`data:` URLs — for arbitrary `<head>` markup (a `<style>` block, a preload hint,
+analytics) use [`site.headExtra`](/docs/reference/config/), which is injected
+*after* your `css` so it can still override if you need it to.
+
+### Inheriting a host project's design
+
+When Ovellum docs are built into a larger product — say a host app that runs
+`ovellum build` for its `/docs` and already has its own colors, light/dark, and
+typography — `site.css` lets the docs **adopt the host's design** instead of
+shipping their own palette. The contract is the **token layer**: re-declare
+these properties and the template follows.
+
+| Token group | Override these                                                                                  |
+| ----------- | ----------------------------------------------------------------------------------------------- |
+| Surfaces    | `--color-bg`, `--color-surface`, `--color-bg-subtle`, `--color-bg-muted`                         |
+| Text        | `--color-fg`, `--color-fg-muted`, `--color-fg-subtle`                                            |
+| Lines       | `--color-border`, `--color-border-strong`                                                        |
+| Brand roles | `--color-primary` (+ `-fg`/`-hover`), `--color-accent` (+ `-fg`/`-hover`)                         |
+| Callouts    | `--callout-note-bg`/`-fg`, and the `tip` / `important` / `warning` / `caution` pairs            |
+| Typography  | `--font-body`, `--font-mono` (and the `--font-sans` / `--font-serif` stacks they default to)     |
+
+Map each to the host's own variables (or values), and supply the dark variant
+under `:root[data-theme='dark']`:
+
+```css
+/* host-bridge.css — make the docs read the host design system's tokens */
+:root {
+  --color-bg: var(--app-bg, #fff);
+  --color-surface: var(--app-surface, #fff);
+  --color-fg: var(--app-text, #1a1a1a);
+  --color-fg-muted: var(--app-text-muted, #555);
+  --color-border: var(--app-border, oklch(0% 0 0 / 0.1));
+  --color-primary: var(--app-brand);
+  --color-accent: var(--app-brand);
+  --font-body: var(--app-font-sans);
+  --font-mono: var(--app-font-mono);
+}
+
+:root[data-theme='dark'] {
+  --color-bg: var(--app-bg-dark, #101010);
+  --color-surface: var(--app-surface-dark, #181818);
+  --color-fg: var(--app-text-dark, #f4f4f4);
+  /* …the dark side of each token */
+}
+```
+
+The host's design variables (`--app-*` above) need to be **in scope on the
+generated pages** — Ovellum builds standalone HTML, so reference a stylesheet
+that defines them (a shared `tokens.css`, the same one the host app loads) from
+`site.css` ahead of the bridge file.
+
+#### Following the host's light/dark switch
+
+`site.css` makes the *colors* inherit, but light/dark is still **two switches**
+until you bridge them: by default Ovellum owns the mode through its own
+appearance control (persisted in `localStorage`), independent of how the host
+toggles. **[`site.appearance`](/docs/reference/config/)** closes that gap.
+
+```ts
+site: {
+  // Drop Ovellum's own light/dark toggle and follow the host instead.
+  appearance: 'inherit',
+}
+```
+
+With `appearance: 'inherit'`, Ovellum:
+
+- **removes the Mode (auto/light/dark) control** from the appearance panel — the
+  host owns it now (Theme, Color, Text size, and Font stay reader-controllable);
+- **stops persisting its own mode**, so a stale Ovellum choice can't override;
+- **resolves light/dark from `prefers-color-scheme`** — which is exactly what a
+  host's *auto* light/dark already follows, so an OS-driven host needs nothing
+  more.
+
+If the host's toggle is a **manual** choice (a `.dark` class, next-themes, a
+Tailwind `class` strategy) persisted to **same-origin `localStorage`**, point
+Ovellum at that key — it reads it on load and live-updates when the host flips
+it in another tab:
+
+```ts
+site: {
+  appearance: {
+    mode: 'inherit',
+    storageKey: 'theme',   // the host app's own localStorage key
+    darkValue: 'dark',     // value that means dark (default 'dark')
+    lightValue: 'light',   // value that means light (default 'light')
+  },
+}
+```
+
+Ovellum maps `darkValue`→dark and `lightValue`→light; anything else (a
+`'system'` value, unset, unknown) falls back to `prefers-color-scheme`. Because
+the docs and the host app share an origin, a `storage` event fires on the docs
+page when the host toggles its theme elsewhere, so the two stay in lockstep.
+(This needs same-origin hosting and the host writing its choice to
+`localStorage`; for a host that only flips a class with no persisted signal,
+stick with `'inherit'` + `prefers-color-scheme`, or mirror the class to the key.)
+
+> Still override both `:root` and `:root[data-theme='dark']` in your bridge
+> stylesheet — `appearance: 'inherit'` decides *which* mode is active, and your
+> `site.css` decides what each mode looks like.
 
 ## Theming the landing page
 
@@ -350,6 +468,8 @@ Pick one via `site.codeTheme`:
 
 **Available now:**
 
+- Site-wide CSS overrides + theme inheritance via [`site.css`](#customizing-the-default-theme).
+- Follow a host project's light/dark via [`site.appearance: 'inherit'`](#following-the-hosts-lightdark-switch).
 - Default light + default dark.
 - Auto-follow-OS via `prefers-color-scheme`.
 - Pre-paint theme script (no flash).
@@ -371,12 +491,12 @@ Pick one via `site.codeTheme`:
 - A plugin API for fully custom templates.
 - Per-page `extraStyles` for one-off page-specific CSS.
 
-Until those land, the recommended path for serious customization is:
-
-1. Fork the [`templates/default/`](https://github.com/oinam/ovellum/tree/main/packages/site/src/templates/default)
-   directory.
-2. Run your own `ovellum.config.ts` that points at your fork.
-3. Re-rebase when Ovellum updates its template.
-
-This is a deliberate constraint for v1 — once the customization surface
-is stable, an API is easier to commit to.
+CSS-level customization — colors, fonts, token overrides, whole-UI re-skins,
+inheriting a host design system — is handled today by
+[`site.css`](#customizing-the-default-theme). The roadmap items above are about
+going *beyond* CSS: changing the template **structure**. Until those land, that
+deeper customization means forking the
+[`templates/default/`](https://github.com/oinam/ovellum/tree/main/packages/site/src/templates/default)
+directory and pointing your own `ovellum.config.ts` at the fork (re-rebasing
+when Ovellum updates its template). This is a deliberate constraint for v1 —
+once the customization surface is stable, an API is easier to commit to.

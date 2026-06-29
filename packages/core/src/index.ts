@@ -8,6 +8,8 @@ export type {
   OvellumDefaultTheme,
   OvellumFont,
   OvellumCustomFont,
+  OvellumAppearance,
+  OvellumAppearanceInherit,
   OvellumDateFormat,
   OvellumLocale,
   OvellumVersion,
