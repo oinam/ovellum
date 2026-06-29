@@ -433,6 +433,59 @@ stick with `'inherit'` + `prefers-color-scheme`, or mirror the class to the key.
 > stylesheet — `appearance: 'inherit'` decides *which* mode is active, and your
 > `site.css` decides what each mode looks like.
 
+#### Bare mode
+
+For the cleanest "host owns all the color" path, the bridge stylesheet above
+maps Ovellum's tokens onto a host's variables by
+hand. **`palette: 'bare'`** does that wiring for you: it ships **no baked
+palette** and instead exposes a small, fixed set of **`--ov-host-*`** variables —
+define them (in your `site.css`) and they own the color; define none and the
+default Ovellum look stays intact.
+
+```ts
+site: {
+  palette: 'bare',         // no baked palette — defer color to --ov-host-*
+  css: '/host-theme.css',
+  appearance: 'inherit',   // and defer light/dark to the host too
+}
+```
+
+```css
+/* host-theme.css — the only colors the bare docs will use */
+:root {
+  --ov-host-bg: #fafafa;
+  --ov-host-surface: #fff;
+  --ov-host-fg: #1a1a1a;
+  --ov-host-fg-muted: #585858;
+  --ov-host-border: oklch(0% 0 0 / 0.1);
+  --ov-host-primary: #2563eb;       /* CTA buttons; primary-hover derives */
+  --ov-host-accent: #2563eb;        /* links + focus rings */
+  --ov-host-font-body: 'Inter', system-ui, sans-serif;
+}
+:root[data-theme='dark'] {
+  --ov-host-bg: #0c0c0c;
+  --ov-host-surface: #161616;
+  --ov-host-fg: #f4f4f4;
+  /* …the dark side of each */
+}
+```
+
+The full set: `--ov-host-bg`, `--ov-host-surface`, `--ov-host-fg`,
+`--ov-host-fg-muted`, `--ov-host-border`, `--ov-host-border-strong`,
+`--ov-host-primary` (+ `-fg`, `-hover`), `--ov-host-accent` (+ `-fg`, `-hover`),
+and `--ov-host-font-body`. Anything you leave undefined falls back to the
+Ovellum default for that mode, and the derived tokens (links, callouts, the
+border hairlines, inline-code chips) follow `--color-fg`/`--color-accent`
+automatically — so you rarely set more than the handful above. The Theme picker
+is dropped (switching to a baked palette would fight your colors); Color, Text
+size, and Font stay.
+
+**Bare vs. a hand-written bridge:** they reach the same place. Use `palette:
+'bare'` when you want a published, named contract (`--ov-host-*`) and the picker
+removed for you; write the bridge from the [token table](#inheriting-a-host-projects-design)
+directly when you only need to nudge a few tokens and want to keep the baked
+palettes available as a fallback.
+
 ## Theming the landing page
 
 If you've enabled `site.landing`, the landing inherits the same tokens.

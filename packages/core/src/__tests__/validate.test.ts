@@ -267,7 +267,7 @@ describe('validateUserConfig', () => {
   });
 
   it('accepts every named site.palette and a CSS-color accent', () => {
-    for (const palette of ['default', 'nord', 'flexoki', 'solarized', 'eink']) {
+    for (const palette of ['default', 'nord', 'flexoki', 'solarized', 'eink', 'bare']) {
       expect(validateUserConfig({ site: { palette } })).toEqual({ site: { palette } });
     }
     const input = { site: { accent: 'oklch(57% 0.16 255)' } };

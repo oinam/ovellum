@@ -1,7 +1,7 @@
 ---
 title: テーマ設定
 description: デフォルトテーマの構成、オーバーライドの方法、そしてトップバー・ヒーロー・アイコンシステムが標準で提供するもの。
-sourceHash: '10924562f1811d64'
+sourceHash: '424e1cfd9a42ead6'
 ---
 
 # テーマ設定
@@ -291,6 +291,42 @@ site: {
 Ovellum は `darkValue`→ダーク、`lightValue`→ライトにマッピングし、それ以外（`'system'` の値、未設定、不明）は `prefers-color-scheme` にフォールバックします。ドキュメントとホストアプリはオリジンを共有しているので、ホストが他の場所でテーマを切り替えるとドキュメントのページで `storage` イベントが発火し、両者が歩調を合わせます。（これには同一オリジンのホスティングと、ホストが自身の選択を `localStorage` に書き込むことが必要です。永続化される信号なしにクラスを切り替えるだけのホストの場合は、`'inherit'` + `prefers-color-scheme` のままにするか、クラスをキーにミラーしてください。）
 
 > ブリッジスタイルシートでは `:root` と `:root[data-theme='dark']` の両方を引き続きオーバーライドしてください — `appearance: 'inherit'` は*どの*モードがアクティブかを決め、`site.css` は各モードがどう見えるかを決めます。
+
+#### bare モード
+
+「ホストが色をすべて所有する」最もクリーンな方法として、上記のブリッジスタイルシートは Ovellum のトークンをホストの変数に手作業でマッピングします。**`palette: 'bare'`** はその配線を肩代わりします。**ベイクされたパレットを一切含まず**、代わりに小さく固定された **`--ov-host-*`** 変数のセットを公開します — それらを（`site.css` で）定義すれば色を所有でき、何も定義しなければ Ovellum のデフォルトの見た目がそのまま残ります。
+
+```ts
+site: {
+  palette: 'bare',         // ベイクされたパレットなし — 色を --ov-host-* に委ねる
+  css: '/host-theme.css',
+  appearance: 'inherit',   // ライト／ダークもホストに委ねる
+}
+```
+
+```css
+/* host-theme.css — bare なドキュメントが使う唯一の色 */
+:root {
+  --ov-host-bg: #fafafa;
+  --ov-host-surface: #fff;
+  --ov-host-fg: #1a1a1a;
+  --ov-host-fg-muted: #585858;
+  --ov-host-border: oklch(0% 0 0 / 0.1);
+  --ov-host-primary: #2563eb;       /* CTA ボタン。primary-hover は派生 */
+  --ov-host-accent: #2563eb;        /* リンク + フォーカスリング */
+  --ov-host-font-body: 'Inter', system-ui, sans-serif;
+}
+:root[data-theme='dark'] {
+  --ov-host-bg: #0c0c0c;
+  --ov-host-surface: #161616;
+  --ov-host-fg: #f4f4f4;
+  /* …各トークンのダーク側 */
+}
+```
+
+全セット: `--ov-host-bg`、`--ov-host-surface`、`--ov-host-fg`、`--ov-host-fg-muted`、`--ov-host-border`、`--ov-host-border-strong`、`--ov-host-primary`（+ `-fg`、`-hover`）、`--ov-host-accent`（+ `-fg`、`-hover`）、そして `--ov-host-font-body`。未定義のものはそのモードの Ovellum デフォルトにフォールバックし、派生トークン（リンク、コールアウト、罫線のヘアライン、インラインコードのチップ）は `--color-fg`／`--color-accent` に自動的に従うので、上記のひと握り以上を設定することはめったにありません。テーマピッカーは削除されます（ベイクされたパレットへの切り替えはあなたの色と衝突するため）。カラー・テキストサイズ・フォントは残ります。
+
+**bare と手書きブリッジの比較:** どちらも同じ結果に行き着きます。公開された名前付きの契約（`--ov-host-*`）が欲しく、ピッカーを自動で外したいときは `palette: 'bare'` を使い、いくつかのトークンを微調整するだけでベイクされたパレットをフォールバックとして残したいときは[トークン表](#ホストプロジェクトのデザインを継承する)から直接ブリッジを書いてください。
 
 ## ランディングページのテーマ設定
 

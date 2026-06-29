@@ -329,7 +329,20 @@ A1 unlocks A2–A4.
         host attribute/class. Needs a small design pass on how the boot script
         and `script.js` panel behave when "inherit" is on (likely: hide the
         light/dark switch, keep palette/font if still wanted).
-  - **B10.3 (S, optional) — Token-only "bare" mode.** A flag to emit Ovellum
+  - [x] **B10.3 (S) — DONE 2026-06-29.** Shipped `site.palette: 'bare'` — no
+        baked palette. `renderBareThemeHead` injects a `[data-palette="bare"]`
+        `<style>` mapping each color + `--font-body` token to
+        `var(--ov-host-NAME, <default>)` (mode-aware light/dark/auto blocks keep
+        "unset = default" true); a host `site.css` defining the `--ov-host-*`
+        names becomes the sole color source. Boot script pins `data-palette` +
+        skips the stored-palette restore; panel drops the Theme group (mirrors
+        `appearance: 'inherit'` dropping Mode). Chose graceful fallback (host
+        vars + Ovellum default) over the literal "tokens left unset" footgun, and
+        the `--ov-host-*` namespace over `--ov-*` (the latter collides with the
+        `--ov-accent`/`--ov-text-scale` runtime vars). Core `OvellumPalette`/
+        PALETTES; docs en+ja; template (2) + validate (1) tests. **Tier B10
+        theme inheritance COMPLETE (B10.1 + B10.2 + B10.3).** Original spec: A
+        flag to emit Ovellum
         layout/structure with **no baked palette** (tokens left `unset` /
         `inherit`), so a host stylesheet is the *sole* source of color — the
         cleanest "drop into my app and it just matches" path. Build on B10.1's

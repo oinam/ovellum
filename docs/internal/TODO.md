@@ -303,9 +303,23 @@ theming** (color, auto light/dark, typography). Filed as **ROADMAP B10**, the
     persisted signal isn't auto-followed. Changeset `site-appearance-inherit`
     (minor). template (2) + validate (1) tests; docs en+ja. **B10 theme
     inheritance is functionally complete (B10.1 + B10.2).**
-  - **B10.3 — optional/deferred.** Token-only "bare" mode (no baked palette) so a
-    host stylesheet is the sole color source. Not needed for the core ask;
-    revisit only if someone wants Ovellum structure with zero Ovellum color.
+  - **B10.3 — DONE 2026-06-29 (unreleased, same batch).** Token-only "bare"
+    palette shipped: `site.palette: 'bare'` ships no baked palette —
+    `renderBareThemeHead` injects a `[data-palette="bare"]` `<style>` mapping
+    color + `--font-body` tokens to `var(--ov-host-NAME, <default>)` (mode-aware
+    light/dark/auto blocks keep "unset = default"). Host defines the published
+    `--ov-host-*` set (namespaced to avoid the `--ov-accent` runtime-var clash)
+    → sole color source. Boot pins `data-palette` + skips stored-palette
+    restore; panel drops the Theme group (mirrors `inherit` dropping Mode).
+    Chose graceful-fallback over the literal "unset" footgun. Changeset
+    `palette-bare` (minor); template (2) + validate (1) tests; docs en+ja.
+    **Tier B10 theme inheritance COMPLETE (B10.1 + B10.2 + B10.3).**
+  - **Known pre-existing nit (not B10):** config.md's `site` table cross-refs
+    rows by `#fieldname` (`#css`, `#appearance`, `#headextra`, `#dateformat`),
+    but rehype-slug only IDs headings, so these in-page anchors are dead (don't
+    scroll). `ovellum check` doesn't validate in-page fragments so it's green.
+    Pre-existing pattern (`#dateformat` shipped long ago); fix would be a
+    table-wide pass (give rows IDs or de-link) — left out of B10 scope.
 
 - **0.12.0 — AI-Ready output + portable deploy-anywhere build (343 tests).**
   **C1:** `site.ai` config (`{enabled?,llmsTxt?,fullText?,mdMirror?}`) → `/llms.txt`

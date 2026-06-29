@@ -142,7 +142,7 @@ export interface OvellumVersion {
  * Visitors can switch palettes at runtime from the topbar appearance
  * control; this value is the server-rendered starting point.
  */
-export type OvellumPalette = 'default' | 'nord' | 'flexoki' | 'solarized' | 'eink';
+export type OvellumPalette = 'default' | 'nord' | 'flexoki' | 'solarized' | 'eink' | 'bare';
 
 /**
  * Code-block theme pair (passed to shiki). Each option resolves to a
@@ -505,6 +505,14 @@ export interface OvellumSiteConfig {
    * Initial color palette before user preference loads. Defaults to
    * `'default'` (the monochrome editorial theme). Visitors can override it
    * from the topbar appearance control (persisted in `localStorage`).
+   *
+   * The special value `'bare'` ships **no baked palette**: Ovellum's color +
+   * `--font-body` tokens are emitted as `var(--ov-host-*, <Ovellum default>)`,
+   * so a host stylesheet (via {@link OvellumSiteConfig.css}) that defines the
+   * `--ov-host-*` names becomes the sole source of color — and defining none
+   * leaves the default look intact. The Theme picker is dropped (switching to a
+   * baked palette would fight the host). The cleanest "drop into my app and it
+   * matches" path; pairs with `appearance: 'inherit'` (host owns light/dark).
    */
   palette: OvellumPalette;
   /**

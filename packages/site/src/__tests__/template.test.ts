@@ -851,6 +851,47 @@ describe('renderPage', () => {
     expect(osOnly).not.toContain('data-ov-mode');
   });
 
+  it('palette: bare emits the --ov-host-* layer, drops the Theme picker, pins data-palette', () => {
+    const html = renderPage({
+      site: { title: 'X', defaultTheme: 'auto', footer: '', palette: 'bare' },
+      nav: NAV,
+      url: '/',
+      title: 'X',
+      bodyHtml: '',
+      headings: [],
+      generatedAt: '2026-06-29T00:00:00.000Z',
+    });
+    // <html data-palette="bare"> and the host-token indirection layer is emitted.
+    expect(html).toContain('data-palette="bare"');
+    expect(html).toContain('--color-bg: var(--ov-host-bg, var(--color-gray-100))');
+    expect(html).toContain('--font-body: var(--ov-host-font-body, var(--font-sans))');
+    // Dark block restates the mode-aware default so "unset = default" holds in dark.
+    expect(html).toContain(
+      ":root[data-palette=\"bare\"][data-theme=\"dark\"] { --color-bg: var(--ov-host-bg, var(--color-gray-900));",
+    );
+    // The Theme (palette) picker is dropped; other groups (color/font) remain.
+    expect(html).not.toContain('data-ov-palette');
+    expect(html).toContain('data-ov-font');
+    // Boot script pins 'bare' and skips the stored-palette restore.
+    expect(html).toContain("var p = 'bare';");
+    expect(html).not.toContain("localStorage.getItem('ovellum-palette')");
+  });
+
+  it('palette unset keeps the baked palette picker and stored-palette restore', () => {
+    const html = renderPage({
+      site: { title: 'X', defaultTheme: 'auto', footer: '' },
+      nav: NAV,
+      url: '/',
+      title: 'X',
+      bodyHtml: '',
+      headings: [],
+      generatedAt: '2026-06-29T00:00:00.000Z',
+    });
+    expect(html).toContain('data-ov-palette');
+    expect(html).toContain("localStorage.getItem('ovellum-palette')");
+    expect(html).not.toContain('--ov-host-bg');
+  });
+
   it('appearance unset / control keeps the mode toggle and the default boot script', () => {
     const html = renderPage({
       site: { title: 'X', defaultTheme: 'auto', footer: '' },

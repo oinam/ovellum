@@ -79,6 +79,55 @@ function resolveAppearance(appearance: OvellumSiteConfig['appearance']): Resolve
   };
 }
 
+// Bare palette (`site.palette: 'bare'`) — ship NO baked palette. Each token is
+// emitted as `var(--ov-host-NAME, <Ovellum default>)`, so a host stylesheet that
+// defines the `--ov-host-*` name owns the color, and defining none falls back to
+// the default look. The `--ov-host-*` namespace can't collide with Ovellum's own
+// runtime vars (`--ov-accent`, `--ov-text-scale`, …). Derived tokens (links,
+// callouts, border tints, inline-code) reference these, so they follow for free.
+//
+// Mode-aware tokens differ light vs dark, so they're restated in the dark + auto
+// blocks (mirroring style.css's default-palette remap) referencing the same gray
+// ramp steps — keeping "unset = default" true in both modes. Fallbacks reference
+// the primitives, so they track any ramp edit.
+const BARE_TOKENS: ReadonlyArray<readonly [string, string, string, string]> = [
+  // [token, host var, light default, dark default]
+  ['--color-bg', '--ov-host-bg', 'var(--color-gray-100)', 'var(--color-gray-900)'],
+  ['--color-surface', '--ov-host-surface', 'var(--color-white)', 'var(--color-gray-800)'],
+  ['--color-fg', '--ov-host-fg', 'var(--color-gray-900)', 'var(--color-gray-100)'],
+  ['--color-fg-muted', '--ov-host-fg-muted', 'var(--color-gray-700)', 'var(--color-gray-300)'],
+  ['--color-primary', '--ov-host-primary', 'var(--color-gray-900)', 'var(--color-gray-50)'],
+  ['--color-primary-fg', '--ov-host-primary-fg', 'var(--color-gray-50)', 'var(--color-gray-900)'],
+  ['--color-primary-hover', '--ov-host-primary-hover', 'var(--color-gray-800)', 'var(--color-gray-200)'],
+  ['--color-accent', '--ov-host-accent', 'var(--color-gray-900)', 'var(--color-gray-100)'],
+  ['--color-accent-fg', '--ov-host-accent-fg', 'var(--color-gray-50)', 'var(--color-gray-900)'],
+  ['--color-accent-hover', '--ov-host-accent-hover', 'var(--color-gray-700)', 'var(--color-gray-300)'],
+];
+// Mode-invariant: the default formula/stack already adapts (border tints follow
+// --color-fg; --font-body falls back to the system sans stack).
+const BARE_TOKENS_STATIC: ReadonlyArray<readonly [string, string, string]> = [
+  ['--color-border', '--ov-host-border', 'color-mix(in oklch, var(--color-fg) 10%, transparent)'],
+  ['--color-border-strong', '--ov-host-border-strong', 'color-mix(in oklch, var(--color-fg) 18%, transparent)'],
+  ['--font-body', '--ov-host-font-body', 'var(--font-sans)'],
+];
+/**
+ * Inline `<style>` for `site.palette: 'bare'`: the `--ov-host-*` indirection
+ * layer, scoped under `[data-palette="bare"]` so it sits above the base `:root`
+ * but below `site.css`. Emitted only in bare mode.
+ */
+function renderBareThemeHead(): string {
+  const light = BARE_TOKENS.map(([t, h, l]) => `${t}: var(${h}, ${l});`);
+  const statics = BARE_TOKENS_STATIC.map(([t, h, d]) => `${t}: var(${h}, ${d});`);
+  const dark = BARE_TOKENS.map(([t, h, , dk]) => `${t}: var(${h}, ${dk});`);
+  const lightBlock = [...light, ...statics].join(' ');
+  const darkBlock = dark.join(' ');
+  return `<style>
+  :root[data-palette="bare"] { ${lightBlock} }
+  :root[data-palette="bare"][data-theme="dark"] { ${darkBlock} }
+  @media (prefers-color-scheme: dark) { :root[data-palette="bare"][data-theme="auto"] { ${darkBlock} } }
+  </style>`;
+}
+
 export interface ShellOptions {
   site: OvellumSiteConfig & { title: string };
   /** Full <title> for the page (already composed upstream). */
@@ -221,6 +270,12 @@ function renderShell(opts: ShellOptions): string {
   // Author stylesheets (`site.css`) come last among Ovellum-emitted CSS so they
   // override the base theme + bundled UI — the theme-inheritance / token hook.
   const extraCssHead = opts.site.css ? renderExtraCss(opts.site.css, basePath) : '';
+  // Bare palette (`site.palette: 'bare'`): no baked palette — emit the
+  // `--ov-host-*` indirection layer (before site.css so a host override still
+  // wins), skip the boot palette-restore (a stored palette must not clobber
+  // 'bare'), and drop the Theme picker from the panel.
+  const barePalette = palette === 'bare';
+  const bareThemeHead = barePalette ? renderBareThemeHead() : '';
   // Appearance ownership. In `inherit` mode the boot script resolves light/dark
   // from the host (a `prefers-color-scheme`-tracking `'auto'`, or the host's
   // `localStorage` key) instead of Ovellum's own `ovellum-theme`, exposes the
@@ -251,6 +306,16 @@ function renderShell(opts: ShellOptions): string {
         } else {
           t = d.getAttribute('data-theme') || 'auto';
         }`;
+  // In bare mode the palette is host-owned — keep the server-set 'bare' and skip
+  // the stored-palette restore (which would otherwise clobber it with a baked one).
+  const paletteBoot = barePalette
+    ? `var p = 'bare';`
+    : `var p = localStorage.getItem('ovellum-palette');
+        if (p && bgs[p]) {
+          d.setAttribute('data-palette', p);
+        } else {
+          p = d.getAttribute('data-palette') || 'default';
+        }`;
   return `<!doctype html>
 <html lang="${escapeAttr(opts.lang ?? 'en')}"${dirAttr} data-theme="${escapeAttr(opts.site.defaultTheme)}" data-palette="${escapeAttr(palette)}" data-font="${escapeAttr(fontKey)}"${accentAttrs}${mermaidAttr}>
 <head>
@@ -277,6 +342,7 @@ function renderShell(opts: ShellOptions): string {
   <link rel="stylesheet" href="${escapeAttr(assets)}assets/ovellum.css">
   ${customFontHead}
   ${searchHead}
+  ${bareThemeHead}
   ${extraCssHead}
   ${opts.site.headExtra ?? ''}
   <script>
@@ -296,12 +362,7 @@ function renderShell(opts: ShellOptions): string {
           eink: ['oklch(95.2% 0.019 91)', 'oklch(22.3% 0.014 88)']
         };
         window.__OV_PALETTE_BG__ = bgs;
-        var p = localStorage.getItem('ovellum-palette');
-        if (p && bgs[p]) {
-          d.setAttribute('data-palette', p);
-        } else {
-          p = d.getAttribute('data-palette') || 'default';
-        }
+        ${paletteBoot}
         var a = localStorage.getItem('ovellum-accent');
         if (a) {
           d.style.setProperty('--ov-accent', a);
@@ -462,6 +523,7 @@ function renderAppearancePanel(
   strings: UiStrings,
   customFont?: OvellumCustomFont | null,
   inheritAppearance = false,
+  barePalette = false,
 ): string {
   const modes = [
     { id: 'auto', label: strings.modeAuto, icon: 'monitor' as IconName },
@@ -561,14 +623,19 @@ function renderAppearancePanel(
           </div>
         </div>
         `;
-  return `<div class="ov-appearance-panel" data-ov-appearance-panel hidden>
-        ${modeGroup}<div class="ov-appearance-group">
+  // In bare mode the host owns the color values, so switching to a baked palette
+  // would fight it — drop the Theme group (color/text-size/font stay).
+  const themeGroup = barePalette
+    ? ''
+    : `<div class="ov-appearance-group">
           <span class="ov-appearance-label">${escapeHtml(strings.themeLabel)}</span>
           <div class="ov-appearance-palettes" role="group" aria-label="${escapeAttr(strings.themeGroup)}">
           ${paletteButtons}
           </div>
         </div>
-        <div class="ov-appearance-group">
+        `;
+  return `<div class="ov-appearance-panel" data-ov-appearance-panel hidden>
+        ${modeGroup}${themeGroup}<div class="ov-appearance-group">
           <span class="ov-appearance-label">${escapeHtml(strings.colorLabel)}</span>
           <div class="ov-appearance-accents" role="group" aria-label="${escapeAttr(strings.colorGroup)}">
           <button type="button" class="ov-appearance-accent ov-appearance-accent--default" data-ov-accent=""
@@ -682,13 +749,14 @@ function renderTopbar(
   // their pressed states in sync, so duplicates can't drift.
   const customFont = typeof site.font === 'object' ? site.font : null;
   const inheritAppearance = resolveAppearance(site.appearance).inherit;
+  const barePalette = site.palette === 'bare';
   const appearancePopover = `<div class="ov-appearance" data-ov-appearance>
       <button class="ov-theme-toggle" type="button"
         aria-label="${escapeAttr(strings.appearance)}" title="${escapeAttr(strings.appearance)}"
         aria-haspopup="true" aria-expanded="false" data-ov-appearance-toggle>
         ${renderIcon('palette', { size: 18 })}
       </button>
-      ${renderAppearancePanel(strings, customFont, inheritAppearance)}
+      ${renderAppearancePanel(strings, customFont, inheritAppearance, barePalette)}
     </div>`;
   const versionBadge = site.version
     ? `<span class="ov-brand-version" aria-label="Stable version ${escapeAttr(site.version)}">${escapeHtml(site.version)}</span>`
@@ -729,7 +797,7 @@ function renderTopbar(
         ${versionPicker ? `<div class="ov-mobile-lang">${versionPicker}</div>` : ''}
         ${langPicker ? `<div class="ov-mobile-lang">${langPicker}</div>` : ''}
         <div class="ov-mobile-theme" data-ov-appearance>
-          ${renderAppearancePanel(strings, customFont, inheritAppearance)}
+          ${renderAppearancePanel(strings, customFont, inheritAppearance, barePalette)}
         </div>
       </nav>
     </div>
