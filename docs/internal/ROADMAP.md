@@ -140,19 +140,20 @@ A1 unlocks A2–A4.
 
 ### Tier B — site-builder parity (vs Docusaurus/VitePress/Starlight)
 
-- [~] **B1 (L) — Slice 1 DONE 2026-06-29; design pass in
-      [`PLUGINS.md`](./PLUGINS.md).** **Plugin/extension API.** Decided model:
-      a single `config.plugins: OvellumPlugin[]` (Vite/Rollup style). **Slice 1
-      shipped lifecycle hooks (this is also D3):** `onResolveConfig`,
-      `onBuildStart`, `transformPage`, `onBuildComplete` — orchestrated in
-      `run-build.ts`, site stays plugin-agnostic (resolved-callback plumbing like
-      `onLog`); types in core, exported from `ovellum`; deploy hook gets the
-      manifest free. See FEATURES + PLUGINS.md. **Remaining seams:** (a) **Slice
-      2 (B1a)** user-supplied remark/rehype plugins via config, injected
-      pre-sanitize so the security model holds (the sharp seam); (b) **Slice 3
-      (B1b)** template overrides ("bring your own template directory"). These
-      were the original "single most-requested-shaped gap"; the hook contract is
-      now in place to build on.
+- [~] **B1 (L) — Slices 1 + 2 DONE 2026-06-29; design pass in
+      [`PLUGINS.md`](./PLUGINS.md).** **Plugin/extension API.** Model: a single
+      `config.plugins: OvellumPlugin[]` (Vite/Rollup style). **Slice 1 — lifecycle
+      hooks (also D3):** `onResolveConfig`, `onBuildStart`, `transformPage`,
+      `onBuildComplete`; orchestrated in `run-build.ts`, site stays
+      plugin-agnostic, deploy hook gets the manifest free. **Slice 2 (B1a) —
+      markdown plugins:** `remarkPlugins`/`rehypePlugins` on a plugin, injected
+      into `markdown.ts` (remark after built-ins/before HTML; rehype **before
+      `rehypeSanitize`** so sanitize stays the security guard — `<script>`
+      injection stripped, pinned by a test). Typed `unknown[]` in core/cli so
+      neither imports `unified`; only `@ovellum/site` names `PluggableList`.
+      Manual-mode rendering only. See FEATURES + PLUGINS.md. **Remaining: Slice 3
+      (B1b)** template overrides ("bring your own template directory") — the
+      largest piece.
 - [x] **B2 (M) — Slice 1 DONE 2026-06-26.** **Component directives** (reframed
       from "MDX tier 1" per [`COMPETITIVE.md`](./COMPETITIVE.md) — the one real
       authoring gap). Shipped: callouts/steps/cards/tabs via `remark-directive`

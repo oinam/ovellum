@@ -106,14 +106,40 @@ without `--manifest`, so a deploy plugin always has the file list.
 This is the "Ovellum builds; the host deploys" contract made concrete: Ovellum
 hands you a finished folder + an inventory, and your hook takes it from there.
 
+## Markdown plugins
+
+A plugin can extend the Markdown pipeline with
+[remark](https://github.com/remarkjs/remark) and
+[rehype](https://github.com/rehypejs/rehype) plugins — each a unified
+`Pluggable` (a plugin function, or a `[plugin, options]` tuple):
+
+```ts
+import remarkMath from 'remark-math';
+import rehypeKatex from 'rehype-katex';
+
+export default defineConfig({
+  plugins: [
+    { name: 'math', remarkPlugins: [remarkMath], rehypePlugins: [rehypeKatex] },
+  ],
+});
+```
+
+`remarkPlugins` run after Ovellum's built-in remark plugins and before the HTML
+conversion; `rehypePlugins` run on the HTML tree. They apply to manual-mode page
+rendering (doc pages + landing prose).
+
+> **Security:** `rehypePlugins` are injected **before sanitization** — Ovellum's
+> sanitize step is the guard over everything they produce, so a plugin can't
+> inject `<script>` or other unsafe HTML. (A `<script>` a rehype plugin adds is
+> stripped, same as raw HTML in a page.) If you need an element/attribute the
+> sanitizer drops, that's a deliberate boundary, not a bug.
+
 ## What's not here yet
 
-This is the first slice of the extension API. Coming next:
+The remaining slice of the extension API:
 
-- **Markdown plugins** — `remarkPlugins` / `rehypePlugins` on a plugin, injected
-  safely into the render pipeline (before sanitize, so the security model
-  holds).
 - **Template overrides** — bring your own template directory.
 
-Until then, the lifecycle hooks above cover config, per-page HTML, and deploy;
-CSS-level theming is handled by [`site.css`](/docs/guides/themes/#customizing-the-default-theme).
+Until then, the hooks + markdown plugins above cover config, per-page HTML,
+Markdown extensions, and deploy; CSS-level theming is handled by
+[`site.css`](/docs/guides/themes/#customizing-the-default-theme).

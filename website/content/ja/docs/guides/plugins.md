@@ -1,7 +1,7 @@
 ---
 title: プラグイン
 description: プラグインでビルドを拡張する — 設定・ページごとの変換・デプロイロジック（onBuildComplete）のためのライフサイクルフック。
-sourceHash: 'd125a87e475a01ef'
+sourceHash: '5231666edf0a4f7a'
 ---
 
 # プラグイン
@@ -105,14 +105,39 @@ export default defineConfig({
 これは「Ovellum はビルドし、ホストがデプロイする」という契約を具体化したものです。Ovellum は
 完成したフォルダ + インベントリを渡し、あとはあなたのフックが引き継ぎます。
 
+## Markdown プラグイン
+
+プラグインは、Markdown パイプラインを [remark](https://github.com/remarkjs/remark) と
+[rehype](https://github.com/rehypejs/rehype) のプラグインで拡張できます。それぞれは
+unified の `Pluggable`（プラグイン関数、または `[plugin, options]` のタプル）です。
+
+```ts
+import remarkMath from 'remark-math';
+import rehypeKatex from 'rehype-katex';
+
+export default defineConfig({
+  plugins: [
+    { name: 'math', remarkPlugins: [remarkMath], rehypePlugins: [rehypeKatex] },
+  ],
+});
+```
+
+`remarkPlugins` は Ovellum の組み込み remark プラグインの後・HTML 変換の前に実行され、
+`rehypePlugins` は HTML ツリーに対して実行されます。manual モードのページレンダリング
+（ドキュメントページ + ランディングのプロース）に適用されます。
+
+> **セキュリティ:** `rehypePlugins` は**サニタイズの前**に注入されます — Ovellum の
+> サニタイズステップが、それらが生成するすべてのものに対するガードなので、プラグインが
+> `<script>` などの安全でない HTML を注入することはできません。（rehype プラグインが追加した
+> `<script>` は、ページ内の生 HTML と同様に除去されます。）サニタイザーが落とす要素・属性が
+> 必要な場合、それはバグではなく意図的な境界です。
+
 ## まだないもの
 
-これは拡張 API の最初のスライスです。次に来るもの:
+拡張 API の残りのスライス:
 
-- **Markdown プラグイン** — プラグインの `remarkPlugins` / `rehypePlugins`。レンダリング
-  パイプラインに安全に注入されます（サニタイズの前なので、セキュリティモデルは保たれます）。
 - **テンプレートのオーバーライド** — 自分のテンプレートディレクトリを持ち込む。
 
-それまでは、上記のライフサイクルフックが設定・ページごとの HTML・デプロイをカバーします。
-CSS レベルのテーマ設定は [`site.css`](/ja/docs/guides/themes/#デフォルトテーマのカスタマイズ)
-で扱えます。
+それまでは、上記のフック + Markdown プラグインが設定・ページごとの HTML・Markdown 拡張・
+デプロイをカバーします。CSS レベルのテーマ設定は
+[`site.css`](/ja/docs/guides/themes/#デフォルトテーマのカスタマイズ)で扱えます。

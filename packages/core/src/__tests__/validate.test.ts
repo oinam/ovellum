@@ -140,6 +140,12 @@ describe('validateUserConfig', () => {
     expect(() => validateUserConfig({ plugins: [{ name: 'x', transformPage: 'no' }] })).toThrow(
       /plugins\[0\] \(x\)\.transformPage/,
     );
+    // remark/rehype plugin lists: arrays accepted, non-arrays rejected.
+    const md = { plugins: [{ name: 'm', remarkPlugins: [() => {}], rehypePlugins: [] }] };
+    expect(validateUserConfig(md)).toEqual(md);
+    expect(() => validateUserConfig({ plugins: [{ name: 'm', remarkPlugins: {} }] })).toThrow(
+      /plugins\[0\] \(m\)\.remarkPlugins/,
+    );
   });
 
   it('accepts site.dateFormat humanized/iso and rejects an unknown one', () => {

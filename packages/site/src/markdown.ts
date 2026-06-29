@@ -1,4 +1,4 @@
-import { unified } from 'unified';
+import { unified, type PluggableList } from 'unified';
 import remarkParse from 'remark-parse';
 import remarkGfm from 'remark-gfm';
 import remarkDirective from 'remark-directive';
@@ -28,6 +28,10 @@ export interface RenderedMarkdown {
 export interface RenderMarkdownOptions {
   /** Shiki theme pair to highlight code blocks with. Defaults to `'github'`. */
   codeTheme?: OvellumCodeTheme;
+  /** Plugin-supplied remark plugins, injected after the built-ins, before HTML. */
+  remarkPlugins?: PluggableList;
+  /** Plugin-supplied rehype plugins, injected before sanitize (sanitize stays the guard). */
+  rehypePlugins?: PluggableList;
 }
 
 /**
@@ -229,7 +233,7 @@ export async function renderMarkdown(
   const themes = CODE_THEME_PAIRS[opts.codeTheme ?? 'github'] ?? CODE_THEME_PAIRS.github;
   const headings: Heading[] = [];
 
-  const file = await unified()
+  const processor = unified()
     .use(remarkParse)
     // GFM enables tables, strikethrough, task lists, and literal autolinks
     // — Markdown features people expect, none of which CommonMark includes.
@@ -239,14 +243,23 @@ export async function renderMarkdown(
     // class-tagged elements. Runs in the remark phase so the structure flows
     // through sanitize (its classes are whitelisted in SANITIZE_SCHEMA).
     .use(remarkDirective)
-    .use(remarkComponents)
+    .use(remarkComponents);
+  // Plugin-supplied remark plugins (B1): after the built-ins, before the HTML
+  // conversion — so whatever mdast they emit still flows through sanitize.
+  if (opts.remarkPlugins?.length) processor.use(opts.remarkPlugins);
+  processor
     .use(remarkRehype, { allowDangerousHtml: true })
     // rehype-raw parses `raw` HAST nodes (the literal HTML that survived
     // remark-rehype because of allowDangerousHtml) into real element nodes
     // so rehype-sanitize can actually walk them. Without this, raw HTML
     // would either pass straight through or be wholesale dropped — neither
     // is what we want.
-    .use(rehypeRaw)
+    .use(rehypeRaw);
+  // Plugin-supplied rehype plugins (B1): BEFORE sanitize, so sanitize stays the
+  // security guard over everything they produce — a plugin can't smuggle in
+  // unsanitized HTML.
+  if (opts.rehypePlugins?.length) processor.use(opts.rehypePlugins);
+  const file = await processor
     // Sanitize BEFORE shiki — see SANITIZE_SCHEMA comment above.
     .use(rehypeSanitize, SANITIZE_SCHEMA)
     // Transform `> [!NOTE]` etc. blockquotes into ov-callout panels. Runs

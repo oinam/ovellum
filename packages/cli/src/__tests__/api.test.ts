@@ -131,6 +131,19 @@ describe('plugins (lifecycle hooks)', () => {
     expect(html).not.toContain('>Base<');
   });
 
+  it('a plugin remarkPlugin flows through the build into the rendered HTML', async () => {
+    /* eslint-disable @typescript-eslint/no-explicit-any */
+    const remarkStamp = () => (tree: any) =>
+      void tree.children.push({
+        type: 'paragraph',
+        children: [{ type: 'text', value: 'FROM_REMARK_PLUGIN' }],
+      });
+    const plugin: OvellumPlugin = { name: 'md', remarkPlugins: [remarkStamp] };
+    await build({ cwd: dir, plugins: [plugin] });
+    const html = readFileSync(path.join(dir, 'dist', 'index.html'), 'utf8');
+    expect(html).toContain('FROM_REMARK_PLUGIN');
+  });
+
   it('a throwing hook fails the build, attributed to the plugin by name', async () => {
     const boom: OvellumPlugin = {
       name: 'boom',

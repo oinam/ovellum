@@ -3,6 +3,7 @@ import { copyFile, cp, mkdir, readFile, readdir, realpath, stat, writeFile } fro
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import matter from 'gray-matter';
+import type { PluggableList } from 'unified';
 import type {
   BuildWarning,
   OvellumConfig,
@@ -61,6 +62,10 @@ export interface BuildSiteOptions {
    * site builder stays plugin-agnostic (same pattern as a resolved callback).
    */
   transformPage?: TransformPage;
+  /** Plugin-supplied remark plugins for the Markdown pipeline (B1). Unified `PluggableList`. */
+  remarkPlugins?: unknown[];
+  /** Plugin-supplied rehype plugins, injected before sanitize (B1). Unified `PluggableList`. */
+  rehypePlugins?: unknown[];
 }
 
 /**
@@ -285,7 +290,10 @@ export async function buildSite(options: BuildSiteOptions): Promise<BuildSiteRes
     // Render the landing page first (if enabled) so a locale `index.md`
     // can be detected as a conflict during the walk.
     if (landingEnabled) {
-      const landingBody = await readLandingBody(spec.inputAbs, site);
+      const landingBody = await readLandingBody(spec.inputAbs, site, {
+        remarkPlugins: options.remarkPlugins,
+        rehypePlugins: options.rehypePlugins,
+      });
       // Render each install snippet through the same markdown/shiki pipeline as
       // doc code blocks (and the pitch body) so it gets syntax highlighting plus
       // the `data-language` eyebrow + `data-copy` the copy-button JS looks for.
@@ -387,6 +395,8 @@ export async function buildSite(options: BuildSiteOptions): Promise<BuildSiteRes
           draft: spec.draftBySource.has(sourceRelFromCwd),
           strings: spec.strings,
           dir: spec.dir,
+          remarkPlugins: options.remarkPlugins,
+          rehypePlugins: options.rehypePlugins,
         });
         if (!result) continue; // draft page excluded in production — skip
         const pageHtml = await finalizePage(url, outputPath, result.html);
@@ -635,6 +645,9 @@ interface RenderOneInput {
   strings: UiStrings;
   /** Text direction for `<html dir>`. */
   dir: 'ltr' | 'rtl';
+  /** Plugin-supplied remark/rehype plugins for the Markdown render (B1). */
+  remarkPlugins?: unknown[];
+  rehypePlugins?: unknown[];
 }
 
 interface RenderOneResult {
@@ -670,6 +683,8 @@ async function renderOne(input: RenderOneInput): Promise<RenderOneResult | null>
       : undefined;
   const { html: bodyHtml, headings } = await renderMarkdown(parsed.content, {
     codeTheme: input.site.codeTheme,
+    remarkPlugins: input.remarkPlugins as PluggableList | undefined,
+    rehypePlugins: input.rehypePlugins as PluggableList | undefined,
   });
   // Title resolution mirrors the nav (nav.ts pageNode): frontmatter `title`,
   // else the first `# H1` in the body, else the site title. (The ToC only
@@ -751,13 +766,18 @@ interface LandingBody {
 async function readLandingBody(
   inputAbs: string,
   site: OvellumSiteConfig,
+  markdownPlugins?: { remarkPlugins?: unknown[]; rehypePlugins?: unknown[] },
 ): Promise<LandingBody | undefined> {
   const abs = path.join(inputAbs, LANDING_BODY_FILE);
   if (!existsSync(abs)) return undefined;
   const raw = await readFile(abs, 'utf8');
   const { content } = matter(raw);
   if (!content.trim()) return undefined;
-  const { html } = await renderMarkdown(content, { codeTheme: site.codeTheme });
+  const { html } = await renderMarkdown(content, {
+    codeTheme: site.codeTheme,
+    remarkPlugins: markdownPlugins?.remarkPlugins as PluggableList | undefined,
+    rehypePlugins: markdownPlugins?.rehypePlugins as PluggableList | undefined,
+  });
   return { html, sourcePath: path.join(path.basename(inputAbs), LANDING_BODY_FILE) };
 }
 

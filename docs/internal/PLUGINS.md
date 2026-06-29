@@ -26,10 +26,14 @@ can't carry plugins. That's inherent and acceptable — plugins are code.
 - **Slice 1 — lifecycle hooks (D3).** `onResolveConfig`, `onBuildStart`,
   `transformPage`, `onBuildComplete`. Thin, typed, no markdown-chain or security
   risk. Delivers the headline deploy hook (`onBuildComplete`). **(building now)**
-- **Slice 2 — markdown plugin seam (B1a).** `remarkPlugins` / `rehypePlugins`
-  on a plugin. SECURITY: user remark plugins inject *before* `remarkRehype`;
-  user rehype plugins *before* `rehypeSanitize` so sanitize stays the guard
-  (`markdown.ts` ordering). Never let a user plugin run post-sanitize.
+- **Slice 2 — markdown plugin seam (B1a). DONE 2026-06-29.** `remarkPlugins` /
+  `rehypePlugins` on a plugin. Remark plugins inject after the built-in remark
+  chain / before `remarkRehype`; rehype plugins after `rehypeRaw` / *before*
+  `rehypeSanitize` so sanitize stays the guard (verified: a rehype-injected
+  `<script>` is stripped). Typed `unknown[]` in core + cli (neither imports
+  `unified`); `@ovellum/site` casts to `PluggableList` at the `renderMarkdown`
+  boundary. `run-build.ts` flattens across plugins in order → `buildSite`. Manual
+  rendering only (auto/hybrid emit Markdown, not HTML).
 - **Slice 3 — template overrides (B1b).** "Bring your own template directory"
   — override the hard-coded `templates/default/` (shell render + asset copy in
   `build.ts`/`template.ts`). Biggest blast radius; last.

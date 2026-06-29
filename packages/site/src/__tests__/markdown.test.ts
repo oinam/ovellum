@@ -1,6 +1,44 @@
 import { describe, expect, it } from 'vitest';
 import { renderMarkdown } from '../markdown.js';
 
+/* eslint-disable @typescript-eslint/no-explicit-any */
+describe('renderMarkdown — plugin remark/rehype injection (B1 slice 2)', () => {
+  it('runs a plugin-supplied remark plugin (mdast transform shows in output)', async () => {
+    const remarkStamp = () => (tree: any) =>
+      void tree.children.push({
+        type: 'paragraph',
+        children: [{ type: 'text', value: 'REMARK_STAMP' }],
+      });
+    const { html } = await renderMarkdown('hello', { remarkPlugins: [remarkStamp] });
+    expect(html).toContain('REMARK_STAMP');
+  });
+
+  it('runs a plugin-supplied rehype plugin (allowed output survives)', async () => {
+    const rehypeAddPara = () => (tree: any) =>
+      void tree.children.push({
+        type: 'element',
+        tagName: 'p',
+        properties: {},
+        children: [{ type: 'text', value: 'REHYPE_OK' }],
+      });
+    const { html } = await renderMarkdown('hello', { rehypePlugins: [rehypeAddPara] });
+    expect(html).toContain('REHYPE_OK');
+  });
+
+  it('SECURITY: a rehype plugin runs before sanitize, so an injected <script> is stripped', async () => {
+    const rehypeInjectScript = () => (tree: any) =>
+      void tree.children.push({
+        type: 'element',
+        tagName: 'script',
+        properties: {},
+        children: [{ type: 'text', value: 'alert(1)' }],
+      });
+    const { html } = await renderMarkdown('hello', { rehypePlugins: [rehypeInjectScript] });
+    expect(html).not.toContain('<script');
+    expect(html).not.toContain('alert(1)');
+  });
+});
+
 describe('renderMarkdown', () => {
   it('renders paragraphs + headings + collects h2/h3 for the ToC', async () => {
     const { html, headings } = await renderMarkdown(

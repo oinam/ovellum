@@ -137,7 +137,14 @@ export async function runBuild(input: RunBuildInput): Promise<BuildSummary> {
   }
 
   const transformPage = composeTransformPage(plugins);
-  const summary = await runBuildForMode(config, cwd, input, startedAt, log, transformPage);
+  // Flatten plugin-supplied remark/rehype plugins in array order (B1 slice 2).
+  const remarkPlugins = plugins.flatMap((p) => p.remarkPlugins ?? []);
+  const rehypePlugins = plugins.flatMap((p) => p.rehypePlugins ?? []);
+  const summary = await runBuildForMode(config, cwd, input, startedAt, log, {
+    transformPage,
+    remarkPlugins,
+    rehypePlugins,
+  });
 
   // Deploy manifest — an inventory of the built output a host tool can use to
   // deploy anywhere (atomic / incremental uploads), independent of any host.
@@ -162,17 +169,31 @@ export async function runBuild(input: RunBuildInput): Promise<BuildSummary> {
   return summary;
 }
 
+interface SitePluginOptions {
+  transformPage?: TransformPage;
+  /** Opaque unified plugin lists (typed as `PluggableList` inside @ovellum/site). */
+  remarkPlugins?: unknown[];
+  rehypePlugins?: unknown[];
+}
+
 async function runBuildForMode(
   config: OvellumConfig,
   cwd: string,
   input: RunBuildInput,
   startedAt: number,
   log: Logger,
-  transformPage?: TransformPage,
+  siteOpts: SitePluginOptions = {},
 ): Promise<BuildSummary> {
   if (config.mode === 'manual') {
     log('building site (manual)…');
-    const result = await buildSite({ config, cwd, includeDrafts: input.includeDrafts, transformPage });
+    const result = await buildSite({
+      config,
+      cwd,
+      includeDrafts: input.includeDrafts,
+      transformPage: siteOpts.transformPage,
+      remarkPlugins: siteOpts.remarkPlugins,
+      rehypePlugins: siteOpts.rehypePlugins,
+    });
     log(`built ${result.pages.length} page(s) → ${result.outputDir}/ (landing: ${result.landingRendered})`);
     return {
       mode: 'manual',

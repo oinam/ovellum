@@ -71,4 +71,19 @@ export interface OvellumPlugin {
   ): OvellumPageResult | void | Promise<OvellumPageResult | void>;
   /** Fires after the build completes — the place for deploy logic. */
   onBuildComplete?(ctx: OvellumBuildCompleteContext): void | Promise<void>;
+  /**
+   * Extra [remark](https://github.com/remarkjs/remark) plugins added to the
+   * Markdown render pipeline (manual mode), each a unified `Pluggable` — a plugin
+   * function or a `[plugin, options]` tuple. Injected **after** Ovellum's own
+   * remark plugins and **before** the HTML conversion, so their output still
+   * passes through sanitization.
+   */
+  remarkPlugins?: unknown[];
+  /**
+   * Extra [rehype](https://github.com/rehypejs/rehype) plugins, each a unified
+   * `Pluggable`. Injected **before sanitization** — sanitize remains the security
+   * guard over everything they produce, so a plugin can't inject unsanitized
+   * HTML. (Only manual-mode HTML rendering runs these.)
+   */
+  rehypePlugins?: unknown[];
 }

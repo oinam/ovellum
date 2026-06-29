@@ -99,6 +99,11 @@ export function validateUserConfig(input: unknown): OvellumUserConfig {
           throw new ConfigError(`\`plugins[${i}] (${plugin.name}).${hook}\` must be a function.`);
         }
       }
+      for (const list of ['remarkPlugins', 'rehypePlugins'] as const) {
+        if (plugin[list] !== undefined && !Array.isArray(plugin[list])) {
+          throw new ConfigError(`\`plugins[${i}] (${plugin.name}).${list}\` must be an array.`);
+        }
+      }
     });
   }
 
