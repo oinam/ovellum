@@ -261,7 +261,8 @@ A1 unlocks A2–A4.
 - [ ] **B9 (M)** **Image optimization** (lazy-import `sharp`, same pattern as
       the planned `site.minify` esbuild gating) and, later, OG-image
       generation per page.
-- [ ] **B10 (M–L)** **Theme inheritance — adopt a parent project's design
+- [x] **B10 (M–L) — DONE 2026-06-29 (B10.1 + B10.2 + B10.3).** **Theme
+      inheritance — adopt a parent project's design
       tokens.** *(maintainer-requested 2026-06-28.)* When Ovellum docs are
       built into a host project's `/docs` (the Tier D embed story), let the
       output **inherit the host's existing theming** — colors, auto light/dark,
