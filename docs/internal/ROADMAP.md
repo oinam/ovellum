@@ -140,20 +140,22 @@ A1 unlocks A2–A4.
 
 ### Tier B — site-builder parity (vs Docusaurus/VitePress/Starlight)
 
-- [~] **B1 (L) — Slices 1 + 2 DONE 2026-06-29; design pass in
+- [x] **B1 (L) — COMPLETE 2026-06-29 (slices 1+2+3); design pass in
       [`PLUGINS.md`](./PLUGINS.md).** **Plugin/extension API.** Model: a single
       `config.plugins: OvellumPlugin[]` (Vite/Rollup style). **Slice 1 — lifecycle
       hooks (also D3):** `onResolveConfig`, `onBuildStart`, `transformPage`,
       `onBuildComplete`; orchestrated in `run-build.ts`, site stays
       plugin-agnostic, deploy hook gets the manifest free. **Slice 2 (B1a) —
-      markdown plugins:** `remarkPlugins`/`rehypePlugins` on a plugin, injected
-      into `markdown.ts` (remark after built-ins/before HTML; rehype **before
-      `rehypeSanitize`** so sanitize stays the security guard — `<script>`
-      injection stripped, pinned by a test). Typed `unknown[]` in core/cli so
-      neither imports `unified`; only `@ovellum/site` names `PluggableList`.
-      Manual-mode rendering only. See FEATURES + PLUGINS.md. **Remaining: Slice 3
-      (B1b)** template overrides ("bring your own template directory") — the
-      largest piece.
+      markdown plugins:** `remarkPlugins`/`rehypePlugins`, injected into
+      `markdown.ts` (rehype **before `rehypeSanitize`** so sanitize stays the
+      guard — `<script>` injection stripped, pinned). Typed `unknown[]` in
+      core/cli (only `@ovellum/site` names `PluggableList`). **Slice 3 (B1b) —
+      template overrides:** `site.templateDir` — a directory whose
+      `style.css`/`script.js`/`fonts/` replace the bundled theme assets per-file
+      with fallback (`writeStaticAssets`). Replaces the CSS/JS layer without
+      forking; **HTML stays code** (targets `ov-*` classes — a layout/partial
+      system over the markup is the deferred component work, out of scope per the
+      original "not a component system" framing). See FEATURES + PLUGINS.md.
 - [x] **B2 (M) — Slice 1 DONE 2026-06-26.** **Component directives** (reframed
       from "MDX tier 1" per [`COMPETITIVE.md`](./COMPETITIVE.md) — the one real
       authoring gap). Shipped: callouts/steps/cards/tabs via `remark-directive`

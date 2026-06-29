@@ -156,3 +156,32 @@ describe('plugins (lifecycle hooks)', () => {
     );
   });
 });
+
+/** site.templateDir (B1 slice 3) — bring your own CSS/JS, with per-file fallback. */
+describe('templateDir (custom template assets)', () => {
+  let dir: string;
+  beforeEach(() => {
+    dir = mkdtempSync(path.join(tmpdir(), 'ovellum-tpl-'));
+    mkdirSync(path.join(dir, 'content'), { recursive: true });
+    mkdirSync(path.join(dir, 'theme'), { recursive: true });
+    writeFileSync(path.join(dir, 'content', 'index.md'), '# Home\n\nHi.\n', 'utf8');
+    writeFileSync(path.join(dir, 'theme', 'style.css'), '/* CUSTOM_TEMPLATE_CSS */\n', 'utf8');
+    writeFileSync(
+      path.join(dir, 'ovellum.config.json'),
+      JSON.stringify({ mode: 'manual', input: './content', output: './dist', site: { templateDir: './theme' } }),
+    );
+  });
+  afterEach(async () => {
+    await rm(dir, { recursive: true, force: true });
+  });
+
+  it("uses the template dir's style.css for ovellum.css; script.js falls back to bundled", async () => {
+    await build({ cwd: dir });
+    const css = readFileSync(path.join(dir, 'dist', 'assets', 'ovellum.css'), 'utf8');
+    expect(css).toContain('CUSTOM_TEMPLATE_CSS');
+    expect(css).not.toContain('--color-bg'); // the bundled theme's tokens are gone
+    // No script.js in the template dir → the bundled runtime is still emitted.
+    const js = readFileSync(path.join(dir, 'dist', 'assets', 'ovellum.js'), 'utf8');
+    expect(js.length).toBeGreaterThan(0);
+  });
+});

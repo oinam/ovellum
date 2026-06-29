@@ -596,6 +596,22 @@ export interface OvellumSiteConfig {
    */
   assetBaseUrl?: string;
   /**
+   * Path to a custom template directory whose assets **replace** the bundled
+   * theme's, resolved relative to the project root. Per file, Ovellum uses your
+   * version when present and falls back to the default otherwise:
+   * `style.css` → the emitted `/assets/ovellum.css`, `script.js` →
+   * `/assets/ovellum.js`, and a `fonts/` folder → `/assets/fonts/`. This is the
+   * "bring your own template directory" path — full control of the CSS/JS layer
+   * without forking the package.
+   *
+   * **Scope:** the page **HTML structure is generated in code** (the topbar,
+   * sidebar, appearance panel, the `ov-*` class names), so this overrides the
+   * *styling + client behavior*, not the markup. Your `style.css` targets the
+   * same `ov-*` classes; for token-level tweaks prefer {@link OvellumSiteConfig.css}
+   * or `palette: 'bare'`. Unset = the bundled default theme.
+   */
+  templateDir?: string;
+  /**
    * File globs to exclude from the manual-mode site — both Markdown pages and
    * passthrough assets, honored by `build` **and** `check`. A pattern without
    * `/` matches the basename at any depth (`README.md`, `*.draft.md`); a

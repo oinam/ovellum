@@ -190,7 +190,9 @@ export async function buildSite(options: BuildSiteOptions): Promise<BuildSiteRes
   const warn = (message: string): BuildWarning => ({ message, severity: 'warning' });
 
   await mkdir(assetsAbs, { recursive: true });
-  await writeStaticAssets(assetsAbs);
+  // `site.templateDir` (B1 slice 3) replaces the bundled CSS/JS/fonts per file.
+  const userTemplateDir = site.templateDir ? path.resolve(cwd, site.templateDir) : undefined;
+  await writeStaticAssets(assetsAbs, userTemplateDir);
 
   // publicDir → output ROOT (the SSG norm: `public/favicon.ico` → `/favicon.ico`),
   // copied verbatim, before page render (so a generated route wins a same-name
@@ -1189,15 +1191,25 @@ function firstH1(content: string): string | undefined {
   return m ? m[1]!.trim() : undefined;
 }
 
-async function writeStaticAssets(assetsAbs: string): Promise<void> {
-  const templateDir = resolveTemplateDir();
-  await copyFile(path.join(templateDir, 'style.css'), path.join(assetsAbs, 'ovellum.css'));
-  await copyFile(path.join(templateDir, 'script.js'), path.join(assetsAbs, 'ovellum.js'));
+async function writeStaticAssets(assetsAbs: string, userTemplateDir?: string): Promise<void> {
+  const defaultDir = resolveTemplateDir();
+  // Per asset, prefer the user template dir's version (B1 slice 3 — "bring your
+  // own template directory"); fall back to the bundled default so a partial
+  // override (e.g. only `style.css`) still produces a complete asset set.
+  const pick = (rel: string): string => {
+    if (userTemplateDir) {
+      const candidate = path.join(userTemplateDir, rel);
+      if (existsSync(candidate)) return candidate;
+    }
+    return path.join(defaultDir, rel);
+  };
+  await copyFile(pick('style.css'), path.join(assetsAbs, 'ovellum.css'));
+  await copyFile(pick('script.js'), path.join(assetsAbs, 'ovellum.js'));
   // Bundled webfonts (Inter, Geist) for the font picker. The @font-face rules
   // in ovellum.css reference them at fonts/… relative to the stylesheet, so
   // they must land in assets/fonts/. Lazy by spec — the browser only fetches a
   // file when a page actually renders in that family (data-font=inter|geist).
-  const fontsDir = path.join(templateDir, 'fonts');
+  const fontsDir = pick('fonts');
   if (existsSync(fontsDir)) {
     await cp(fontsDir, path.join(assetsAbs, 'fonts'), { recursive: true });
   }

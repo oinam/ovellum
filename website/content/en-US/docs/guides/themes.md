@@ -486,6 +486,39 @@ removed for you; write the bridge from the [token table](#inheriting-a-host-proj
 directly when you only need to nudge a few tokens and want to keep the baked
 palettes available as a fallback.
 
+### Bring your own template directory
+
+When `site.css` and `palette: 'bare'` aren't enough — you want to **replace**
+Ovellum's stylesheet and client script entirely, not layer on top —
+[`site.templateDir`](/docs/reference/config/) points at a directory whose assets
+take over:
+
+```ts
+site: {
+  templateDir: './theme',   // relative to the project root
+}
+```
+
+```text
+theme/
+  style.css     → emitted as /assets/ovellum.css   (replaces the bundled theme CSS)
+  script.js     → emitted as /assets/ovellum.js    (replaces the bundled runtime)
+  fonts/        → emitted as /assets/fonts/         (your webfonts)
+```
+
+It's a **per-file** override with fallback: provide only `style.css` and you get
+your CSS plus Ovellum's bundled `script.js`; provide only `script.js` and the
+default theme CSS stays. So you can take over just the layer you care about.
+
+**What it does and doesn't cover.** This replaces the *styling and client
+behavior* — your `style.css` is the whole stylesheet now, so it targets the same
+`ov-*` class names the [generated HTML](#whats-bundled-today-vs-planned) uses
+(topbar, sidebar, appearance panel, content card, …). The page **HTML structure
+is generated in code** and isn't a template you override here — a full
+layout/partial system is out of scope. For color/font tweaks rather than a
+ground-up rewrite, reach for `site.css` or `palette: 'bare'` first; `templateDir`
+is the escape hatch when you want total control without forking the package.
+
 ## Theming the landing page
 
 If you've enabled `site.landing`, the landing inherits the same tokens.
@@ -541,15 +574,14 @@ Pick one via `site.codeTheme`:
   …). Each theme ships its own gray ramp + role values plus a reversed-ramp
   dark block, per the [token model](#token-model). Today only the default
   page theme ships; `site.codeTheme` already switches the syntax palette.
-- A plugin API for fully custom templates.
 - Per-page `extraStyles` for one-off page-specific CSS.
+- A layout/partial system for overriding the page **HTML structure** (today the
+  markup is generated in code).
 
-CSS-level customization — colors, fonts, token overrides, whole-UI re-skins,
-inheriting a host design system — is handled today by
-[`site.css`](#customizing-the-default-theme). The roadmap items above are about
-going *beyond* CSS: changing the template **structure**. Until those land, that
-deeper customization means forking the
-[`templates/default/`](https://github.com/oinam/ovellum/tree/main/packages/site/src/templates/default)
-directory and pointing your own `ovellum.config.ts` at the fork (re-rebasing
-when Ovellum updates its template). This is a deliberate constraint for v1 —
-once the customization surface is stable, an API is easier to commit to.
+The CSS/JS layer is fully customizable today: [`site.css`](#customizing-the-default-theme)
+layers overrides, [`palette: 'bare'`](#bare-mode) defers all color to a host, and
+[`site.templateDir`](#bring-your-own-template-directory) replaces the bundled
+stylesheet + script wholesale — none of which require forking the package. The
+roadmap items above are about going *beyond* CSS/JS: changing the generated
+markup itself. That's the deliberate v1 constraint — the styling surface is
+open, the structure is still code.

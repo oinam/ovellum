@@ -134,12 +134,16 @@ rendering (doc pages + landing prose).
 > stripped, same as raw HTML in a page.) If you need an element/attribute the
 > sanitizer drops, that's a deliberate boundary, not a bug.
 
-## What's not here yet
+## Related: replacing the theme assets
 
-The remaining slice of the extension API:
+Plugins cover config, per-page HTML, Markdown extensions, and deploy. The other
+half of customization is the **CSS/JS layer**:
 
-- **Template overrides** — bring your own template directory.
+- [`site.css`](/docs/guides/themes/#customizing-the-default-theme) — layer extra
+  stylesheets (override design tokens, add rules).
+- [`site.templateDir`](/docs/guides/themes/#bring-your-own-template-directory) —
+  replace the bundled `ovellum.css` / `ovellum.js` / fonts wholesale with your
+  own, no fork required.
 
-Until then, the hooks + markdown plugins above cover config, per-page HTML,
-Markdown extensions, and deploy; CSS-level theming is handled by
-[`site.css`](/docs/guides/themes/#customizing-the-default-theme).
+The page **HTML structure** is generated in code; a full layout/partial system
+(beyond CSS/JS) is intentionally out of scope for now.

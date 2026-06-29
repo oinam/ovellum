@@ -34,9 +34,14 @@ can't carry plugins. That's inherent and acceptable — plugins are code.
   `unified`); `@ovellum/site` casts to `PluggableList` at the `renderMarkdown`
   boundary. `run-build.ts` flattens across plugins in order → `buildSite`. Manual
   rendering only (auto/hybrid emit Markdown, not HTML).
-- **Slice 3 — template overrides (B1b).** "Bring your own template directory"
-  — override the hard-coded `templates/default/` (shell render + asset copy in
-  `build.ts`/`template.ts`). Biggest blast radius; last.
+- **Slice 3 — template overrides (B1b). DONE 2026-06-29.** `site.templateDir`
+  — a directory whose `style.css`/`script.js`/`fonts/` replace the bundled
+  theme assets, per-file with fallback (`writeStaticAssets` `pick()`). Bounded
+  to the **asset layer** because the HTML shell is generated in code
+  (`template.ts`), not a file template — a layout/partial system over the markup
+  is explicitly out of scope ("not a component system"). It's a `site.*` config,
+  not a plugin field (a static-asset concern, parallel to `publicDir`).
+  **B1 complete.**
 
 ## Slice 1 hook contract
 

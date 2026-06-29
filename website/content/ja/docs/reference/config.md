@@ -1,7 +1,7 @@
 ---
 title: 設定
 description: ovellum.config.{json,ts,js} のすべてのフィールドと、その型・デフォルト値・効果。
-sourceHash: '5aea41c6aa7c1549'
+sourceHash: '0ba5af8e9f2a87be'
 ---
 
 # 設定
@@ -117,6 +117,7 @@ interface OvellumSiteConfig {
   headExtra?: string;
   css?: string | string[];
   assetBaseUrl?: string;
+  templateDir?: string;
   search: { enabled: boolean };
   pageMeta: { readingTime: boolean; lastModified: boolean };
   sidebar: { collapse: boolean };
@@ -161,6 +162,7 @@ interface OvellumSiteConfig {
 | `sidebar`        | `{ collapse: boolean }`             | `{ collapse: true }`          | サイドバーのフォルダの挙動。`collapse: true`（デフォルト）は各フォルダを折りたたみ可能な開閉要素として、初期状態は閉じてレンダリングします。現在のページを含む枝は常に開いたままなので、自分の現在地が分かります。`collapse: false` にするとツリー全体を自動展開してレンダリングします。フォルダの `_meta.json` で `"collapse": false`（常に開く）または `"collapse": true`（常に閉じる）として、フォルダごとに上書きできます。 |
 | `backToTop`      | `{ enabled, threshold }`            | `{ enabled: true, threshold: 360 }` | フローティングの「back to top」ボタン。`enabled: false` で削除します。`threshold` はフェードインするまでのスクロール距離（px）です。短いページのサイトでは早く現れるよう下げ、もっと下までスクロールするまで隠したいなら上げます。 |
 | `assetBaseUrl`   | `string?`                           | `undefined`                   | `publicDir` のアセット用の CDN／ベース URL（例: `'https://cdn.example.com/site'`）。**設定すると**、Ovellum は `publicDir` のローカルコピーをやめ（その内容は CDN でホストします）、レンダリング済み HTML 内のそれらのファイルへの参照を CDN に書き換えます: `/img/logo.svg` → `https://cdn.example.com/site/img/logo.svg`。どちらの場合も、作者は同じルート絶対パスを書きます。Vite の `base` / Next の `assetPrefix` のようなものです。`publicDir` の*外*のアセットはそのままです。（クエリ文字列付きや `srcset` の参照は書き換えられません。） |
+| `templateDir`    | `string?`                           | `undefined`                   | カスタムテンプレートディレクトリへのパス（プロジェクトルートからの相対）。その中のアセットがバンドルのテーマを**置き換え**、ファイル単位でフォールバックします: `style.css` → `/assets/ovellum.css`、`script.js` → `/assets/ovellum.js`、`fonts/` → `/assets/fonts/`。一部だけ用意すれば残りはデフォルトにフォールバックします。「自分のテンプレートディレクトリを持ち込む」 — フォークせずに CSS/JS レイヤーを完全に制御できます。**ページの HTML はコードで生成される**ので、これはスタイリング + クライアント挙動を上書きします（`style.css` は同じ `ov-*` クラスを対象にします）。マークアップは対象外です。トークンの調整には [`css`](#css) や [`palette: 'bare'`](#palette) を優先してください。[テーマ設定ガイド](/ja/docs/guides/themes/#テンプレートディレクトリを持ち込む)を参照。 |
 | `publicDir`      | `string`                            | `'public'`                    | **予約済み**の静的アセットフォルダ（`input` ルート直下の単一の名前）。その内容は**出力ルートにそのままコピー**されます — `public/favicon.ico` → `/favicon.ico`、`public/img/logo.svg` → `/img/logo.svg` — SSG の慣習です（Next/Astro/Vite/VitePress/Hugo）。ルートで配信されるファイル（favicon、`robots.txt`、`CNAME`、OG 画像）やその他の静的アセットに使います。中身は一切処理されません（ページもサイドバーもなし。`.md` ですらそのままコピーされます）。Ovellum の予約フォルダ名の最初のもので、それの*外*にある静的ファイルはパスを保ったまま通過します。 |
 | `ignoreFolders`  | `string[]`                          | `[]`                          | manual モードのサイトから完全に除外するフォルダ**名**（任意の深さでマッチ） — サイドバーに出ず、レンダリングもされず、出力にもコピーされません。WIP／プライベートなディレクトリに使います。フォルダは `_meta.json` の `"hidden": true` で自己非表示にもでき、単一ページはフロントマターの `draft: true` で非表示にできます。（`public/` のようなアセット専用フォルダは、すでに自動的にサイドバーから除外されています。） |
 | `ignoreFiles`    | `string[]`                          | `[]`                          | 除外するファイルの **glob** — Markdown ページとパススルーのアセットの両方が対象で、`build` **と** `check` の双方で尊重されます。スラッシュなしのパターンは任意の深さで basename にマッチし（`README.md`、`*.draft.md`）、スラッシュ付きのパターンは `input` を基準とした相対パスにマッチします（`drafts/**`）。`*`、`**`、`?` をサポートします。単一ファイル（例: リポジトリの `README.md`）を、そのファイルに触れずに除外するのに使えます。**常に自動除外**（設定不要）: ドットファイル、`node_modules`、パッケージのマニフェスト／ロックファイル、Ovellum の設定、出力ディレクトリ自身 — これにより `input: "."` でもプロジェクトファイルが漏れません。 |

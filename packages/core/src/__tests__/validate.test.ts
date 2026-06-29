@@ -204,6 +204,14 @@ describe('validateUserConfig', () => {
     );
   });
 
+  it('accepts a site.templateDir path and rejects empty / non-string', () => {
+    expect(validateUserConfig({ site: { templateDir: './theme' } })).toEqual({
+      site: { templateDir: './theme' },
+    });
+    expect(() => validateUserConfig({ site: { templateDir: '' } })).toThrow(/templateDir/);
+    expect(() => validateUserConfig({ site: { templateDir: 42 } })).toThrow(/templateDir/);
+  });
+
   it('accepts site.css as a URL or array of URLs, rejects empties and script schemes', () => {
     expect(validateUserConfig({ site: { css: '/theme.css' } })).toEqual({
       site: { css: '/theme.css' },

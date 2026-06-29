@@ -467,6 +467,9 @@ export function validateUserConfig(input: unknown): OvellumUserConfig {
         throw new ConfigError('`site.assetBaseUrl` must not contain whitespace.');
       }
     }
+    if (s.templateDir !== undefined && (typeof s.templateDir !== 'string' || s.templateDir.trim() === '')) {
+      throw new ConfigError('`site.templateDir` must be a non-empty directory path.');
+    }
     if (s.css !== undefined) {
       // One stylesheet URL or an array of them, injected as `<link>`s. Same
       // scheme guard as `site.font.source` — reject script-bearing schemes;
