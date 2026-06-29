@@ -30,18 +30,33 @@ Legend: `[ ]` not started · `[~]` in progress · `[x]` done · `[!]` blocked
 
 ---
 
-## Current state (2026-06-14)
+## Current state (2026-06-29)
 
-**Publish state (read this first):** **`ovellum@0.19.0` is live on npm**
-(2026-06-27). Signed tag `ovellum@0.19.0` pushed + GitHub release published;
-**no pending changesets**. Tags `ovellum@0.7.0`…`0.19.0` all up. **MCP Registry
-shows `io.github.oinam/ovellum@0.19.0`** (latest; 0.16.0–0.18.0 also listed).
-Tree clean, fully pushed. Released via `./publish.sh --npmotp=<code>`. **Release
-gotcha (hit 0.19.0):** `npm publish` failed `E404 PUT /ovellum` — that's npm's
-misleading code for an **expired auth token** (it 404s instead of 401 on publish
-to avoid leaking existence). Fix: `npm login` (the `--npmotp` is only the 2FA
-code for the publish, not a login). publish.sh is idempotent — it had already
-pushed main, so re-running after `npm login` resumed cleanly from `npm publish`.
+**Publish state (read this first):** **`ovellum@0.20.0` is live on npm**
+(2026-06-29). Released via `./publish.sh --npmotp=<code>`; signed tag
+`ovellum@0.20.0` + GitHub release + MCP Registry `io.github.oinam/ovellum@0.20.0`.
+**No pending changesets.** Tree clean, fully pushed. **Release gotcha (still
+true):** if `npm publish` fails `E404 PUT /ovellum`, that's npm's misleading code
+for an **expired auth token** — `npm login` (the `--npmotp` is only the publish
+2FA, not a login); publish.sh is idempotent so re-run after login.
+
+**0.20.0 (2026-06-29) — theme inheritance + build-output severity + the plugin
+API (8 changesets across the session, B10/B8/B1/D3):** **B10 theme inheritance
+(complete)** — `site.css` (token-override stylesheet hook), `site.appearance:
+'inherit'` (follow a host's light/dark via `prefers-color-scheme` or a
+same-origin `localStorage` key), `palette: 'bare'` (no baked palette; host owns
+color via `--ov-host-*` vars). **B8** — build-output severity levels:
+`BuildWarning {message, severity:'info'|'warning'}`, CLI orders real problems
+first + splits `warnings:`/`notes:`, `--json` shape changed to tagged objects.
+**B1 plugin/extension API (complete) + D3** — `config.plugins: OvellumPlugin[]`
+(Vite/Rollup model): slice 1 lifecycle hooks `onResolveConfig`/`onBuildStart`/
+`transformPage`/`onBuildComplete` (the deploy hook = D3); slice 2 markdown
+`remarkPlugins`/`rehypePlugins` (rehype injected pre-sanitize so sanitize stays
+the guard — `<script>` stripped); slice 3 `site.templateDir` (replace bundled
+`style.css`/`script.js`/`fonts` per-file, HTML stays code). Design in
+`docs/internal/PLUGINS.md`. 483 tests; docs en+ja 1:1. **HTML-is-code is the
+standing boundary:** template overrides are asset-only; a layout/partial system
+over the markup is the deferred component work.
 
 **0.19.0 (2026-06-27) — versioned docs + composable landing + custom fonts +
 per-locale RSS + CLI polish (6 changesets):** **B6 versioned docs** —
