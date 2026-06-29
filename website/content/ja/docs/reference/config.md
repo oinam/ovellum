@@ -1,7 +1,7 @@
 ---
 title: 設定
 description: ovellum.config.{json,ts,js} のすべてのフィールドと、その型・デフォルト値・効果。
-sourceHash: '6b5a6be53ce32e94'
+sourceHash: '5aea41c6aa7c1549'
 ---
 
 # 設定
@@ -60,6 +60,7 @@ export default defineConfig({
 | `protect`         | `ProtectConfig`                  | 下記参照                                                             |                                                            |
 | `site`            | `OvellumSiteConfig`              | 下記参照                                                             |                                                            |
 | `update`          | `OvellumUpdateConfig`            | 下記参照                                                             | CLI の更新チェックの挙動。                                |
+| `plugins`         | `OvellumPlugin[]?`               | `undefined`                                                          | ビルドプラグイン — ライフサイクルフック（`onResolveConfig`、`onBuildStart`、`transformPage`、`onBuildComplete`）の名前付きユニットで、順番に実行されます。デプロイロジックやページごとの変換の置き場所です。関数なので **TS/JS の設定**が必要です（JSON は不可）。[プラグインガイド](/ja/docs/guides/plugins/)を参照。 |
 
 ## `protect`（hybrid モード + マージャー）
 

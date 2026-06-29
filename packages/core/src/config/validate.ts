@@ -82,6 +82,26 @@ export function validateUserConfig(input: unknown): OvellumUserConfig {
     throw new ConfigError(`\`defaultFormat\` must be one of: ${FORMATS.join(', ')}.`);
   }
 
+  if (c.plugins !== undefined) {
+    if (!Array.isArray(c.plugins)) {
+      throw new ConfigError('`plugins` must be an array of plugin objects.');
+    }
+    const HOOKS = ['onResolveConfig', 'onBuildStart', 'transformPage', 'onBuildComplete'] as const;
+    c.plugins.forEach((plugin, i) => {
+      if (!isPlainObject(plugin)) {
+        throw new ConfigError(`\`plugins[${i}]\` must be an object with a \`name\`.`);
+      }
+      if (typeof plugin.name !== 'string' || plugin.name.trim() === '') {
+        throw new ConfigError(`\`plugins[${i}].name\` must be a non-empty string.`);
+      }
+      for (const hook of HOOKS) {
+        if (plugin[hook] !== undefined && typeof plugin[hook] !== 'function') {
+          throw new ConfigError(`\`plugins[${i}] (${plugin.name}).${hook}\` must be a function.`);
+        }
+      }
+    });
+  }
+
   if (c.protect !== undefined) {
     if (!isPlainObject(c.protect)) {
       throw new ConfigError('`protect` must be an object.');

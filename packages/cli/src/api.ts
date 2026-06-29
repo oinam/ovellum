@@ -25,7 +25,14 @@ import {
   loadOvellumConfig,
   type BuildWarning,
   type BuildWarningSeverity,
+  type DeployManifest,
+  type ManifestFile,
+  type OvellumBuildCompleteContext,
+  type OvellumBuildStartContext,
   type OvellumConfig,
+  type OvellumPageContext,
+  type OvellumPageResult,
+  type OvellumPlugin,
   type OvellumUserConfig,
 } from '@ovellum/core';
 import { runBuild, type BuildSummary } from './dev/run-build.js';
@@ -36,6 +43,13 @@ export type {
   BuildSummary,
   BuildWarning,
   BuildWarningSeverity,
+  DeployManifest,
+  ManifestFile,
+  OvellumPlugin,
+  OvellumPageContext,
+  OvellumPageResult,
+  OvellumBuildStartContext,
+  OvellumBuildCompleteContext,
   ActiveWatcher,
   OvellumConfig,
   OvellumUserConfig,
@@ -56,6 +70,8 @@ export interface BuildOptions {
   manifest?: boolean;
   /** Receive per-stage / file-I/O log lines (the data behind `--verbose`). */
   onLog?: (message: string) => void;
+  /** Plugins supplied in code, run before any declared in the config. */
+  plugins?: OvellumPlugin[];
 }
 
 /**
@@ -74,6 +90,7 @@ export async function build(options: BuildOptions = {}): Promise<BuildSummary> {
     basePath: options.base,
     manifest: options.manifest === true,
     onLog: options.onLog,
+    plugins: options.plugins,
   });
 }
 

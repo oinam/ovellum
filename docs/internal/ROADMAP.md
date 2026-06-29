@@ -140,11 +140,19 @@ A1 unlocks A2–A4.
 
 ### Tier B — site-builder parity (vs Docusaurus/VitePress/Starlight)
 
-- [ ] **B1 (L)** **Plugin/extension API** — two seams: (a) user-supplied
-      remark/rehype plugins via config, (b) template overrides (start with
-      "bring your own template directory", not a component system). This is
-      the single most-requested-shaped gap; everything custom today requires
-      forking. Needs its own design pass (already flagged in TODO).
+- [~] **B1 (L) — Slice 1 DONE 2026-06-29; design pass in
+      [`PLUGINS.md`](./PLUGINS.md).** **Plugin/extension API.** Decided model:
+      a single `config.plugins: OvellumPlugin[]` (Vite/Rollup style). **Slice 1
+      shipped lifecycle hooks (this is also D3):** `onResolveConfig`,
+      `onBuildStart`, `transformPage`, `onBuildComplete` — orchestrated in
+      `run-build.ts`, site stays plugin-agnostic (resolved-callback plumbing like
+      `onLog`); types in core, exported from `ovellum`; deploy hook gets the
+      manifest free. See FEATURES + PLUGINS.md. **Remaining seams:** (a) **Slice
+      2 (B1a)** user-supplied remark/rehype plugins via config, injected
+      pre-sanitize so the security model holds (the sharp seam); (b) **Slice 3
+      (B1b)** template overrides ("bring your own template directory"). These
+      were the original "single most-requested-shaped gap"; the hook contract is
+      now in place to build on.
 - [x] **B2 (M) — Slice 1 DONE 2026-06-26.** **Component directives** (reframed
       from "MDX tier 1" per [`COMPETITIVE.md`](./COMPETITIVE.md) — the one real
       authoring gap). Shipped: callouts/steps/cards/tabs via `remark-directive`
@@ -597,13 +605,13 @@ out.
       into `dist/api.d.ts` (kept `@ovellum/*` private — no flip needed). Curated
       facade over the internal engines (`runBuild`/`watchAndBuild`), NOT raw
       `@ovellum/*`. Pinned by `api.test.ts` (5). Next: D5 recipes, then D3 hooks.
-- [ ] **D3 (M–L) — Build lifecycle hooks (the literal deploy hook; shares B1's
-      seam).** `onResolveConfig`, `onBuildStart`, `transformPage` (per-page
-      HTML/MD), `onBuildComplete({ outDir, manifest })`. **A host tool's deploy
-      logic lives in `onBuildComplete`.** This is the same plugin seam as **B1**
-      (plugin/extension API) — design them together; the deploy hook is the
-      first concrete consumer that justifies B1. Keep it a thin, typed lifecycle
-      (config-supplied functions) before any component system.
+- [x] **D3 — DONE 2026-06-29 (shipped as B1 slice 1).** Build lifecycle hooks —
+      `onResolveConfig`, `onBuildStart`, `transformPage` (per-page HTML, manual
+      mode), `onBuildComplete({ outDir, manifest, cwd, mode })`. Delivered via
+      the `config.plugins: OvellumPlugin[]` model (the shared B1 seam, as
+      planned): a host tool's deploy logic lives in `onBuildComplete`, which
+      always receives the deploy manifest. Thin, typed, config/api-supplied
+      functions — no component system. See [`PLUGINS.md`](./PLUGINS.md) + B1.
 - [x] **D4 (S–M) — SHIPPED 2026-06-14** via `ovellum build --manifest`
       (`dev/manifest.ts` `writeDeployManifest`; sorted, sha256, OS-junk +
       own-dir excluded; `manifest.test.ts`). Original below. — Emit `<output>/.ovellum/manifest.json`:

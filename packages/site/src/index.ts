@@ -1,5 +1,5 @@
 export { buildSite, resolveHomeRel, rewriteAssetUrls, walkContent } from './build.js';
-export type { BuildSiteOptions, BuildSiteResult, PageOutput } from './build.js';
+export type { BuildSiteOptions, BuildSiteResult, PageOutput, TransformPage } from './build.js';
 export {
   isExcludedContentFile,
   isExcludedDirName,

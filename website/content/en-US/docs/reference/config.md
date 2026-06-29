@@ -60,6 +60,7 @@ All fields are optional; sensible defaults apply.
 | `protect`         | `ProtectConfig`                  | see below                                                             |                                                            |
 | `site`            | `OvellumSiteConfig`              | see below                                                             |                                                            |
 | `update`          | `OvellumUpdateConfig`            | see below                                                             | CLI update-check behavior.                                |
+| `plugins`         | `OvellumPlugin[]?`               | `undefined`                                                          | Build plugins — named units of lifecycle hooks (`onResolveConfig`, `onBuildStart`, `transformPage`, `onBuildComplete`), run in order. The home for deploy logic and per-page transforms. Functions, so a **TS/JS config** is required (not JSON). See the [plugins guide](/docs/guides/plugins/). |
 
 ## `protect` (hybrid mode + merger)
 

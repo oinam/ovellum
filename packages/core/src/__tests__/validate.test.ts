@@ -126,6 +126,22 @@ describe('validateUserConfig', () => {
     expect(() => validateUserConfig({ site: { appearance: 42 } })).toThrow(/site\.appearance/);
   });
 
+  it('accepts a valid plugins array and rejects malformed plugins', () => {
+    const ok = { plugins: [{ name: 'a', onBuildComplete: () => {} }, { name: 'b' }] };
+    expect(validateUserConfig(ok)).toEqual(ok);
+    // Not an array.
+    expect(() => validateUserConfig({ plugins: {} })).toThrow(/`plugins`/);
+    // Missing / empty name.
+    expect(() => validateUserConfig({ plugins: [{ onBuildStart: () => {} }] })).toThrow(
+      /plugins\[0\]\.name/,
+    );
+    expect(() => validateUserConfig({ plugins: [{ name: '  ' }] })).toThrow(/plugins\[0\]\.name/);
+    // A hook that isn't a function.
+    expect(() => validateUserConfig({ plugins: [{ name: 'x', transformPage: 'no' }] })).toThrow(
+      /plugins\[0\] \(x\)\.transformPage/,
+    );
+  });
+
   it('accepts site.dateFormat humanized/iso and rejects an unknown one', () => {
     for (const dateFormat of ['humanized', 'iso']) {
       expect(validateUserConfig({ site: { dateFormat } })).toEqual({ site: { dateFormat } });

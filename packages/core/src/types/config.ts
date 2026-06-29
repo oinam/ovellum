@@ -1,3 +1,5 @@
+import type { OvellumPlugin } from './plugin.js';
+
 export type OvellumMode = 'hybrid' | 'manual' | 'auto';
 
 /**
@@ -688,6 +690,14 @@ export interface OvellumConfig {
   site: OvellumSiteConfig;
   /** CLI update-check behavior (notice only; never auto-installs). */
   update: OvellumUpdateConfig;
+  /**
+   * Build plugins — named units of build lifecycle hooks
+   * (`onResolveConfig`/`onBuildStart`/`transformPage`/`onBuildComplete`), run in
+   * order. The home for deploy logic (`onBuildComplete`) and programmatic build
+   * customization. Requires a TS/JS config (functions can't live in JSON). Empty
+   * by default. See {@link OvellumPlugin}.
+   */
+  plugins?: OvellumPlugin[];
 }
 
 /** All fields optional — what users actually write in `ovellum.config.ts`. */

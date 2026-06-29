@@ -3,17 +3,20 @@ import { mkdir, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import type {
   BuildWarning,
+  DeployManifest,
   DocProject,
   OrphanRecord,
   OvellumConfig,
   OvellumMode,
+  OvellumPlugin,
 } from '@ovellum/core';
 import { parseProject, type IncrementalParser } from '@ovellum/parser';
 import { generateDocs } from '@ovellum/generator';
 import { readManualDoc } from '@ovellum/reader';
 import { merge, writeOrphan } from '@ovellum/merger';
-import { buildSite, type PageOutput } from '@ovellum/site';
-import { writeDeployManifest } from './manifest.js';
+import { buildSite, type PageOutput, type TransformPage } from '@ovellum/site';
+import { computeManifest, writeDeployManifest } from './manifest.js';
+import { runPluginHook, composeTransformPage } from './plugins.js';
 import { collectAnchorIds, collectNodes, readProjectIR, writeProjectIR } from './ir.js';
 import { detectRenames } from './rename.js';
 
@@ -30,6 +33,8 @@ export interface RunBuildInput {
   manifest?: boolean;
   /** Optional stage/I-O logger for `--verbose` (messages, no prefix). */
   onLog?: (message: string) => void;
+  /** Plugins supplied programmatically (api `build()`); run before config plugins. */
+  plugins?: OvellumPlugin[];
 }
 
 /** A no-op logger so the build internals can always call `log(...)`. */
@@ -103,21 +108,56 @@ export function countWarnings(warnings: BuildWarning[]): { warnings: number; not
 export async function runBuild(input: RunBuildInput): Promise<BuildSummary> {
   const { cwd } = input;
   const startedAt = Date.now();
-  const config = applyOverrides(input.config, input);
-
   const log = input.onLog ?? noopLog;
+
+  // Plugins: programmatic ones (api `build({ plugins })`) first, then config.
+  const plugins: OvellumPlugin[] = [...(input.plugins ?? []), ...(input.config.plugins ?? [])];
+
+  // onResolveConfig — chained; a returned config replaces it. CLI overrides
+  // (`--out`/`--base`) are applied AFTER, so the most explicit source wins.
+  let resolved = input.config;
+  for (const plugin of plugins) {
+    if (!plugin.onResolveConfig) continue;
+    const next = await runPluginHook(plugin, 'onResolveConfig', () =>
+      plugin.onResolveConfig!(resolved),
+    );
+    if (next) resolved = next;
+  }
+  const config = applyOverrides(resolved, input);
+
   log(`cwd ${cwd}`);
   log(`mode ${config.mode}`);
+  if (plugins.length) log(`plugins: ${plugins.map((p) => p.name).join(', ')}`);
 
-  const summary = await runBuildForMode(config, cwd, input, startedAt, log);
+  for (const plugin of plugins) {
+    if (!plugin.onBuildStart) continue;
+    await runPluginHook(plugin, 'onBuildStart', () =>
+      plugin.onBuildStart!({ config, cwd, mode: config.mode }),
+    );
+  }
+
+  const transformPage = composeTransformPage(plugins);
+  const summary = await runBuildForMode(config, cwd, input, startedAt, log, transformPage);
 
   // Deploy manifest — an inventory of the built output a host tool can use to
   // deploy anywhere (atomic / incremental uploads), independent of any host.
+  // Computed when `--manifest` is set OR any plugin needs it for onBuildComplete.
+  const outputAbs = path.resolve(cwd, config.output);
+  const needsManifest = plugins.some((p) => p.onBuildComplete);
+  let manifest: DeployManifest | undefined;
   if (input.manifest) {
-    const outputAbs = path.resolve(cwd, config.output);
     const manifestPath = await writeDeployManifest({ outputAbs, generatedAt: new Date() });
     summary.manifestPath = path.relative(cwd, manifestPath).replace(/\\/g, '/');
     log(`wrote ${summary.manifestPath}`);
+  }
+  if (needsManifest) {
+    manifest = await computeManifest({ outputAbs, generatedAt: new Date() });
+    for (const plugin of plugins) {
+      if (!plugin.onBuildComplete) continue;
+      await runPluginHook(plugin, 'onBuildComplete', () =>
+        plugin.onBuildComplete!({ outDir: outputAbs, manifest: manifest!, cwd, mode: config.mode }),
+      );
+    }
   }
   return summary;
 }
@@ -128,10 +168,11 @@ async function runBuildForMode(
   input: RunBuildInput,
   startedAt: number,
   log: Logger,
+  transformPage?: TransformPage,
 ): Promise<BuildSummary> {
   if (config.mode === 'manual') {
     log('building site (manual)…');
-    const result = await buildSite({ config, cwd, includeDrafts: input.includeDrafts });
+    const result = await buildSite({ config, cwd, includeDrafts: input.includeDrafts, transformPage });
     log(`built ${result.pages.length} page(s) → ${result.outputDir}/ (landing: ${result.landingRendered})`);
     return {
       mode: 'manual',

@@ -3,7 +3,13 @@ import { copyFile, cp, mkdir, readFile, readdir, realpath, stat, writeFile } fro
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import matter from 'gray-matter';
-import type { BuildWarning, OvellumConfig, OvellumLocale, OvellumSiteConfig } from '@ovellum/core';
+import type {
+  BuildWarning,
+  OvellumConfig,
+  OvellumLocale,
+  OvellumPageContext,
+  OvellumSiteConfig,
+} from '@ovellum/core';
 import { renderMarkdown } from './markdown.js';
 import { isExcludedContentFile, isExcludedDirName } from './content-filter.js';
 import {
@@ -49,7 +55,19 @@ export interface BuildSiteOptions {
    * them and reports how many were dropped.
    */
   includeDrafts?: boolean;
+  /**
+   * Per-page transform — given a rendered page, returns the (possibly rewritten)
+   * HTML to write. Composed from plugins' `transformPage` hooks by the CLI; the
+   * site builder stays plugin-agnostic (same pattern as a resolved callback).
+   */
+  transformPage?: TransformPage;
 }
+
+/**
+ * Resolved per-page transform: receives a rendered HTML page and returns the
+ * HTML to write (unchanged if no plugin altered it).
+ */
+export type TransformPage = (page: OvellumPageContext) => Promise<string>;
 
 export interface PageOutput {
   sourcePath: string;
@@ -192,6 +210,19 @@ export async function buildSite(options: BuildSiteOptions): Promise<BuildSiteRes
   const finalizeHtml = (h: string): string =>
     assetBase && publicPaths.length ? rewriteAssetUrls(h, assetBase, publicPaths) : h;
 
+  // Run the resolved plugin `transformPage` hook (if any) over a finalized page
+  // just before write. `outputPath` is reported relative to the output dir.
+  const transformPage = options.transformPage;
+  const finalizePage = async (url: string, absOut: string, html: string): Promise<string> => {
+    const finalized = finalizeHtml(html);
+    if (!transformPage) return finalized;
+    return transformPage({
+      url,
+      html: finalized,
+      outputPath: path.relative(outputAbs, absOut).replace(/\\/g, '/'),
+    });
+  };
+
   const landingEnabled = site.landing.enabled === true;
 
   // Resolve which languages to build. A single-language site (no `site.locales`)
@@ -290,7 +321,7 @@ export async function buildSite(options: BuildSiteOptions): Promise<BuildSiteRes
       });
       const landingOut = path.join(outputAbs, urlToOutputPath(homeUrl));
       await mkdir(path.dirname(landingOut), { recursive: true });
-      await writeFile(landingOut, finalizeHtml(html), 'utf8');
+      await writeFile(landingOut, await finalizePage(homeUrl, landingOut, html), 'utf8');
       pages.push({
         sourcePath: landingBody?.sourcePath ?? '(landing config)',
         outputPath: path.relative(cwd, landingOut).replace(/\\/g, '/'),
@@ -358,7 +389,7 @@ export async function buildSite(options: BuildSiteOptions): Promise<BuildSiteRes
           dir: spec.dir,
         });
         if (!result) continue; // draft page excluded in production — skip
-        const pageHtml = finalizeHtml(result.html);
+        const pageHtml = await finalizePage(url, outputPath, result.html);
         await mkdir(path.dirname(outputPath), { recursive: true });
         await writeFile(outputPath, pageHtml, 'utf8');
         // The DEFAULT locale's 404 is mirrored to a root `404.html` (the file
@@ -457,8 +488,8 @@ export async function buildSite(options: BuildSiteOptions): Promise<BuildSiteRes
         strings: spec.strings,
         dir: spec.dir,
       });
-      const html404 = finalizeHtml(html);
       const out404 = path.join(outputAbs, urlToOutputPath(notFoundUrl));
+      const html404 = await finalizePage(notFoundUrl, out404, html);
       await mkdir(path.dirname(out404), { recursive: true });
       await writeFile(out404, html404, 'utf8');
       if (spec.isDefault) {

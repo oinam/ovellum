@@ -12,6 +12,7 @@
     "versioning",
     "search",
     "deploy",
-    "automation"
+    "automation",
+    "plugins"
   ]
 }

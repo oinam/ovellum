@@ -1,8 +1,9 @@
-import { mkdtempSync, mkdirSync, writeFileSync, existsSync } from 'node:fs';
+import { mkdtempSync, mkdirSync, writeFileSync, readFileSync, existsSync } from 'node:fs';
 import { rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import type { OvellumPlugin } from '@ovellum/core';
 import { build, watch, loadConfig } from '../api.js';
 
 /**
@@ -70,5 +71,75 @@ describe('programmatic API', () => {
     const { config, configFile } = await loadConfig({ cwd: dir });
     expect(config.mode).toBe('hybrid');
     expect(configFile).toBeTruthy();
+  });
+});
+
+/**
+ * Plugin / build-lifecycle hooks (B1 slice 1 + D3). Driven via `build({ plugins })`
+ * so the functions don't need a TS config file on disk.
+ */
+describe('plugins (lifecycle hooks)', () => {
+  let dir: string;
+  beforeEach(() => {
+    dir = mkdtempSync(path.join(tmpdir(), 'ovellum-plugin-'));
+    mkdirSync(path.join(dir, 'content'), { recursive: true });
+    writeFileSync(
+      path.join(dir, 'ovellum.config.json'),
+      JSON.stringify({ mode: 'manual', input: './content', output: './dist', site: { title: 'Base' } }),
+    );
+    writeFileSync(path.join(dir, 'content', 'index.md'), '# Home\n\nHello.\n', 'utf8');
+  });
+  afterEach(async () => {
+    await rm(dir, { recursive: true, force: true });
+  });
+
+  it('fires every hook in order; transformPage rewrites the written HTML', async () => {
+    const calls: string[] = [];
+    const plugin: OvellumPlugin = {
+      name: 'recorder',
+      onResolveConfig: () => void calls.push('resolve'),
+      onBuildStart: ({ mode }) => void calls.push(`start:${mode}`),
+      transformPage: ({ url, html }) => {
+        calls.push(`page:${url}`);
+        return { html: html.replace('</body>', '<!--ov-plugin--></body>') };
+      },
+      onBuildComplete: ({ outDir, manifest }) => {
+        calls.push(`complete:${manifest.fileCount > 0}:${path.isAbsolute(outDir)}`);
+      },
+    };
+
+    await build({ cwd: dir, plugins: [plugin] });
+
+    expect(calls[0]).toBe('resolve');
+    expect(calls[1]).toBe('start:manual');
+    expect(calls).toContain('page:/');
+    // onBuildComplete ran last, got a populated manifest + an absolute outDir.
+    expect(calls[calls.length - 1]).toBe('complete:true:true');
+
+    const html = readFileSync(path.join(dir, 'dist', 'index.html'), 'utf8');
+    expect(html).toContain('<!--ov-plugin-->');
+  });
+
+  it('onResolveConfig can replace the config for the build', async () => {
+    const retitle: OvellumPlugin = {
+      name: 'retitle',
+      onResolveConfig: (config) => ({ ...config, site: { ...config.site, title: 'Plugged' } }),
+    };
+    await build({ cwd: dir, plugins: [retitle] });
+    const html = readFileSync(path.join(dir, 'dist', 'index.html'), 'utf8');
+    expect(html).toContain('Plugged');
+    expect(html).not.toContain('>Base<');
+  });
+
+  it('a throwing hook fails the build, attributed to the plugin by name', async () => {
+    const boom: OvellumPlugin = {
+      name: 'boom',
+      onBuildStart: () => {
+        throw new Error('nope');
+      },
+    };
+    await expect(build({ cwd: dir, plugins: [boom] })).rejects.toThrow(
+      /\[plugin: boom\] onBuildStart failed: nope/,
+    );
   });
 });

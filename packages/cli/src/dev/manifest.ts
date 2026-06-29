@@ -1,27 +1,14 @@
 import { createHash } from 'node:crypto';
 import { mkdir, readFile, readdir, writeFile } from 'node:fs/promises';
 import path from 'node:path';
+import type { DeployManifest, ManifestFile } from '@ovellum/core';
+
+// Re-exported from their canonical home in @ovellum/core so existing importers
+// (and the manifest tests) keep working.
+export type { DeployManifest, ManifestFile } from '@ovellum/core';
 
 // Replaced at build time by tsup `define` (see tsup.config.ts).
 declare const __OVELLUM_VERSION__: string;
-
-export interface ManifestFile {
-  /** Path relative to the output directory, POSIX-separated. */
-  path: string;
-  bytes: number;
-  sha256: string;
-}
-
-export interface DeployManifest {
-  generator: 'ovellum';
-  version: string;
-  generatedAt: string;
-  /** The output directory's basename (e.g. `dist`, `docs`). */
-  output: string;
-  fileCount: number;
-  totalBytes: number;
-  files: ManifestFile[];
-}
 
 const MANIFEST_DIR = '.ovellum';
 const MANIFEST_FILE = 'manifest.json';
@@ -43,11 +30,29 @@ export async function writeDeployManifest(opts: {
   outputAbs: string;
   generatedAt: Date;
 }): Promise<string> {
+  const manifest = await computeManifest(opts);
+  const dir = path.join(opts.outputAbs, MANIFEST_DIR);
+  await mkdir(dir, { recursive: true });
+  const out = path.join(dir, MANIFEST_FILE);
+  await writeFile(out, JSON.stringify(manifest, null, 2) + '\n', 'utf8');
+  return out;
+}
+
+/**
+ * Build the {@link DeployManifest} for an output directory **without writing**
+ * it — the in-memory inventory handed to a plugin's `onBuildComplete` hook (so
+ * a deploy hook always has the file list + hashes, even without `--manifest`).
+ * `writeDeployManifest` is this plus a file write.
+ */
+export async function computeManifest(opts: {
+  outputAbs: string;
+  generatedAt: Date;
+}): Promise<DeployManifest> {
   const files: ManifestFile[] = [];
   await walk(opts.outputAbs, opts.outputAbs, files);
   files.sort((a, b) => a.path.localeCompare(b.path));
 
-  const manifest: DeployManifest = {
+  return {
     generator: 'ovellum',
     version: typeof __OVELLUM_VERSION__ === 'string' ? __OVELLUM_VERSION__ : '0.0.0',
     generatedAt: opts.generatedAt.toISOString(),
@@ -56,12 +61,6 @@ export async function writeDeployManifest(opts: {
     totalBytes: files.reduce((sum, f) => sum + f.bytes, 0),
     files,
   };
-
-  const dir = path.join(opts.outputAbs, MANIFEST_DIR);
-  await mkdir(dir, { recursive: true });
-  const out = path.join(dir, MANIFEST_FILE);
-  await writeFile(out, JSON.stringify(manifest, null, 2) + '\n', 'utf8');
-  return out;
 }
 
 async function walk(rootAbs: string, dirAbs: string, acc: ManifestFile[]): Promise<void> {
