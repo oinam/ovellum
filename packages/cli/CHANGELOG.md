@@ -1,5 +1,101 @@
 # ovellum
 
+## 0.20.0
+
+### Minor Changes
+
+- c681e53: Build-output severity levels. Build diagnostics now carry a `severity` —
+  `'warning'` for real problems to act on (orphaned content, an asset skipped for
+  safety, an unparseable `updated:` date) and `'info'` for benign notes about what
+  the build did (drafts excluded, `sitemap.xml` skipped because `site.baseUrl` is
+  unset). The CLI prints real problems first as `warning:` / `info:` lines, and
+  the summary counts them separately (`warnings:` vs `notes:`), so a genuine
+  problem is no longer buried under routine notes.
+
+  `--json` (and the programmatic `BuildSummary.warnings`) now expose each entry as
+  `{ message, severity }` instead of a bare string — branch on
+  `severity === 'warning'` to fail CI only on real problems. The new `BuildWarning`
+  / `BuildWarningSeverity` types are exported from the `ovellum` package.
+
+- 2c2ae05: Theme inheritance, slice 3 — `palette: 'bare'`. A new `site.palette` value ships
+  **no baked palette**: Ovellum's color and `--font-body` tokens are emitted as
+  `var(--ov-host-*, <Ovellum default>)`, so a host stylesheet (via `site.css`)
+  that defines the `--ov-host-*` names becomes the sole source of color — and
+  defining none leaves the default look intact (light and dark). The published
+  surface is a small fixed set: `--ov-host-bg`, `--ov-host-surface`,
+  `--ov-host-fg`, `--ov-host-fg-muted`, `--ov-host-border`(`-strong`),
+  `--ov-host-primary`(`-fg`/`-hover`), `--ov-host-accent`(`-fg`/`-hover`), and
+  `--ov-host-font-body`; derived tokens (links, callouts, border tints) follow
+  automatically. The Theme picker is dropped in bare mode. This is the cleanest
+  "drop into a host app and match" path, and pairs with `appearance: 'inherit'`
+  (host owns light/dark) for full host ownership of the look.
+- afaafe1: Plugins — remark/rehype markdown plugins (B1 slice 2). A plugin can now extend
+  the Markdown pipeline with `remarkPlugins` and `rehypePlugins` (each a unified
+  `Pluggable` — a plugin function or a `[plugin, options]` tuple), e.g. to add
+  `remark-math` + `rehype-katex` for LaTeX:
+
+  ```ts
+  plugins: [{ name: 'math', remarkPlugins: [remarkMath], rehypePlugins: [rehypeKatex] }];
+  ```
+
+  `remarkPlugins` run after Ovellum's built-in remark plugins and before the HTML
+  conversion; `rehypePlugins` run on the HTML tree. They apply to manual-mode page
+  rendering (doc pages + landing prose). **Security:** rehype plugins are injected
+  _before_ sanitization, so Ovellum's sanitize step remains the guard over
+  everything they produce — a plugin can't inject `<script>` or other unsafe HTML.
+
+- d65161b: Plugins — build lifecycle hooks (B1 slice 1 + D3). A new `config.plugins:
+OvellumPlugin[]` extends the build with named units of lifecycle hooks, run in
+  order:
+  - `onResolveConfig(config)` — observe or replace the resolved config (e.g. set
+    `site.baseUrl` from the environment); CLI `--out`/`--base` still win.
+  - `onBuildStart({ config, cwd, mode })` — before any output.
+  - `transformPage({ url, html, outputPath })` — rewrite each rendered HTML page
+    of a manual-mode site before it's written.
+  - `onBuildComplete({ outDir, manifest })` — the deploy hook; `manifest` (the
+    file inventory with hashes) is always computed when a plugin defines it, even
+    without `--manifest`.
+
+  Plugins are functions, so they live in a TS/JS config (or pass them to the
+  programmatic API: `build({ plugins: [...] })`). A hook that throws fails the
+  build, attributed to the plugin by name. The `OvellumPlugin` type and the hook
+  context types are exported from the `ovellum` package; `DeployManifest` /
+  `ManifestFile` are now exported too. User-supplied remark/rehype plugins and
+  template overrides are planned follow-up slices.
+
+- 04708a1: Theme inheritance, slice 2 — `site.appearance`. A new `site.appearance` config
+  lets the docs **follow a host project's light/dark switch** instead of carrying
+  their own. `appearance: 'inherit'` removes Ovellum's Mode toggle from the
+  appearance panel, stops persisting its own choice, and resolves light/dark from
+  `prefers-color-scheme` — which an OS-driven host already follows. For a host
+  whose toggle is a JS choice in same-origin `localStorage` (next-themes, a
+  Tailwind `class` strategy), use the object form
+  `{ mode: 'inherit', storageKey: 'theme', darkValue?, lightValue? }`: Ovellum
+  reads that key on load and live-updates on cross-tab `storage` events. Pairs
+  with `site.css`, which inherits the colors — `appearance` decides which mode is
+  active. Unset (`'control'`) keeps today's behavior with byte-identical output.
+- 04708a1: Theme inheritance, slice 1 — `site.css`. A new `site.css` config field takes one
+  stylesheet URL or an array of them, linked into `<head>` **after** the base
+  theme CSS so their rules win the cascade by source order. It's the supported,
+  validated hook for overriding the design tokens (`--color-bg`, `--color-fg`,
+  `--color-border`, `--color-primary`/`--color-accent`, `--font-body`/`--font-mono`,
+  the `--callout-*` set) or pointing the docs at a host project's design system so
+  they re-skin to match. Unlike `site.headExtra` (raw `<head>` markup), it emits
+  `<link rel="stylesheet">` only and rejects `javascript:`/`data:` URLs. Relative
+  and root-absolute paths are basePath-aware; `http(s)://` URLs pass through.
+- 60f664e: Bring your own template directory — `site.templateDir` (B1 slice 3). Point it at
+  a directory whose assets replace the bundled theme's, per file with fallback:
+  `style.css` → `/assets/ovellum.css`, `script.js` → `/assets/ovellum.js`, and a
+  `fonts/` folder → `/assets/fonts/`. Provide only some and the rest fall back to
+  the default, so you can take over just the CSS or just the client script. This
+  gives full control of the styling/behavior layer without forking the package.
+
+  The page HTML is generated in code, so `templateDir` overrides the CSS/JS layer
+  (your `style.css` targets the same `ov-*` class names), not the markup — for
+  color/font tweaks rather than a ground-up rewrite, prefer `site.css` or
+  `palette: 'bare'`. This completes the plugin/extension API (B1): lifecycle hooks,
+  markdown plugins, and template overrides.
+
 ## 0.19.0
 
 ### Minor Changes
