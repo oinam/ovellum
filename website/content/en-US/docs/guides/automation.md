@@ -37,7 +37,9 @@ pure JSON).
   "mode": "hybrid",
   "durationMs": 211,
   "config": "/project/ovellum.config.json",
-  "warnings": [],
+  "warnings": [
+    { "message": "did src/date.ts::a become …::b? …", "severity": "info" }
+  ],
   "sources": 2,
   "written": ["docs/format.md", "docs/user.md"],
   "merged": [],
@@ -47,6 +49,15 @@ pure JSON).
   "manifest": null
 }
 ```
+
+Each `warnings[]` entry is `{ message, severity }`, where `severity` is
+`"warning"` (a real problem to act on — orphaned content, an asset skipped for
+safety, an unparseable date) or `"info"` (a benign note about what the build
+did — drafts excluded, `sitemap.xml` skipped because `site.baseUrl` is unset).
+Branch on `severity` to fail CI only on real problems:
+`summary.warnings.some(w => w.severity === "warning")`. On the terminal the
+human summary counts these separately (`warnings:` vs `notes:`) and prints
+`warning:`/`info:` lines with the real problems first.
 
 In `manual` mode the auto/hybrid fields are replaced by `output`, `pages`
 (`[{ url, outputPath }]`), and `landingRendered`.

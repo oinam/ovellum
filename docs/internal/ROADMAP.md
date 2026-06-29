@@ -255,9 +255,16 @@ A1 unlocks A2–A4.
         in each translation's frontmatter; `ovellum check` flags "English
         changed, `ja` is stale." This is the anti-drift identity applied to
         translations — no static i18n does it well. Strong fit.
-- [ ] **B8 (M)** **Build-output severity levels** — split the `warnings[]`
-      bag into info/warning (or add a severity enum) so real problems aren't
-      buried under "sitemap skipped" notes; CLI renders them distinctly.
+- [x] **B8 (M) — DONE 2026-06-29.** **Build-output severity levels** — added a
+      `BuildWarning { message, severity: 'info' | 'warning' }` (core, exported
+      from `ovellum`); `BuildSiteResult.warnings` + `BuildSummary.warnings` are
+      now `BuildWarning[]`, tagged at source (site build) and wrapped at the
+      run-build ingestion points for leaf-package strings. CLI orders real
+      problems before info (`orderWarnings`), prints `warning:`/`info:` lines,
+      and splits the summary count into `warnings:` / `notes:`. `--json` emits
+      `{message, severity}` objects (shape change — branch on
+      `severity === 'warning'` for CI). Docs en+ja; `build-warnings.test.ts` (4)
+      + cli-smoke + rename-build. `check`'s own issue list is separate.
 - [ ] **B9 (M)** **Image optimization** (lazy-import `sharp`, same pattern as
       the planned `site.minify` esbuild gating) and, later, OG-image
       generation per page.

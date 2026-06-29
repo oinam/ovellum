@@ -3,7 +3,7 @@ import { copyFile, cp, mkdir, readFile, readdir, realpath, stat, writeFile } fro
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import matter from 'gray-matter';
-import type { OvellumConfig, OvellumLocale, OvellumSiteConfig } from '@ovellum/core';
+import type { BuildWarning, OvellumConfig, OvellumLocale, OvellumSiteConfig } from '@ovellum/core';
 import { renderMarkdown } from './markdown.js';
 import { isExcludedContentFile, isExcludedDirName } from './content-filter.js';
 import {
@@ -66,7 +66,7 @@ export interface PageOutput {
 
 export interface BuildSiteResult {
   pages: PageOutput[];
-  warnings: string[];
+  warnings: BuildWarning[];
   outputDir: string;
   assetsDir: string;
   /** True when a landing page was rendered at `/`. */
@@ -161,7 +161,10 @@ export async function buildSite(options: BuildSiteOptions): Promise<BuildSiteRes
   // it lives at the content root, is copied to the output root below, and is
   // skipped everywhere else (no pages, no nav, never under a locale subtree).
   const publicAbs = path.join(inputAbs, site.publicDir);
-  const warnings: string[] = [];
+  const warnings: BuildWarning[] = [];
+  // `info` = a benign note about what the build did; `warn` = a real problem.
+  const info = (message: string): BuildWarning => ({ message, severity: 'info' });
+  const warn = (message: string): BuildWarning => ({ message, severity: 'warning' });
 
   await mkdir(assetsAbs, { recursive: true });
   await writeStaticAssets(assetsAbs);
@@ -316,9 +319,11 @@ export async function buildSite(options: BuildSiteOptions): Promise<BuildSiteRes
         const url = spec.urlBySource.get(sourceRelFromCwd) ?? spec.urlPrefix + urlFor(relFromInput);
         if (landingEnabled && url === homeUrl) {
           warnings.push(
-            `Skipped ${sourceRelFromCwd} because site.landing.enabled is true; ` +
-              `the landing template renders ${homeUrl} instead. Move prose to ` +
-              `${LANDING_BODY_FILE} or rename this file.`,
+            info(
+              `Skipped ${sourceRelFromCwd} because site.landing.enabled is true; ` +
+                `the landing template renders ${homeUrl} instead. Move prose to ` +
+                `${LANDING_BODY_FILE} or rename this file.`,
+            ),
           );
           continue;
         }
@@ -372,7 +377,9 @@ export async function buildSite(options: BuildSiteOptions): Promise<BuildSiteRes
           lastModified: result.lastModified,
           draft: spec.draftBySource.has(sourceRelFromCwd) || undefined,
         });
-        warnings.push(...result.warnings);
+        // Per-page render warnings (e.g. an unparseable `updated:` date) are
+        // real problems the author should fix.
+        warnings.push(...result.warnings.map(warn));
 
         // AI-friendly companions. Drafts and the 404 stay out of these (the
         // same rule as sitemap/RSS) — they're publish artifacts.
@@ -405,11 +412,13 @@ export async function buildSite(options: BuildSiteOptions): Promise<BuildSiteRes
         // or a symlink that resolves outside it (only an in-repo symlink could
         // trigger this, but it's cheap to close).
         if (relFromInput.startsWith('..') || path.isAbsolute(relFromInput)) {
-          warnings.push(`Skipped asset outside the content directory: ${relFromInput}`);
+          warnings.push(warn(`Skipped asset outside the content directory: ${relFromInput}`));
           continue;
         }
         if (!(await isInsideDir(file, spec.inputAbs))) {
-          warnings.push(`Skipped symlinked asset resolving outside the content directory: ${relFromInput}`);
+          warnings.push(
+            warn(`Skipped symlinked asset resolving outside the content directory: ${relFromInput}`),
+          );
           continue;
         }
         const outRel = spec.urlPrefix ? path.join(spec.urlPrefix.slice(1), relFromInput) : relFromInput;
@@ -502,7 +511,9 @@ export async function buildSite(options: BuildSiteOptions): Promise<BuildSiteRes
       );
     }
     warnings.push(
-      `Excluded ${parts.join(' and ')} from this production build — run \`ovellum dev\` to preview drafts.`,
+      info(
+        `Excluded ${parts.join(' and ')} from this production build — run \`ovellum dev\` to preview drafts.`,
+      ),
     );
   }
 
@@ -543,7 +554,7 @@ export async function buildSite(options: BuildSiteOptions): Promise<BuildSiteRes
     }
   } else {
     warnings.push(
-      'sitemap.xml and feed.xml not generated: set `site.baseUrl` in your config to enable them.',
+      info('sitemap.xml and feed.xml not generated: set `site.baseUrl` in your config to enable them.'),
     );
   }
 
@@ -551,7 +562,7 @@ export async function buildSite(options: BuildSiteOptions): Promise<BuildSiteRes
   if (site.search.enabled) {
     const idx = await indexSite({ outputAbs });
     if (idx.exitCode !== 0) {
-      for (const err of idx.errors) warnings.push(`search: ${err}`);
+      for (const err of idx.errors) warnings.push(warn(`search: ${err}`));
     }
   }
 

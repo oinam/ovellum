@@ -139,13 +139,21 @@ ovellum build complete in 207ms
   written:   2 file(s)  ← Markdown files written
   merged:    1 file(s)  ← hybrid only: files where a manual block was spliced
   orphans:   0          ← hybrid only: blocks whose anchor disappeared
-  warnings:  0
+  warnings:  0          ← real problems to act on (severity "warning")
+  notes:     1          ← benign notes (severity "info"); shown only when > 0
     → docs/format.md
     → docs/user.md
   quarantined:          ← only printed when orphans > 0
     ↪ .ovellum/orphans/2026-05-15_src-format.ts-padZero.md
   ir:        .ovellum/ir.json   ← parsed IR snapshot, written every auto/hybrid build
 ```
+
+Diagnostics are split by severity: `warnings:` counts real problems (orphaned
+content, an asset skipped for safety, an unparseable date), `notes:` counts
+benign info (drafts excluded, `sitemap.xml` skipped for a missing
+`site.baseUrl`). Below the summary each is printed as a `warning:` / `info:`
+line — **real problems first**, so they're never buried. `--json` carries the
+same `{ message, severity }` shape (see [Automation](/docs/guides/automation/)).
 
 Every auto/hybrid build also writes its parsed IR to `.ovellum/ir.json` at the
 project root (beside `.ovellum/orphans/`) — a snapshot of the symbols, anchors,

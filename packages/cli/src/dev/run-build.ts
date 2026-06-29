@@ -1,7 +1,13 @@
 import { existsSync } from 'node:fs';
 import { mkdir, writeFile } from 'node:fs/promises';
 import path from 'node:path';
-import type { DocProject, OrphanRecord, OvellumConfig, OvellumMode } from '@ovellum/core';
+import type {
+  BuildWarning,
+  DocProject,
+  OrphanRecord,
+  OvellumConfig,
+  OvellumMode,
+} from '@ovellum/core';
 import { parseProject, type IncrementalParser } from '@ovellum/parser';
 import { generateDocs } from '@ovellum/generator';
 import { readManualDoc } from '@ovellum/reader';
@@ -49,7 +55,7 @@ function applyOverrides(config: OvellumConfig, input: RunBuildInput): OvellumCon
 export interface BuildSummary {
   mode: OvellumMode;
   elapsedMs: number;
-  warnings: string[];
+  warnings: BuildWarning[];
 
   // Manual-mode fields
   outputDir?: string;
@@ -67,6 +73,26 @@ export interface BuildSummary {
   manifestPath?: string;
   /** Path to the persisted IR snapshot (auto/hybrid builds). */
   irPath?: string;
+}
+
+/**
+ * Order warnings for display: real `'warning'` entries first (so genuine
+ * problems are never buried under routine `'info'` notes), each group keeping
+ * its original insertion order.
+ */
+export function orderWarnings(warnings: BuildWarning[]): BuildWarning[] {
+  return [
+    ...warnings.filter((w) => w.severity === 'warning'),
+    ...warnings.filter((w) => w.severity === 'info'),
+  ];
+}
+
+/** Counts by severity for the summary block. `warnings` = real problems. */
+export function countWarnings(warnings: BuildWarning[]): { warnings: number; notes: number } {
+  let w = 0;
+  let n = 0;
+  for (const entry of warnings) entry.severity === 'warning' ? w++ : n++;
+  return { warnings: w, notes: n };
 }
 
 /**
@@ -151,8 +177,13 @@ async function buildProjectDocs(
     ? { ...project, files: project.files.filter((f) => opts.onlyFiles!.has(f.filePath)) }
     : project;
   if (opts.onlyFiles) log(`affected: ${scoped.files.length} of ${project.files.length} file(s)`);
-  const { files, warnings } = generateDocs(scoped, config);
+  const { files, warnings: genWarnings } = generateDocs(scoped, config);
   log(`generated ${files.size} output(s)`);
+  // Generator diagnostics are real problems (a doc that couldn't be produced
+  // cleanly). `info`/`warn` tag the rest of this arm's diagnostics by severity.
+  const info = (message: string): BuildWarning => ({ message, severity: 'info' });
+  const warn = (message: string): BuildWarning => ({ message, severity: 'warning' });
+  const warnings: BuildWarning[] = genWarnings.map(warn);
 
   const orphanRecords: OrphanRecord[] = [];
   const mergedFiles: string[] = [];
@@ -163,12 +194,14 @@ async function buildProjectDocs(
 
     if (config.mode === 'hybrid' && existsSync(abs)) {
       const manualDoc = await readManualDoc(abs);
-      warnings.push(...manualDoc.warnings);
+      // Reader notes (e.g. a positional-fallback zone id) are advisory.
+      warnings.push(...manualDoc.warnings.map(info));
       if (manualDoc.protectedBlocks.length > 0) {
         const result = merge(generatedBody, manualDoc, { sourceFile: relOut });
         finalBody = result.content;
         orphanRecords.push(...result.orphans);
-        warnings.push(...result.warnings);
+        // An orphaned block is real content the merge couldn't place.
+        warnings.push(...result.warnings.map(warn));
         mergedFiles.push(relOut);
         log(`merged ${relOut} (${result.orphans.length} orphan(s))`);
       }
@@ -207,7 +240,9 @@ async function buildProjectDocs(
       const target = renameTarget.get(record.anchorId);
       if (target) {
         warnings.push(
-          `did ${record.anchorId} become ${target}? a protected block was orphaned — reattach it under the new anchor (see \`ovellum orphans\`).`,
+          info(
+            `did ${record.anchorId} become ${target}? a protected block was orphaned — reattach it under the new anchor (see \`ovellum orphans\`).`,
+          ),
         );
       }
     }

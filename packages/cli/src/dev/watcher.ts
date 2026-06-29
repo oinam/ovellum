@@ -2,7 +2,27 @@ import path from 'node:path';
 import chokidar, { type FSWatcher } from 'chokidar';
 import { ConfigError, loadOvellumConfig, type OvellumConfig } from '@ovellum/core';
 import { createIncrementalParser, type IncrementalParser } from '@ovellum/parser';
-import { runBuild, runIncrementalBuild, type BuildSummary } from './run-build.js';
+import {
+  countWarnings,
+  orderWarnings,
+  runBuild,
+  runIncrementalBuild,
+  type BuildSummary,
+} from './run-build.js';
+
+/** Inline "(N warning(s), M note(s))" suffix for a rebuild line, omitted when clean. */
+function warningSuffix(warnings: BuildSummary['warnings']): string {
+  const { warnings: w, notes: n } = countWarnings(warnings);
+  const parts: string[] = [];
+  if (w > 0) parts.push(`${w} warning(s)`);
+  if (n > 0) parts.push(`${n} note(s)`);
+  return parts.length ? ` (${parts.join(', ')})` : '';
+}
+
+/** Print build diagnostics to stderr, real problems first, each tagged. */
+function printWarnings(warnings: BuildSummary['warnings']): void {
+  for (const w of orderWarnings(warnings)) process.stderr.write(`${w.severity}: ${w.message}\n`);
+}
 
 const DEBOUNCE_MS = 300;
 
@@ -167,11 +187,9 @@ async function safeBuild(
     const count = result.mode === 'manual' ? result.pages?.length ?? 0 : result.written?.length ?? 0;
     const unit = result.mode === 'manual' ? 'page' : 'file';
     process.stdout.write(
-      `built ${count} ${unit}(s) in ${result.elapsedMs}ms` +
-        (result.warnings.length > 0 ? ` (${result.warnings.length} warning(s))` : '') +
-        '\n',
+      `built ${count} ${unit}(s) in ${result.elapsedMs}ms` + warningSuffix(result.warnings) + '\n',
     );
-    for (const w of result.warnings) process.stderr.write(`warning: ${w}\n`);
+    printWarnings(result.warnings);
     if (onBuild) await onBuild(result);
   } catch (err) {
     onError(err as Error);
@@ -191,11 +209,9 @@ async function safeIncremental(
     const result = await runIncrementalBuild({ parser, config, cwd, changed, removed });
     const n = result.written?.length ?? 0;
     process.stdout.write(
-      `rebuilt ${n} file(s) in ${result.elapsedMs}ms` +
-        (result.warnings.length > 0 ? ` (${result.warnings.length} warning(s))` : '') +
-        '\n',
+      `rebuilt ${n} file(s) in ${result.elapsedMs}ms` + warningSuffix(result.warnings) + '\n',
     );
-    for (const w of result.warnings) process.stderr.write(`warning: ${w}\n`);
+    printWarnings(result.warnings);
     if (onBuild) await onBuild(result);
   } catch (err) {
     onError(err as Error);

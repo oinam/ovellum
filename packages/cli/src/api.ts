@@ -21,12 +21,25 @@
  * `ovellum` executable is a separate binary.
  */
 import path from 'node:path';
-import { loadOvellumConfig, type OvellumConfig, type OvellumUserConfig } from '@ovellum/core';
+import {
+  loadOvellumConfig,
+  type BuildWarning,
+  type BuildWarningSeverity,
+  type OvellumConfig,
+  type OvellumUserConfig,
+} from '@ovellum/core';
 import { runBuild, type BuildSummary } from './dev/run-build.js';
 import { watchAndBuild, type ActiveWatcher } from './dev/watcher.js';
 
 export { defineConfig } from '@ovellum/core';
-export type { BuildSummary, ActiveWatcher, OvellumConfig, OvellumUserConfig };
+export type {
+  BuildSummary,
+  BuildWarning,
+  BuildWarningSeverity,
+  ActiveWatcher,
+  OvellumConfig,
+  OvellumUserConfig,
+};
 
 export interface BuildOptions {
   /** Project root. Paths in the config resolve from here. Default: `process.cwd()`. */

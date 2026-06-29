@@ -76,9 +76,11 @@ describe('build-time rename hint', () => {
     const summary = await runBuild({ config: { ...DEFAULT_CONFIG }, cwd: dir });
 
     expect(summary.orphans).toBeGreaterThanOrEqual(1);
-    const hint = summary.warnings.find((w) => w.includes('become'));
+    const hint = summary.warnings.find((w) => w.message.includes('become'));
     expect(hint, 'expected a rename hint among the warnings').toBeTruthy();
-    expect(hint).toContain('src/date.ts::formatDate');
-    expect(hint).toContain('src/date.ts::formatDateUTC');
+    // The rename hint is advisory, not a hard problem.
+    expect(hint?.severity).toBe('info');
+    expect(hint?.message).toContain('src/date.ts::formatDate');
+    expect(hint?.message).toContain('src/date.ts::formatDateUTC');
   });
 });

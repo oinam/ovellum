@@ -1,7 +1,7 @@
 ---
 title: CLI リファレンス
 description: ovellum CLI のすべてのサブコマンドとフラグ。
-sourceHash: '599a212ad525574a'
+sourceHash: 'ba5a57cc35894675'
 ---
 
 # CLI リファレンス
@@ -140,13 +140,21 @@ ovellum build complete in 207ms
   written:   2 file(s)  ← Markdown files written
   merged:    1 file(s)  ← hybrid only: files where a manual block was spliced
   orphans:   0          ← hybrid only: blocks whose anchor disappeared
-  warnings:  0
+  warnings:  0          ← 対処すべき実際の問題（severity "warning"）
+  notes:     1          ← 良性の通知（severity "info"）。> 0 のときのみ表示
     → docs/format.md
     → docs/user.md
   quarantined:          ← only printed when orphans > 0
     ↪ .ovellum/orphans/2026-05-15_src-format.ts-padZero.md
   ir:        .ovellum/ir.json   ← parsed IR snapshot, written every auto/hybrid build
 ```
+
+診断は severity で分けられます。`warnings:` は実際の問題（孤立したコンテンツ、
+安全のためスキップされたアセット、解析できない日付）を数え、`notes:` は良性の通知
+（ドラフトの除外、`site.baseUrl` 未設定による `sitemap.xml` のスキップ）を数えます。
+サマリーの下では、それぞれ `warning:` / `info:` の行として — **実際の問題を先頭に** —
+表示されるので、埋もれることはありません。`--json` も同じ `{ message, severity }`
+の形を持ちます（[自動化](/ja/docs/guides/automation/)を参照）。
 
 auto/hybrid ビルドは毎回、解析した IR をプロジェクトルートの `.ovellum/ir.json`
 （`.ovellum/orphans/` の隣）にも書き出します — 直前に読み取ったシンボル・アンカー・

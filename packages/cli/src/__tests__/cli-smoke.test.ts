@@ -131,7 +131,12 @@ describe('ovellum build (manual)', () => {
     expect(parsed).toMatchObject({ ok: true, command: 'build', mode: 'manual' });
     expect(parsed.pages.length).toBe(1);
     expect(parsed.pages[0]).toHaveProperty('url');
+    // B8: warnings are severity-tagged objects, not bare strings.
     expect(Array.isArray(parsed.warnings)).toBe(true);
+    for (const w of parsed.warnings) {
+      expect(typeof w.message).toBe('string');
+      expect(['info', 'warning']).toContain(w.severity);
+    }
   });
 
   it('--verbose logs stage detail to stderr, leaving stdout the normal summary', async () => {

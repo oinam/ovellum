@@ -1,4 +1,5 @@
 export type { DocKind, DocParam, DocReturn, DocNode, DocFile, DocProject } from './types/ir.js';
+export type { BuildWarning, BuildWarningSeverity } from './types/build.js';
 
 export type {
   OvellumMode,

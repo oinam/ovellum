@@ -1,7 +1,7 @@
 ---
 title: 自動化と AI エージェント
 description: スクリプト・CI ジョブ・AI エージェントから Ovellum を操作する — 機械可読な --json 出力、安定した終了コード、MCP サーバー。
-sourceHash: '585fbe75523c0763'
+sourceHash: '96ea9e51a0e383bf'
 ---
 
 # 自動化と AI エージェント
@@ -37,7 +37,9 @@ ovellum diff --json
   "mode": "hybrid",
   "durationMs": 211,
   "config": "/project/ovellum.config.json",
-  "warnings": [],
+  "warnings": [
+    { "message": "did src/date.ts::a become …::b? …", "severity": "info" }
+  ],
   "sources": 2,
   "written": ["docs/format.md", "docs/user.md"],
   "merged": [],
@@ -47,6 +49,15 @@ ovellum diff --json
   "manifest": null
 }
 ```
+
+`warnings[]` の各エントリは `{ message, severity }` です。`severity` は
+`"warning"`（対処すべき実際の問題 — 孤立したコンテンツ、安全のためスキップされた
+アセット、解析できない日付）または `"info"`（ビルドが行ったことの良性の通知 —
+ドラフトの除外、`site.baseUrl` 未設定による `sitemap.xml` のスキップ）です。
+`severity` で分岐すれば、実際の問題のときだけ CI を失敗させられます:
+`summary.warnings.some(w => w.severity === "warning")`。ターミナルの人間向け
+サマリーはこれらを別々に数え（`warnings:` と `notes:`）、`warning:`/`info:` の行を
+実際の問題を先頭にして表示します。
 
 `manual` モードでは auto/hybrid のフィールドが `output`、`pages`
 （`[{ url, outputPath }]`）、`landingRendered` に置き換わります。

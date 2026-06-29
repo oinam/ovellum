@@ -1,7 +1,12 @@
 import path from 'node:path';
 import { defineCommand } from 'citty';
 import { ConfigError, loadOvellumConfig } from '@ovellum/core';
-import { runBuild, type BuildSummary } from '../dev/run-build.js';
+import {
+  countWarnings,
+  orderWarnings,
+  runBuild,
+  type BuildSummary,
+} from '../dev/run-build.js';
 
 export const buildCommand = defineCommand({
   meta: {
@@ -94,7 +99,10 @@ export const buildCommand = defineCommand({
       return;
     }
     process.stdout.write(formatBuildSummary(summary, configFile) + '\n');
-    for (const w of summary.warnings) process.stderr.write(`warning: ${w}\n`);
+    // Real problems first, then info notes — each line tagged with its severity.
+    for (const w of orderWarnings(summary.warnings)) {
+      process.stderr.write(`${w.severity}: ${w.message}\n`);
+    }
   },
 });
 
@@ -149,12 +157,17 @@ export function formatBuildSummary(
     `  config:    ${configFile ?? '(defaults)'}`,
     `  mode:      ${summary.mode}`,
   ];
+  // Headline counts split real problems (`warnings`) from benign `notes`;
+  // the `notes` line only appears when there are any, to keep the block calm.
+  const { warnings: warnCount, notes } = countWarnings(summary.warnings);
+  const warningLines = [`  warnings:  ${warnCount}`];
+  if (notes > 0) warningLines.push(`  notes:     ${notes}`);
 
   if (summary.mode === 'manual') {
     lines.push(
       `  output:    ${summary.outputDir}/`,
       `  pages:     ${summary.pages?.length ?? 0}`,
-      `  warnings:  ${summary.warnings.length}`,
+      ...warningLines,
       ...(summary.pages ?? []).map((p) => `    → ${p.url}  (${p.outputPath})`),
     );
   } else {
@@ -163,7 +176,7 @@ export function formatBuildSummary(
       `  written:   ${summary.written?.length ?? 0} file(s)`,
       `  merged:    ${summary.merged?.length ?? 0} file(s)`,
       `  orphans:   ${summary.orphans ?? 0}`,
-      `  warnings:  ${summary.warnings.length}`,
+      ...warningLines,
       ...(summary.written ?? []).map((f) => `    → ${f}`),
     );
     if ((summary.quarantined ?? []).length > 0) {
