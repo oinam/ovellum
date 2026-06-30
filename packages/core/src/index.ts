@@ -32,6 +32,7 @@ export type {
   OvellumSiteConfig,
   OvellumAiConfig,
   OvellumImagesConfig,
+  OvellumOgImageConfig,
   OvellumMermaidConfig,
   OvellumSiteSearchConfig,
   OvellumLandingConfig,

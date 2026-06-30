@@ -223,6 +223,27 @@ describe('validateUserConfig', () => {
     expect(() => validateUserConfig({ site: { images: { quality: 75.5 } } })).toThrow(/quality/);
   });
 
+  it('accepts site.images.format webp and rejects others / the assetBaseUrl clash', () => {
+    expect(validateUserConfig({ site: { images: { format: 'webp' } } })).toEqual({
+      site: { images: { format: 'webp' } },
+    });
+    expect(() => validateUserConfig({ site: { images: { format: 'avif' } } })).toThrow(/format/);
+    // Conversion + CDN is incompatible.
+    expect(() =>
+      validateUserConfig({ site: { images: { format: 'webp' }, assetBaseUrl: 'https://cdn.x/y' } }),
+    ).toThrow(/not compatible with `site\.assetBaseUrl`/);
+  });
+
+  it('accepts site.ogImage as a boolean or color object, rejects malformed', () => {
+    expect(validateUserConfig({ site: { ogImage: true } })).toEqual({ site: { ogImage: true } });
+    const obj = { site: { ogImage: { background: '#000', foreground: '#fff' } } };
+    expect(validateUserConfig(obj)).toEqual(obj);
+    expect(() => validateUserConfig({ site: { ogImage: 'yes' } })).toThrow(/site\.ogImage/);
+    expect(() => validateUserConfig({ site: { ogImage: { background: '' } } })).toThrow(
+      /ogImage\.background/,
+    );
+  });
+
   it('accepts a boolean site.minify and rejects a non-boolean', () => {
     expect(validateUserConfig({ site: { minify: true } })).toEqual({ site: { minify: true } });
     expect(validateUserConfig({ site: { minify: false } })).toEqual({ site: { minify: false } });

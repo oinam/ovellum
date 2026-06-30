@@ -4,8 +4,9 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import matter from 'gray-matter';
 import type { PluggableList } from 'unified';
-import { isOptimizableImage, optimizeImageFile } from './images.js';
+import { isConvertibleToWebp, isOptimizableImage, optimizeImageFile, webpDest } from './images.js';
 import { isMinifiable, minifyFile } from './minify.js';
+import { generateOgCard, ogSlug, resolveOgConfig, type ResolvedOgConfig } from './og-image.js';
 import type {
   BuildWarning,
   OvellumConfig,
@@ -197,6 +198,7 @@ export async function buildSite(options: BuildSiteOptions): Promise<BuildSiteRes
   // one bad image never fails the build. Totals are reported as an info note.
   const imagesCfg = site.images;
   const imageQuality = imagesCfg?.quality ?? 80;
+  const imageFormat = imagesCfg?.format; // 'webp' → convert png/jpg/jpeg to .webp
   const imageStats = { count: 0, savedBytes: 0 };
   // Opt-in CSS/JS minification of author-supplied assets (`site.minify`, B9
   // sibling). The bundled theme is already minified at our package build, so
@@ -204,6 +206,19 @@ export async function buildSite(options: BuildSiteOptions): Promise<BuildSiteRes
   // style.css/script.js. A transform failure degrades to a plain copy + warning.
   const minifyCfg = site.minify === true;
   const minifyStats = { count: 0, savedBytes: 0 };
+  // Per-page OpenGraph cards (B9). Needs `site.baseUrl` (social tags are absolute
+  // URLs) — enabled-without-baseUrl warns once and generates nothing.
+  const ogConfig = resolveOgConfig(site.ogImage);
+  if (ogConfig && !site.baseUrl) {
+    warnings.push(
+      warn('`site.ogImage` is set but `site.baseUrl` is unset — social cards need absolute URLs, so none were generated.'),
+    );
+  }
+  const ogContext =
+    ogConfig && site.baseUrl
+      ? { dirAbs: path.join(outputAbs, 'og'), config: ogConfig, baseUrl: site.baseUrl, basePath: site.basePath ?? '' }
+      : undefined;
+  const ogStats = { count: 0 };
   const minifyAsset = async (srcAbs: string, destAbs: string): Promise<void> => {
     try {
       const { minified, savedBytes } = await minifyFile(srcAbs, destAbs);
@@ -224,8 +239,18 @@ export async function buildSite(options: BuildSiteOptions): Promise<BuildSiteRes
   };
   const copyAsset = async (srcAbs: string, destAbs: string): Promise<void> => {
     if (imagesCfg && isOptimizableImage(srcAbs)) {
+      // Under `format: 'webp'`, png/jpg/jpeg are written as a sibling `.webp`
+      // (the Markdown `<img src>` refs are rewritten to match); other images
+      // re-encode in place.
+      const convert = imageFormat === 'webp' && isConvertibleToWebp(srcAbs);
+      const dest = convert ? webpDest(destAbs) : destAbs;
       try {
-        const { optimized, savedBytes } = await optimizeImageFile(srcAbs, destAbs, imageQuality);
+        const { optimized, savedBytes } = await optimizeImageFile(
+          srcAbs,
+          dest,
+          imageQuality,
+          convert ? 'webp' : undefined,
+        );
         if (optimized) {
           imageStats.count++;
           imageStats.savedBytes += savedBytes;
@@ -371,6 +396,7 @@ export async function buildSite(options: BuildSiteOptions): Promise<BuildSiteRes
       const landingBody = await readLandingBody(spec.inputAbs, site, {
         remarkPlugins: options.remarkPlugins,
         rehypePlugins: options.rehypePlugins,
+        convertImages: imageFormat,
       });
       // Render each install snippet through the same markdown/shiki pipeline as
       // doc code blocks (and the pitch body) so it gets syntax highlighting plus
@@ -475,8 +501,11 @@ export async function buildSite(options: BuildSiteOptions): Promise<BuildSiteRes
           dir: spec.dir,
           remarkPlugins: options.remarkPlugins,
           rehypePlugins: options.rehypePlugins,
+          convertImages: imageFormat,
+          ogImage: ogContext,
         });
         if (!result) continue; // draft page excluded in production — skip
+        if (result.ogGenerated) ogStats.count++;
         const pageHtml = await finalizePage(url, outputPath, result.html);
         await mkdir(path.dirname(outputPath), { recursive: true });
         await writeFile(outputPath, pageHtml, 'utf8');
@@ -695,6 +724,9 @@ export async function buildSite(options: BuildSiteOptions): Promise<BuildSiteRes
     const savedKb = (minifyStats.savedBytes / 1024).toFixed(1);
     warnings.push(info(`Minified ${minifyStats.count} asset(s), saving ${savedKb} KB.`));
   }
+  if (ogStats.count > 0) {
+    warnings.push(info(`Generated ${ogStats.count} OpenGraph image(s).`));
+  }
 
   return {
     pages,
@@ -737,6 +769,10 @@ interface RenderOneInput {
   /** Plugin-supplied remark/rehype plugins for the Markdown render (B1). */
   remarkPlugins?: unknown[];
   rehypePlugins?: unknown[];
+  /** Rewrite local raster `<img src>` to `.webp` (`site.images.format`). */
+  convertImages?: 'webp';
+  /** Per-page OpenGraph card generation (`site.ogImage` + `site.baseUrl`). */
+  ogImage?: { dirAbs: string; config: ResolvedOgConfig; baseUrl: string; basePath: string };
 }
 
 interface RenderOneResult {
@@ -747,6 +783,8 @@ interface RenderOneResult {
   /** Raw Markdown body (frontmatter stripped) — feeds the `.md` mirror + llms output. */
   markdown: string;
   warnings: string[];
+  /** True when an OpenGraph card was generated for this page (`site.ogImage`). */
+  ogGenerated?: boolean;
 }
 
 async function renderOne(input: RenderOneInput): Promise<RenderOneResult | null> {
@@ -772,6 +810,7 @@ async function renderOne(input: RenderOneInput): Promise<RenderOneResult | null>
       : undefined;
   const { html: bodyHtml, headings } = await renderMarkdown(parsed.content, {
     codeTheme: input.site.codeTheme,
+    convertImages: input.convertImages,
     remarkPlugins: input.remarkPlugins as PluggableList | undefined,
     rehypePlugins: input.rehypePlugins as PluggableList | undefined,
   });
@@ -810,6 +849,29 @@ async function renderOne(input: RenderOneInput): Promise<RenderOneResult | null>
       ? siteUrl('/' + mirrorRel, normaliseBasePath(input.site.basePath))
       : undefined;
 
+  // Per-page OpenGraph card (B9). Generated for real pages only (drafts + 404
+  // excluded, like sitemap/RSS); a render failure warns and just omits the meta.
+  let ogImageUrl: string | undefined;
+  if (input.ogImage && !input.draft && input.url !== '/404/') {
+    try {
+      const png = await generateOgCard({
+        title,
+        siteTitle: input.site.title,
+        config: input.ogImage.config,
+      });
+      const rel = siteUrl(`/og/${ogSlug(input.url)}.png`, normaliseBasePath(input.ogImage.basePath));
+      await mkdir(input.ogImage.dirAbs, { recursive: true });
+      await writeFile(path.join(input.ogImage.dirAbs, `${ogSlug(input.url)}.png`), png);
+      ogImageUrl = input.ogImage.baseUrl.replace(/\/+$/, '') + rel;
+    } catch (err) {
+      warnings.push(
+        `OG image generation failed for ${input.url} — meta omitted: ${
+          err instanceof Error ? err.message : String(err)
+        }`,
+      );
+    }
+  }
+
   const html = renderPage({
     site: input.site,
     nav: input.nav,
@@ -817,6 +879,7 @@ async function renderOne(input: RenderOneInput): Promise<RenderOneResult | null>
     title,
     description: frontmatter.description,
     tags,
+    ogImageUrl,
     bodyHtml,
     headings,
     generatedAt: input.generatedAt,
@@ -844,6 +907,7 @@ async function renderOne(input: RenderOneInput): Promise<RenderOneResult | null>
     lastModified,
     markdown: parsed.content,
     warnings,
+    ogGenerated: ogImageUrl !== undefined,
   };
 }
 
@@ -855,7 +919,11 @@ interface LandingBody {
 async function readLandingBody(
   inputAbs: string,
   site: OvellumSiteConfig,
-  markdownPlugins?: { remarkPlugins?: unknown[]; rehypePlugins?: unknown[] },
+  markdownPlugins?: {
+    remarkPlugins?: unknown[];
+    rehypePlugins?: unknown[];
+    convertImages?: 'webp';
+  },
 ): Promise<LandingBody | undefined> {
   const abs = path.join(inputAbs, LANDING_BODY_FILE);
   if (!existsSync(abs)) return undefined;
@@ -864,6 +932,7 @@ async function readLandingBody(
   if (!content.trim()) return undefined;
   const { html } = await renderMarkdown(content, {
     codeTheme: site.codeTheme,
+    convertImages: markdownPlugins?.convertImages,
     remarkPlugins: markdownPlugins?.remarkPlugins as PluggableList | undefined,
     rehypePlugins: markdownPlugins?.rehypePlugins as PluggableList | undefined,
   });

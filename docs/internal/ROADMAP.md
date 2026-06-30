@@ -286,23 +286,21 @@ A1 unlocks A2–A4.
       re-encode would be larger; SVG/GIF pass through. `packages/site/src/images.ts`;
       both copy seams in `build.ts` (`copyAsset`/`copyTree`, fast `cp -r` path
       kept for default builds); per-image failure → warn + plain copy; closing
-      `info` note (count + KB saved). **Slice 2 DEFERRED to backlog
-      (maintainer call 2026-06-30)** — design pass done: it's really **two
-      independent M-features**, build as separate slices when picked up. (a)
-      **Format conversion** — extend the optimize step to write raster → `.webp`
-      (`site.images.format`), plus a NEW post-sanitize rehype pass that
-      deterministically rewrites local `<img src="*.png|jpg">` → `.webp` (no
-      runtime coordination needed — converter + rewriter share the by-extension
-      rule). webp ~97% support → plain src-rewrite, no `<picture>` fallback
-      (simpler than dual files); avif is the less-supported add-on. No `<img>`
-      transform pass exists today (markdown `![]()` → plain `<img>`), so this
-      adds one. (b) **OG-image generation** — **net-new**: no `og:image`/
-      OpenGraph meta exists today (social cards rely on `headExtra`); generate a
-      per-page share card (title + site name on a branded bg) via sharp + emit
-      `og:image`/`twitter:image` (needs `site.baseUrl` for absolute URLs). This
-      is arguably its OWN roadmap item, not "image optimization." Also: resize/
-      max-width + responsive `srcset`. The `site.minify` esbuild gating B9 was
-      patterned after is still planned.
+      `info` note (count + KB saved). **Slice 2 DONE 2026-06-30** (both halves,
+      maintainer asked for both before 0.21.0). (a) **Format conversion** —
+      `site.images.format: 'webp'` converts `.png`/`.jpg`/`.jpeg` → sibling
+      `.webp` (`images.ts` `webpDest`/`isConvertibleToWebp`) + a post-sanitize
+      `rehypeWebpImages` pass that rewrites local raster `<img src>` → `.webp`
+      (by-extension; skips schemes/`//`, preserves `?query#hash`), threaded via a
+      `convertImages` opt. Validated mutually-exclusive with `assetBaseUrl`;
+      Markdown-body images only (landing/raw-HTML = author's `.webp` path; avif +
+      `<picture>` + `srcset` remain future). (b) **OG-image generation** —
+      `site.ogImage` renders a per-page 1200×630 card via sharp SVG→PNG
+      (`og-image.ts`) → `dist/og/<slug>.png` + the **first OpenGraph/Twitter
+      meta** in `template.ts`; needs `site.baseUrl` (warn + no-op otherwise);
+      drafts/404 excluded. **Composable-landing OG = follow-up** (renderOne pages
+      + doc-page home covered). Resize/max-width still future. The `site.minify`
+      esbuild gating this was patterned after shipped earlier today.
 - [x] **B10 (M–L) — DONE 2026-06-29 (B10.1 + B10.2 + B10.3).** **Theme
       inheritance — adopt a parent project's design
       tokens.** *(maintainer-requested 2026-06-28.)* When Ovellum docs are

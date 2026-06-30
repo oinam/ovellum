@@ -478,9 +478,34 @@ export function validateUserConfig(input: unknown): OvellumUserConfig {
       if (q !== undefined && (typeof q !== 'number' || !Number.isInteger(q) || q < 1 || q > 100)) {
         throw new ConfigError('`site.images.quality` must be an integer between 1 and 100.');
       }
+      const fmt = s.images.format;
+      if (fmt !== undefined && fmt !== 'webp') {
+        throw new ConfigError("`site.images.format` must be `'webp'`.");
+      }
+      if (fmt !== undefined && s.assetBaseUrl !== undefined) {
+        throw new ConfigError(
+          '`site.images.format` (image conversion) is not compatible with `site.assetBaseUrl` — a CDN serves the original images.',
+        );
+      }
     }
     if (s.minify !== undefined && typeof s.minify !== 'boolean') {
       throw new ConfigError('`site.minify` must be a boolean.');
+    }
+    if (s.ogImage !== undefined) {
+      if (typeof s.ogImage === 'boolean') {
+        // ok
+      } else if (isPlainObject(s.ogImage)) {
+        for (const key of ['background', 'foreground'] as const) {
+          const v = s.ogImage[key];
+          if (v !== undefined && (typeof v !== 'string' || v.trim() === '')) {
+            throw new ConfigError(`\`site.ogImage.${key}\` must be a non-empty color string.`);
+          }
+        }
+      } else {
+        throw new ConfigError(
+          '`site.ogImage` must be a boolean or a `{ background?, foreground? }` object.',
+        );
+      }
     }
     if (s.css !== undefined) {
       // One stylesheet URL or an array of them, injected as `<link>`s. Same

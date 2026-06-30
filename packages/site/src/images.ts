@@ -45,6 +45,16 @@ export function isOptimizableImage(filePath: string): boolean {
   return OPTIMIZABLE.has(path.extname(filePath).toLowerCase());
 }
 
+/** Raster formats converted to webp under `site.images.format: 'webp'`. */
+const WEBP_CONVERTIBLE = new Set(['.jpg', '.jpeg', '.png']);
+export function isConvertibleToWebp(filePath: string): boolean {
+  return WEBP_CONVERTIBLE.has(path.extname(filePath).toLowerCase());
+}
+/** The webp output path for a convertible image (`/img/x.png` → `/img/x.webp`). */
+export function webpDest(destAbs: string): string {
+  return destAbs.replace(/\.(?:png|jpe?g)$/i, '.webp');
+}
+
 export interface OptimizeResult {
   /** True if the re-encoded image was smaller and written; false if the original was kept. */
   optimized: boolean;
@@ -63,10 +73,21 @@ export async function optimizeImageFile(
   srcAbs: string,
   destAbs: string,
   quality: number,
+  format?: 'webp',
 ): Promise<OptimizeResult> {
   const sharp = await loadSharp();
   const ext = path.extname(srcAbs).toLowerCase();
   const original = await readFile(srcAbs);
+
+  // Format conversion (png/jpg → webp). `destAbs` already carries the `.webp`
+  // extension and the HTML `<img src>` refs have been rewritten to it, so we
+  // ALWAYS write the converted file — even if marginally larger, the reference
+  // is committed (unlike in-place re-encoding, which can keep the original).
+  if (format === 'webp' && isConvertibleToWebp(srcAbs)) {
+    const out = await sharp(srcAbs).webp({ quality }).toBuffer();
+    await writeFile(destAbs, out);
+    return { optimized: true, savedBytes: Math.max(0, original.byteLength - out.byteLength) };
+  }
 
   let pipeline = sharp(srcAbs);
   if (ext === '.jpg' || ext === '.jpeg') pipeline = pipeline.jpeg({ quality });

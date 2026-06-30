@@ -93,6 +93,30 @@ export interface OvellumImagesConfig {
    * PNG is recompressed losslessly (max deflate), so `quality` doesn't apply.
    */
   quality?: number;
+  /**
+   * Convert raster images to a modern format instead of re-encoding in place.
+   * `'webp'` rewrites `.png`/`.jpg`/`.jpeg` assets to `.webp` (much smaller, ~97%
+   * browser support) and rewrites the matching Markdown `<img src>` references to
+   * point at the new files. Other images (`.webp`/`.avif`/`.svg`/`.gif`) are
+   * unaffected. **Not compatible with {@link OvellumSiteConfig.assetBaseUrl}** (a
+   * CDN serves the originals, which wouldn't be converted). Unset = re-encode in
+   * place, same format.
+   */
+  format?: 'webp';
+}
+
+/**
+ * Per-page OpenGraph card generation. When {@link OvellumSiteConfig.ogImage} is
+ * enabled, Ovellum renders a 1200×630 social-share image (page title + site
+ * name on a flat background) for each page and emits `og:image` / `twitter:image`
+ * meta. Requires {@link OvellumSiteConfig.baseUrl} (social tags need absolute
+ * URLs) and the optional `sharp` peer dependency.
+ */
+export interface OvellumOgImageConfig {
+  /** Card background — any CSS color. Default `'#0c0c0c'`. */
+  background?: string;
+  /** Title + site-name color. Default `'#f4f4f4'`. */
+  foreground?: string;
 }
 
 /**
@@ -634,6 +658,13 @@ export interface OvellumSiteConfig {
    * {@link OvellumImagesConfig}. Unset = assets copied verbatim.
    */
   images?: OvellumImagesConfig;
+  /**
+   * Opt-in per-page OpenGraph card generation. `true` (or a
+   * {@link OvellumOgImageConfig} for colors) renders a 1200×630 social image per
+   * page and emits `og:image` / `twitter:image` meta. Requires `site.baseUrl`
+   * (absolute URLs) and the optional `sharp` peer dependency. Unset = no cards.
+   */
+  ogImage?: boolean | OvellumOgImageConfig;
   /**
    * Opt-in minification of **author-supplied** `.css` / `.js` assets during the
    * build — content-folder passthrough files and a custom

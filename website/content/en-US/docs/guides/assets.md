@@ -119,6 +119,30 @@ images it optimized and the bytes saved.
 > Ovellum: `npm i sharp`. (It's left out of the default install so a docs site
 > that doesn't optimize images stays lean.)
 
+##### Converting to WebP
+
+To go further than re-compression, set `format: 'webp'` to convert raster images
+to [WebP](https://developer.mozilla.org/docs/Web/Media/Formats/Image_types#webp)
+(much smaller than PNG/JPEG, ~97% browser support):
+
+```ts
+site: {
+  images: { format: 'webp' },
+}
+```
+
+`.png` / `.jpg` / `.jpeg` assets are written as a sibling `.webp`, and Ovellum
+rewrites the matching Markdown `<img src>` references to point at the new files —
+so `![](/img/hero.png)` resolves to `/img/hero.webp` with no edits on your part.
+Other formats (`.webp`, `.avif`, `.svg`, `.gif`) and external / `data:` image URLs
+are left alone.
+
+> **Note:** `format` rewrites image *paths*, so it isn't compatible with
+> [`site.assetBaseUrl`](/docs/reference/config/) (a CDN serves the originals). It
+> also rewrites references in **Markdown** body content only — if you point a
+> landing hero or a raw-HTML `<img>` at an image, reference it at its final
+> `.webp` path yourself.
+
 #### Minifying CSS and JS
 
 If you ship your own `.css` / `.js` — files in your content folder, or a custom
@@ -197,6 +221,37 @@ strict referrer policy) and wrapped in a responsive 16:9 frame, so the fixed
 `width`/`height` in the pasted snippet don't matter. Prefer
 `youtube-nocookie.com` if you want YouTube's privacy-preserving embed. See the
 [styleguide](/docs/reference/styleguide/#video) for a live example.
+
+## Social share images (OpenGraph)
+
+When a page is shared on social platforms or chat apps, a preview card is pulled
+from its OpenGraph meta. Ovellum can **generate a card per page** for you — set
+[`site.ogImage`](/docs/reference/config/):
+
+```ts
+site: {
+  baseUrl: 'https://docs.example.com', // required — social tags are absolute URLs
+  ogImage: true,
+}
+```
+
+Each page gets a 1200×630 image (its title + your site name on a flat
+background) written to `og/<slug>.png`, and the page `<head>` gains `og:image`,
+`twitter:image`, `og:title`, `og:url`, and `twitter:card` meta. Drafts and the
+404 page are skipped. To tune the colors, pass an object:
+
+```ts
+site: {
+  ogImage: { background: '#101418', foreground: '#fafafa' },
+}
+```
+
+`site.baseUrl` is **required** — without it the build warns and generates
+nothing (a relative `og:image` won't resolve for a scraper). Generation uses the
+optional [`sharp`](https://sharp.pixelplumbing.com) peer dependency (`npm i
+sharp`), lazy-loaded only when `ogImage` is set.
+
+> The card text renders with the build machine's default sans-serif font.
 
 ## Checking links
 

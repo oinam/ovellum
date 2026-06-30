@@ -640,6 +640,70 @@ describe('ovellum build — asset minification (site.minify)', () => {
   });
 });
 
+describe('ovellum build — OpenGraph cards (site.ogImage)', () => {
+  let dir: string;
+  /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
+  let sharp: any = null;
+  beforeEach(async () => {
+    dir = mkdtempSync(path.join(tmpdir(), 'ovellum-og-'));
+    try {
+      sharp = await import('sharp' as string);
+    } catch {
+      sharp = null;
+    }
+  });
+  afterEach(async () => {
+    await rm(dir, { recursive: true, force: true });
+  });
+
+  it('generates per-page cards + og:image meta through the compiled CLI', async () => {
+    if (!sharp) return; // sharp not installed — skip
+    mkdirSync(path.join(dir, 'content'), { recursive: true });
+    writeFileSync(path.join(dir, 'content', 'index.md'), '# Home\n\nWelcome.\n');
+    writeFileSync(path.join(dir, 'content', 'guide.md'), '# A Guide Page\n\nBody.\n');
+    writeFileSync(
+      path.join(dir, 'ovellum.config.json'),
+      JSON.stringify({
+        mode: 'manual',
+        input: './content',
+        output: './dist',
+        site: { title: 'My Docs', baseUrl: 'https://docs.example.com', ogImage: true },
+      }),
+    );
+
+    const { code, stderr } = await runCli(['build'], { cwd: dir });
+    expect(code).toBe(0);
+    expect(stderr).not.toMatch(/needs the optional .?sharp/);
+    expect(stderr).toMatch(/Generated 2 OpenGraph image/);
+
+    // Cards written + valid PNGs.
+    expect(existsSync(path.join(dir, 'dist', 'og', 'index.png'))).toBe(true);
+    expect(existsSync(path.join(dir, 'dist', 'og', 'guide.png'))).toBe(true);
+    const png = await readFile(path.join(dir, 'dist', 'og', 'guide.png'));
+    expect(png.subarray(0, 4).toString('hex')).toBe('89504e47');
+
+    // Absolute og:image + twitter meta in the page head.
+    const home = await readFile(path.join(dir, 'dist', 'index.html'), 'utf8');
+    expect(home).toContain('<meta property="og:image" content="https://docs.example.com/og/index.png">');
+    expect(home).toContain('<meta name="twitter:card" content="summary_large_image">');
+  });
+
+  it('warns and generates nothing when baseUrl is unset', async () => {
+    mkdirSync(path.join(dir, 'content'), { recursive: true });
+    writeFileSync(path.join(dir, 'content', 'index.md'), '# Home\n\nHi.\n');
+    writeFileSync(
+      path.join(dir, 'ovellum.config.json'),
+      JSON.stringify({ mode: 'manual', input: './content', output: './dist', site: { ogImage: true } }),
+    );
+    const { code, stderr } = await runCli(['build'], { cwd: dir });
+    expect(code).toBe(0);
+    expect(stderr).toMatch(/ogImage.*baseUrl|baseUrl.*absolute/i);
+    expect(existsSync(path.join(dir, 'dist', 'og'))).toBe(false);
+    const home = await readFile(path.join(dir, 'dist', 'index.html'), 'utf8');
+    expect(home).not.toContain('og:image');
+  });
+});
+
 describe('ovellum clean', () => {
   let dir: string;
   beforeEach(() => {

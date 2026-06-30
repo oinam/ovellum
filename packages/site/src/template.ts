@@ -136,6 +136,8 @@ export interface ShellOptions {
   description?: string;
   /** Frontmatter tags → <meta name="keywords">. */
   tags?: string[];
+  /** Absolute URL of the generated OpenGraph card (`site.ogImage`), if any. */
+  ogImageUrl?: string;
   /** Site-relative URL for canonical/OG; empty for landings. */
   url: string;
   /** Path prefix for static assets, defaults to '/'. */
@@ -337,6 +339,18 @@ function renderShell(opts: ShellOptions): string {
   ${desc ? `<meta name="description" content="${escapeAttr(desc)}">` : ''}
   ${opts.site.baseUrl ? `<link rel="canonical" href="${escapeAttr(join(opts.site.baseUrl, basePath + opts.url))}">` : ''}
   ${opts.site.baseUrl ? `<link rel="alternate" type="application/rss+xml" title="${escapeAttr(opts.site.title)}" href="${escapeAttr(join(opts.site.baseUrl, basePath + '/feed.xml'))}">` : ''}
+  ${
+    opts.ogImageUrl
+      ? `<meta property="og:title" content="${escapeAttr(opts.fullTitle)}">
+  <meta property="og:type" content="${opts.url === '/' ? 'website' : 'article'}">${opts.site.baseUrl ? `\n  <meta property="og:url" content="${escapeAttr(join(opts.site.baseUrl, basePath + opts.url))}">` : ''}${desc ? `\n  <meta property="og:description" content="${escapeAttr(desc)}">` : ''}
+  <meta property="og:image" content="${escapeAttr(opts.ogImageUrl)}">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="${escapeAttr(opts.fullTitle)}">${desc ? `\n  <meta name="twitter:description" content="${escapeAttr(desc)}">` : ''}
+  <meta name="twitter:image" content="${escapeAttr(opts.ogImageUrl)}">`
+      : ''
+  }
   ${hreflang}
   <link rel="icon" href="${escapeAttr(siteUrl(opts.site.favicon ?? '/favicon.ico', basePath))}">
   <link rel="stylesheet" href="${escapeAttr(assets)}assets/ovellum.css">
@@ -882,6 +896,8 @@ export interface RenderPageInput {
   description?: string;
   /** Frontmatter tags → `<meta name="keywords">`. */
   tags?: string[];
+  /** Absolute URL of the generated OpenGraph card (`site.ogImage`), if any. */
+  ogImageUrl?: string;
   /** Rendered body HTML. */
   bodyHtml: string;
   /** Headings extracted from the body for the right-side ToC. */
@@ -979,6 +995,7 @@ export function renderPage(input: RenderPageInput): string {
     fullTitle,
     description: input.description,
     tags: input.tags,
+    ogImageUrl: input.ogImageUrl,
     url: input.url,
     assetsPrefix: input.assetsPrefix,
     docsHref: input.docsHref,

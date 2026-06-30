@@ -39,6 +39,31 @@ describe('renderMarkdown — plugin remark/rehype injection (B1 slice 2)', () =>
   });
 });
 
+describe('renderMarkdown — convertImages: webp (B9 slice 2)', () => {
+  it('rewrites local png/jpg/jpeg <img src> to .webp, leaving others alone', async () => {
+    const md = [
+      '![a](/img/hero.png)',
+      '![b](/img/photo.jpg)',
+      '![c](/img/pic.JPEG)',
+      '![d](/img/logo.svg)',
+      '![e](https://cdn.example.com/x.png)',
+      '![f](/img/q.png?v=2#frag)',
+    ].join('\n\n');
+    const { html } = await renderMarkdown(md, { convertImages: 'webp' });
+    expect(html).toContain('src="/img/hero.webp"');
+    expect(html).toContain('src="/img/photo.webp"');
+    expect(html).toContain('src="/img/pic.webp"'); // case-insensitive
+    expect(html).toContain('src="/img/logo.svg"'); // svg untouched
+    expect(html).toContain('src="https://cdn.example.com/x.png"'); // external untouched
+    expect(html).toContain('src="/img/q.webp?v=2#frag"'); // query/hash preserved
+  });
+
+  it('leaves <img> untouched when convertImages is unset', async () => {
+    const { html } = await renderMarkdown('![a](/img/hero.png)');
+    expect(html).toContain('src="/img/hero.png"');
+  });
+});
+
 describe('renderMarkdown', () => {
   it('renders paragraphs + headings + collects h2/h3 for the ToC', async () => {
     const { html, headings } = await renderMarkdown(
