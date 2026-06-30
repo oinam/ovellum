@@ -1,5 +1,61 @@
 # ovellum
 
+## 0.21.0
+
+### Minor Changes
+
+- 44da6b9: `ovellum clean` — remove generated output, safely. **Dry-run by default** (lists
+  what it would remove); `--confirm` deletes. In `manual` mode it removes the whole
+  output directory (100% generated from your content). In `auto`/`hybrid` mode it
+  removes generated Markdown (identified by the `ovellum: true` frontmatter) but
+  **never** a hand-written file or a generated file that contains a `@manual`
+  zone — that prose lives only on disk, so deleting it must be deliberate. The
+  orphan archive (`.ovellum/orphans/`) is preserved unless you pass `--orphans`.
+- 0c27b2b: Image optimization — `site.images` (B9 slice 1). Opt-in raster re-compression:
+  set `site.images: { quality? }` to re-encode `.jpg`/`.jpeg`/`.png`/`.webp`/`.avif`
+  assets **in place** during the build — same path and format, smaller bytes, so
+  your `<img src>` references never change. Lossy formats use `quality` (1–100,
+  default 80); PNG is recompressed losslessly. If a re-encode would be larger (the
+  image is already optimized) the original is kept, so optimization never grows a
+  file; SVG and GIF pass through. The build reports how many images it optimized
+  and the bytes saved.
+
+  Optimization uses [sharp](https://sharp.pixelplumbing.com) as an **optional peer
+  dependency**, lazy-loaded only when `site.images` is set — install it with
+  `npm i sharp`. Default installs stay lean (sharp never enters the tree unless you
+  opt in). Format conversion (→ webp/avif) and per-page OG-image generation are
+  planned follow-ups.
+
+- 678b141: WebP conversion — `site.images.format`. Set `site.images: { format: 'webp' }` to
+  convert raster images to WebP during the build instead of re-compressing them in
+  place: `.png`/`.jpg`/`.jpeg` assets are written as a sibling `.webp` (much
+  smaller, ~97% browser support) and the matching Markdown `<img src>` references
+  are rewritten to point at the new files — so `![](/img/hero.png)` resolves to
+  `/img/hero.webp` with no edits on your part. Other formats and external/`data:`
+  URLs are left alone. Not compatible with `site.assetBaseUrl` (a CDN serves the
+  originals); rewrites Markdown body images only. Uses the optional `sharp` peer.
+- c33dfc3: CSS/JS minification — `site.minify`. Set `site.minify: true` to minify your own
+  `.css` / `.js` during the build: files in your content folder and a custom
+  `site.templateDir`'s `style.css` / `script.js`. The bundled default theme is
+  already minified and HTML pages aren't touched, so this only affects assets you
+  supply. A minified output larger than the original is discarded (the original is
+  kept), and a file that fails to minify is copied as-is with a warning; the build
+  reports how many assets it minified and the bytes saved.
+
+  Minification uses [esbuild](https://esbuild.github.io) as an **optional peer
+  dependency**, lazy-loaded only when `site.minify` is `true` — install it with
+  `npm i esbuild`. Default installs stay lean. (HTML-page minification is a
+  separate future item — esbuild only minifies CSS/JS.)
+
+- 678b141: OpenGraph social cards — `site.ogImage`. Set `site.ogImage: true` (or a
+  `{ background, foreground }` object for colors) to generate a 1200×630
+  social-share image per page — its title and your site name on a flat
+  background — and emit `og:image` / `twitter:image` (plus `og:title`, `og:url`,
+  and `twitter:card`) meta. Cards are written to `og/<slug>.png`; drafts and the
+  404 page are excluded. Requires `site.baseUrl` (social tags are absolute URLs) —
+  set without it, the build warns and generates nothing. Uses the optional `sharp`
+  peer dependency.
+
 ## 0.20.0
 
 ### Minor Changes
