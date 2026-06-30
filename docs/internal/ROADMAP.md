@@ -276,9 +276,20 @@ A1 unlocks A2–A4.
       `{message, severity}` objects (shape change — branch on
       `severity === 'warning'` for CI). Docs en+ja; `build-warnings.test.ts` (4)
       + cli-smoke + rename-build. `check`'s own issue list is separate.
-- [ ] **B9 (M)** **Image optimization** (lazy-import `sharp`, same pattern as
-      the planned `site.minify` esbuild gating) and, later, OG-image
-      generation per page.
+- [~] **B9 (M) — Slice 1 DONE 2026-06-30.** **Image optimization.** Shipped
+      `site.images: { quality? }` — opt-in raster re-compression **in place**
+      (`.jpg`/`.jpeg`/`.png`/`.webp`/`.avif`, same path/format, smaller bytes, no
+      `<img src>` rewriting) via lazily-imported **sharp** (optional peer dep —
+      lazy `import('sharp' as string)` so core/cli neither bundle nor typecheck
+      against it; tsup leaves it external; missing → actionable error). PNG
+      lossless, lossy formats use `quality` (default 80); keeps the original if a
+      re-encode would be larger; SVG/GIF pass through. `packages/site/src/images.ts`;
+      both copy seams in `build.ts` (`copyAsset`/`copyTree`, fast `cp -r` path
+      kept for default builds); per-image failure → warn + plain copy; closing
+      `info` note (count + KB saved). **Deferred (slice 2):** format conversion
+      (→ webp/avif with `<img>`/`<picture>` src rewriting), per-page OG-image
+      generation, resize/max-width. The `site.minify` esbuild gating it was
+      patterned after is still planned.
 - [x] **B10 (M–L) — DONE 2026-06-29 (B10.1 + B10.2 + B10.3).** **Theme
       inheritance — adopt a parent project's design
       tokens.** *(maintainer-requested 2026-06-28.)* When Ovellum docs are

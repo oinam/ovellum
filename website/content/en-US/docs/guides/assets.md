@@ -95,6 +95,30 @@ files by their final CDN URL directly.
 ![A diagram of the build pipeline](/guides/pipeline.svg)
 ```
 
+#### Optimizing images
+
+By default images are copied **verbatim**. To re-compress raster images
+(`.jpg` / `.jpeg` / `.png` / `.webp` / `.avif`) during the build, set
+[`site.images`](/docs/reference/config/):
+
+```ts
+site: {
+  images: { quality: 80 }, // quality is optional (default 80)
+}
+```
+
+Each image is re-encoded **in place** — same path and format, smaller bytes — so
+your `![…](/img/hero.png)` references never change. Lossy formats use `quality`;
+PNG is recompressed losslessly. If a re-encode would be *larger* (the image is
+already optimized), Ovellum keeps the original, so optimization never makes a
+file bigger. SVG and GIF pass through untouched. The build reports how many
+images it optimized and the bytes saved.
+
+> Optimization uses [**sharp**](https://sharp.pixelplumbing.com), an **optional**
+> dependency that's only loaded when `site.images` is set — install it alongside
+> Ovellum: `npm i sharp`. (It's left out of the default install so a docs site
+> that doesn't optimize images stays lean.)
+
 ### PDFs, zips, and other downloads
 
 A plain link — the browser opens or downloads it:

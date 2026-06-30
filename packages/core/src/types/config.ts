@@ -79,6 +79,23 @@ export interface OvellumCustomFont {
 export type OvellumAppearance = 'control' | 'inherit' | OvellumAppearanceInherit;
 
 /**
+ * Raster-image optimization for copied assets (manual mode). Opt-in: set
+ * `site.images` (even `{}`) to re-encode `.jpg`/`.jpeg`/`.png`/`.webp`/`.avif`
+ * assets through [sharp](https://sharp.pixelplumb.com) **in place** — same path
+ * and format, smaller bytes, so `<img src>` references never change. SVG/GIF
+ * pass through untouched. If the re-encode would be larger, the original is
+ * kept. **sharp is an optional peer dependency** (lazy-loaded only when this is
+ * set) — `npm i sharp` to use it. Unset = assets copied verbatim.
+ */
+export interface OvellumImagesConfig {
+  /**
+   * Encoder quality 1–100 for **lossy** formats (jpeg/webp/avif). Default `80`.
+   * PNG is recompressed losslessly (max deflate), so `quality` doesn't apply.
+   */
+  quality?: number;
+}
+
+/**
  * "Follow the host" appearance. By default light/dark tracks
  * `prefers-color-scheme` (an OS-driven host needs no extra config). To follow a
  * host whose toggle is a JS choice persisted to **same-origin `localStorage`**
@@ -611,6 +628,12 @@ export interface OvellumSiteConfig {
    * or `palette: 'bare'`. Unset = the bundled default theme.
    */
   templateDir?: string;
+  /**
+   * Opt-in raster-image optimization for copied assets — re-encodes images in
+   * place (smaller bytes, same path/format) via sharp. See
+   * {@link OvellumImagesConfig}. Unset = assets copied verbatim.
+   */
+  images?: OvellumImagesConfig;
   /**
    * File globs to exclude from the manual-mode site — both Markdown pages and
    * passthrough assets, honored by `build` **and** `check`. A pattern without

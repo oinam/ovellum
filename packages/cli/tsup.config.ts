@@ -24,6 +24,11 @@ const shared = {
   target: 'node20' as const,
   define,
   noExternal,
+  // `sharp` is an OPTIONAL peer (B9 image optimization) — keep it external even
+  // though `@ovellum/site` is inlined, so the lazy `import('sharp')` resolves the
+  // real (CJS, native) package from the consumer's node_modules at runtime.
+  // Bundling it produces an esbuild `require` shim that throws at load.
+  external: ['sharp'],
 };
 
 export default defineConfig([

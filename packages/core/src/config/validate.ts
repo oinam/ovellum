@@ -470,6 +470,15 @@ export function validateUserConfig(input: unknown): OvellumUserConfig {
     if (s.templateDir !== undefined && (typeof s.templateDir !== 'string' || s.templateDir.trim() === '')) {
       throw new ConfigError('`site.templateDir` must be a non-empty directory path.');
     }
+    if (s.images !== undefined) {
+      if (!isPlainObject(s.images)) {
+        throw new ConfigError('`site.images` must be an object (e.g. `{ quality: 80 }`).');
+      }
+      const q = s.images.quality;
+      if (q !== undefined && (typeof q !== 'number' || !Number.isInteger(q) || q < 1 || q > 100)) {
+        throw new ConfigError('`site.images.quality` must be an integer between 1 and 100.');
+      }
+    }
     if (s.css !== undefined) {
       // One stylesheet URL or an array of them, injected as `<link>`s. Same
       // scheme guard as `site.font.source` — reject script-bearing schemes;

@@ -8,4 +8,7 @@ export default defineConfig({
   sourcemap: true,
   clean: true,
   target: 'node20',
+  // `sharp` (B9, optional) must NOT be bundled — it's a native CJS module that
+  // breaks under esbuild's `require` shim. Lazy-loaded from node_modules instead.
+  external: ['sharp'],
 });

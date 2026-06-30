@@ -542,3 +542,52 @@ describe('ovellum mcp', () => {
     expect(payload.symbols[0].id).toBe('src/math.ts::add');
   });
 });
+
+/**
+ * B9 image optimization, exercised through the COMPILED CLI (`dist/index.js`).
+ * This is the regression guard the unit tests can't be: it catches a packaging
+ * bug (sharp bundled instead of left external) that only manifests in the
+ * bundle — a source-level test would pass while the shipped binary is broken.
+ */
+describe('ovellum build — image optimization (site.images)', () => {
+  let dir: string;
+  /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
+  let sharp: any = null;
+  beforeEach(async () => {
+    dir = mkdtempSync(path.join(tmpdir(), 'ovellum-img-'));
+    try {
+      sharp = (await import('sharp' as string)).default;
+    } catch {
+      sharp = null;
+    }
+  });
+  afterEach(async () => {
+    await rm(dir, { recursive: true, force: true });
+  });
+
+  it('optimizes a JPEG through the compiled CLI (sharp loads from the external import)', async () => {
+    if (!sharp) return; // sharp not installed — skip
+    mkdirSync(path.join(dir, 'content', 'public'), { recursive: true });
+    writeFileSync(path.join(dir, 'content', 'index.md'), '# Hi\n\n![x](/noise.jpg)\n');
+    writeFileSync(
+      path.join(dir, 'ovellum.config.json'),
+      JSON.stringify({ mode: 'manual', input: './content', output: './dist', site: { images: { quality: 40 } } }),
+    );
+    const srcImg = path.join(dir, 'content', 'public', 'noise.jpg');
+    // Incompressible noise → a big q100 JPEG that visibly shrinks at q40.
+    const raw = Buffer.alloc(384 * 384 * 3);
+    for (let i = 0; i < raw.length; i++) raw[i] = (i * 2654435761) & 0xff; // cheap deterministic noise
+    await sharp(raw, { raw: { width: 384, height: 384, channels: 3 } }).jpeg({ quality: 100 }).toFile(srcImg);
+
+    const { code, stderr } = await runCli(['build'], { cwd: dir });
+    expect(code).toBe(0);
+    // The real failure mode this guards: a bundled sharp can't load, so the build
+    // would warn "needs the optional `sharp`" and copy the original as-is.
+    expect(stderr).not.toMatch(/needs the optional .?sharp/);
+    expect(stderr).toMatch(/Optimized 1 image/);
+
+    const srcSize = (await readFile(srcImg)).byteLength;
+    const outSize = (await readFile(path.join(dir, 'dist', 'noise.jpg'))).byteLength;
+    expect(outSize).toBeLessThan(srcSize);
+  });
+});

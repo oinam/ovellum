@@ -80,6 +80,14 @@
     "unified": "^11.0.5",
     "unist-util-visit": "^5.1.0"
   },
+  "peerDependencies": {
+    "sharp": "^0.33.0 || ^0.34.0"
+  },
+  "peerDependenciesMeta": {
+    "sharp": {
+      "optional": true
+    }
+  },
   "devDependencies": {
     "@ovellum/core": "workspace:*",
     "@ovellum/generator": "workspace:*",

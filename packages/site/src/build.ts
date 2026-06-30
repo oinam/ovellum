@@ -4,6 +4,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import matter from 'gray-matter';
 import type { PluggableList } from 'unified';
+import { isOptimizableImage, optimizeImageFile } from './images.js';
 import type {
   BuildWarning,
   OvellumConfig,
@@ -189,6 +190,47 @@ export async function buildSite(options: BuildSiteOptions): Promise<BuildSiteRes
   const info = (message: string): BuildWarning => ({ message, severity: 'info' });
   const warn = (message: string): BuildWarning => ({ message, severity: 'warning' });
 
+  // Opt-in raster-image optimization (B9). When `site.images` is set, copied
+  // image assets are re-encoded in place via sharp; everything else copies
+  // verbatim. A per-file encode failure degrades to a plain copy + a warning, so
+  // one bad image never fails the build. Totals are reported as an info note.
+  const imagesCfg = site.images;
+  const imageQuality = imagesCfg?.quality ?? 80;
+  const imageStats = { count: 0, savedBytes: 0 };
+  const copyAsset = async (srcAbs: string, destAbs: string): Promise<void> => {
+    if (imagesCfg && isOptimizableImage(srcAbs)) {
+      try {
+        const { optimized, savedBytes } = await optimizeImageFile(srcAbs, destAbs, imageQuality);
+        if (optimized) {
+          imageStats.count++;
+          imageStats.savedBytes += savedBytes;
+        }
+        return;
+      } catch (err) {
+        warnings.push(
+          warn(
+            `Image optimization failed for ${path.relative(cwd, srcAbs)} — copied as-is: ${
+              err instanceof Error ? err.message : String(err)
+            }`,
+          ),
+        );
+      }
+    }
+    await copyFile(srcAbs, destAbs);
+  };
+  // Recursively copy a directory, routing image files through copyAsset. Used
+  // for publicDir when optimization is on (the plain `cp -r` path stays for the
+  // common no-optimization case, so default builds are byte-identical + fast).
+  const copyTree = async (srcDir: string, destDir: string): Promise<void> => {
+    await mkdir(destDir, { recursive: true });
+    for (const entry of await readdir(srcDir, { withFileTypes: true })) {
+      const s = path.join(srcDir, entry.name);
+      const d = path.join(destDir, entry.name);
+      if (entry.isDirectory()) await copyTree(s, d);
+      else if (entry.isFile()) await copyAsset(s, d);
+    }
+  };
+
   await mkdir(assetsAbs, { recursive: true });
   // `site.templateDir` (B1 slice 3) replaces the bundled CSS/JS/fonts per file.
   const userTemplateDir = site.templateDir ? path.resolve(cwd, site.templateDir) : undefined;
@@ -205,11 +247,16 @@ export async function buildSite(options: BuildSiteOptions): Promise<BuildSiteRes
     if (assetBase) {
       publicPaths = await collectPublicPaths(publicAbs, publicAbs);
     } else {
-      for (const name of await readdir(publicAbs)) {
-        await cp(path.join(publicAbs, name), path.join(outputAbs, name), {
-          recursive: true,
-          force: true,
-        });
+      if (imagesCfg) {
+        // Walk + optimize images; copyTree handles the top-level files + dirs.
+        await copyTree(publicAbs, outputAbs);
+      } else {
+        for (const name of await readdir(publicAbs)) {
+          await cp(path.join(publicAbs, name), path.join(outputAbs, name), {
+            recursive: true,
+            force: true,
+          });
+        }
       }
     }
   }
@@ -467,7 +514,7 @@ export async function buildSite(options: BuildSiteOptions): Promise<BuildSiteRes
         const outRel = spec.urlPrefix ? path.join(spec.urlPrefix.slice(1), relFromInput) : relFromInput;
         const outputPath = path.join(outputAbs, outRel);
         await mkdir(path.dirname(outputPath), { recursive: true });
-        await copyFile(file, outputPath);
+        await copyAsset(file, outputPath);
       }
     }
 
@@ -607,6 +654,13 @@ export async function buildSite(options: BuildSiteOptions): Promise<BuildSiteRes
     if (idx.exitCode !== 0) {
       for (const err of idx.errors) warnings.push(warn(`search: ${err}`));
     }
+  }
+
+  if (imageStats.count > 0) {
+    const savedKb = (imageStats.savedBytes / 1024).toFixed(1);
+    warnings.push(
+      info(`Optimized ${imageStats.count} image(s), saving ${savedKb} KB.`),
+    );
   }
 
   return {

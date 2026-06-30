@@ -2,7 +2,7 @@
 title: アセットとダウンロード
 description: 画像、動画、音声、PDF、その他のファイルをどこに置き、どう参照・埋め込み・リンクするか。
 tags: [assets, images, video, audio, downloads]
-sourceHash: '55ec2695507f2159'
+sourceHash: 'ad83dc510d51436e'
 ---
 
 # アセットとダウンロード
@@ -96,6 +96,29 @@ CDN の URL で直接参照してください。
 ```markdown
 ![A diagram of the build pipeline](/guides/pipeline.svg)
 ```
+
+#### 画像の最適化
+
+デフォルトでは画像は**そのまま**コピーされます。ビルド時にラスター画像
+（`.jpg` / `.jpeg` / `.png` / `.webp` / `.avif`）を再圧縮するには、
+[`site.images`](/ja/docs/reference/config/) を設定します。
+
+```ts
+site: {
+  images: { quality: 80 }, // quality は任意（デフォルト 80）
+}
+```
+
+各画像は**その場で**再エンコードされます — 同じパス・同じ形式で、バイト数だけ小さく —
+なので `![…](/img/hero.png)` の参照は変わりません。非可逆形式は `quality` を使い、PNG は
+可逆で再圧縮されます。再エンコードのほうが*大きく*なる場合（すでに最適化済みの画像）は
+元のファイルを保持するので、最適化でファイルが大きくなることはありません。SVG と GIF は
+そのまま通過します。ビルドは最適化した画像の数と削減バイト数を報告します。
+
+> 最適化には [**sharp**](https://sharp.pixelplumbing.com) を使います。これは
+> `site.images` を設定したときだけ読み込まれる**オプションの**依存関係です — Ovellum と
+> 一緒にインストールしてください: `npm i sharp`。（画像を最適化しないドキュメントサイトを
+> 軽量に保つため、デフォルトのインストールには含まれません。）
 
 ### PDF、zip、その他のダウンロード
 

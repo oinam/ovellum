@@ -212,6 +212,17 @@ describe('validateUserConfig', () => {
     expect(() => validateUserConfig({ site: { templateDir: 42 } })).toThrow(/templateDir/);
   });
 
+  it('accepts site.images config and rejects a bad quality', () => {
+    expect(validateUserConfig({ site: { images: {} } })).toEqual({ site: { images: {} } });
+    expect(validateUserConfig({ site: { images: { quality: 70 } } })).toEqual({
+      site: { images: { quality: 70 } },
+    });
+    expect(() => validateUserConfig({ site: { images: 'yes' } })).toThrow(/site\.images/);
+    expect(() => validateUserConfig({ site: { images: { quality: 0 } } })).toThrow(/quality/);
+    expect(() => validateUserConfig({ site: { images: { quality: 101 } } })).toThrow(/quality/);
+    expect(() => validateUserConfig({ site: { images: { quality: 75.5 } } })).toThrow(/quality/);
+  });
+
   it('accepts site.css as a URL or array of URLs, rejects empties and script schemes', () => {
     expect(validateUserConfig({ site: { css: '/theme.css' } })).toEqual({
       site: { css: '/theme.css' },
