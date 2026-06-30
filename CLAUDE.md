@@ -38,8 +38,8 @@ ask only when a decision is genuinely the maintainer's to make.
 - Build the site (and its package deps): `npm run build:website`
 - Dev the site: `npm run dev:website`
 - Tests: `npm test` (turbo, per-package vitest)
-- Real CLI commands: `init`, `build`, `dev`, `watch`, `serve`, `check`.
-  (`orphans` and `clean` are NOT implemented — don't reference them as shipping.)
+- Real CLI commands: `init`, `build`, `dev`, `watch`, `serve`, `check`, `diff`,
+  `orphans`, `clean`, `mcp`, `upgrade`. (All shipping as of 0.20.x.)
 - Orphan archive lives at `.ovellum/orphans/` (never `.docsmith` — that's a dead
   former name).
 

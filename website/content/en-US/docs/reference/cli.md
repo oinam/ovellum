@@ -24,7 +24,7 @@ package manager's task runner.
 | `upgrade`  | available | Check npm for a newer Ovellum and install it.                            |
 | `orphans`  | available | List quarantined manual blocks (with `--stale` / `--json`).              |
 | `mcp`      | available | Run Ovellum as an MCP server over stdio so an AI agent can drive it.      |
-| `clean`    | planned   | Remove auto-generated outputs while preserving manual files.             |
+| `clean`    | available | Remove auto-generated outputs while preserving manual files (dry-run by default). |
 
 ## `ovellum init`
 
@@ -745,11 +745,32 @@ claude mcp add ovellum -- npx ovellum mcp --cwd /path/to/project
 
 ### `ovellum clean`
 
-Removes auto-generated files (identified by `ovellum: true` frontmatter)
-while preserving manual files. Dry-run by default; `--confirm` actually
-deletes. **Preserves `.ovellum/orphans/` by default** (those are committed
-manual writing); pass `--orphans` to also remove the orphan archive. Deleting
-hand-written prose must be deliberate, so it never happens without the flag.
+Removes generated output while preserving anything you wrote by hand. **Dry-run
+by default** — it lists what it *would* remove; pass `--confirm` to actually
+delete.
+
+```
+ovellum clean [--cwd <dir>] [--config <path>] [--confirm] [--orphans]
+```
+
+What it removes, by mode:
+
+- **`manual`** — the whole output directory (`dist/` by default). It's 100%
+  generated from your content; your `.md` sources in `input` are untouched.
+- **`auto` / `hybrid`** — generated Markdown files, identified by the
+  `ovellum: true` frontmatter the generator writes. Two things are **always
+  kept**: files you authored by hand (no `ovellum: true`), and **any generated
+  file that contains a `@manual` zone** — that prose lives only in the file, so
+  clean never deletes it.
+
+**Preserves `.ovellum/orphans/` by default** (committed hand-written prose); pass
+`--orphans` to also remove the orphan archive. Deleting hand-written prose must
+be deliberate, so it never happens without an explicit flag.
+
+| Flag        | Default | Description |
+| ----------- | ------- | ----------- |
+| `--confirm` | off     | Actually delete. Without it, clean is a dry run. |
+| `--orphans` | off     | Also remove `.ovellum/orphans/`. |
 
 ## Common flags
 

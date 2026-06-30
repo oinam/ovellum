@@ -1067,10 +1067,13 @@ deploy design in [`DEPLOY.md`](./DEPLOY.md).
   - [ ] List mode (default)
   - [ ] `--stale` flag
   - [ ] Interactive reattach / delete (optional `--interactive` flag)
-- [ ] Implement `ovellum clean`:
-  - [ ] Identify and remove auto-generated files (by `ovellum: true` frontmatter)
-  - [ ] Preserve manual-only files
-  - [ ] Dry-run mode by default; `--confirm` to actually delete
+- [x] **Implement `ovellum clean` — DONE 2026-06-30** (`commands/clean.ts`):
+  - [x] Identify + remove auto-generated files (by `ovellum: true` frontmatter)
+  - [x] Preserve manual-only files **and** generated files containing `@manual`
+        zones (that prose lives only on disk — `readManualDoc().protectedBlocks`)
+  - [x] Dry-run by default; `--confirm` to delete; `--orphans` to also remove
+        `.ovellum/orphans/` (preserved otherwise). Manual mode wipes the whole
+        output dir. Matches the published cli.md contract; cli-smoke (2) pinned.
 - [ ] `ovellum dev` for auto / hybrid (today manual-only; auto/hybrid produce `.md` so there's nothing to live-reload but a "rebuild on TS change" loop would still be useful — overlaps with `watch`)
 - [ ] Add `--strict` global flag
 - [x] `--config` + `--cwd` available on `build`, `check`, `watch`, `dev`, `serve`

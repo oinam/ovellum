@@ -837,5 +837,8 @@ remainder worth remembering, all low priority:
   counter suffix when it ever bites.
 - Hybrid mode overwrites manual frontmatter on regeneration (by design;
   custom frontmatter preservation would need its own design).
-- `ovellum clean` remains unimplemented and is correctly documented as
-  planned; lower value than `orphans`, keep deferred.
+- `ovellum clean` — **IMPLEMENTED 2026-06-30** (`commands/clean.ts`): dry-run by
+  default, `--confirm` deletes, preserves hand-written files / `@manual`-zone
+  files / the orphan archive (unless `--orphans`); manual mode wipes the whole
+  output dir. Matches the published cli.md contract + the "deleting prose must be
+  deliberate" decision.

@@ -639,3 +639,64 @@ describe('ovellum build — asset minification (site.minify)', () => {
     expect(Buffer.byteLength(out)).toBeLessThan((await readFile(srcCss)).byteLength);
   });
 });
+
+describe('ovellum clean', () => {
+  let dir: string;
+  beforeEach(() => {
+    dir = mkdtempSync(path.join(tmpdir(), 'ovellum-clean-'));
+  });
+  afterEach(async () => {
+    await rm(dir, { recursive: true, force: true });
+  });
+
+  it('hybrid: removes generated files, preserves @manual-prose files, hand-written files, and orphans', async () => {
+    mkdirSync(path.join(dir, 'docs'), { recursive: true });
+    mkdirSync(path.join(dir, '.ovellum', 'orphans'), { recursive: true });
+    writeFileSync(
+      path.join(dir, 'ovellum.config.json'),
+      JSON.stringify({ mode: 'hybrid', input: './src', output: './docs' }),
+    );
+    // Purely generated → removable.
+    writeFileSync(path.join(dir, 'docs', 'gen.md'), '---\ntitle: A\novellum: true\n---\n\n## A\n\nGenerated.\n');
+    // Generated but carries hand-written prose → must be preserved.
+    writeFileSync(
+      path.join(dir, 'docs', 'withzone.md'),
+      '---\ntitle: B\novellum: true\n---\n\n<!-- @manual:start id="n" -->\nKeep me.\n<!-- @manual:end -->\n',
+    );
+    // Hand-authored (no generator marker) → preserved.
+    writeFileSync(path.join(dir, 'docs', 'manual.md'), '# Hand-written\n\nKeep me too.\n');
+    writeFileSync(path.join(dir, '.ovellum', 'orphans', 'x.md'), 'orphaned prose\n');
+
+    // Dry run by default — lists but deletes nothing.
+    const dry = await runCli(['clean'], { cwd: dir });
+    expect(dry.code).toBe(0);
+    expect(dry.stdout).toMatch(/dry run/);
+    expect(dry.stdout).toMatch(/would remove .*docs\/gen\.md/);
+    expect(existsSync(path.join(dir, 'docs', 'gen.md'))).toBe(true); // untouched
+
+    // --confirm actually deletes — only the purely-generated file.
+    const run = await runCli(['clean', '--confirm'], { cwd: dir });
+    expect(run.code).toBe(0);
+    expect(existsSync(path.join(dir, 'docs', 'gen.md'))).toBe(false);
+    expect(existsSync(path.join(dir, 'docs', 'withzone.md'))).toBe(true);
+    expect(existsSync(path.join(dir, 'docs', 'manual.md'))).toBe(true);
+    expect(existsSync(path.join(dir, '.ovellum', 'orphans', 'x.md'))).toBe(true);
+  });
+
+  it('manual: removes the whole output dir; --orphans also removes the archive', async () => {
+    mkdirSync(path.join(dir, 'dist', 'assets'), { recursive: true });
+    mkdirSync(path.join(dir, '.ovellum', 'orphans'), { recursive: true });
+    writeFileSync(
+      path.join(dir, 'ovellum.config.json'),
+      JSON.stringify({ mode: 'manual', input: './content', output: './dist' }),
+    );
+    writeFileSync(path.join(dir, 'dist', 'index.html'), '<html></html>');
+    writeFileSync(path.join(dir, 'dist', 'assets', 'ovellum.css'), 'body{}');
+    writeFileSync(path.join(dir, '.ovellum', 'orphans', 'x.md'), 'orphan\n');
+
+    const run = await runCli(['clean', '--confirm', '--orphans'], { cwd: dir });
+    expect(run.code).toBe(0);
+    expect(existsSync(path.join(dir, 'dist'))).toBe(false); // whole output gone
+    expect(existsSync(path.join(dir, '.ovellum', 'orphans'))).toBe(false); // archive removed with the flag
+  });
+});
