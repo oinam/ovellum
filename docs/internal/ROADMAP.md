@@ -286,9 +286,22 @@ A1 unlocks A2–A4.
       re-encode would be larger; SVG/GIF pass through. `packages/site/src/images.ts`;
       both copy seams in `build.ts` (`copyAsset`/`copyTree`, fast `cp -r` path
       kept for default builds); per-image failure → warn + plain copy; closing
-      `info` note (count + KB saved). **Deferred (slice 2):** format conversion
-      (→ webp/avif with `<img>`/`<picture>` src rewriting), per-page OG-image
-      generation, resize/max-width. The `site.minify` esbuild gating it was
+      `info` note (count + KB saved). **Slice 2 DEFERRED to backlog
+      (maintainer call 2026-06-30)** — design pass done: it's really **two
+      independent M-features**, build as separate slices when picked up. (a)
+      **Format conversion** — extend the optimize step to write raster → `.webp`
+      (`site.images.format`), plus a NEW post-sanitize rehype pass that
+      deterministically rewrites local `<img src="*.png|jpg">` → `.webp` (no
+      runtime coordination needed — converter + rewriter share the by-extension
+      rule). webp ~97% support → plain src-rewrite, no `<picture>` fallback
+      (simpler than dual files); avif is the less-supported add-on. No `<img>`
+      transform pass exists today (markdown `![]()` → plain `<img>`), so this
+      adds one. (b) **OG-image generation** — **net-new**: no `og:image`/
+      OpenGraph meta exists today (social cards rely on `headExtra`); generate a
+      per-page share card (title + site name on a branded bg) via sharp + emit
+      `og:image`/`twitter:image` (needs `site.baseUrl` for absolute URLs). This
+      is arguably its OWN roadmap item, not "image optimization." Also: resize/
+      max-width + responsive `srcset`. The `site.minify` esbuild gating B9 was
       patterned after is still planned.
 - [x] **B10 (M–L) — DONE 2026-06-29 (B10.1 + B10.2 + B10.3).** **Theme
       inheritance — adopt a parent project's design
