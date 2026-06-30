@@ -741,9 +741,7 @@ And curated **prompts** (guided workflows the client surfaces):
 claude mcp add ovellum -- npx ovellum mcp --cwd /path/to/project
 ```
 
-## Planned subcommands
-
-### `ovellum clean`
+## `ovellum clean`
 
 Removes generated output while preserving anything you wrote by hand. **Dry-run
 by default** — it lists what it *would* remove; pass `--confirm` to actually

@@ -570,10 +570,6 @@ Pick one via `site.codeTheme`:
 
 **Roadmap:**
 
-- A `site.theme` config to switch the **page** theme by name (Nord, Dracula,
-  …). Each theme ships its own gray ramp + role values plus a reversed-ramp
-  dark block, per the [token model](#token-model). Today only the default
-  page theme ships; `site.codeTheme` already switches the syntax palette.
 - Per-page `extraStyles` for one-off page-specific CSS.
 - A layout/partial system for overriding the page **HTML structure** (today the
   markup is generated in code).

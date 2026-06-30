@@ -1,7 +1,7 @@
 ---
 title: CLI リファレンス
 description: ovellum CLI のすべてのサブコマンドとフラグ。
-sourceHash: '5d0245332539a082'
+sourceHash: 'fb2f0972e7d3a9c7'
 ---
 
 # CLI リファレンス
@@ -729,7 +729,7 @@ IR ベースのツールはスナップショットを必要とします — 先
 claude mcp add ovellum -- npx ovellum mcp --cwd /path/to/project
 ```
 
-### `ovellum clean`
+## `ovellum clean`
 
 手で書いたものはすべて保持しつつ、生成された出力を削除します。**デフォルトは
 ドライラン** — 何を*削除するか*を一覧表示するだけです。実際に削除するには
