@@ -96,7 +96,10 @@ export function orderWarnings(warnings: BuildWarning[]): BuildWarning[] {
 export function countWarnings(warnings: BuildWarning[]): { warnings: number; notes: number } {
   let w = 0;
   let n = 0;
-  for (const entry of warnings) entry.severity === 'warning' ? w++ : n++;
+  for (const entry of warnings) {
+    if (entry.severity === 'warning') w++;
+    else n++;
+  }
   return { warnings: w, notes: n };
 }
 
