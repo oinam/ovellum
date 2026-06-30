@@ -30,15 +30,39 @@ Legend: `[ ]` not started · `[~]` in progress · `[x]` done · `[!]` blocked
 
 ---
 
-## Current state (2026-06-29)
+## Current state (2026-06-30)
 
-**Publish state (read this first):** **`ovellum@0.20.0` is live on npm**
-(2026-06-29). Released via `./publish.sh --npmotp=<code>`; signed tag
-`ovellum@0.20.0` + GitHub release + MCP Registry `io.github.oinam/ovellum@0.20.0`.
-**No pending changesets.** Tree clean, fully pushed. **Release gotcha (still
-true):** if `npm publish` fails `E404 PUT /ovellum`, that's npm's misleading code
-for an **expired auth token** — `npm login` (the `--npmotp` is only the publish
-2FA, not a login); publish.sh is idempotent so re-run after login.
+**Publish state (read this first):** **`ovellum@0.21.0` is live on npm**
+(2026-06-30). Released via `./publish.sh --npmotp=<code>`; signed tag
+`ovellum@0.21.0` + GitHub release + MCP Registry `io.github.oinam/ovellum@0.21.0`.
+**No pending changesets.** Tree clean, fully pushed.
+
+**0.21.0 (2026-06-30) — B9 image-features completion + two sibling slices
+(5 changesets, 504 tests):** **`site.images`** opt-in raster re-compression
+(slice 1, in place, lazy sharp); **`site.images.format:'webp'`** converts
+png/jpg/jpeg→sibling `.webp` + a post-sanitize `rehypeWebpImages` pass rewrites
+local raster `<img src>`→`.webp` (mutually-exclusive with `assetBaseUrl`;
+Markdown-body images only); **`site.ogImage`** per-page 1200×630 OpenGraph card
+via sharp SVG→PNG (`og-image.ts`) → `dist/og/<slug>.png` + the first og:/twitter:
+meta in `template.ts` (needs `site.baseUrl`; drafts/404 excluded; composable-
+landing OG = follow-up); **`site.minify`** author CSS/JS via lazy esbuild (bundled
+theme already minified; HTML minification deferred); **`ovellum clean`** dry-run
+removal of generated output (preserves hand-written + `@manual`-zone files + the
+orphan archive unless `--orphans`). sharp + esbuild are lazy optional peers,
+`external` in BOTH tsup configs (a bundled native module throws at load — sharp
+regression-guarded by a compiled-CLI smoke test). **Process lesson:** the
+per-feature gate ran build+test but skipped `lint`/`typecheck` → a B8
+`no-unused-expressions` ternary reached CI once + two `noUncheckedIndexedAccess`
+traps only `tsc -b` (not tsup) catches — **always run the full CI gate
+(lint+typecheck+test+build) before committing.**
+
+**Release gotcha (still true):** if `npm publish` fails `E404 PUT /ovellum`,
+that's npm's misleading code for an **expired auth token** — `npm login` (the
+`--npmotp` is only the publish 2FA). **New 0.21.0 variant:** the E404 can ALSO be
+a **mid-publish OTP expiry** — `prepublishOnly` runs `pnpm -w build` (full 7-pkg
+build); on a cold turbo cache that ate the OTP's ~30s window before the upload.
+Fix: warm the cache (`pnpm -w build` until FULL TURBO) then retry with a FRESH
+OTP. publish.sh is idempotent so re-run resumes (main already pushed by step 1).
 
 **0.20.0 (2026-06-29) — theme inheritance + build-output severity + the plugin
 API (8 changesets across the session, B10/B8/B1/D3):** **B10 theme inheritance
