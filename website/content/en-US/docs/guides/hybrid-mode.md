@@ -11,6 +11,36 @@ source; on every rebuild it merges those generated docs with the
 hand-written prose already in your `docs/` folder. Nothing of yours gets
 overwritten as long as it's tagged.
 
+## Why hybrid
+
+Documenting an API usually forces a choice between two tools, and each one
+breaks in a predictable way when the source changes:
+
+- **A pure generator** (the API-docs-from-source approach) regenerates
+  everything on each run, so any prose you hand-edit into the output is gone
+  next build. The workaround — keep narrative in *separate* files — is exactly
+  how docs drift: the reference updates, your hand-written pages don't, and
+  nobody notices until they contradict each other.
+- **Hand-written-only docs** never drift-protect themselves. When you change a
+  signature, the docs silently lie until a human spots it and edits the prose by
+  hand.
+
+Hybrid removes the choice: the generated reference and your narrative live in the
+**same file**, and a rebuild updates the reference *around* your prose. Here's
+what each approach does when the source changes:
+
+| When you… | Pure generator | Hand-written only | **Hybrid** |
+| --------- | -------------- | ----------------- | ---------- |
+| change a signature | reference updates; **hand edits lost** | reference goes **stale/wrong** | reference updates, **your note stays** |
+| rename / delete a symbol | reference updates; edits lost | doc silently wrong | reference updates; **your prose is [quarantined](/docs/concepts/orphans/), not lost** |
+| add a symbol | new section | nothing (manual) | new section, prose untouched |
+
+That last column is the whole product: docs that **never fall out of sync**,
+because the reference is always regenerated and your prose is never silently
+dropped. The rest of this guide is the mechanics; if you're moving from a
+generator or a hand-written site, the [migration guide](/docs/guides/migration/)
+maps your starting point.
+
 ## Setup
 
 ```json

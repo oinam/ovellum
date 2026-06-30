@@ -720,8 +720,14 @@ machine-readable-CLI groundwork (C3 ≈ D1).
       gaps; en+ja). Skipped the landing mode-explainer — redundant with the
       "Three Modes" feature card + hero (adding it would be the kind of chrome
       the design direction rejects).
-- [ ] **U7 (M)** **"Why hybrid" comparison section** in the hybrid guide —
-      before/after regeneration story vs TypeDoc and vs hand-written prose.
+- [x] **U7 (M) — DONE 2026-06-30.** **"Why hybrid" comparison section** in the
+      hybrid guide (en+ja): frames the two alternatives' failure modes (pure
+      generator → hand edits lost / prose-in-separate-files drift; hand-written →
+      silently stale) and a "when the source changes" table (change signature /
+      rename-delete / add symbol × generator / hand-written / hybrid) whose last
+      column is the "never fall out of sync" payoff; cross-links the migration
+      guide rather than duplicating its TypeDoc comparison. Website-only (no
+      changeset). **All U-series usability docs now done (U1–U8).**
 - [x] **U8 (M)** **Drafts — SHIPPED (v0.9.0, "the Editor" slice 1).** Design locked
       2026-06-14 (planning session). Model: a draft is **dev-visible, never
       published** — WIP you preview locally (and the team sees in source), then
