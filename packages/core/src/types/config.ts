@@ -635,6 +635,17 @@ export interface OvellumSiteConfig {
    */
   images?: OvellumImagesConfig;
   /**
+   * Opt-in minification of **author-supplied** `.css` / `.js` assets during the
+   * build — content-folder passthrough files and a custom
+   * {@link OvellumSiteConfig.templateDir}'s `style.css` / `script.js`. The
+   * bundled default theme is already minified, so this only touches your own
+   * assets; HTML pages are not minified (a separate concern). Uses
+   * [esbuild](https://esbuild.github.io) as an **optional peer dependency**
+   * (`npm i esbuild`), lazy-loaded only when `true`. Unset / `false` = copied
+   * verbatim.
+   */
+  minify?: boolean;
+  /**
    * File globs to exclude from the manual-mode site — both Markdown pages and
    * passthrough assets, honored by `build` **and** `check`. A pattern without
    * `/` matches the basename at any depth (`README.md`, `*.draft.md`); a

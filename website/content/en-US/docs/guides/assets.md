@@ -119,6 +119,30 @@ images it optimized and the bytes saved.
 > Ovellum: `npm i sharp`. (It's left out of the default install so a docs site
 > that doesn't optimize images stays lean.)
 
+#### Minifying CSS and JS
+
+If you ship your own `.css` / `.js` — files in your content folder, or a custom
+[`templateDir`](/docs/guides/themes/#bring-your-own-template-directory)'s
+`style.css` / `script.js` — set [`site.minify`](/docs/reference/config/) to
+minify them during the build:
+
+```ts
+site: {
+  minify: true,
+}
+```
+
+It only touches **your** assets: the bundled default theme already ships
+minified, and HTML pages aren't minified. A minified output that would be larger
+than the original is discarded (the original is kept), and a file that fails to
+minify is copied as-is with a warning. The build reports how many assets it
+minified and the bytes saved.
+
+> Minification uses [**esbuild**](https://esbuild.github.io), an **optional**
+> dependency loaded only when `site.minify` is `true` — install it with
+> `npm i esbuild`. Like image optimization, it's left out of the default install
+> so a docs site that doesn't need it stays lean.
+
 ### PDFs, zips, and other downloads
 
 A plain link — the browser opens or downloads it:

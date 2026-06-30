@@ -479,6 +479,9 @@ export function validateUserConfig(input: unknown): OvellumUserConfig {
         throw new ConfigError('`site.images.quality` must be an integer between 1 and 100.');
       }
     }
+    if (s.minify !== undefined && typeof s.minify !== 'boolean') {
+      throw new ConfigError('`site.minify` must be a boolean.');
+    }
     if (s.css !== undefined) {
       // One stylesheet URL or an array of them, injected as `<link>`s. Same
       // scheme guard as `site.font.source` — reject script-bearing schemes;

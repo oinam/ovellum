@@ -223,6 +223,12 @@ describe('validateUserConfig', () => {
     expect(() => validateUserConfig({ site: { images: { quality: 75.5 } } })).toThrow(/quality/);
   });
 
+  it('accepts a boolean site.minify and rejects a non-boolean', () => {
+    expect(validateUserConfig({ site: { minify: true } })).toEqual({ site: { minify: true } });
+    expect(validateUserConfig({ site: { minify: false } })).toEqual({ site: { minify: false } });
+    expect(() => validateUserConfig({ site: { minify: 'yes' } })).toThrow(/site\.minify/);
+  });
+
   it('accepts site.css as a URL or array of URLs, rejects empties and script schemes', () => {
     expect(validateUserConfig({ site: { css: '/theme.css' } })).toEqual({
       site: { css: '/theme.css' },

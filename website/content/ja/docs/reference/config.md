@@ -1,7 +1,7 @@
 ---
 title: 設定
 description: ovellum.config.{json,ts,js} のすべてのフィールドと、その型・デフォルト値・効果。
-sourceHash: '6fbdacd6b5893fce'
+sourceHash: '29fde0563ade609d'
 ---
 
 # 設定
@@ -119,6 +119,7 @@ interface OvellumSiteConfig {
   assetBaseUrl?: string;
   templateDir?: string;
   images?: { quality?: number };
+  minify?: boolean;
   search: { enabled: boolean };
   pageMeta: { readingTime: boolean; lastModified: boolean };
   sidebar: { collapse: boolean };
@@ -165,6 +166,7 @@ interface OvellumSiteConfig {
 | `assetBaseUrl`   | `string?`                           | `undefined`                   | `publicDir` のアセット用の CDN／ベース URL（例: `'https://cdn.example.com/site'`）。**設定すると**、Ovellum は `publicDir` のローカルコピーをやめ（その内容は CDN でホストします）、レンダリング済み HTML 内のそれらのファイルへの参照を CDN に書き換えます: `/img/logo.svg` → `https://cdn.example.com/site/img/logo.svg`。どちらの場合も、作者は同じルート絶対パスを書きます。Vite の `base` / Next の `assetPrefix` のようなものです。`publicDir` の*外*のアセットはそのままです。（クエリ文字列付きや `srcset` の参照は書き換えられません。） |
 | `templateDir`    | `string?`                           | `undefined`                   | カスタムテンプレートディレクトリへのパス（プロジェクトルートからの相対）。その中のアセットがバンドルのテーマを**置き換え**、ファイル単位でフォールバックします: `style.css` → `/assets/ovellum.css`、`script.js` → `/assets/ovellum.js`、`fonts/` → `/assets/fonts/`。一部だけ用意すれば残りはデフォルトにフォールバックします。「自分のテンプレートディレクトリを持ち込む」 — フォークせずに CSS/JS レイヤーを完全に制御できます。**ページの HTML はコードで生成される**ので、これはスタイリング + クライアント挙動を上書きします（`style.css` は同じ `ov-*` クラスを対象にします）。マークアップは対象外です。トークンの調整には [`css`](#css) や [`palette: 'bare'`](#palette) を優先してください。[テーマ設定ガイド](/ja/docs/guides/themes/#テンプレートディレクトリを持ち込む)を参照。 |
 | `images`         | `{ quality? }?`                     | `undefined`                   | **オプトインの画像最適化。** 設定すると、ラスターアセット（`.jpg`/`.jpeg`/`.png`/`.webp`/`.avif`）がビルド時に**その場で**再エンコードされます — 同じパス・同じ形式で、バイト数だけ小さく — なので `<img src>` は変わりません。`quality`（1〜100、デフォルト `80`）は非可逆形式に適用され、PNG は可逆で再圧縮されます。再エンコードのほうが大きくなる場合は元を保持し、SVG/GIF は通過します。**オプションの** `sharp` ピア依存（`npm i sharp`）を使い、設定したときだけ遅延読み込みされるので、デフォルトのインストールは軽量なままです。[アセット → 画像の最適化](/ja/docs/guides/assets/#画像の最適化)を参照。 |
+| `minify`         | `boolean?`                          | `false`                       | **オプトインの CSS/JS 縮小。** `true` のとき、**作者が用意した** `.css`/`.js` がビルド時に縮小されます — コンテンツフォルダのパススルーファイルと、カスタムな [`templateDir`](#templatedir) の `style.css`/`script.js`。バンドルのテーマはすでに縮小済みで、HTML ページは対象外なので、影響するのはあなた自身のアセットだけです。縮小後が元より大きい場合は破棄し、縮小に失敗したファイルは警告とともにそのままコピーされます。**オプションの** `esbuild` ピア依存（`npm i esbuild`）を使い、`true` のときだけ遅延読み込みされます。[アセット → CSS と JS の縮小](/ja/docs/guides/assets/#css-と-js-の縮小)を参照。 |
 | `publicDir`      | `string`                            | `'public'`                    | **予約済み**の静的アセットフォルダ（`input` ルート直下の単一の名前）。その内容は**出力ルートにそのままコピー**されます — `public/favicon.ico` → `/favicon.ico`、`public/img/logo.svg` → `/img/logo.svg` — SSG の慣習です（Next/Astro/Vite/VitePress/Hugo）。ルートで配信されるファイル（favicon、`robots.txt`、`CNAME`、OG 画像）やその他の静的アセットに使います。中身は一切処理されません（ページもサイドバーもなし。`.md` ですらそのままコピーされます）。Ovellum の予約フォルダ名の最初のもので、それの*外*にある静的ファイルはパスを保ったまま通過します。 |
 | `ignoreFolders`  | `string[]`                          | `[]`                          | manual モードのサイトから完全に除外するフォルダ**名**（任意の深さでマッチ） — サイドバーに出ず、レンダリングもされず、出力にもコピーされません。WIP／プライベートなディレクトリに使います。フォルダは `_meta.json` の `"hidden": true` で自己非表示にもでき、単一ページはフロントマターの `draft: true` で非表示にできます。（`public/` のようなアセット専用フォルダは、すでに自動的にサイドバーから除外されています。） |
 | `ignoreFiles`    | `string[]`                          | `[]`                          | 除外するファイルの **glob** — Markdown ページとパススルーのアセットの両方が対象で、`build` **と** `check` の双方で尊重されます。スラッシュなしのパターンは任意の深さで basename にマッチし（`README.md`、`*.draft.md`）、スラッシュ付きのパターンは `input` を基準とした相対パスにマッチします（`drafts/**`）。`*`、`**`、`?` をサポートします。単一ファイル（例: リポジトリの `README.md`）を、そのファイルに触れずに除外するのに使えます。**常に自動除外**（設定不要）: ドットファイル、`node_modules`、パッケージのマニフェスト／ロックファイル、Ovellum の設定、出力ディレクトリ自身 — これにより `input: "."` でもプロジェクトファイルが漏れません。 |

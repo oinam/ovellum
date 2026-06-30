@@ -5,6 +5,7 @@ import { fileURLToPath } from 'node:url';
 import matter from 'gray-matter';
 import type { PluggableList } from 'unified';
 import { isOptimizableImage, optimizeImageFile } from './images.js';
+import { isMinifiable, minifyFile } from './minify.js';
 import type {
   BuildWarning,
   OvellumConfig,
@@ -197,6 +198,30 @@ export async function buildSite(options: BuildSiteOptions): Promise<BuildSiteRes
   const imagesCfg = site.images;
   const imageQuality = imagesCfg?.quality ?? 80;
   const imageStats = { count: 0, savedBytes: 0 };
+  // Opt-in CSS/JS minification of author-supplied assets (`site.minify`, B9
+  // sibling). The bundled theme is already minified at our package build, so
+  // this only touches content-folder `.css`/`.js` and a templateDir's
+  // style.css/script.js. A transform failure degrades to a plain copy + warning.
+  const minifyCfg = site.minify === true;
+  const minifyStats = { count: 0, savedBytes: 0 };
+  const minifyAsset = async (srcAbs: string, destAbs: string): Promise<void> => {
+    try {
+      const { minified, savedBytes } = await minifyFile(srcAbs, destAbs);
+      if (minified) {
+        minifyStats.count++;
+        minifyStats.savedBytes += savedBytes;
+      }
+    } catch (err) {
+      warnings.push(
+        warn(
+          `Minification failed for ${path.relative(cwd, srcAbs)} — copied as-is: ${
+            err instanceof Error ? err.message : String(err)
+          }`,
+        ),
+      );
+      await copyFile(srcAbs, destAbs);
+    }
+  };
   const copyAsset = async (srcAbs: string, destAbs: string): Promise<void> => {
     if (imagesCfg && isOptimizableImage(srcAbs)) {
       try {
@@ -216,6 +241,10 @@ export async function buildSite(options: BuildSiteOptions): Promise<BuildSiteRes
         );
       }
     }
+    if (minifyCfg && isMinifiable(srcAbs)) {
+      await minifyAsset(srcAbs, destAbs);
+      return;
+    }
     await copyFile(srcAbs, destAbs);
   };
   // Recursively copy a directory, routing image files through copyAsset. Used
@@ -234,7 +263,7 @@ export async function buildSite(options: BuildSiteOptions): Promise<BuildSiteRes
   await mkdir(assetsAbs, { recursive: true });
   // `site.templateDir` (B1 slice 3) replaces the bundled CSS/JS/fonts per file.
   const userTemplateDir = site.templateDir ? path.resolve(cwd, site.templateDir) : undefined;
-  await writeStaticAssets(assetsAbs, userTemplateDir);
+  await writeStaticAssets(assetsAbs, userTemplateDir, minifyCfg ? minifyAsset : undefined);
 
   // publicDir → output ROOT (the SSG norm: `public/favicon.ico` → `/favicon.ico`),
   // copied verbatim, before page render (so a generated route wins a same-name
@@ -661,6 +690,10 @@ export async function buildSite(options: BuildSiteOptions): Promise<BuildSiteRes
     warnings.push(
       info(`Optimized ${imageStats.count} image(s), saving ${savedKb} KB.`),
     );
+  }
+  if (minifyStats.count > 0) {
+    const savedKb = (minifyStats.savedBytes / 1024).toFixed(1);
+    warnings.push(info(`Minified ${minifyStats.count} asset(s), saving ${savedKb} KB.`));
   }
 
   return {
@@ -1245,25 +1278,37 @@ function firstH1(content: string): string | undefined {
   return m ? m[1]!.trim() : undefined;
 }
 
-async function writeStaticAssets(assetsAbs: string, userTemplateDir?: string): Promise<void> {
+async function writeStaticAssets(
+  assetsAbs: string,
+  userTemplateDir?: string,
+  // Minify a user-supplied template asset (`site.minify`). Only called for files
+  // that came from `userTemplateDir` — the bundled fallback is already minified.
+  minifyUserAsset?: (srcAbs: string, destAbs: string) => Promise<void>,
+): Promise<void> {
   const defaultDir = resolveTemplateDir();
   // Per asset, prefer the user template dir's version (B1 slice 3 — "bring your
   // own template directory"); fall back to the bundled default so a partial
   // override (e.g. only `style.css`) still produces a complete asset set.
-  const pick = (rel: string): string => {
+  const pick = (rel: string): { path: string; fromUser: boolean } => {
     if (userTemplateDir) {
       const candidate = path.join(userTemplateDir, rel);
-      if (existsSync(candidate)) return candidate;
+      if (existsSync(candidate)) return { path: candidate, fromUser: true };
     }
-    return path.join(defaultDir, rel);
+    return { path: path.join(defaultDir, rel), fromUser: false };
   };
-  await copyFile(pick('style.css'), path.join(assetsAbs, 'ovellum.css'));
-  await copyFile(pick('script.js'), path.join(assetsAbs, 'ovellum.js'));
+  const writeAsset = async (rel: string, destName: string): Promise<void> => {
+    const { path: src, fromUser } = pick(rel);
+    const dest = path.join(assetsAbs, destName);
+    if (fromUser && minifyUserAsset) await minifyUserAsset(src, dest);
+    else await copyFile(src, dest);
+  };
+  await writeAsset('style.css', 'ovellum.css');
+  await writeAsset('script.js', 'ovellum.js');
   // Bundled webfonts (Inter, Geist) for the font picker. The @font-face rules
   // in ovellum.css reference them at fonts/… relative to the stylesheet, so
   // they must land in assets/fonts/. Lazy by spec — the browser only fetches a
   // file when a page actually renders in that family (data-font=inter|geist).
-  const fontsDir = pick('fonts');
+  const fontsDir = pick('fonts').path;
   if (existsSync(fontsDir)) {
     await cp(fontsDir, path.join(assetsAbs, 'fonts'), { recursive: true });
   }

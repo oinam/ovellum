@@ -591,3 +591,51 @@ describe('ovellum build — image optimization (site.images)', () => {
     expect(outSize).toBeLessThan(srcSize);
   });
 });
+
+/**
+ * `site.minify` through the COMPILED CLI — the regression guard for the same
+ * bundling trap as the image test: esbuild must stay external, or the bundled
+ * copy can't load and minification silently no-ops.
+ */
+describe('ovellum build — asset minification (site.minify)', () => {
+  let dir: string;
+  /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
+  let esbuild: any = null;
+  beforeEach(async () => {
+    dir = mkdtempSync(path.join(tmpdir(), 'ovellum-min-'));
+    try {
+      esbuild = await import('esbuild' as string);
+    } catch {
+      esbuild = null;
+    }
+  });
+  afterEach(async () => {
+    await rm(dir, { recursive: true, force: true });
+  });
+
+  it('minifies a content CSS asset through the compiled CLI', async () => {
+    if (!esbuild) return; // esbuild not installed — skip
+    mkdirSync(path.join(dir, 'content'), { recursive: true });
+    writeFileSync(path.join(dir, 'content', 'index.md'), '# Hi\n\nBody.\n');
+    const srcCss = path.join(dir, 'content', 'style.css');
+    writeFileSync(
+      srcCss,
+      '/* a long comment that minification removes */\n.a {\n  color: rebeccapurple;\n  padding: 8px   16px;\n}\n.b { margin: 0; }\n',
+    );
+    writeFileSync(
+      path.join(dir, 'ovellum.config.json'),
+      JSON.stringify({ mode: 'manual', input: './content', output: './dist', site: { minify: true } }),
+    );
+
+    const { code, stderr } = await runCli(['build'], { cwd: dir });
+    expect(code).toBe(0);
+    // The bundling-trap failure mode: a bundled esbuild can't load → warns
+    // "needs the optional `esbuild`" and copies the CSS unminified.
+    expect(stderr).not.toMatch(/needs the optional .?esbuild/);
+    expect(stderr).toMatch(/Minified 1 asset/);
+
+    const out = await readFile(path.join(dir, 'dist', 'style.css'), 'utf8');
+    expect(out).not.toContain('a long comment');
+    expect(Buffer.byteLength(out)).toBeLessThan((await readFile(srcCss)).byteLength);
+  });
+});
