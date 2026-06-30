@@ -674,12 +674,26 @@ machine-readable-CLI groundwork (C3 ≈ D1).
 
 ## 3. Usability
 
-- [ ] **U1 (M)** **Troubleshooting page** (`/docs/guides/troubleshooting/`):
-      zones not merging, unbalanced tags, config not loading, basePath/asset
-      gotchas, orphan recovery walkthrough.
-- [ ] **U2 (M)** **Migration guide** (`/docs/guides/migration/`): from
-      TypeDoc, from hand-written-only, with a short capability comparison
-      (generation / merge / orphan handling). The skeptical-adopter page.
+- [x] **U1 (M) — DONE 2026-06-30.** **Troubleshooting page**
+      (`guides/troubleshooting`, en+ja): protected zones not merging (id-less
+      positional warning + `--strict` `positional-zone`/`stale-anchor`),
+      unbalanced `@manual` tags (nested/stray/unclosed errors), the
+      "my prose disappeared → orphans" recovery walkthrough
+      (`ovellum orphans [--stale|--reattach]`, present/gone/unknown status),
+      config not loading (missing ≠ error → `config: (defaults)`; invalid → exit
+      3; the `defineConfig` value-import vs scaffold `import type` gotcha),
+      broken asset paths (relative-vs-root-absolute pretty-URL trap, basePath,
+      publicDir, assetBaseUrl), `dev` manual-only, and the exit-code table. Real
+      error strings throughout. Website-only (no changeset).
+- [x] **U2 (M) — DONE 2026-06-30.** **Migration guide** (`guides/migration`,
+      en+ja): the three-mode comparison table + the hybrid pitch (prose in the
+      generated file, survives regen, orphan-quarantined). Three "from" paths —
+      **TypeDoc** (auto ≈ it; hybrid is the differentiator; ts-morph + JSDoc/TSDoc
+      tags), **hand-written Markdown** (manual mode = full SSG, concrete feature
+      list), and **a hosted docs platform** (ownership/portability/AI-native MCP
+      angle — competitor **NOT named**, per COMPETITIVE rule). Plus a 6-step
+      "bringing your content across" (init → drop md → `_meta.json` → frontmatter
+      → root-absolute assets → `check`). Website-only (no changeset).
 - [x] **U3 (S) — DONE 2026-06-27.** **Init scaffolds a protected-zone example**
       in hybrid mode (`renderStarterIndex` adds a `@manual id="welcome-note"`
       zone with "Add your own notes here — this block survives every rebuild";
