@@ -8,7 +8,8 @@ opportunity (post-`v1.0.0`). We never name the competitor in any public or
 shipped surface — refer to it here as "the incumbent."
 
 Captured 2026-06-26 (against `ovellum@0.17.0`). Re-survey before each major
-planning cycle.
+planning cycle. Sibling analysis: `COMPETITIVE-OPENWIKI.md` (LangChain's
+agent-run docs CLI — complementary, OSS, naming it is fine).
 
 ## Our edge (already ahead, or things they can't match for free)
 
