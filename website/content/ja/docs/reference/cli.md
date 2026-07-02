@@ -1,7 +1,7 @@
 ---
 title: CLI リファレンス
 description: ovellum CLI のすべてのサブコマンドとフラグ。
-sourceHash: 'fb2f0972e7d3a9c7'
+sourceHash: '8c769f787bc435e8'
 ---
 
 # CLI リファレンス
@@ -24,6 +24,7 @@ sourceHash: 'fb2f0972e7d3a9c7'
 | `check`    | available | 設定を検証し、リンク切れの内部リンクを確認し、安全でない URL を警告します。    |
 | `upgrade`  | available | npm に新しい Ovellum がないか確認し、インストールします。                            |
 | `orphans`  | available | 隔離された手動ブロックを一覧表示します（`--stale` / `--json` 対応）。              |
+| `agents`   | available | `AGENTS.md` / `CLAUDE.md` の標準「Ovellum docs」セクションを追加または更新します（冪等。CI には `--check`）。 |
 | `mcp`      | available | Ovellum を stdio 上の MCP サーバーとして起動し、AI エージェントから操作できるようにします。 |
 | `clean`    | available | 手動ファイルを保持したまま、自動生成された出力を削除します（デフォルトはドライラン）。 |
 
@@ -63,7 +64,9 @@ ovellum init [--cwd <dir>] [--yes] [--force]
 - `ovellum.config.json`
 - `<input>/index.md`（manual + hybrid モードのみ）。親しみやすいスターター付き。
 - `AGENTS.md` — AI コーディングエージェント向けの、モードに応じた指示（保護ゾーンの契約 +
-  コマンド）。[自動化](/ja/docs/guides/automation/)を参照。
+  コマンド）。[自動化](/ja/docs/guides/automation/)を参照。既存の `AGENTS.md` がある
+  場合は、標準の「Ovellum docs」セクションだけを追加または更新します —
+  [`ovellum agents`](#ovellum-agents) と同じ動作です。
 - `.gitignore` — 未記載の場合に `<output>/` と `.orphans/` を追記します。
 
 選択したモードに応じた番号付きの次のステップ一覧を表示します。
@@ -756,6 +759,59 @@ ovellum clean [--cwd <dir>] [--config <path>] [--confirm] [--orphans]
 | ----------- | ------- | ----------- |
 | `--confirm` | off     | 実際に削除します。指定しなければドライランです。 |
 | `--orphans` | off     | `.ovellum/orphans/` も削除します。 |
+
+## `ovellum agents`
+
+プロジェクトのトップレベルのエージェント指示ファイル — `AGENTS.md` および/または
+`CLAUDE.md` — に、標準の**「Ovellum docs」セクション**を追加または更新します。
+このセクションは、このリポジトリでのドキュメントの仕組みをあらゆるコーディング
+エージェントに伝えます: どのディレクトリが再生成されるか、保護ゾーンの契約
+（hybrid）、実行すべきコマンドとその終了コード、MCP サーバーの場所。内容は設定
+（`mode`、`input`、`output`、`protect.orphanDir`）からレンダリングされるので、
+プロジェクトの構成が変わっても正確なままです。
+
+このコマンドは冪等かつ外科的です:
+
+- プロジェクトルートに存在する `AGENTS.md` / `CLAUDE.md` を更新します — 両方が
+  存在すれば両方。どちらもなければ、セクションだけを含む `AGENTS.md` を作成します。
+- 置き換えるのは `## Ovellum docs` セクション（見出しから次の `#`/`##` 見出し、
+  またはファイル末尾まで）だけで、その周りはそのまま保持されます。
+- セクションがすでに最新なら**何も書き込みません** — いつでも、フックからでも、
+  CI でも安全に再実行できます。
+
+### シノプシス
+
+```
+ovellum agents [--cwd <dir>] [--config <path>] [--check]
+```
+
+### フラグ
+
+| フラグ            | 型      | デフォルト       | 備考                                                                     |
+| ----------------- | ------- | --------------- | ------------------------------------------------------------------------ |
+| `--cwd <dir>`     | path    | `process.cwd()` | プロジェクトルート。                                                       |
+| `--config <path>` | path    | 自動検出         | 検出をスキップしてこのファイルを直接読み込みます。                              |
+| `--check`         | boolean | `false`         | 検証のみ: いずれかの対象ファイルでセクションが欠落・古い場合に `1` で終了。何も書き込みません。 |
+
+### 出力
+
+```
+ovellum agents:
+  AGENTS.md  Ovellum docs section updated
+  CLAUDE.md  already current
+```
+
+### 終了コード
+
+| Code | 意味                                                         |
+| ---- | ------------------------------------------------------------ |
+| `0`  | セクションを書き込んだ、またはすべて最新。                          |
+| `1`  | `--check` がセクションの欠落・古さを検出。                         |
+| `3`  | `ConfigError` — 設定スキーマが不正、ファイルが見つからない、など。   |
+
+[`ovellum init`](#ovellum-init) も、既存の `AGENTS.md` がある場合に同じ更新を
+行うので、新しくスキャフォールドしたプロジェクトと長く運用しているプロジェクトが
+同じセクションに収束します。
 
 ## 共通フラグ
 

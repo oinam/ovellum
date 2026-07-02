@@ -3,6 +3,7 @@ import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { confirm, input, select } from '@inquirer/prompts';
 import { defineCommand } from 'citty';
+import { renderOvellumDocsSection, upsertOvellumDocsSection } from './agents.js';
 
 /**
  * Scaffold a new Ovellum project in the current (or given) directory.
@@ -94,10 +95,24 @@ export const initCommand = defineCommand({
 
     // AGENTS.md — instructions for AI coding agents (the protected-zone contract
     // + commands). Written only if absent, so we never clobber a user's own.
+    // When one already exists, only the canonical "## Ovellum docs" section is
+    // added or refreshed (surrounding content untouched) — same as `ovellum agents`.
     const agentsPath = path.join(cwd, 'AGENTS.md');
     if (!existsSync(agentsPath)) {
       await writeFile(agentsPath, renderAgentsMd(answers), 'utf8');
       writes.push('AGENTS.md');
+    } else {
+      const raw = await readFile(agentsPath, 'utf8');
+      const section = renderOvellumDocsSection({
+        mode: answers.mode,
+        input: answers.input,
+        output: answers.output,
+      });
+      const { content, changed } = upsertOvellumDocsSection(raw, section);
+      if (changed) {
+        await writeFile(agentsPath, content, 'utf8');
+        writes.push('AGENTS.md (Ovellum docs section)');
+      }
     }
 
     const lines = [

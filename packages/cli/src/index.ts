@@ -1,4 +1,5 @@
 import { defineCommand, runMain } from 'citty';
+import { agentsCommand } from './commands/agents.js';
 import { buildCommand } from './commands/build.js';
 import { checkCommand } from './commands/check.js';
 import { cleanCommand } from './commands/clean.js';
@@ -31,6 +32,7 @@ const main = defineCommand({
     check: checkCommand,
     clean: cleanCommand,
     orphans: orphansCommand,
+    agents: agentsCommand,
     mcp: mcpCommand,
     upgrade: upgradeCommand,
   },

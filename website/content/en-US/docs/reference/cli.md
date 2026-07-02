@@ -23,6 +23,7 @@ package manager's task runner.
 | `check`    | available | Validate config + check for broken internal links + flag unsafe URLs.    |
 | `upgrade`  | available | Check npm for a newer Ovellum and install it.                            |
 | `orphans`  | available | List quarantined manual blocks (with `--stale` / `--json`).              |
+| `agents`   | available | Add or refresh the canonical "Ovellum docs" section in `AGENTS.md` / `CLAUDE.md` (idempotent; `--check` for CI). |
 | `mcp`      | available | Run Ovellum as an MCP server over stdio so an AI agent can drive it.      |
 | `clean`    | available | Remove auto-generated outputs while preserving manual files (dry-run by default). |
 
@@ -62,7 +63,9 @@ Writes only files that don't already exist (unless `--force`):
 - `ovellum.config.json`
 - `<input>/index.md` (manual + hybrid modes only) with a friendly starter.
 - `AGENTS.md` — mode-aware instructions for AI coding agents (the protected-zone
-  contract + commands). See [Automation](/docs/guides/automation/).
+  contract + commands). See [Automation](/docs/guides/automation/). When an
+  `AGENTS.md` already exists, only the canonical "Ovellum docs" section is added
+  or refreshed — the same upsert as [`ovellum agents`](#ovellum-agents).
 - `.gitignore` — appends `<output>/` and `.orphans/` if absent.
 
 Prints a numbered next-steps list keyed to the chosen mode.
@@ -769,6 +772,61 @@ be deliberate, so it never happens without an explicit flag.
 | ----------- | ------- | ----------- |
 | `--confirm` | off     | Actually delete. Without it, clean is a dry run. |
 | `--orphans` | off     | Also remove `.ovellum/orphans/`. |
+
+## `ovellum agents`
+
+Add or refresh the canonical **"Ovellum docs" section** in the project's
+top-level agent-instruction files — `AGENTS.md` and/or `CLAUDE.md`. The section
+tells any coding agent how documentation works in this repository: which
+directory is regenerated, the protected-zone contract (hybrid), which commands
+to run and their exit codes, and where the MCP server is. Its content is
+rendered from your config (`mode`, `input`, `output`, `protect.orphanDir`), so
+it stays truthful as the project's setup changes.
+
+The command is idempotent and surgical:
+
+- Whichever of `AGENTS.md` / `CLAUDE.md` exists at the project root is updated —
+  both when both exist. When neither does, `AGENTS.md` is created containing
+  only the section.
+- Only the `## Ovellum docs` section (its heading through to the next `#`/`##`
+  heading, or end of file) is replaced; everything around it is preserved
+  verbatim.
+- When the section is already current, **nothing is written** — safe to re-run
+  any time, from a hook, or in CI.
+
+### Synopsis
+
+```
+ovellum agents [--cwd <dir>] [--config <path>] [--check]
+```
+
+### Flags
+
+| Flag              | Type    | Default         | Notes                                                                    |
+| ----------------- | ------- | --------------- | ------------------------------------------------------------------------ |
+| `--cwd <dir>`     | path    | `process.cwd()` | Project root.                                                            |
+| `--config <path>` | path    | auto-discovered | Skip discovery and load this file directly.                              |
+| `--check`         | boolean | `false`         | Verify only: exit `1` if the section is missing or stale in any target file; write nothing. |
+
+### Output
+
+```
+ovellum agents:
+  AGENTS.md  Ovellum docs section updated
+  CLAUDE.md  already current
+```
+
+### Exit codes
+
+| Code | Meaning                                                     |
+| ---- | ----------------------------------------------------------- |
+| `0`  | Section written, or already current everywhere.             |
+| `1`  | `--check` found a missing or stale section.                 |
+| `3`  | `ConfigError` — config schema invalid, file not found, etc. |
+
+[`ovellum init`](#ovellum-init) performs the same upsert when an `AGENTS.md`
+already exists, so a freshly scaffolded project and a long-lived one converge
+on the same section.
 
 ## Common flags
 

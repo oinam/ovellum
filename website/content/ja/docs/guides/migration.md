@@ -1,7 +1,7 @@
 ---
 title: Ovellum への移行
 description: TypeDoc から、手書きの Markdown サイトから、あるいはホスト型ドキュメントプラットフォームから — 何が変わり、Ovellum が何を加え、どうコンテンツを持ち込むか。
-sourceHash: '5582beb5d425fac5'
+sourceHash: 'edba40621b372d50'
 ---
 
 # Ovellum への移行
@@ -80,6 +80,37 @@ Ovellum では生成ファイルの*中*に、`@manual` ゾーンとして物語
 ディレクトリにコピーし、古いナビ設定をフォルダごとの `_meta.json` に変換し、フロントマター
 （`title`、`description`、`tags`、`permalink`）を保持または追加し、`ovellum check` で
 リンク切れを捕まえます。
+
+## エージェント生成の wiki から
+
+新しいタイプのツール（例えば OpenWiki）は、LLM エージェントにコードベース*について*の
+Markdown wiki をリポジトリ内のフォルダに書かせます — アーキテクチャノート、ワーク
+フロー、クイックスタート。有用な文章ですが、ただのファイルの集まりです: レンダラー
+なし、リンクチェックなし、検索なし、公開の手段なし。
+
+Ovellum の manual モードは、ジェネレーターのワークフローに触れることなく、その
+フォルダを本物のドキュメントサイトに変えます:
+
+```ts
+// ovellum.config.ts
+export default {
+  name: 'wiki',
+  mode: 'manual',
+  input: 'openwiki', // 生成された wiki をそのまま指す
+  output: 'dist',
+  site: { title: 'Project wiki' },
+} satisfies OvellumUserConfig;
+```
+
+`ovellum build` はフォルダ構造からのナビゲーション、検索、テーマ、`llms.txt` と
+ページごとの `.md` ミラーを与え、`ovellum check` は wiki 内部のリンクを検証します
+（エージェントもリンク切れを書きます）。wiki ツールは Markdown を更新し続け、
+Ovellum はそれをレンダリングし続けます。
+
+さらに進めるなら: ドキュメントの*リファレンス*部分がエージェントの記述ではなく
+ソースから来るべきなら、[hybrid モード](/ja/docs/guides/hybrid-mode/)に切り替え、
+エージェントには MCP サーバーの保護ゾーンを通じて書かせてください —
+[エージェントにドキュメントを書かせる](/ja/docs/guides/automation/#エージェントにドキュメントを書かせる)を参照。
 
 ## ホスト型ドキュメントプラットフォームから
 

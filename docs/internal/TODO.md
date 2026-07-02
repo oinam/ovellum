@@ -30,12 +30,26 @@ Legend: `[ ]` not started · `[~]` in progress · `[x]` done · `[!]` blocked
 
 ---
 
-## Current state (2026-06-30)
+## Current state (2026-07-02)
 
 **Publish state (read this first):** **`ovellum@0.21.0` is live on npm**
 (2026-06-30). Released via `./publish.sh --npmotp=<code>`; signed tag
 `ovellum@0.21.0` + GitHub release + MCP Registry `io.github.oinam/ovellum@0.21.0`.
-**No pending changesets.** Tree clean, fully pushed.
+**One pending changeset** (`ovellum-agents.md`, minor) — unreleased work below.
+
+**Unreleased (2026-07-02) — OpenWiki-inspired slice, from the
+`COMPETITIVE-OPENWIKI.md` analysis (all four "adopt" items shipped):**
+**`ovellum agents`** (`commands/agents.ts`; exported `renderOvellumDocsSection`
++ `upsertOvellumDocsSection` + `syncAgentsFiles`; `agents-command.test.ts` 15) —
+idempotent canonical `## Ovellum docs` section in top-level
+`AGENTS.md`/`CLAUDE.md`, `--check` CI gate; `init` now upserts the section into
+an existing `AGENTS.md` instead of skipping. Docs (en + ja 1:1, hashes
+stamped): cli.md reference section + table row; automation.md gained
+"Keeping docs fresh in CI" (PR-gate + scheduled regenerate-and-PR workflows)
+and "Letting an agent write your docs" (write_zone safety story);
+migration.md gained "From an agent-generated wiki" (render an OpenWiki-style
+folder with manual mode). Full gate (lint+typecheck+test+build) green;
+website `check --strict` clean.
 
 **0.21.0 (2026-06-30) — B9 image-features completion + two sibling slices
 (5 changesets, 504 tests):** **`site.images`** opt-in raster re-compression

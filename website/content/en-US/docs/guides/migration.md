@@ -83,6 +83,38 @@ copy your Markdown into the content directory, translate your old nav config to
 per-folder `_meta.json`, keep or add frontmatter (`title`, `description`,
 `tags`, `permalink`), and run `ovellum check` to catch broken links.
 
+## From an agent-generated wiki
+
+A newer breed of tool (OpenWiki, for example) has an LLM agent write a Markdown
+wiki *about* your codebase into a folder in your repo — architecture notes,
+workflows, a quickstart. Useful prose, but it's plain files: no renderer, no
+link checking, no search, no publishing story.
+
+Ovellum's manual mode turns that folder into a real docs site without touching
+the generator's workflow:
+
+```ts
+// ovellum.config.ts
+export default {
+  name: 'wiki',
+  mode: 'manual',
+  input: 'openwiki', // point at the generated wiki as-is
+  output: 'dist',
+  site: { title: 'Project wiki' },
+} satisfies OvellumUserConfig;
+```
+
+`ovellum build` gives you navigation from the folder structure, search, themes,
+`llms.txt` + per-page `.md` mirrors — and `ovellum check` validates the wiki's
+internal links (agents write broken links too). The wiki tool keeps refreshing
+the Markdown; Ovellum keeps rendering it.
+
+Going further: if the *reference* half of your docs should come from your
+source rather than an agent's description of it, switch to
+[hybrid mode](/docs/guides/hybrid-mode/) and let agents write through the MCP
+server's protected zones instead — see
+[letting an agent write your docs](/docs/guides/automation/#letting-an-agent-write-your-docs).
+
 ## From a hosted docs platform
 
 If your docs live on a hosted platform, the migration is as much about

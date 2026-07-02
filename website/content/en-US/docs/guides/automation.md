@@ -103,6 +103,73 @@ ovellum build            # record the baseline IR snapshot
 ovellum diff --exit-code # exit 1 if the current source no longer matches
 ```
 
+## Keeping docs fresh in CI
+
+Because generation is deterministic and the exit codes are stable, docs
+freshness is a normal CI concern — no API keys, no model in the loop,
+byte-identical output. Two copy-paste recipes:
+
+**Gate pull requests.** Fail a PR when the docs have drifted — broken links,
+stale translations, stale anchors, source changes the generated docs don't
+reflect, or an out-of-date agent-instruction section:
+
+```yaml
+# .github/workflows/docs-check.yml
+name: Docs check
+on: pull_request
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22 }
+      - run: npm ci
+      - run: npx ovellum build              # records the IR snapshot
+      - run: npx ovellum diff --exit-code   # auto/hybrid: fail if source and docs disagree
+      - run: npx ovellum check --strict     # links, anchors, translations
+      - run: npx ovellum agents --check     # AGENTS.md/CLAUDE.md section still current
+```
+
+(Drop the `diff` step on a manual-mode site — there's no source to diff.)
+
+**Regenerate on a schedule.** For auto/hybrid projects, let CI rebuild the
+docs and open a pull request whenever the generated output changed — the
+review-friendly way to keep reference docs tracking the source:
+
+```yaml
+# .github/workflows/docs-update.yml
+name: Docs update
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 6 * * 1" # Mondays 06:00 UTC
+permissions:
+  contents: write
+  pull-requests: write
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22 }
+      - run: npm ci
+      - run: npx ovellum build
+      - uses: peter-evans/create-pull-request@v7
+        with:
+          add-paths: docs # your configured output dir
+          branch: ovellum/docs-update
+          commit-message: "docs: regenerate reference docs"
+          title: "docs: regenerate reference docs"
+          body: Automated Ovellum rebuild — generated docs caught up with source.
+```
+
+Hybrid's protected zones are what make the scheduled rebuild safe to automate:
+the build only ever changes generated content — hand-written prose in `@manual`
+zones rides along untouched, and anything orphaned lands in
+`.ovellum/orphans/` for review instead of disappearing into the PR.
+
 ## Programmatic API
 
 When you'd rather drive Ovellum in-process than shell out — from a framework
@@ -180,18 +247,53 @@ Ovellum is also listed in the
 
 ## Telling agents how to use Ovellum
 
-Two artifacts meet agents where they look:
+Three artifacts meet agents where they look:
 
-- **`AGENTS.md`** — `ovellum init` scaffolds an `AGENTS.md` at your project root
-  (the cross-tool convention for "instructions to coding agents"). It's
-  mode-aware: hybrid/auto projects lead with the protected-zone contract — what
-  survives regeneration and what gets overwritten — so an agent edits in the
-  right place. It's written only if one doesn't already exist.
+- **`ovellum agents`** — adds (or refreshes) a canonical **"Ovellum docs"**
+  section in your top-level `AGENTS.md` / `CLAUDE.md`, telling any coding agent
+  how docs work here: what's regenerated, the protected-zone contract, which
+  commands to run. It's idempotent and surgical — it touches only its own
+  section, writes nothing when it's already current, and `--check` turns it
+  into a CI gate. See the
+  [`ovellum agents` reference](/docs/reference/cli/#ovellum-agents).
+- **`AGENTS.md`** — `ovellum init` scaffolds a full, mode-aware `AGENTS.md` at
+  your project root (the cross-tool convention for "instructions to coding
+  agents") when none exists: hybrid/auto projects lead with the protected-zone
+  contract — what survives regeneration and what gets overwritten — so an agent
+  edits in the right place. When one already exists, init refreshes just the
+  Ovellum docs section, same as `ovellum agents`.
 - **A Claude Skill** — the [Claude Code plugin](#install-in-your-ai-tool) above
   bundles an `ovellum-docs` skill so Claude can scaffold, build, and safely edit
   Ovellum docs on request. To use it without the plugin, copy
   [`plugins/ovellum/skills/ovellum-docs/`](https://github.com/oinam/ovellum/tree/main/plugins/ovellum/skills/ovellum-docs)
   into your `.claude/skills/`.
+
+## Letting an agent write your docs
+
+A growing pattern is having a coding agent *draft* documentation — explain an
+architecture, document a symbol, write the "why". The risk is what happens
+next: prose dropped into a generated file is overwritten by the next build,
+and prose in a parallel wiki drifts silently as the code moves on.
+
+Ovellum gives agent-written prose the same guarantees human prose gets:
+
+1. **Point the agent at the [MCP server](#mcp-server).** The `document-symbol`
+   prompt is the guided version of this workflow: read a symbol from the IR,
+   draft prose, write it into a protected zone.
+2. **The agent writes through `ovellum_write_zone`** — the prose lands inside a
+   `@manual` zone under the right anchor, so the next `ovellum build` merges
+   *around* it instead of over it ([hybrid mode](/docs/concepts/modes/)).
+3. **Nothing is silently lost.** If the documented symbol is later renamed or
+   removed, the prose is quarantined to `.ovellum/orphans/`; `ovellum orphans
+   --reattach` (or the `ovellum_reattach` tool) puts it back under the new
+   anchor.
+4. **Drift is caught in CI.** The [freshness gate](#keeping-docs-fresh-in-ci)
+   fails the build when docs and source disagree — whoever wrote them.
+
+The result: you can accept AI-drafted docs without adopting an unmanaged,
+regenerate-the-world wiki. Every draft is a reviewable PR diff, survives
+regeneration, and is link-checked like everything else. (Already have an
+agent-generated wiki folder? [Publish it with Ovellum](/docs/guides/migration/#from-an-agent-generated-wiki).)
 
 ## AI-friendly output
 
