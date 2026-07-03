@@ -11,6 +11,11 @@ Captured 2026-06-26 (against `ovellum@0.17.0`). Re-survey before each major
 planning cycle. Sibling analysis: `COMPETITIVE-OPENWIKI.md` (LangChain's
 agent-run docs CLI — complementary, OSS, naming it is fine).
 
+> **2026-07-03:** ROADMAP item IDs below (B2, B6, U2, …) refer to the archived
+> [first-edition roadmap](./ROADMAP-2026-06.md); most shipped. The unadopted
+> remainder of this list (snippets, changelog, importer, PDF) is now
+> **Tier W** in the live [`ROADMAP.md`](./ROADMAP.md).
+
 ## Our edge (already ahead, or things they can't match for free)
 
 These are the moat. Don't dilute them; lead with them.

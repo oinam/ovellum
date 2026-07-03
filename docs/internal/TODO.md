@@ -37,6 +37,16 @@ Legend: `[ ]` not started · `[~]` in progress · `[x]` done · `[!]` blocked
 `ovellum@0.21.0` + GitHub release + MCP Registry `io.github.oinam/ovellum@0.21.0`.
 **One pending changeset** (`ovellum-agents.md`, minor) — unreleased work below.
 
+**Roadmap re-planned (2026-07-03):** the first-edition ROADMAP was essentially
+cleared, so it's archived at `ROADMAP-2026-06.md` and **`ROADMAP.md` is now the
+second edition** — Tier F finish-lines (images slice 3, versioning polish, AI
+discoverability, paper-cuts), Tier W authoring (snippets/includes = the
+headline, changelog page, importer), Tier G moat (coverage command *proposal*,
+frontmatter preservation, layout/partials), Tier V v1.0 readiness (stability
+contract, OS matrix, perf bench), Tier E Editor (design not locked), Tier H
+horizon. Proposed 1.0 gate = V1–V3 + W1 (needs maintainer sign-off). Pick next
+work from there.
+
 **Unreleased (2026-07-02) — OpenWiki-inspired slice, from the
 `COMPETITIVE-OPENWIKI.md` analysis (all four "adopt" items shipped):**
 **`ovellum agents`** (`commands/agents.ts`; exported `renderOvellumDocsSection`

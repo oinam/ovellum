@@ -1,842 +1,194 @@
-# ROADMAP — the 10x plan
+# ROADMAP — the 10x plan, second edition
 
-Written 2026-06-12, after a full four-track audit of the codebase at v0.3.0
-(CLI, site builder, engine packages, docs/website — each swept end-to-end).
-This is the prioritized plan to make Ovellum 10x better on **features**,
-**security**, and **usability**. Work items graduate from here into
-`TODO.md` when they're picked up.
+Written 2026-07-03, after the [first edition](./ROADMAP-2026-06.md) was
+essentially cleared (0.4.0 → 0.21.0 shipped its Tiers A/C/D, all hardening,
+all usability items; see that file for the historical record and
+[`FEATURES.md`](./FEATURES.md) for what works today). This edition folds in
+the first edition's surviving deferred slices, the unadopted remainder of
+[`COMPETITIVE.md`](./COMPETITIVE.md), the outcome of
+[`COMPETITIVE-OPENWIKI.md`](./COMPETITIVE-OPENWIKI.md) (its four adopt items
+shipped 2026-07-02 as `ovellum agents` + guides), and a proposed path to
+`v1.0.0`. Work items graduate into `TODO.md` when picked up.
 
-Legend: effort **S**mall (≤half day) / **M**edium (1–3 days) / **L**arge (multi-day, needs a design pass).
+State at writing: `ovellum@0.21.0` live on npm; one pending changeset
+(`ovellum agents`, minor → 0.22.0).
 
-> **Competitive input:** [`COMPETITIVE.md`](./COMPETITIVE.md) studies the leading
-> commercial docs platform. Its "adopt" list reinforces **B2** (reframed as
-> Markdown-native **component directives** — callouts/tabs/steps/cards/code-groups,
-> the biggest authoring gap), **B6** (versioning), and **U2** (a "switch from the
-> incumbent" migration path), and adds two new candidates: **Mermaid diagrams**
-> and a **"copy page as Markdown / open in ChatGPT"** per-page affordance (we
-> already emit the `.md` mirror). The SaaS surface (hosting, web editor, auth,
-> analytics dashboard) is deliberately out of scope for the free tool — it's the
-> future commercial tier (post-`v1.0.0`).
-
----
-
-## Where we are (verified strengths — don't break these)
-
-The audit confirmed the security posture is genuinely good; these are
-verified properties, keep them pinned:
-
-- **Escaping is systematic**: `escapeHtml`/`escapeAttr` on every text/attr
-  interpolation in `template.ts`; `escapeXml` in sitemap/RSS; dedicated
-  `escapeCopyAttr` in `build.ts`.
-- **Sanitize-before-Shiki order is correct** in `markdown.ts` (rehype-raw →
-  rehype-sanitize → shiki), pinned by tests.
-- **No shell-string execution on user data**: `page-meta.ts` uses `execFile`
-  with array args (test pins metacharacter safety); orphan filenames are
-  slugified (`merger/src/orphans.ts`) so anchor IDs can't traverse paths.
-- **No ReDoS** in the zone/anchor regexes (fixed patterns, no nested
-  quantifiers); gray-matter YAML is safe-schema; config validation is
-  exhaustive and eval-free.
-- **Merger never silently loses prose** — every unplaced block is orphaned
-  with metadata and a warning; the cursor logic can't skip or duplicate
-  content (audited + tested).
-
-**Audit false-positive on record:** a subagent flagged the `shell: true`
-spawn in `commands/upgrade.ts` as a critical command injection. Verified
-NOT exploitable — the command string comes only from the fixed
-manager/scope allowlist in `update/install.ts` (`upgradeCommand()`); no
-user input flows in. It stays on the hardening list (S1) as
-defense-in-depth, not as a vulnerability.
+Legend: effort **S**mall (≤half day) / **M**edium (1–3 days) / **L**arge
+(multi-day, needs a design pass). Items marked *(proposal)* have no maintainer
+decision yet — pitch before building.
 
 ---
 
-## 1. Security hardening (near-term, all small — do as one slice)
+## What we never break
 
-**DONE 2026-06-24 (S1–S6, one slice).** None were exploitable; they remove
-latent foot-guns and document trust boundaries. Staged for 0.13.0.
+The moat and the verified strengths, condensed (details + audit provenance in
+the first edition):
 
-- [x] **S1 (S)** `commands/upgrade.ts`: argv-array spawn without a shell on
-      POSIX (split the allowlisted command ourselves); Windows keeps `shell:true`
-      because `.cmd` shims require it (CVE-2024-27980) — still fixed tokens only.
-- [x] **S2 (S)** `dev/server.ts` `resolveFilePath()`: `realpathSync` the final
-      path and re-verify it's under (realpath'd) `rootDir` — `containedRealPath`
-      closes the symlink escape. `server.requestTimeout`/`headersTimeout` set
-      (30s/15s). Localhost-only binding confirmed (DEFAULT_HOST `127.0.0.1`,
-      documented). Pinned by a symlink-escape dev-server test.
-- [x] **S3 (S)** `site/src/build.ts` passthrough copy: rejects `..`/absolute
-      `relFromInput` and symlinks resolving outside the input dir
-      (`isInsideDir`), each with a one-line warning.
-- [x] **S4 (S)** `site.headExtra` documented as a trust boundary — strengthened
-      JSDoc in `@ovellum/core` + a section on `reference/security` (en+ja):
-      injected verbatim by design, admin-only, never from untrusted input.
-- [x] **S5 (S)** `commands/init.ts`: `validateDir` rejects absolute paths and
-      `..` segments on the prompted content/output dirs. Pinned by
-      `init-validate.test.ts`.
-- [x] **S6 (S)** `update/cache.ts`: cache written with mode `0o600`.
-      `update/registry.ts`: `redirect: 'error'` + a content-length size guard.
+- **The hybrid contract** — generated docs and hand prose in the same file;
+  protected zones survive regeneration; orphans are quarantined, never lost;
+  rename detection + reattach. Nobody else has this.
+- **Agent-editable docs** — the MCP server's `write_zone` (+ tools, resources,
+  prompts), `llms.txt` / `.md` mirrors, `AGENTS.md` / `ovellum agents`. The
+  free tool is the most AI-native docs tool available.
+- **Deterministic, portable, free** — no LLM in the build, no API keys,
+  byte-identical output, a static folder any host deploys; `--json` + stable
+  exit codes; programmatic API + plugin hooks.
+- **Security posture** — systematic escaping, sanitize-before-Shiki, argv
+  spawns, path containment on every file seam, safe-schema YAML. Unset config
+  = byte-identical output is a repeated, test-pinned property; keep it true.
+- **Editorial-calm design** — locked primitives in `SITE.md` / `STYLES.md`;
+  no chrome, no cartoon, no emoji.
 
-## 2. Features — the 10x bets
+## The path to v1.0.0 *(proposal — needs the maintainer's yes)*
 
-### Tier A — deepen the moat (the hybrid merge engine)
+0.x has been feature-sprint; 1.0 is a **promise-keeping release**, not a
+feature. Proposed gate — declare 1.0 when:
 
-Nobody else has the protected-zone/orphan model; these multiply it.
-A1 unlocks A2–A4.
+1. **Stability contract written** (V1) — what semver covers: config schema,
+   programmatic API, plugin hooks, MCP tool names, CLI flags/exit codes,
+   the theme token contract (`--color-*`, `ov-*` classes).
+2. **Platform proof** (V2) — CI green on Windows + macOS, not just Ubuntu.
+3. **Performance floor** (V3) — a benchmark in CI so build-time regressions
+   surface before users feel them.
+4. **Authoring parity holds** (W1 shipped) — snippets/includes was the last
+   real gap vs the incumbent's component library.
 
-- [x] **A1 (M)** **IR persistence** — write the parsed `DocProject` IR to
-      `.ovellum/ir.json` after each auto/hybrid build. Foundation for diff,
-      rename detection, and last-seen tracking. **Done 2026-06-24:**
-      `dev/ir.ts` `writeProjectIR` persists `{generator, format, version,
-      project}` to `<cwd>/.ovellum/ir.json` (project root, not output dir;
-      unaffected by `--out`); reported as the `ir:` summary line. Next: A2/A4
-      read it.
-- [x] **A2 (M)** **`ovellum diff`** — compare current source IR against the
-      persisted one; report added/removed/changed symbols (and which docs
-      would change) without writing. CI-friendly `--json`. **Done 2026-06-24:**
-      `commands/diff.ts` + pure `dev/diff.ts` `diffProjects`; matches by anchor
-      id (rename = remove+add, A3 separate), flattens members, ignores
-      `line`/`filePath`, maps docs via `outputPathFor`; `--json` + `--exit-code`
-      (git-diff style). Next consumer of the A1 snapshot; A3/A4 still open.
-- [x] **A3 (L)** **Rename detection (suggest-only)** — when an anchor disappears
-      and a similar symbol (same signature shape, fuzzy-matched name, same-file
-      or moved-file) appears, offer the remap instead of orphaning. Kills the #1
-      cause of orphans (refactors). **Done 2026-06-24:** pure `dev/rename.ts`
-      `detectRenames` (kind gate + Levenshtein name sim + signature-shape sim +
-      same-file bonus, greedy 1:1 ≥0.6); surfaced in `diff` (likely-renames
-      section + JSON) and at build time (`did X become Y? … reattach` warning
-      over the prior snapshot). **The `--reattach` write action landed
-      2026-06-25** with A4 (`ovellum orphans --reattach`).
-- [x] **A4 (M)** **`ovellum orphans` CLI** — list (default), `--stale`,
-      interactive reattach/delete. The merger already returns full
-      `OrphanRecord`s; long promised in docs. Populate `anchorLastSeen` from the
-      persisted IR (A1). **Read slice done 2026-06-24** (`commands/orphans.ts` +
-      pure `dev/orphans.ts`; list + `--stale` + `--json`; present/gone/unknown vs
-      snapshot; `anchorLastSeen` stamped at build). **Write slice done
-      2026-06-25:** `--reattach` walks each orphan interactively and reattaches
-      (via `suggestReattachTarget` → `applyWriteZone` → delete archive),
-      deletes, or skips — closes A3's `--reattach` too.
-- [x] **A5 (S)** **`@preserve` auto-wrapping** — generator emits
-      `@manual:start/end` around `@preserve`-tagged content. **Done 2026-06-25:**
-      `templates.ts` `wrapPreserved` wraps a preserved node's body in a
-      `@manual` zone keyed by the node id (hybrid only, via `generate.ts`).
-      Note: the merger did *not* "treat them uniformly" — it appends, which would
-      duplicate the seed; added `stripGeneratedBlocks` in `merge.ts` so the
-      author's copy replaces the generated seed. Seeds on first build; edits
-      survive; deletion orphans.
-- [x] **A6 (M)** **Validation mode** (`ovellum check --strict`): warn on
-      positional-fallback zones (no `id=`), anchors pointing at no-longer-existing
-      symbols, required frontmatter fields. **Done 2026-06-25:** `--strict` adds
-      `positional-zone` (reader `hasExplicitId`), `stale-anchor` (`findAnchors`
-      vs `collectAnchorIds(parseProject)`), `missing-frontmatter` (no title +
-      no H1); `[STRICT]`-tagged, `counts.strictIssues` in `--json`; MCP
-      `ovellum_check` gains `strict`. Off by default; exit 1 on any issue.
-- [x] **A7 (L)** **Incremental watch builds** — re-parse only changed files,
-      re-merge only affected outputs. **Done 2026-06-25:** `createIncrementalParser`
-      keeps a warm ts-morph Project; `update()` refreshes only changed files,
-      re-extracts the whole project (cheap, in-memory AST walks → cross-file
-      ripples reflected, no staleness) and returns the changed `DocFile`s; the
-      watcher routes auto/hybrid changes through `runIncrementalBuild`, which
-      rebuilds only affected outputs via the shared `buildProjectDocs` (full +
-      incremental one code path → parity). `ir.json` stays whole-project; hybrid
-      zones preserved; manual + config-change stay full.
+Everything in Tier H explicitly does **not** gate 1.0.
 
-### Tier B — site-builder parity (vs Docusaurus/VitePress/Starlight)
+---
 
-- [x] **B1 (L) — COMPLETE 2026-06-29 (slices 1+2+3); design pass in
-      [`PLUGINS.md`](./PLUGINS.md).** **Plugin/extension API.** Model: a single
-      `config.plugins: OvellumPlugin[]` (Vite/Rollup style). **Slice 1 — lifecycle
-      hooks (also D3):** `onResolveConfig`, `onBuildStart`, `transformPage`,
-      `onBuildComplete`; orchestrated in `run-build.ts`, site stays
-      plugin-agnostic, deploy hook gets the manifest free. **Slice 2 (B1a) —
-      markdown plugins:** `remarkPlugins`/`rehypePlugins`, injected into
-      `markdown.ts` (rehype **before `rehypeSanitize`** so sanitize stays the
-      guard — `<script>` injection stripped, pinned). Typed `unknown[]` in
-      core/cli (only `@ovellum/site` names `PluggableList`). **Slice 3 (B1b) —
-      template overrides:** `site.templateDir` — a directory whose
-      `style.css`/`script.js`/`fonts/` replace the bundled theme assets per-file
-      with fallback (`writeStaticAssets`). Replaces the CSS/JS layer without
-      forking; **HTML stays code** (targets `ov-*` classes — a layout/partial
-      system over the markup is the deferred component work, out of scope per the
-      original "not a component system" framing). See FEATURES + PLUGINS.md.
-- [x] **B2 (M) — Slice 1 DONE 2026-06-26.** **Component directives** (reframed
-      from "MDX tier 1" per [`COMPETITIVE.md`](./COMPETITIVE.md) — the one real
-      authoring gap). Shipped: callouts/steps/cards/tabs via `remark-directive`
-      (`packages/site/src/directives.ts`; `remarkComponents` + post-sanitize
-      `rehypeTabs`), theme-styled + accessible, sanitize-safe (component classes
-      whitelisted; `a` className rule rebuilt). `guides/components` en+ja.
-      **B2.2 DONE 2026-06-26:** `:::code-group` (tabbed code, reuses the tabs
-      path) + `.mdx`-as-Markdown (widened `isMarkdown`/`stem`/`urlFor` to
-      `md|markdown|mdx`; no JSX eval). **B2 COMPLETE.** Original spec:
-      Markdown-native block components via **`remark-directive`** (`:::name`),
-      **not** JSX/MDX (keeps output portable Markdown, no React/lock-in). All
-      theme-styled, sanitize-safe. **Slice 1 (building now):** `:::note|tip|
-      important|warning|caution` callout directives (alias the existing
-      `.ov-callout` styles; `{title="…"}` overrides the label — complements the
-      GFM `> [!NOTE]` alert syntax we already ship); `:::steps` + `:::step{title}`
-      (CSS-counter stepper); `:::cards` + `:::card{title,href}` (responsive grid;
-      `href` → linkable card); `:::tabs` + `:::tab{label}` (accessible tablist —
-      built post-sanitize like `rehypeCallouts`, with a small `script.js` toggle;
-      no-JS shows all panels). Architecture: a `remark` transform sets
-      `hName`/`hProperties` for the CSS-only ones (flow through sanitize as
-      div/a+class); `tabs` get upgraded by a **post-sanitize** rehype pass so
-      button/role/aria/data survive. Labels render as `<div>` (not headings) to
-      stay out of the ToC. **Deferred to B2.2:** `:::code-group` (tabbed code),
-      and `.mdx`-as-Markdown file support (the original B2 — widen the
-      `isMarkdown` regexes + reader extensions; no JSX eval).
-- [x] **B3 (S) — RESOLVED 2026-06-27 (stale premise).** `extractMarkdownLinks()`
-      is no longer dead code — `commands/check.ts` calls it (broken-link +
-      unsafe-scheme validation, per-locale), so the shared-implementation goal is
-      already met. **Deliberately NOT adding build-time link warnings:** that
-      would re-run the per-locale link scan on every `build` (slower, noisier) and
-      crosses the build/check separation — `check` is the lint gate (run it in CI
-      next to `build`). No code change; closing the item.
-- [x] **B4 (M) — DONE 2026-06-27.** **Custom fonts via config** — `site.font`
-      accepts `{ body, mono?, source?, label? }` (alongside the
-      `'sans'|'serif'|'inter'|'geist'` keywords). Build sets
-      `<html data-font="custom">`, injects a `[data-font="custom"]` rule mapping
-      `--font-body`/`--font-mono` (after the base CSS so it wins, under
-      `[data-font]` so the picker still overrides), `<link>`s the `source`
-      stylesheet(s), and adds a custom entry to the reader's Font picker
-      (previewed in its own family). FOUT = the author's `font-display` call
-      (STYLES.md §1.3); docs recommend `swap`/`optional`. Family values
-      sanitized + validated (no `< > { } ;`); `source` must be http(s)/relative.
-      Core `OvellumCustomFont` type + validation; `template.ts`
-      `renderCustomFontHead`; themes + config docs rewritten (en+ja). Pinned by
-      template (2) + validate (1) tests.
-- [x] **B5 (M) — DONE 2026-06-27.** **Composable landing** —
-      `site.landing.sections: OvellumLandingSection[]` (discriminated union:
-      `hero | install | features | trust | scene | prose | custom-html`). When
-      set, replaces the fixed `hero→install→features→prose→trust` order
-      (scenes auto-interleaved); flat config stays the data source for the
-      reference blocks (shorthand) so unset = byte-identical default. `prose`
-      takes inline `html` or falls back to the `_landing.md` body; `custom-html`
-      is author-trusted raw HTML (headExtra boundary, `.ov-landing-html`). Core
-      type + validation; `renderLanding` switch; docs en+ja. Tests: landing (4)
-      + validate (1).
-- [x] **B6 (L) — DONE 2026-06-27.** **Versioned docs** — `site.versions:
-      { id, label?, latest? }[]`, directory-per-version (`content/<id>/`), latest
-      at root + others under `/<id>/`, topbar version picker. **Composes with
-      i18n** by generalizing `resolveLocaleSpecs` → specs per (version × locale):
-      version is the outer URL/dir prefix, so sitemap/RSS/llms/404 follow for
-      free (everything keys off `spec.urlPrefix`/`inputAbs`). Picker maps to the
-      same page across versions (home fallback) via `buildVersionAlternates`
-      (same locale); language picker filtered to same version. Unversioned output
-      byte-identical. Core type + validation; `VersionAlternate` +
-      `renderVersionPicker` (reuses `.ov-lang`); `versionLabel` string en+ja;
-      config + versioning guide en+ja. Tests: template (2) + validate (1).
-      **Deferred polish (slice 2):** old-version noindex/sitemap exclusion, an
-      "you're viewing an old version" banner, a `version snapshot` command.
-- [x] **B7 (L)** **i18n / multi-language — SHIPPED (v0.8.0 + v0.11.0).** Full
-      engine + English↔Japanese 1:1 site; chrome-string localization + RTL;
-      per-locale `check` + translation-staleness. **Per-locale RSS — DONE
-      2026-06-27** (each locale gets `<prefix>/feed.xml` scoped to its pages;
-      `generateRss` gained `localePrefix`; sitemap stays one combined file;
-      single-locale output byte-identical). **i18n now has no known gaps.**
-      Design locked
-      2026-06-14 (planning session). Scope agreed: build the full engine + a
-      **single Japanese demo** on 2–3 pages (landing + getting-started), English
-      canonical + fallback. **Skip `en-GB`** — after standardizing on American
-      spelling it's a near-duplicate differing only in spelling; pure
-      maintenance, no reader value. More languages = community PRs later.
-  - **Language codes = BCP 47** (not "EN"/"jp"/"ch"): `en-US`, `ja`, `zh-Hans`
-        (Simplified) / `zh-Hant` (Traditional), `ko`, etc. UK English is
-        **`en-GB`** (GB, not UK). Selector labels use the **autonym** (語: 日本語,
-        简体中文, …), not the English name.
-  - **Opt-in, zero breakage:** unset `site.locales` → today's single-language
-        behavior unchanged. i18n activates only when locales are defined.
-  - **Content = locale subtrees:** `content/<locale>/…` (e.g. `content/en-US/`,
-        `content/ja/`). Pages map across languages by **identical relative
-        path** (that's what the selector follows). Per-locale `_meta.json`/nav.
-  - **URLs = default-at-root, others prefixed:** `defaultLocale` → `/guide/`;
-        others → `/ja/guide/`. A site adding i18n moves existing content into
-        `content/<defaultLocale>/` once; non-i18n sites untouched.
-  - **Config shape:** `site.defaultLocale` + `site.locales: [{ code, label }]`.
-  - **Selector placement (maintainer-specified):** right cluster, **after the
-        "Docs" link, before the divider** preceding the GitHub/npm icons. Globe
-        dropdown of autonyms; switching → same page in target locale, else
-        **fall back** to that locale's home (partial translations are fine).
-  - **Per-page:** `<html lang>`, `hreflang` alternates between translations,
-        per-locale sitemap/RSS, Pagefind per-`lang` shard (already supported).
-  - **"Written or generated":** tool renders whatever's in each locale folder;
-        author by hand or pre-translate however you like.
-  - **Chrome strings:** second pass — extract hard-coded English UI strings in
-        `template.ts` (e.g. "Edited", "min read", "On this page", appearance
-        labels) into a per-locale string table; drive `<html dir>` for RTL
-        (Arabic/Hebrew) — RTL itself deferred past v0.8.0.
-  - **On-brand differentiator (consider for v0.8.0 or headline v0.9.0):**
-        **translation-staleness check** — store the source page's content hash
-        in each translation's frontmatter; `ovellum check` flags "English
-        changed, `ja` is stale." This is the anti-drift identity applied to
-        translations — no static i18n does it well. Strong fit.
-- [x] **B8 (M) — DONE 2026-06-29.** **Build-output severity levels** — added a
-      `BuildWarning { message, severity: 'info' | 'warning' }` (core, exported
-      from `ovellum`); `BuildSiteResult.warnings` + `BuildSummary.warnings` are
-      now `BuildWarning[]`, tagged at source (site build) and wrapped at the
-      run-build ingestion points for leaf-package strings. CLI orders real
-      problems before info (`orderWarnings`), prints `warning:`/`info:` lines,
-      and splits the summary count into `warnings:` / `notes:`. `--json` emits
-      `{message, severity}` objects (shape change — branch on
-      `severity === 'warning'` for CI). Docs en+ja; `build-warnings.test.ts` (4)
-      + cli-smoke + rename-build. `check`'s own issue list is separate.
-- [~] **B9 (M) — Slice 1 DONE 2026-06-30.** **Image optimization.** Shipped
-      `site.images: { quality? }` — opt-in raster re-compression **in place**
-      (`.jpg`/`.jpeg`/`.png`/`.webp`/`.avif`, same path/format, smaller bytes, no
-      `<img src>` rewriting) via lazily-imported **sharp** (optional peer dep —
-      lazy `import('sharp' as string)` so core/cli neither bundle nor typecheck
-      against it; tsup leaves it external; missing → actionable error). PNG
-      lossless, lossy formats use `quality` (default 80); keeps the original if a
-      re-encode would be larger; SVG/GIF pass through. `packages/site/src/images.ts`;
-      both copy seams in `build.ts` (`copyAsset`/`copyTree`, fast `cp -r` path
-      kept for default builds); per-image failure → warn + plain copy; closing
-      `info` note (count + KB saved). **Slice 2 DONE 2026-06-30** (both halves,
-      maintainer asked for both before 0.21.0). (a) **Format conversion** —
-      `site.images.format: 'webp'` converts `.png`/`.jpg`/`.jpeg` → sibling
-      `.webp` (`images.ts` `webpDest`/`isConvertibleToWebp`) + a post-sanitize
-      `rehypeWebpImages` pass that rewrites local raster `<img src>` → `.webp`
-      (by-extension; skips schemes/`//`, preserves `?query#hash`), threaded via a
-      `convertImages` opt. Validated mutually-exclusive with `assetBaseUrl`;
-      Markdown-body images only (landing/raw-HTML = author's `.webp` path; avif +
-      `<picture>` + `srcset` remain future). (b) **OG-image generation** —
-      `site.ogImage` renders a per-page 1200×630 card via sharp SVG→PNG
-      (`og-image.ts`) → `dist/og/<slug>.png` + the **first OpenGraph/Twitter
-      meta** in `template.ts`; needs `site.baseUrl` (warn + no-op otherwise);
-      drafts/404 excluded. **Composable-landing OG = follow-up** (renderOne pages
-      + doc-page home covered). Resize/max-width still future. The `site.minify`
-      esbuild gating this was patterned after shipped earlier today.
-- [x] **B10 (M–L) — DONE 2026-06-29 (B10.1 + B10.2 + B10.3).** **Theme
-      inheritance — adopt a parent project's design
-      tokens.** *(maintainer-requested 2026-06-28.)* When Ovellum docs are
-      built into a host project's `/docs` (the Tier D embed story), let the
-      output **inherit the host's existing theming** — colors, auto light/dark,
-      typography — instead of carrying its own palette. Today this is only
-      *partially* possible via escape hatches (`site.headExtra` to `<link>` a
-      parent stylesheet; `site.font` custom object for type), with no contract
-      and a dark-mode conflict. Three layered pieces, smallest-first:
-  - [x] **B10.1 (S) — DONE 2026-06-29.** Shipped `site.css` (`string |
-        string[]`) — author stylesheet URL(s) linked into `<head>` **after** the
-        base theme CSS (after custom-font + search bits, before `headExtra`), so
-        `:root` token re-declarations win the cascade. `renderExtraCss`
-        (`template.ts`) mirrors `renderCustomFontHead` URL handling
-        (`http(s)://` pass-through; relative/root-absolute via `siteUrl`,
-        basePath-aware). Validated to stylesheet links only (rejects
-        `javascript:`/`data:`, same guard as `site.font.source`). Themes guide
-        rewritten — "Customizing the default theme" now leads with `site.css`
-        plus a new **"Inheriting a host project's design"** token-contract table
-        (`--color-*`/`--font-*`/`--callout-*`, light + `:root[data-theme='dark']`),
-        en+ja; config reference + FEATURES updated; changeset
-        `site-css-theme-inheritance` (minor). Core type + validation; template
-        (1) + validate (1) tests. **B10.2 (host dark-mode bridge) is the next
-        slice — colors inherit, the light/dark *switch* does not yet follow the
-        host.** Original spec below.
-        Ovellum's CSS already runs on a 3-tier OKLCH token system
-        (`packages/site/src/templates/default/style.css`): the **applied
-        surface tokens** (`--color-bg`, `--color-surface`, `--color-fg`,
-        `--color-fg-muted`, `--color-border`, the `--callout-*` set) plus
-        typography (`--font-body`, `--font-mono`) are the natural theming API —
-        everything visual references them. Step 1: **document these names as a
-        stable, supported override surface** (new `concepts/theming` or
-        `guides/theming` doc, en+ja) and add a first-class **`site.css`** config
-        field (a real "inject this stylesheet/CSS" hook, distinct from the
-        blunt raw-markup `headExtra`) so a host can re-declare the tokens at
-        `:root` and Ovellum picks them up by cascade. Validate/escape like
-        `site.font.source`. This alone makes "match my brand colors + fonts"
-        a one-liner.
-  - [x] **B10.2 (M) — DONE 2026-06-29 (the real work).** Shipped
-        `site.appearance: 'control' | 'inherit' | { mode: 'inherit', storageKey?,
-        darkValue?, lightValue? }` (optional; unset = `'control'`, byte-identical
-        output). `'inherit'` makes the docs follow a host's light/dark: boot
-        script (`template.ts`) resolves `data-theme` from the host — `'auto'`
-        (→ `prefers-color-scheme` via existing CSS) or the host's same-origin
-        `localStorage` key when `storageKey` is set — and exposes the config via
-        `window.__OV_APPEARANCE__`; appearance panel drops the Mode segment
-        (`renderAppearancePanel` `inheritAppearance` arg; palette/color/text/font
-        stay); `script.js` ignores `ovellum-theme` in inherit mode + a
-        `storage`-event listener live-updates on a host toggle in another tab
-        (`resolveInherited`). `resolveAppearance` normalizer. Colors still come
-        from B10.1 `site.css`; `appearance` picks the mode. Caveats: same-origin
-        + host-persists-to-localStorage for the manual-toggle case (OS hosts need
-        only `'inherit'`); a class-only host with no persisted signal isn't
-        auto-followed (documented). Core types
-        (`OvellumAppearance`/`OvellumAppearanceInherit`) + validation; docs en+ja
-        (themes "Following the host's light/dark switch" + config ref); template
-        (2) + validate (1) tests. Original spec below.
-        Ovellum toggles
-        light/dark via its own `data-theme` attribute + localStorage +
-        appearance panel; a parent app usually toggles via
-        `prefers-color-scheme` or a `.dark`/`[data-theme]` class on `<html>`.
-        Even with colors inherited, the two switches can disagree. Add a
-        **"follow host" appearance mode** (`site.appearance: 'inherit'` or
-        similar) that (a) suppresses Ovellum's own toggle/boot-script
-        localStorage write and (b) lets the host's signal drive — either by
-        honoring `prefers-color-scheme` only, or by reading a configurable
-        host attribute/class. Needs a small design pass on how the boot script
-        and `script.js` panel behave when "inherit" is on (likely: hide the
-        light/dark switch, keep palette/font if still wanted).
-  - [x] **B10.3 (S) — DONE 2026-06-29.** Shipped `site.palette: 'bare'` — no
-        baked palette. `renderBareThemeHead` injects a `[data-palette="bare"]`
-        `<style>` mapping each color + `--font-body` token to
-        `var(--ov-host-NAME, <default>)` (mode-aware light/dark/auto blocks keep
-        "unset = default" true); a host `site.css` defining the `--ov-host-*`
-        names becomes the sole color source. Boot script pins `data-palette` +
-        skips the stored-palette restore; panel drops the Theme group (mirrors
-        `appearance: 'inherit'` dropping Mode). Chose graceful fallback (host
-        vars + Ovellum default) over the literal "tokens left unset" footgun, and
-        the `--ov-host-*` namespace over `--ov-*` (the latter collides with the
-        `--ov-accent`/`--ov-text-scale` runtime vars). Core `OvellumPalette`/
-        PALETTES; docs en+ja; template (2) + validate (1) tests. **Tier B10
-        theme inheritance COMPLETE (B10.1 + B10.2 + B10.3).** Original spec: A
-        flag to emit Ovellum
-        layout/structure with **no baked palette** (tokens left `unset` /
-        `inherit`), so a host stylesheet is the *sole* source of color — the
-        cleanest "drop into my app and it just matches" path. Build on B10.1's
-        token contract.
-  - **Cross-refs:** this is the visual half of **Tier D** "embed anywhere"
-        (D1–D5 handle the *build/deploy* contract; B10 handles the *look*
-        contract) and overlaps **B1** (template overrides) and **B4** (custom
-        fonts — already shipped the typography slice). Sequence:
-        B10.1 first (cheap, high leverage, unblocks the common case) → B10.2
-        (dark-mode bridge) → B10.3 (bare mode).
+## Tier F — finish lines (carryovers from the first edition)
 
-### Tier C — the AI age ("AI-Ready" theme)
+Small, already-designed remainders. Clear these first; they're cheap and they
+close open loops.
 
-**STATUS: COMPLETE (2026-06-24).** All five slices shipped — C1 (`site.ai`
-output), C2 (`ovellum mcp` server), C3 (`--json` CLI), C4 (AGENTS.md + Skill),
-C5 (positioning page). Staged for 0.13.0. (Only adjacent non-C follow-ups left:
-B8 warning-severity inside the JSON, U4 `--verbose`, `ovellum_search_docs`.)
+- [ ] **F1 (M)** **Images, slice 3** (B9 remainder): `site.images.maxWidth`
+      resize cap; AVIF as a `format` target; `<picture>`/`srcset` emission
+      (design: Markdown-body only, same seam as the WebP rewrite); OG-image
+      coverage for composable-landing pages.
+- [ ] **F2 (S–M)** **Versioning polish** (B6 slice 2): `noindex` + sitemap
+      exclusion for non-latest versions; an "you're viewing an old version"
+      banner (editorial-calm, one line); a `version snapshot` command that
+      copies current content into `content/<id>/` and updates config.
+- [ ] **F3 (S)** **AI discoverability** (C1 remainder): per-page
+      `<link rel="alternate" type="text/markdown">` pointing at the `.md`
+      mirror; mention `/llms.txt` in `robots.txt`.
+- [ ] **F4 (S)** **Paper-cut hardening** (audit leftovers, one slice): orphan
+      filename collision counter suffix; dev-server `.html`-fallback TOCTOU
+      try/catch; update-notifier config-load errors surfaced under
+      `--verbose`.
 
-**Theme (proposed, design NOT yet locked — task prepared 2026-06-14 on
-maintainer request; "we won't do now, but prepare").** Make Ovellum
-**AI-Ready / AI-Native** along three independent surfaces — the docs it
-*emits*, the tool an agent *drives*, and the packaging that tells an agent
-*how*. They ship as separate slices; C1 (output) is cheap and standalone, C3
-(CLI) overlaps U4, C2 (MCP) is the headline and needs IR persistence (A1)
-first. Sequence: **C1 → C3 → C2 → C4/C5**.
+## Tier W — authoring power (the remaining COMPETITIVE.md adopts)
 
-The framing to hold: Ovellum's identity is the anti-drift hybrid contract —
-hand prose and generated docs co-exist and survive regeneration. The
-AI-Ready story is *the same contract extended to agents*: an agent reads the
-docs as clean Markdown (C1), drives builds/checks with machine-readable I/O
-(C3), and writes prose into protected zones over MCP that survives the next
-regeneration exactly as a human's does (C2). That last point is the
-differentiator no other docs tool can make.
+- [ ] **W1 (M)** **Reusable snippets / includes (partials).** The one real
+      authoring gap left vs the incumbent. Author once under `_snippets/`
+      (or any underscore-prefixed dir — already nav-excluded by convention),
+      include with a Markdown-native directive (`::include{file=…}`), reusing
+      the B2 `remark-directive` pipeline. Design must cover: recursion guard,
+      path containment (no `..` escapes — same rule as everywhere), snippet
+      frontmatter (ignored vs merged), i18n (per-locale snippets fall back to
+      default locale), and `check` validating include targets. Sanitize stays
+      the guard. *Highest-impact item in this edition.*
+- [ ] **W2 (S–M)** **Changelog page type.** A first-class "Updates" page:
+      date-grouped entries with stable anchors, rendered from one Markdown
+      file with a light directive or heading convention (no new file format),
+      optional inclusion in the RSS feed. Complements the humanized "Edited"
+      dates.
+- [ ] **W3 (M)** **Migration importer.** U2 shipped the guide; this is the
+      converter — map a hosted platform's config + component syntax to
+      `ovellum.config.ts` + our directives. **Open naming tension:** an
+      importer flag names the source platform, but the never-name rule covers
+      shipped surfaces — resolve with the maintainer before building (options:
+      a generic `--from <dir>` heuristic importer, or accept naming
+      OSS-importable formats only).
+- [ ] **W4 (S, backlog)** **Print/PDF.** Start with a print stylesheet
+      (cheap, editorial-calm); real PDF export only if demand shows up.
 
-#### C1 — AI-friendly documentation output (the `llms.txt` standard)
+## Tier G — moat multipliers
 
-- [x] **C1 (S–M) — SHIPPED 2026-06-14.** `site.ai` block; `/llms.txt` (default
-      on), `/llms-full.txt` (default off), per-page `.md` mirrors (default on);
-      per-locale, drafts/404 excluded, HTML byte-identical. Code in
-      `packages/site/src/llms.ts` + `build.ts`; `llms.test.ts`. **Deferred
-      follow-up:** head `<link rel="alternate" type="text/markdown">` +
-      `robots.txt` mention. Original plan below. — Emit AI-consumable docs
-      alongside the HTML at build. We
-      already hold the rendered Markdown, so most of this is plumbing + a
-      config gate. Three artifacts, per the emerging
-      [llmstxt.org](https://llmstxt.org) convention:
-  - **`/llms.txt`** (site root) — a curated, link-first **index**: site title
-        + one-line description, then a flat or sectioned list of every page as
-        `[Title](url): one-line summary`. Summary comes from frontmatter
-        `description` → first paragraph fallback. This is the map an agent
-        fetches first.
-  - **`/llms-full.txt`** — the **entire docs corpus concatenated** as one
-        Markdown stream (front-matter-stripped, H1-delimited per page, in
-        sidebar order). One fetch, whole-site context. Gate behind a size note
-        — warn if it gets large.
-  - **Per-page `.md` mirror** — the raw Markdown for each page at a
-        predictable URL. Convention to settle in the design pass: **append
-        `.md` to the page URL** (`/guide/intro/` → `/guide/intro.md` or
-        `/guide/intro/index.md`). Lets an agent (or a human `curl`) get clean
-        source for any single page without HTML-stripping.
-  - **Config:** opt-in `site.ai` block — at minimum `{ llmsTxt?: boolean,
-        fullText?: boolean, mdMirror?: boolean }` (bikeshed names in design).
-        Decide default-on vs default-off: leaning **default-on for `llms.txt`
-        + `.md` mirror** (cheap, pure upside, strong adoption signal) and
-        **default-off for `llms-full.txt`** (can be heavy). Single-language
-        output must stay byte-identical when the block is unset.
-  - **i18n:** per-locale variants — `/llms.txt` for the default locale,
-        `/ja/llms.txt` for others (reuses the locale-subtree plumbing). Drafts
-        excluded always (same rule as sitemap/RSS/hreflang).
-  - **Discoverability:** optional `<link rel="alternate" type="text/markdown">`
-        per page pointing at its `.md` mirror; mention `llms.txt` in
-        `robots.txt`/head if cheap.
-  - **Hybrid/auto mode bonus:** when docs are generated from source, the `.md`
-        mirror is *already* the merger's canonical Markdown — the AI mirror and
-        the human source are the same artifact. Worth calling out as the
-        natural fit.
+- [ ] **G1 (M)** **`ovellum coverage`** *(proposal)* — docs-health report from
+      the IR: % of exported symbols with a description, with `@param`/
+      `@returns` docs, with a `@manual` zone; per-file breakdown; `--json` +
+      a `--min <pct>` CI gate. The anti-drift identity made measurable —
+      pairs with `check`/`diff` as the third leg of the CI story, and no
+      generator-adjacent tool offers it. Small design pass (what counts as
+      "documented"; how hybrid zones weigh).
+- [ ] **G2 (M)** **Hybrid custom-frontmatter preservation.** Today
+      regeneration overwrites user-added frontmatter keys on generated docs
+      (by design, first-edition audit note). Design a merge policy: generator
+      owns its keys (`ovellum`, `title`, …), unknown keys survive — the
+      protected-zone idea applied to frontmatter.
+- [ ] **G3 (L)** **Layout/partial system over the HTML** (B1's deferred
+      component work). `site.templateDir` replaces CSS/JS/fonts today; HTML
+      is still code targeting `ov-*` classes. Design a safe override surface
+      (named partials/blocks — topbar, footer, article shell) without
+      becoming a framework. Needs a real design pass; don't start it casually.
 
-#### C2 — MCP server (the headline; needs A1 first)
+## Tier V — v1.0 readiness
 
-- [~] **C2 (L)** Ship Ovellum as an **MCP server** so agents drive it as a
-      first-class tool. Form: a new `ovellum mcp` subcommand launching a
-      **stdio MCP server** (preferred over a separate package — one install,
-      one binary; revisit if it bloats the CLI). Needs its own design pass.
-      **A1 (IR persistence) is the hard prerequisite** for the query/write
-      tools — they read `.ovellum/ir.json`. **Done 2026-06-24:** `ovellum mcp`,
-      a **dependency-free** hand-rolled JSON-RPC stdio server (`dev/mcp/`, no SDK
-      so the published CLI stays lean). Tools: `ovellum_query_symbol`,
-      `ovellum_diff`, `ovellum_list_orphans`, `ovellum_get_page`,
-      `ovellum_build`, and the differentiator **`ovellum_write_zone`**
-      (`applyWriteZone` — write prose into a `@manual` zone that survives hybrid
-      regen; `dryRun`). **Deferred:** `ovellum_check` (needs C3 JSON),
-      `ovellum_search_docs` (Pagefind index). If the no-SDK choice ever fights
-      protocol drift, revisit `@modelcontextprotocol/sdk`.
-  - **Read tools (ship first, low risk):** `ovellum_build`, `ovellum_check`
-        (returns structured findings — reuse C3's JSON), `ovellum_query_symbol`
-        (look up a symbol in the persisted IR — signature, anchor, source loc),
-        `ovellum_search_docs` (over the site's Markdown/Pagefind index),
-        `ovellum_get_page` (the C1 `.md` mirror for one page),
-        `ovellum_list_orphans` (once A4 lands).
-  - **The write tool (the differentiator):** `ovellum_write_zone` — an agent
-        writes prose into a **protected zone** addressed by anchor id; the
-        merge engine guarantees it survives the next regeneration, exactly the
-        contract a human editing between `@manual:start/end` gets. This is the
-        single feature no other docs MCP can offer — it's the hybrid moat
-        exposed to agents. Design must cover: addressing (anchor id vs
-        symbol), conflict/orphan behavior on write, and a dry-run/preview.
-  - **Packaging overlap with C4** (Claude Skill) — decide whether the Skill
-        wraps the MCP server or stands alone.
-  - Backlog already sketches this; keep the tool surface small and
-        IR-backed rather than shelling out per call where avoidable.
+- [ ] **V1 (M)** **Stability contract.** Write the semver policy (what's
+      covered, what's internal, deprecation path), audit the public surfaces
+      against it (config schema, `ovellum` API exports, plugin hook
+      signatures, MCP tool names/schemas, CLI flags + exit codes, theme
+      tokens), and publish it as a docs page. Rename/regularize anything
+      embarrassing *before* 1.0 locks it.
+- [ ] **V2 (S)** **CI OS matrix.** Add `windows-latest` + `macos-latest` legs
+      to `ci.yml` (currently Ubuntu-only with a Node matrix). Path handling
+      in merger/site/orphan slugs is exactly the code that regresses on
+      Windows.
+- [ ] **V3 (M)** **Performance benchmark.** A synthetic large project
+      (hundreds of source files / pages) built in CI with a time budget;
+      track full build + incremental watch. We claim "fast"; prove it and
+      keep it provable.
+- [ ] **V4 (S–M)** **Adoption surface** *(proposal)*: 1–2 more starter
+      examples (a versioned+i18n site; a hybrid monorepo embed) and a
+      showcase section once real sites exist. CONTRIBUTING + issue/PR
+      templates already exist — this is examples, not process.
 
-#### C3 — AI-usable CLI (machine-readable I/O — folds in U4)
+## Tier E — "the Editor" (theme, design NOT locked)
 
-- [~] **C3 (M)** An agent shouldn't *need* MCP to drive Ovellum — a clean CLI
-      contract is the floor. **Largely the same work as U4** (`--json` +
-      `--verbose`); pull it forward under the AI-Ready theme and treat the
-      machine-readable surface as a first-class deliverable, not a CI
-      afterthought. **Done 2026-06-24:** `--json` on `build` / `check` (`diff`
-      already had it); stable exit codes (0 / 1 / 3); ConfigError as JSON on the
-      `--json` path; `runCheck` extracted + reused by the new `ovellum_check`
-      MCP tool; `/docs/guides/automation/` documents the contract (schemas, exit
-      codes, MCP, llms.txt). **Remaining (folds U4):** `--verbose` debug output;
-      B8 warning-severity split inside the JSON.
-  - **`--json` on `build` / `check` / `diff`** — structured results (counts,
-        warnings with severity per B8, broken links, stale translations, draft
-        exclusions, orphan list) as a stable schema an agent parses. No
-        decorative output on the JSON path.
-  - **Stable exit codes + structured errors** — distinct codes for
-        config-invalid / build-failed / check-found-issues so an agent
-        branches without scraping stderr.
-  - **Quiet/non-TTY hygiene** — already good (update notifier suppresses in
-        CI); confirm every command degrades cleanly when piped.
-  - **Document the contract** — a `/docs/guides/automation/` (or
-        `…/ai-agents/`) page: the JSON schemas, exit codes, and "drive Ovellum
-        from a script/agent" recipes. This is also where C1/C2 get
-        cross-referenced.
+Drafts (v0.9.0) were slice 1. The rest needs a design session with the
+maintainer before any code:
 
-#### C4 — agent packaging (Claude Skill / `AGENTS.md`)
+- [ ] **E1 (M)** **Scheduled publishing** — `publish: <date>` frontmatter;
+      `build` excludes future-dated pages (with a count, like drafts). Caveat
+      to design around: builds are point-in-time — publishing requires a
+      rebuild (document the CI cron pattern; pairs with the automation
+      guide's scheduled workflow).
+- [ ] **E2 (L)** **In-place preview/editing affordances** — what "the Editor"
+      actually means for a static tool (dev-mode edit links? zone-aware
+      preview?). Unscoped; needs the maintainer's intent first.
 
-- [x] **C4 (S–M)** Tell agents *how* to use Ovellum, in the formats agents
-      look for. Two cheap, high-signal artifacts. **Done 2026-06-24:**
-  - **A Claude Skill** — `skills/ovellum-docs/SKILL.md` (setup + the hybrid
-        contract + CLI/MCP recipes); documented in the Automation guide for
-        one-copy adoption into `.claude/skills/`.
-  - **An `AGENTS.md`** scaffolded by `ovellum init` (`renderAgentsMd`,
-        mode-aware: hybrid/auto lead with the protected-zone contract; only
-        written if absent). Also fixed a stale scaffold marker
-        (`ovellum:manual:start` → `@manual:start`).
+## Tier H — horizon (post-1.0 / by appetite; does not gate anything)
 
-#### C5 — positioning (do alongside C1, not as code)
-
-- [x] **C5 (S)** Once C1 ships, say so where adopters read: a short
-      **"Ovellum for AI / agents"** landing or docs section — "your docs are
-      `llms.txt`-ready out of the box; agents can read and *safely edit* them."
-      Editorial-calm, no hype. This is the close-circle-announcement-grade
-      surface the maintainer cares about (no stale facts) — write it only after
-      the feature is real. **Done 2026-06-24:** `concepts/ai-ready.md` (en+ja),
-      "Ovellum for AI agents" — read-ready / drivable / safely-editable, each
-      cross-linked to the real feature. Chose a docs concept page over a landing
-      section (landing redesign is queued; don't pre-empt it).
-
-#### AI-Native MCP — NEXT (full plan: [`MCP.md`](./MCP.md))
-
-Make the MCP server a first-class citizen (it's the universal AI runtime
-interface) and adoption one-step, leaning on the `write_zone` moat. C1–C5 shipped
-the three surfaces (read / drive / know); these deepen *drive* + distribution.
-
-- [x] **M1 (M)** **MCP Resources + Prompts.** **Done 2026-06-25:** server
-      advertises `capabilities:{tools,resources,prompts}` and implements
-      `resources/{list,templates/list,read}` (`dev/mcp/resources.ts`:
-      `ovellum://llms.txt`, `…/llms-full.txt`, `ovellum://page/{path}`,
-      `ovellum://ir`, `ovellum://orphans`; unknown → -32002) and
-      `prompts/{list,get}` (`dev/mcp/prompts.ts`: `set-up-ovellum`,
-      `document-symbol` (the moat workflow), `review-doc-drift`). Still
-      hand-rolled, no SDK. Pinned by `mcp-server.test.ts` (now 11). Next: M2.
-- [~] **M2 (S–M)** **One-step distribution.** **Done 2026-06-25 (in-repo parts):**
-      a **Claude Code plugin** at `plugins/ovellum/` (manifest + `.mcp.json` →
-      `npx ovellum mcp` + the bundled `ovellum-docs` skill, moved from the old
-      `skills/`), listed by repo-root `.claude-plugin/marketplace.json` →
-      `/plugin marketplace add oinam/ovellum` + `/plugin install`. Cross-tool
-      install snippets (Cursor/Windsurf/Cline/VS Code) in the Automation guide.
-      `mcp` added to the notifier skip list (headless-clean). Pinned by
-      `plugin.test.ts`. **Registry manifest done 2026-06-26 (0.16.0):** package
-      `mcpName` `io.github.oinam/ovellum` + repo-root `server.json` (npm
-      `ovellum`, `packageArguments:["mcp"]`); `plugin.test.ts` guards
-      name↔mcpName↔identifier. **Remaining (human):** run `mcp-publisher login
-      github` + `publish` after 0.16.0 is on npm (TODO-Human).
-- [x] **M3 (M)** **Round out tools + moat.** **Done 2026-06-25:**
-      `ovellum_search_docs` — in-process term-frequency search over the built
-      `.md` (`dev/mcp/search.ts`); **not** Pagefind (its query runtime is
-      browser-only WASM — the npm package only *builds* indexes — so a built-in
-      text search is mode-agnostic and dependency-free) — and `ovellum_reattach`
-      (non-interactive `orphans --reattach`, reusing `dev/orphans.ts`
-      `reattachOrphan`/`suggestReattachTarget`/`deleteOrphan`). Pinned by
-      `mcp-server.test.ts` (13). **AI-Native MCP arc complete (M1–M3).**
-
-Order: M1 → M2 → M3. Each its own changeset. D2 (programmatic API) keeps new
-tools IR-backed / in-process.
-
-### Tier D — Embed & deploy anywhere ("the portable build" — NEXT BIGGEST RELEASE)
-
-**Theme (maintainer-requested 2026-06-14, flagged "the next biggest
-release"; design NOT yet locked).** Make Ovellum a clean, embeddable **build
-step** that any external tool / CI / framework can drive and then **deploy on
-its own terms** — never dependent on GitHub (or any specific host). The
-driving principle, and the message to lead with:
-
-> **Ovellum builds; the host deploys. Deploy is not Ovellum's job.** Ovellum's
-> one guarantee is a *portable, deterministic static folder*. What happens to
-> that folder — GitHub Pages from `/docs`, Netlify, Vercel, Cloudflare Pages,
-> S3/CDN sync, or a host tool's own pipeline — is the host's choice. Our repo's
-> GitHub Actions is *our site's* wiring, not a product requirement.
-
-This matters most for **hybrid builds embedded in someone else's system**: the
-host project runs Ovellum as a step (merging generated API docs + hand prose),
-gets a static `dist`/`docs` folder, and its existing deploy takes over. The
-"hook to let their tool deploy" is really three layered contracts below.
-
-**Where we already are (verified 2026-06-14):** `config.output` exists (default
-`./docs`) — so *GitHub Pages from a repo's `/docs/` folder already works with
-**zero** Actions* (`ovellum build` → static files → Pages serves them). The gap
-is everything that lets a *non-human tool* drive it cleanly + know what came
-out.
-
-- [x] **D1 (S) — `--out`/`--base` SHIPPED 2026-06-14** (`applyOverrides` in
-      `run-build.ts`; flags on the build command). **Still in C3:** the
-      `--json` machine-readable output (deferred with U4) and the
-      idempotent-clean-output semantics (today the build `mkdir`s but doesn't
-      clean — left as-is, documented behavior). Original below. — Add
-      `ovellum build --out <dir>` and `--base <path>` overrides (output is
-      config-only today — no `.option()` on `build`). Pair with **C3's
-      `--json`** so a host pipeline parses the result instead of scraping
-      stdout. Guarantee **idempotent output** — clean-or-reconcile the target
-      dir so repeated builds are diffable and deploys atomic (today the build
-      `mkdir`s but doesn't clean — confirm + document the semantics).
-- [x] **D2 (M) — Programmatic build API (the real "hook").** **Done 2026-06-25:**
-      `src/api.ts` exports a curated, side-effect-free facade — `build()`,
-      `watch()`, `loadConfig()`, `defineConfig` + the config/`BuildSummary` types
-      — from the `ovellum` package. Split the entry: `bin` → `dist/index.js`
-      (CLI, shebang), `main`/`exports["."]` → `dist/api.js` (library, no shebang,
-      no `runMain`). **ESM-only** (`type: module`; pagefind is ESM-only and the
-      bin is ESM — a CJS build can't `require()` cleanly). Self-contained types:
-      tsup `dts: { resolve: [/^@ovellum\//] }` inlines the bundled-private types
-      into `dist/api.d.ts` (kept `@ovellum/*` private — no flip needed). Curated
-      facade over the internal engines (`runBuild`/`watchAndBuild`), NOT raw
-      `@ovellum/*`. Pinned by `api.test.ts` (5). Next: D5 recipes, then D3 hooks.
-- [x] **D3 — DONE 2026-06-29 (shipped as B1 slice 1).** Build lifecycle hooks —
-      `onResolveConfig`, `onBuildStart`, `transformPage` (per-page HTML, manual
-      mode), `onBuildComplete({ outDir, manifest, cwd, mode })`. Delivered via
-      the `config.plugins: OvellumPlugin[]` model (the shared B1 seam, as
-      planned): a host tool's deploy logic lives in `onBuildComplete`, which
-      always receives the deploy manifest. Thin, typed, config/api-supplied
-      functions — no component system. See [`PLUGINS.md`](./PLUGINS.md) + B1.
-- [x] **D4 (S–M) — SHIPPED 2026-06-14** via `ovellum build --manifest`
-      (`dev/manifest.ts` `writeDeployManifest`; sorted, sha256, OS-junk +
-      own-dir excluded; `manifest.test.ts`). Original below. — Emit `<output>/.ovellum/manifest.json`:
-      every written file (path, route, content hash, byte size) + build
-      metadata (version, locales, draft-excluded count). Lets a deploy tool do
-      **incremental / atomic** uploads (S3/CDN sync, cache-bust, completeness
-      verify) instead of blind-copying. Pairs with D1 `--json` and the C-tier
-      machine-readable theme.
-- [x] **D5 (S) — "Deploy anywhere" recipes + positioning (docs, not code).**
-      **Done 2026-06-25:** the existing `guides/deploy` page already covered
-      hosts (self-hosted, GitHub Pages A/B, Cloudflare, GitLab, Netlify, Vercel,
-      subpath); added the missing pieces — an **"Embedding in another project's
-      build"** section (CLI composition with `--out`/`--base` + `concurrently`,
-      and the in-process [programmatic API](#d2)) and a **manifest/CDN sync**
-      recipe. Website-only (no changeset). Original below:
-      A `/docs/guides/deploying/` page: GitHub Pages from `/docs` (no Actions),
-      Netlify / Vercel / Cloudflare Pages (build command + publish dir),
-      S3/CDN sync via the D4 manifest, and **embedding the build in a host
-      pipeline** (monorepo / Vite / turbo / another SSG's `/docs`). Lead with
-      "Ovellum never deploys; it builds a portable folder." Write after D1–D4
-      are real (no stale facts in a public surface).
-
-**Sequencing within D:** D1 (cheap, unblocks scripted use immediately) → D4
-(manifest, cheap, high leverage) → D2 (API, flips the bundling decision) → D3
-(hooks, co-designed with B1) → D5 (docs/positioning). D1+D4 alone deliver "any
-tool can build + deploy Ovellum output" — D2/D3 make it *embeddable in-process*.
-
-**Cross-references:** overlaps **C3** (`--json`, machine-readable CLI — D1
-depends on it), **B1** (plugin API — D3 is its first real consumer), and the
-parked **`@ovellum/*` bundled-private** decision (D2 flips it). Decide whether
-Tier C (AI-Ready) or Tier D ships first when picked up — they share the
-machine-readable-CLI groundwork (C3 ≈ D1).
-
-## 3. Usability
-
-- [x] **U1 (M) — DONE 2026-06-30.** **Troubleshooting page**
-      (`guides/troubleshooting`, en+ja): protected zones not merging (id-less
-      positional warning + `--strict` `positional-zone`/`stale-anchor`),
-      unbalanced `@manual` tags (nested/stray/unclosed errors), the
-      "my prose disappeared → orphans" recovery walkthrough
-      (`ovellum orphans [--stale|--reattach]`, present/gone/unknown status),
-      config not loading (missing ≠ error → `config: (defaults)`; invalid → exit
-      3; the `defineConfig` value-import vs scaffold `import type` gotcha),
-      broken asset paths (relative-vs-root-absolute pretty-URL trap, basePath,
-      publicDir, assetBaseUrl), `dev` manual-only, and the exit-code table. Real
-      error strings throughout. Website-only (no changeset).
-- [x] **U2 (M) — DONE 2026-06-30.** **Migration guide** (`guides/migration`,
-      en+ja): the three-mode comparison table + the hybrid pitch (prose in the
-      generated file, survives regen, orphan-quarantined). Three "from" paths —
-      **TypeDoc** (auto ≈ it; hybrid is the differentiator; ts-morph + JSDoc/TSDoc
-      tags), **hand-written Markdown** (manual mode = full SSG, concrete feature
-      list), and **a hosted docs platform** (ownership/portability/AI-native MCP
-      angle — competitor **NOT named**, per COMPETITIVE rule). Plus a 6-step
-      "bringing your content across" (init → drop md → `_meta.json` → frontmatter
-      → root-absolute assets → `check`). Website-only (no changeset).
-- [x] **U3 (S) — DONE 2026-06-27.** **Init scaffolds a protected-zone example**
-      in hybrid mode (`renderStarterIndex` adds a `@manual id="welcome-note"`
-      zone with "Add your own notes here — this block survives every rebuild";
-      manual mode unchanged). `--yes` fast path already documented in the
-      development guide; added a note there that the hybrid starter carries the
-      example (en+ja). Pinned by `init-render.test.ts` (2).
-- [x] **U4 (M)** **`--verbose` flag** (config-resolution path, file I/O detail)
-      and **`--json` output** on `build`/`check`/`diff` for CI. `--json` done with
-      C3; **`--verbose` done 2026-06-25** on `build`/`check`/`diff` — logs config
-      resolution + per-stage / file-I/O detail to **stderr** (threaded as an
-      `onLog` through `runBuild`/`buildProjectDocs`), so it composes with `--json`
-      (stdout stays pure).
-- [x] **U5 (S) — DONE 2026-06-27.** **Better small messages:** `upgrade`
-      registry-failure now hints the manual `npm install -D ovellum@latest` path;
-      the `dev` manual-only error points at `watch`/`build` instead of the
-      internal "TODO.md Phase 6" ref; `init`'s config-exists error prints a
-      relative path; and `ovellum dev --verbose` logs each request
-      (`METHOD path → status`, opt-in via `DevServerOptions.logRequests`).
-- [x] **U6 (S) — DONE 2026-06-27.** **Docs quick wins:** added a `footerNav`
-      row to the config reference table (it was in the interface but undocumented;
-      en+ja); linked [`examples/`](https://github.com/oinam/ovellum/tree/main/examples)
-      from the manual + hybrid guides (en+ja); reframed the hybrid guide's "What
-      hybrid mode doesn't do" → **"Boundaries (by design)"** (deliberate, not
-      gaps; en+ja). Skipped the landing mode-explainer — redundant with the
-      "Three Modes" feature card + hero (adding it would be the kind of chrome
-      the design direction rejects).
-- [x] **U7 (M) — DONE 2026-06-30.** **"Why hybrid" comparison section** in the
-      hybrid guide (en+ja): frames the two alternatives' failure modes (pure
-      generator → hand edits lost / prose-in-separate-files drift; hand-written →
-      silently stale) and a "when the source changes" table (change signature /
-      rename-delete / add symbol × generator / hand-written / hybrid) whose last
-      column is the "never fall out of sync" payoff; cross-links the migration
-      guide rather than duplicating its TypeDoc comparison. Website-only (no
-      changeset). **All U-series usability docs now done (U1–U8).**
-- [x] **U8 (M)** **Drafts — SHIPPED (v0.9.0, "the Editor" slice 1).** Design locked
-      2026-06-14 (planning session). Model: a draft is **dev-visible, never
-      published** — WIP you preview locally (and the team sees in source), then
-      decide whether to publish.
-  - **Declared by frontmatter `draft: true`** (primary, per page) +
-        **`_meta.json "draft": true`** (whole folder, cascades — parallels the
-        existing `hidden`). **NOT** a Jekyll-style `_drafts/` folder (clunky,
-        breaks co-location, move-to-publish). Co-located frontmatter beats
-        Jekyll.
-  - **Repurpose the existing `draft: true`** (today it's excluded *everywhere*,
-        nav.ts:242 + build.ts:447 return null) → **excluded in production
-        `build`, INCLUDED in `dev`/`watch`/`serve`** with a ribbon + sidebar
-        badge. Standard meaning (Hugo `buildDrafts`). **Behavior change** —
-        note in the changeset. `draft` ≠ `ignoreFiles`: **`ignoreFiles` is full
-        exclusion — never parsed or rendered, in any environment** (the user's
-        explicit framing); `draft` is parsed + rendered in dev only.
-  - **Automatic by command** (no `--drafts` flag to remember, unlike Jekyll):
-        dev/watch/serve include drafts, `build` excludes. Overrides:
-        `build --drafts` (preview prod w/ drafts), `dev --no-drafts` (simulate
-        prod). Plumb an `includeDrafts` flag into `BuildSiteOptions` (today it's
-        just `{config,cwd,now}` — build has no dev/prod signal).
-  - **Ribbon** — a sticky top band on every draft page: *"Draft — visible
-        locally only, never published."* Only ever renders in dev (drafts don't
-        exist in prod), so the message is self-true.
-  - **Sidebar badge** — a small "Draft" tag next to draft pages in the nav
-        (user confirmed they want this).
-  - **Build transparency** — `ovellum build` prints *"N draft pages excluded"*
-        so a draft never silently vanishes from production.
-  - Drafts stay out of **sitemap / RSS / hreflang** always, and out of the i18n
-        picker's "translated" set.
-  - **Caveat to document:** drafts are *unpublished, not secret* — they live in
-        source, so anyone with repo access sees them (that's the point: backed
-        up, PR-reviewable, team-visible). True secrecy = gitignore the file.
-  - Fits the broader v0.9.0 "Editor" theme (authoring/preview experience);
-        drafts are the first slice.
+- [ ] **H1 (M–L)** **Landing redesign** — queued with Agora.xyz as the
+      touchstone; a design session, not a feature ticket.
+- [ ] **H2 (L)** **OpenAPI/AsyncAPI reference + playground** — REST-console
+      territory, orthogonal to the TS/JS symbol story. Revisit only on real
+      demand (first-edition verdict stands).
+- [ ] **H3 (L)** **Beyond TS/JS** *(proposal)* — evaluate whether the IR +
+      anchor model is language-neutral enough to admit other parsers
+      (Python/Go) behind the plugin seam. The biggest possible 10x — and the
+      easiest to do badly. Evaluation doc first, no code.
+- [ ] **H4** **Commercial hosted tier** — post-`v1.0.0` direction per
+      `COMPETITIVE.md` (hosting, web editor, analytics, SSO, hosted ask-AI).
+      Direction, not commitment; the free tool stays complete.
 
 ---
 
 ## Suggested sequencing
 
-1. **Slice 1 — hardening + quick wins (1 day):** S1–S6 + B3 + U5 + U6.
-   Small diffs, all verifiable, clears the audit list.
-2. **Slice 2 — hybrid moat foundation:** A1 → A4 → A2 (IR persistence,
-   orphans CLI, diff). Ships the long-promised `orphans` command and the
-   first genuinely-new capability since 0.3.0. Likely **0.4.0**.
-3. **Slice 3 — adoption surface:** U1 + U2 + U3 + U7 + B2 (MDX tier 1) +
-   C1 (llms.txt). Docs-heavy, low risk, big first-impression payoff.
-4. **Slice 4 — the big bets, each its own design pass:** B1 (plugin API),
-   A3 (rename detection), B6/B7 (versions/i18n), C2 (MCP). Pick by appetite.
+1. **0.22.0** — ship the pending `ovellum agents` changeset; fold in **F3 +
+   F4** (small, same release).
+2. **0.23.0 — authoring headline:** **W1 snippets/includes** (+ **W2**
+   changelog if the slice is light). Closes the last COMPETITIVE gap.
+3. **0.24.0 — finish lines + measurability:** **F1 + F2**, and pitch **G1
+   coverage** (if adopted, it's the release headline).
+4. **1.0 runway:** **V1 → V2 → V3** (contract first — it may force small
+   breaking renames; do them while still 0.x). Then decide the 1.0 call.
+5. **After/alongside, by appetite:** G2/G3, Tier E design session, H1
+   landing redesign.
 
-> **Update 2026-06-14:** 0.4.0–0.7.0 shipped (appearance control, palettes,
-> publicDir, media + scoped-iframe embeds, bundled font picker + text-size,
-> Styleguide, assetBaseUrl, "Edited" dates, American-English spelling). **B4
-> "custom fonts via config" is largely delivered** by 0.7.0's bundled font
-> picker (revisit only for arbitrary userland fonts). **v0.8.0 focus = B7
-> (i18n)** — design locked above; English-canonical + a Japanese demo.
->
-> **Update 2026-06-14 (later): v0.8.0 SHIPPED** (i18n + full English/Japanese
-> site + locale-aware nav + breadcrumb fix). **v0.9.0 focus = U8 (Drafts / "the
-> Editor")** — design locked above: `draft: true` repurposed to dev-visible/
-> prod-excluded, `_meta.json "draft"` for folders, automatic by command, ribbon
-> + sidebar badge + build warning.
->
-> **Update 2026-06-14 (later still): v0.9.0–v0.11.0 SHIPPED** (drafts; smarter
-> "Edited" dates; footnotes; i18n completed end-to-end). **Two themes prepared,
-> not started:**
-> - **Tier D "Embed & deploy anywhere" — flagged THE NEXT BIGGEST RELEASE**
->   (maintainer, 2026-06-14): a portable, embeddable build any tool can drive +
->   deploy without GitHub. D1 `--out`/`--base` + `--json`, D2 programmatic
->   `build()` API (flips the parked `@ovellum/*` bundled-private decision), D3
->   lifecycle hooks (the literal deploy hook; co-design with B1), D4 deploy
->   manifest, D5 recipes. `config.output` (default `./docs`) already gives
->   Pages-from-`/docs` with zero Actions — D fills the tool-driven gap. Design
->   NOT locked.
-> - **Tier C "AI-Ready"** — C1 `llms.txt`/`.md` mirror output, C2 MCP server,
->   C3 machine-readable CLI, C4 Skill/`AGENTS.md`, C5 positioning. Prepared at
->   the maintainer's "prepare for later" request. **C3 ≈ D1** (shared
->   machine-readable-CLI groundwork) — sequence the two together when picked up.
->
-> **Update 2026-06-14 (later still): C1 + D1 + D4 SHIPPED** as one AI-themed
-> slice (the "build out the two AI big features" request). **C1** = `site.ai`
-> → `llms.txt` / `llms-full.txt` / per-page `.md` mirrors (per-locale). **D1** =
-> `ovellum build --out`/`--base`. **D4** = `--manifest` → hashed deploy
-> inventory. All on `main`, 343 tests green, en+ja docs + FEATURES updated,
-> changeset staged. **Not yet built (the design-locked / prerequisite-bound
-> rest):** C2 MCP server (needs A1 IR persistence + design pass), C3 `--json`
-> (with U4), C4 Skill/`AGENTS.md`, C5 positioning page; D2 programmatic `build()`
-> API (flips `@ovellum/*` bundled-private), D3 lifecycle hooks (with B1), D5
-> deploy recipes.
-
----
-
-## Full audit findings (reference)
-
-Severity-verified highlights not already itemized above; the four raw
-subagent reports were synthesized 2026-06-12 — items below are the
-remainder worth remembering, all low priority:
-
-- `dev/server.ts`: port-check → listen race (acceptable for a dev server);
-  TOCTOU between `existsSync` and `statSync` in the `.html` fallback (wrap
-  in try/catch).
-- `commands/build.ts`: redundant manual mode re-validation after schema
-  validation — drop one.
-- `update/notifier.ts`: config-load errors are swallowed to defaults — fine
-  for a notifier, but emit under `--verbose` once U4 exists.
-- Orphan filename collisions (same slug, same day) overwrite — add a
-  counter suffix when it ever bites.
-- Hybrid mode overwrites manual frontmatter on regeneration (by design;
-  custom frontmatter preservation would need its own design).
-- `ovellum clean` — **IMPLEMENTED 2026-06-30** (`commands/clean.ts`): dry-run by
-  default, `--confirm` deletes, preserves hand-written files / `@manual`-zone
-  files / the orphan archive (unless `--orphans`); manual mode wipes the whole
-  output dir. Matches the published cli.md contract + the "deleting prose must be
-  deliberate" decision.
+The standing rule carries over: docs (en + ja, hashes stamped) + FEATURES.md
++ changeset in the same commit as each feature; full CI gate
+(lint+typecheck+test+build) before committing.
