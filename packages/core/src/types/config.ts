@@ -95,14 +95,20 @@ export interface OvellumImagesConfig {
   quality?: number;
   /**
    * Convert raster images to a modern format instead of re-encoding in place.
-   * `'webp'` rewrites `.png`/`.jpg`/`.jpeg` assets to `.webp` (much smaller, ~97%
-   * browser support) and rewrites the matching Markdown `<img src>` references to
-   * point at the new files. Other images (`.webp`/`.avif`/`.svg`/`.gif`) are
-   * unaffected. **Not compatible with {@link OvellumSiteConfig.assetBaseUrl}** (a
-   * CDN serves the originals, which wouldn't be converted). Unset = re-encode in
-   * place, same format.
+   * `'webp'` (~97% browser support) or `'avif'` (smaller still, ~95% support)
+   * rewrites `.png`/`.jpg`/`.jpeg` assets to the new extension and rewrites the
+   * matching Markdown `<img src>` references to point at the new files. Other
+   * images (`.webp`/`.avif`/`.svg`/`.gif`) are unaffected. **Not compatible
+   * with {@link OvellumSiteConfig.assetBaseUrl}** (a CDN serves the originals,
+   * which wouldn't be converted). Unset = re-encode in place, same format.
    */
-  format?: 'webp';
+  format?: 'webp' | 'avif';
+  /**
+   * Downscale raster images wider than this many pixels (aspect ratio kept;
+   * images at or under the cap are untouched). Applies to every optimized
+   * raster, with or without `format`. Unset = never resize.
+   */
+  maxWidth?: number;
 }
 
 /**

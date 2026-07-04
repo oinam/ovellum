@@ -1067,6 +1067,8 @@ export interface RenderLandingInput {
   docsHref?: string;
   /** Canonical site-relative URL (the locale's home for i18n); defaults to `/`. */
   url?: string;
+  /** Absolute URL of the landing's OpenGraph card (`site.ogImage`), if any. */
+  ogImageUrl?: string;
   /** `<html lang>` for i18n sites; defaults to `'en'` when unset. */
   lang?: string;
   /** Language-picker entries (i18n sites); empty/undefined = no picker. */
@@ -1188,6 +1190,7 @@ export function renderLanding(input: RenderLandingInput): string {
     site: input.site,
     fullTitle,
     description: input.site.description,
+    ogImageUrl: input.ogImageUrl,
     url: input.url ?? '/',
     assetsPrefix: input.assetsPrefix,
     docsHref: input.docsHref ? siteUrl(input.docsHref, basePath) : undefined,

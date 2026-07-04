@@ -62,20 +62,27 @@ Everything in Tier H explicitly does **not** gate 1.0.
 Small, already-designed remainders. Clear these first; they're cheap and they
 close open loops.
 
-- [ ] **F1 (M)** **Images, slice 3** (B9 remainder): `site.images.maxWidth`
-      resize cap; AVIF as a `format` target; `<picture>`/`srcset` emission
-      (design: Markdown-body only, same seam as the WebP rewrite); OG-image
-      coverage for composable-landing pages.
-- [ ] **F2 (S–M)** **Versioning polish** (B6 slice 2): `noindex` + sitemap
-      exclusion for non-latest versions; an "you're viewing an old version"
-      banner (editorial-calm, one line); a `version snapshot` command that
-      copies current content into `content/<id>/` and updates config.
-- [ ] **F3 (S)** **AI discoverability** (C1 remainder): per-page
-      `<link rel="alternate" type="text/markdown">` pointing at the `.md`
-      mirror; mention `/llms.txt` in `robots.txt`.
-- [ ] **F4 (S)** **Paper-cut hardening** (audit leftovers, one slice): orphan
-      filename collision counter suffix; dev-server `.html`-fallback TOCTOU
-      try/catch; update-notifier config-load errors surfaced under
+- [x] **F1 (M)** **Images, slice 3** (B9 remainder) — **DONE 2026-07-04**
+      (except srcset, deliberately): `site.images.maxWidth` resize cap
+      (metadata-checked, never enlarges, composes with format), `format:
+      'avif'`, OG cards for landing pages. **`<picture>`/`srcset` re-deferred
+      with a recorded reason:** the Markdown rewrite seam is per-page string
+      rewriting with no knowledge of each image's intrinsic width — emitting
+      srcset safely needs an asset-manifest phase before page rendering
+      (process images first, feed a variant map into the rehype pass).
+      That's its own design item; do not half-ship it.
+- [x] **F2 (S–M)** **Versioning polish** (B6 slice 2) — **DONE 2026-07-04**:
+      `noindex` + sitemap exclusion for non-latest versions; the old-version
+      banner (localized, links the same page in latest); `ovellum snapshot
+      <id>` (copies content; prints the config entry instead of editing a
+      TS config).
+- [x] **F3 (S)** **AI discoverability** (C1 remainder) — **DONE 2026-07-04**:
+      per-page `<link rel="alternate" type="text/markdown">`; a default
+      `robots.txt` (allow-all + Sitemap + llms.txt pointer) unless the user
+      ships their own via publicDir.
+- [x] **F4 (S)** **Paper-cut hardening** (audit leftovers) — **DONE
+      2026-07-04**: orphan filename collision counter suffix; dev-server
+      stat races → 404 (not 500); notifier config-load fallback noted under
       `--verbose`.
 
 ## Tier W — authoring power (the remaining COMPETITIVE.md adopts)

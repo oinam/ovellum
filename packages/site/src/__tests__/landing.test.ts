@@ -471,3 +471,20 @@ describe('renderLanding', () => {
     });
   });
 });
+
+describe('landing OpenGraph meta (F1)', () => {
+  it('emits og:image meta when ogImageUrl is provided', () => {
+    const html = renderLanding({
+      site: { title: 'X', defaultTheme: 'auto', footer: '' },
+      landing: {
+        enabled: true,
+        hero: { title: 'Hello', ctas: [] },
+        features: [],
+      },
+      generatedAt: '2026-07-04T00:00:00.000Z',
+      ogImageUrl: 'https://x.test/og/index.png',
+    });
+    expect(html).toContain('<meta property="og:image" content="https://x.test/og/index.png">');
+    expect(html).toContain('<meta name="twitter:card" content="summary_large_image">');
+  });
+});

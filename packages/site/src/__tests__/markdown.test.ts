@@ -486,3 +486,12 @@ describe('component directives (B2)', () => {
     expect(html).toContain('Body.');
   });
 });
+
+describe('renderMarkdown — convertImages: avif (F1)', () => {
+  it('rewrites local raster <img src> to .avif', async () => {
+    const md = '![a](/img/hero.png) ![b](https://x.test/photo.jpg)';
+    const { html } = await renderMarkdown(md, { convertImages: 'avif' });
+    expect(html).toContain('src="/img/hero.avif"');
+    expect(html).toContain('src="https://x.test/photo.jpg"'); // external untouched
+  });
+});

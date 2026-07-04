@@ -32,27 +32,29 @@ export interface RenderMarkdownOptions {
   remarkPlugins?: PluggableList;
   /** Plugin-supplied rehype plugins, injected before sanitize (sanitize stays the guard). */
   rehypePlugins?: PluggableList;
-  /** When `'webp'`, rewrite local `.png`/`.jpg`/`.jpeg` `<img src>` to `.webp`. */
-  convertImages?: 'webp';
+  /** Rewrite local `.png`/`.jpg`/`.jpeg` `<img src>` to this format's extension. */
+  convertImages?: 'webp' | 'avif';
 }
 
 /**
- * Rewrite local raster `<img src>` (`.png`/`.jpg`/`.jpeg`) to `.webp`, matching
- * the build's `site.images.format: 'webp'` conversion. Skips external/data URLs
- * and other formats; preserves any `?query`/`#hash`. Runs post-sanitize on the
- * trusted tree (it only swaps a same-origin path's extension).
+ * Rewrite local raster `<img src>` (`.png`/`.jpg`/`.jpeg`) to the converted
+ * format's extension, matching the build's `site.images.format` conversion.
+ * Skips external/data URLs and other formats; preserves any `?query`/`#hash`.
+ * Runs post-sanitize on the trusted tree (it only swaps a same-origin path's
+ * extension).
  */
-function rehypeWebpImages() {
-  return (tree: Root): void => {
-    visit(tree, 'element', (node: Element) => {
-      if (node.tagName !== 'img') return;
-      const src = node.properties?.src;
-      if (typeof src !== 'string') return;
-      // Skip schemes (http:, data:, …) and protocol-relative (//host/…).
-      if (/^[a-z][a-z0-9+.-]*:/i.test(src) || src.startsWith('//')) return;
-      node.properties.src = src.replace(/\.(?:png|jpe?g)(?=$|[?#])/i, '.webp');
-    });
-  };
+function rehypeConvertImages(format: 'webp' | 'avif') {
+  return () =>
+    (tree: Root): void => {
+      visit(tree, 'element', (node: Element) => {
+        if (node.tagName !== 'img') return;
+        const src = node.properties?.src;
+        if (typeof src !== 'string') return;
+        // Skip schemes (http:, data:, …) and protocol-relative (//host/…).
+        if (/^[a-z][a-z0-9+.-]*:/i.test(src) || src.startsWith('//')) return;
+        node.properties.src = src.replace(/\.(?:png|jpe?g)(?=$|[?#])/i, '.' + format);
+      });
+    };
 }
 
 /**
@@ -283,7 +285,7 @@ export async function renderMarkdown(
   // webp conversion (B9): rewrite local raster `<img src>` to `.webp`. Runs
   // before sanitize — it only swaps a relative path's extension, which sanitize
   // keeps — so the rewritten refs match the converted files on disk.
-  if (opts.convertImages === 'webp') processor.use(rehypeWebpImages);
+  if (opts.convertImages) processor.use(rehypeConvertImages(opts.convertImages));
   const file = await processor
     // Sanitize BEFORE shiki — see SANITIZE_SCHEMA comment above.
     .use(rehypeSanitize, SANITIZE_SCHEMA)

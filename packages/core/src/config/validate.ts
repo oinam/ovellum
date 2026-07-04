@@ -479,13 +479,17 @@ export function validateUserConfig(input: unknown): OvellumUserConfig {
         throw new ConfigError('`site.images.quality` must be an integer between 1 and 100.');
       }
       const fmt = s.images.format;
-      if (fmt !== undefined && fmt !== 'webp') {
-        throw new ConfigError("`site.images.format` must be `'webp'`.");
+      if (fmt !== undefined && fmt !== 'webp' && fmt !== 'avif') {
+        throw new ConfigError("`site.images.format` must be `'webp'` or `'avif'`.");
       }
       if (fmt !== undefined && s.assetBaseUrl !== undefined) {
         throw new ConfigError(
           '`site.images.format` (image conversion) is not compatible with `site.assetBaseUrl` — a CDN serves the original images.',
         );
+      }
+      const mw = s.images.maxWidth;
+      if (mw !== undefined && (typeof mw !== 'number' || !Number.isInteger(mw) || mw < 1)) {
+        throw new ConfigError('`site.images.maxWidth` must be a positive integer (pixels).');
       }
     }
     if (s.minify !== undefined && typeof s.minify !== 'boolean') {

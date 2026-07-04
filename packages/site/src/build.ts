@@ -4,7 +4,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import matter from 'gray-matter';
 import type { PluggableList } from 'unified';
-import { isConvertibleToWebp, isOptimizableImage, optimizeImageFile, webpDest } from './images.js';
+import { convertDest, isFormatConvertible, isOptimizableImage, optimizeImageFile } from './images.js';
 import { isMinifiable, minifyFile } from './minify.js';
 import { generateOgCard, ogSlug, resolveOgConfig, type ResolvedOgConfig } from './og-image.js';
 import type {
@@ -201,7 +201,8 @@ export async function buildSite(options: BuildSiteOptions): Promise<BuildSiteRes
   // one bad image never fails the build. Totals are reported as an info note.
   const imagesCfg = site.images;
   const imageQuality = imagesCfg?.quality ?? 80;
-  const imageFormat = imagesCfg?.format; // 'webp' → convert png/jpg/jpeg to .webp
+  const imageFormat = imagesCfg?.format; // 'webp'/'avif' → convert png/jpg/jpeg
+  const imageMaxWidth = imagesCfg?.maxWidth; // downscale wider rasters (aspect kept)
   const imageStats = { count: 0, savedBytes: 0 };
   // Opt-in CSS/JS minification of author-supplied assets (`site.minify`, B9
   // sibling). The bundled theme is already minified at our package build, so
@@ -242,18 +243,17 @@ export async function buildSite(options: BuildSiteOptions): Promise<BuildSiteRes
   };
   const copyAsset = async (srcAbs: string, destAbs: string): Promise<void> => {
     if (imagesCfg && isOptimizableImage(srcAbs)) {
-      // Under `format: 'webp'`, png/jpg/jpeg are written as a sibling `.webp`
+      // Under `format`, png/jpg/jpeg are written as a sibling `.webp`/`.avif`
       // (the Markdown `<img src>` refs are rewritten to match); other images
-      // re-encode in place.
-      const convert = imageFormat === 'webp' && isConvertibleToWebp(srcAbs);
-      const dest = convert ? webpDest(destAbs) : destAbs;
+      // re-encode in place. `maxWidth` downscales oversized rasters either way.
+      const convert = imageFormat !== undefined && isFormatConvertible(srcAbs);
+      const dest = convert && imageFormat ? convertDest(destAbs, imageFormat) : destAbs;
       try {
-        const { optimized, savedBytes } = await optimizeImageFile(
-          srcAbs,
-          dest,
-          imageQuality,
-          convert ? 'webp' : undefined,
-        );
+        const { optimized, savedBytes } = await optimizeImageFile(srcAbs, dest, {
+          quality: imageQuality,
+          format: convert ? imageFormat : undefined,
+          maxWidth: imageMaxWidth,
+        });
         if (optimized) {
           imageStats.count++;
           imageStats.savedBytes += savedBytes;
@@ -430,6 +430,35 @@ export async function buildSite(options: BuildSiteOptions): Promise<BuildSiteRes
           install.push({ html: snippetHtml });
         }
       }
+      // OpenGraph card for the landing page (same pipeline as doc pages; a
+      // failure warns and just omits the meta).
+      const landingTitle =
+        localize(site.landing.hero.title, spec.code ?? undefined, site.defaultLocale) || site.title;
+      let landingOgUrl: string | undefined;
+      if (ogContext) {
+        try {
+          const png = await generateOgCard({
+            title: landingTitle,
+            siteTitle: site.title,
+            config: ogContext.config,
+          });
+          const slug = ogSlug(homeUrl);
+          await mkdir(ogContext.dirAbs, { recursive: true });
+          await writeFile(path.join(ogContext.dirAbs, `${slug}.png`), png);
+          landingOgUrl =
+            ogContext.baseUrl.replace(/\/+$/, '') +
+            siteUrl(`/og/${slug}.png`, normaliseBasePath(ogContext.basePath));
+          ogStats.count++;
+        } catch (err) {
+          warnings.push(
+            warn(
+              `OG image generation failed for ${homeUrl} — meta omitted: ${
+                err instanceof Error ? err.message : String(err)
+              }`,
+            ),
+          );
+        }
+      }
       const html = renderLanding({
         site,
         landing: site.landing,
@@ -438,6 +467,7 @@ export async function buildSite(options: BuildSiteOptions): Promise<BuildSiteRes
         generatedAt: now.toISOString(),
         docsHref: spec.docsHref,
         url: homeUrl,
+        ogImageUrl: landingOgUrl,
         lang: spec.lang,
         localeAlternates: alternates('/'),
         versionAlternates: versionAlts('/'),
@@ -454,9 +484,7 @@ export async function buildSite(options: BuildSiteOptions): Promise<BuildSiteRes
         sourcePath: landingBody?.sourcePath ?? '(landing config)',
         outputPath: path.relative(cwd, landingOut).replace(/\\/g, '/'),
         url: homeUrl,
-        title:
-          localize(site.landing.hero.title, spec.code ?? undefined, site.defaultLocale) ||
-          site.title,
+        title: landingTitle,
         oldVersion: oldVersion || undefined,
       });
       landingRendered = true;
@@ -806,8 +834,8 @@ interface RenderOneInput {
   /** Plugin-supplied remark/rehype plugins for the Markdown render (B1). */
   remarkPlugins?: unknown[];
   rehypePlugins?: unknown[];
-  /** Rewrite local raster `<img src>` to `.webp` (`site.images.format`). */
-  convertImages?: 'webp';
+  /** Rewrite local raster `<img src>` to the converted format (`site.images.format`). */
+  convertImages?: 'webp' | 'avif';
   /** Per-page OpenGraph card generation (`site.ogImage` + `site.baseUrl`). */
   ogImage?: { dirAbs: string; config: ResolvedOgConfig; baseUrl: string; basePath: string };
 }
@@ -961,7 +989,7 @@ async function readLandingBody(
   markdownPlugins?: {
     remarkPlugins?: unknown[];
     rehypePlugins?: unknown[];
-    convertImages?: 'webp';
+    convertImages?: 'webp' | 'avif';
   },
 ): Promise<LandingBody | undefined> {
   const abs = path.join(inputAbs, LANDING_BODY_FILE);

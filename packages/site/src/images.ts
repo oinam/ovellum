@@ -10,6 +10,8 @@ interface SharpInstance {
   png(opts: { compressionLevel: number }): SharpInstance;
   webp(opts: { quality: number }): SharpInstance;
   avif(opts: { quality: number }): SharpInstance;
+  resize(opts: { width: number; withoutEnlargement: boolean }): SharpInstance;
+  metadata(): Promise<{ width?: number }>;
   toBuffer(): Promise<Buffer>;
 }
 type SharpFactory = (input: string) => SharpInstance;
@@ -45,14 +47,14 @@ export function isOptimizableImage(filePath: string): boolean {
   return OPTIMIZABLE.has(path.extname(filePath).toLowerCase());
 }
 
-/** Raster formats converted to webp under `site.images.format: 'webp'`. */
-const WEBP_CONVERTIBLE = new Set(['.jpg', '.jpeg', '.png']);
-export function isConvertibleToWebp(filePath: string): boolean {
-  return WEBP_CONVERTIBLE.has(path.extname(filePath).toLowerCase());
+/** Raster formats converted under `site.images.format` (`'webp'` / `'avif'`). */
+const CONVERTIBLE = new Set(['.jpg', '.jpeg', '.png']);
+export function isFormatConvertible(filePath: string): boolean {
+  return CONVERTIBLE.has(path.extname(filePath).toLowerCase());
 }
-/** The webp output path for a convertible image (`/img/x.png` → `/img/x.webp`). */
-export function webpDest(destAbs: string): string {
-  return destAbs.replace(/\.(?:png|jpe?g)$/i, '.webp');
+/** The converted output path for a convertible image (`/img/x.png` → `/img/x.webp`). */
+export function convertDest(destAbs: string, format: 'webp' | 'avif'): string {
+  return destAbs.replace(/\.(?:png|jpe?g)$/i, '.' + format);
 }
 
 export interface OptimizeResult {
@@ -62,43 +64,66 @@ export interface OptimizeResult {
   savedBytes: number;
 }
 
+export interface OptimizeOptions {
+  /** Encoder quality 1–100 for lossy formats. */
+  quality: number;
+  /** Convert png/jpg/jpeg to this format (`destAbs` already carries the new extension). */
+  format?: 'webp' | 'avif';
+  /** Downscale images wider than this many px (aspect kept; never enlarges). */
+  maxWidth?: number;
+}
+
 /**
- * Re-encode a raster image **in place** (same path + format), writing whichever
- * of the optimized or original bytes is smaller to `destAbs`, so optimization
- * never makes a file bigger. Format-appropriate: lossy `quality` for
- * jpeg/webp/avif, lossless max-deflate for png. Throws if sharp is missing (the
- * caller decides whether to fail the build) or the encode fails.
+ * Re-encode a raster image, writing to `destAbs`. Without `format` this is an
+ * in-place re-encode (same path + format) that keeps whichever of the optimized
+ * or original bytes is smaller, so optimization never makes a file bigger —
+ * EXCEPT when `maxWidth` actually downscaled the image: then the resized encode
+ * is the wanted artifact and is always written. With `format`, convertible
+ * sources are always written too (the HTML refs were rewritten to the new
+ * extension, so the reference is committed). Format-appropriate encoding: lossy
+ * `quality` for jpeg/webp/avif, lossless max-deflate for png. Throws if sharp
+ * is missing (the caller decides whether to fail the build) or the encode fails.
  */
 export async function optimizeImageFile(
   srcAbs: string,
   destAbs: string,
-  quality: number,
-  format?: 'webp',
+  opts: OptimizeOptions,
 ): Promise<OptimizeResult> {
   const sharp = await loadSharp();
   const ext = path.extname(srcAbs).toLowerCase();
   const original = await readFile(srcAbs);
+  const quality = opts.quality;
 
-  // Format conversion (png/jpg → webp). `destAbs` already carries the `.webp`
-  // extension and the HTML `<img src>` refs have been rewritten to it, so we
-  // ALWAYS write the converted file — even if marginally larger, the reference
-  // is committed (unlike in-place re-encoding, which can keep the original).
-  if (format === 'webp' && isConvertibleToWebp(srcAbs)) {
-    const out = await sharp(srcAbs).webp({ quality }).toBuffer();
+  // Downscale only when the intrinsic width exceeds the cap (metadata read is
+  // cheap — header only). `withoutEnlargement` is belt-and-braces.
+  let resized = false;
+  if (opts.maxWidth) {
+    const meta = await sharp(srcAbs).metadata();
+    resized = (meta.width ?? 0) > opts.maxWidth;
+  }
+  const pipelineFor = (): SharpInstance => {
+    let p = sharp(srcAbs);
+    if (resized && opts.maxWidth) p = p.resize({ width: opts.maxWidth, withoutEnlargement: true });
+    return p;
+  };
+
+  if (opts.format && isFormatConvertible(srcAbs)) {
+    const p = pipelineFor();
+    const out = await (opts.format === 'avif' ? p.avif({ quality }) : p.webp({ quality })).toBuffer();
     await writeFile(destAbs, out);
     return { optimized: true, savedBytes: Math.max(0, original.byteLength - out.byteLength) };
   }
 
-  let pipeline = sharp(srcAbs);
+  let pipeline = pipelineFor();
   if (ext === '.jpg' || ext === '.jpeg') pipeline = pipeline.jpeg({ quality });
   else if (ext === '.png') pipeline = pipeline.png({ compressionLevel: 9 });
   else if (ext === '.webp') pipeline = pipeline.webp({ quality });
   else if (ext === '.avif') pipeline = pipeline.avif({ quality });
 
   const out = await pipeline.toBuffer();
-  if (out.byteLength < original.byteLength) {
+  if (resized || out.byteLength < original.byteLength) {
     await writeFile(destAbs, out);
-    return { optimized: true, savedBytes: original.byteLength - out.byteLength };
+    return { optimized: true, savedBytes: Math.max(0, original.byteLength - out.byteLength) };
   }
   // Re-encode wasn't smaller (already-optimized image) — keep the original bytes.
   await copyFile(srcAbs, destAbs);

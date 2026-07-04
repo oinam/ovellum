@@ -223,15 +223,29 @@ describe('validateUserConfig', () => {
     expect(() => validateUserConfig({ site: { images: { quality: 75.5 } } })).toThrow(/quality/);
   });
 
-  it('accepts site.images.format webp and rejects others / the assetBaseUrl clash', () => {
+  it('accepts site.images.format webp/avif and rejects others / the assetBaseUrl clash', () => {
     expect(validateUserConfig({ site: { images: { format: 'webp' } } })).toEqual({
       site: { images: { format: 'webp' } },
     });
-    expect(() => validateUserConfig({ site: { images: { format: 'avif' } } })).toThrow(/format/);
+    expect(validateUserConfig({ site: { images: { format: 'avif' } } })).toEqual({
+      site: { images: { format: 'avif' } },
+    });
+    expect(() => validateUserConfig({ site: { images: { format: 'jxl' } } })).toThrow(/format/);
     // Conversion + CDN is incompatible.
     expect(() =>
       validateUserConfig({ site: { images: { format: 'webp' }, assetBaseUrl: 'https://cdn.x/y' } }),
     ).toThrow(/not compatible with `site\.assetBaseUrl`/);
+  });
+
+  it('accepts site.images.maxWidth as a positive integer, rejects malformed', () => {
+    expect(validateUserConfig({ site: { images: { maxWidth: 1600 } } })).toEqual({
+      site: { images: { maxWidth: 1600 } },
+    });
+    expect(() => validateUserConfig({ site: { images: { maxWidth: 0 } } })).toThrow(/maxWidth/);
+    expect(() => validateUserConfig({ site: { images: { maxWidth: 1.5 } } })).toThrow(/maxWidth/);
+    expect(() => validateUserConfig({ site: { images: { maxWidth: '1600' } } })).toThrow(
+      /maxWidth/,
+    );
   });
 
   it('accepts site.ogImage as a boolean or color object, rejects malformed', () => {

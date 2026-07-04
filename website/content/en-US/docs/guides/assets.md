@@ -119,29 +119,45 @@ images it optimized and the bytes saved.
 > Ovellum: `npm i sharp`. (It's left out of the default install so a docs site
 > that doesn't optimize images stays lean.)
 
-##### Converting to WebP
+##### Converting to WebP or AVIF
 
-To go further than re-compression, set `format: 'webp'` to convert raster images
-to [WebP](https://developer.mozilla.org/docs/Web/Media/Formats/Image_types#webp)
-(much smaller than PNG/JPEG, ~97% browser support):
+To go further than re-compression, set `format` to convert raster images to
+[WebP](https://developer.mozilla.org/docs/Web/Media/Formats/Image_types#webp)
+(much smaller than PNG/JPEG, ~97% browser support) or
+[AVIF](https://developer.mozilla.org/docs/Web/Media/Formats/Image_types#avif)
+(smaller still, ~95% support):
 
 ```ts
 site: {
-  images: { format: 'webp' },
+  images: { format: 'webp' }, // or 'avif'
 }
 ```
 
-`.png` / `.jpg` / `.jpeg` assets are written as a sibling `.webp`, and Ovellum
-rewrites the matching Markdown `<img src>` references to point at the new files —
-so `![](/img/hero.png)` resolves to `/img/hero.webp` with no edits on your part.
-Other formats (`.webp`, `.avif`, `.svg`, `.gif`) and external / `data:` image URLs
-are left alone.
+`.png` / `.jpg` / `.jpeg` assets are written as a sibling `.webp` / `.avif`, and
+Ovellum rewrites the matching Markdown `<img src>` references to point at the new
+files — so `![](/img/hero.png)` resolves to `/img/hero.webp` with no edits on
+your part. Other formats (`.webp`, `.avif`, `.svg`, `.gif`) and external /
+`data:` image URLs are left alone.
 
 > **Note:** `format` rewrites image *paths*, so it isn't compatible with
 > [`site.assetBaseUrl`](/docs/reference/config/) (a CDN serves the originals). It
 > also rewrites references in **Markdown** body content only — if you point a
 > landing hero or a raw-HTML `<img>` at an image, reference it at its final
-> `.webp` path yourself.
+> `.webp` / `.avif` path yourself.
+
+##### Capping image width
+
+Screenshots from a retina display are routinely 3000+ px wide — far more than
+any docs layout renders. `maxWidth` downscales any raster wider than the cap
+(aspect ratio kept; smaller images are untouched, never enlarged):
+
+```ts
+site: {
+  images: { maxWidth: 1600, quality: 80, format: 'webp' }, // each part optional
+}
+```
+
+It composes with re-compression and `format` — resize first, then encode.
 
 #### Minifying CSS and JS
 
@@ -237,8 +253,10 @@ site: {
 
 Each page gets a 1200×630 image (its title + your site name on a flat
 background) written to `og/<slug>.png`, and the page `<head>` gains `og:image`,
-`twitter:image`, `og:title`, `og:url`, and `twitter:card` meta. Drafts and the
-404 page are skipped. To tune the colors, pass an object:
+`twitter:image`, `og:title`, `og:url`, and `twitter:card` meta. The
+[landing page](/docs/reference/config/#sitelanding) gets a card too (its hero
+title); drafts and the 404 page are skipped. To tune the colors, pass an
+object:
 
 ```ts
 site: {
