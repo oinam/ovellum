@@ -32,13 +32,17 @@ Legend: `[ ]` not started · `[~]` in progress · `[x]` done · `[!]` blocked
 
 ## Current state (2026-07-02)
 
-**Publish state (read this first):** **`ovellum@0.22.0` is version-committed
-and prepped, NOT yet published** (2026-07-04) — awaiting the maintainer's
-`./publish.sh --npmotp=<code>` (push + npm publish + signed tag + GitHub
-release + MCP registry). Prep done per RELEASE.md: 5 changesets consumed
-(`changeset version` → 0.22.0 + CHANGELOG), `site.version` badge → v0.22.0,
-`server.json` both versions → 0.22.0, full gate green (28 tasks), website
-builds clean. Last published: `ovellum@0.21.0` (2026-06-30).
+**Publish state (read this first):** **`ovellum@0.22.0` is LIVE on npm**
+(2026-07-04, via `./publish.sh --npmotp=<code>`; signed tag `ovellum@0.22.0`
+pushed, GitHub release + MCP registry handled by the script). **No pending
+changesets.** Tree clean, fully pushed. Release hiccup worth remembering: the
+first publish attempt hit the **known expired-npm-token E404** (`PUT /ovellum`
+404 + `whoami` 401) — fixed with an interactive `npm login`, then re-running
+publish.sh (idempotent) — second occurrence of this gotcha, it's the expected
+failure mode when releases are weeks apart. **Next work:** ROADMAP second
+edition Tier W — **W1 snippets/includes is the headline**; G1 `ovellum
+coverage` and the v1.0 gate (V1–V3) are pitched proposals awaiting the
+maintainer's yes.
 
 **0.22.0 contents — `ovellum agents` (2026-07-02) + Tier F complete
 (2026-07-04):** F4 paper-cuts (orphan collision suffix, dev-server stat-race
