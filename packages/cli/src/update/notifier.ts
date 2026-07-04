@@ -73,7 +73,13 @@ async function resolveSettings(): Promise<{ check: boolean; intervalHours: numbe
     const cwd = path.resolve(argValue('--cwd') ?? process.cwd());
     const { config } = await loadOvellumConfig({ cwd, configFile: argValue('--config') });
     return { check: config.update.check, intervalHours: config.update.intervalHours };
-  } catch {
+  } catch (err) {
+    // Best-effort by design — but under --verbose say why the defaults kicked
+    // in, so a broken config isn't silently ignored here of all places.
+    if (process.argv.includes('--verbose')) {
+      const msg = err instanceof Error ? err.message : String(err);
+      process.stderr.write(`update-check: config not loaded (${msg}); using defaults\n`);
+    }
     return { check: true, intervalHours: 24 };
   }
 }

@@ -1,3 +1,4 @@
+import { existsSync } from 'node:fs';
 import { mkdir, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import type { OrphanRecord } from '@ovellum/core';
@@ -46,9 +47,14 @@ export function renderOrphanFile(record: OrphanRecord): string {
 export async function writeOrphan(record: OrphanRecord, orphanDir: string): Promise<string> {
   const slug = slugifyAnchor(record.anchorId);
   const dateStamp = formatDateUTC(new Date(record.orphanedAt));
-  const filename = `${dateStamp}_${slug}.md`;
-  const absPath = path.resolve(orphanDir, filename);
   await mkdir(orphanDir, { recursive: true });
+  // Same anchor orphaned twice on the same UTC day must not overwrite the
+  // earlier archive (each file is unrecoverable hand-written prose) — suffix
+  // with a counter until the name is free.
+  let absPath = path.resolve(orphanDir, `${dateStamp}_${slug}.md`);
+  for (let n = 2; existsSync(absPath); n++) {
+    absPath = path.resolve(orphanDir, `${dateStamp}_${slug}-${n}.md`);
+  }
   await writeFile(absPath, renderOrphanFile(record), 'utf8');
   return absPath;
 }
