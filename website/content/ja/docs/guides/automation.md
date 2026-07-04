@@ -1,7 +1,7 @@
 ---
 title: 自動化と AI エージェント
 description: スクリプト・CI ジョブ・AI エージェントから Ovellum を操作する — 機械可読な --json 出力、安定した終了コード、MCP サーバー。
-sourceHash: 'ba367bf186eacd05'
+sourceHash: 'a397e9a55e5006a1'
 ---
 
 # 自動化と AI エージェント
@@ -299,6 +299,11 @@ Ovellum は、エージェントが書いた文章に人間の文章と同じ保
 `/llms-full.txt`、全ページの `.md` ミラー — エージェントが HTML をスクレイピングせずに
 ドキュメントを読めます。デフォルトでオンです。[`site.ai`](/ja/docs/reference/config/#ai)
 を参照してください。
+
+発見可能性も備えています: 各ページの `<head>` は
+`<link rel="alternate" type="text/markdown">` で Markdown ツインへリンクし、独自の
+`robots.txt` を置いていなければ、ビルドがデフォルトの `/robots.txt`（全許可、
+サイトマップ、`/llms.txt` へのポインタ）を書き出します。
 
 ### ページごとの LLM アクション
 

@@ -138,6 +138,9 @@ export interface ShellOptions {
   tags?: string[];
   /** Absolute URL of the generated OpenGraph card (`site.ogImage`), if any. */
   ogImageUrl?: string;
+  /** URL of this page's `.md` mirror (when emitted) → `<link rel="alternate"
+   *  type="text/markdown">`, so agents/crawlers discover the Markdown twin. */
+  markdownUrl?: string;
   /** Site-relative URL for canonical/OG; empty for landings. */
   url: string;
   /** Path prefix for static assets, defaults to '/'. */
@@ -339,6 +342,7 @@ function renderShell(opts: ShellOptions): string {
   ${desc ? `<meta name="description" content="${escapeAttr(desc)}">` : ''}
   ${opts.site.baseUrl ? `<link rel="canonical" href="${escapeAttr(join(opts.site.baseUrl, basePath + opts.url))}">` : ''}
   ${opts.site.baseUrl ? `<link rel="alternate" type="application/rss+xml" title="${escapeAttr(opts.site.title)}" href="${escapeAttr(join(opts.site.baseUrl, basePath + '/feed.xml'))}">` : ''}
+  ${opts.markdownUrl ? `<link rel="alternate" type="text/markdown" href="${escapeAttr(opts.markdownUrl)}">` : ''}
   ${
     opts.ogImageUrl
       ? `<meta property="og:title" content="${escapeAttr(opts.fullTitle)}">
@@ -996,6 +1000,7 @@ export function renderPage(input: RenderPageInput): string {
     description: input.description,
     tags: input.tags,
     ogImageUrl: input.ogImageUrl,
+    markdownUrl: input.markdownUrl,
     url: input.url,
     assetsPrefix: input.assetsPrefix,
     docsHref: input.docsHref,

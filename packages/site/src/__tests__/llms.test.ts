@@ -3,6 +3,7 @@ import {
   resolveAiConfig,
   mdMirrorPath,
   renderPageMarkdown,
+  renderRobotsTxt,
   generateLlmsTxt,
   generateLlmsFullText,
   type AiDoc,
@@ -96,5 +97,20 @@ describe('generateLlmsFullText', () => {
     expect(full).toContain('Install it.');
     expect(full).toContain('Ship the dist folder anywhere.');
     expect(full).toContain('---');
+  });
+});
+
+describe('renderRobotsTxt', () => {
+  it('with a baseUrl: sitemap line + absolute llms.txt pointer', () => {
+    const txt = renderRobotsTxt('https://example.com/', '');
+    expect(txt).toContain('User-agent: *\nAllow: /');
+    expect(txt).toContain('Sitemap: https://example.com/sitemap.xml');
+    expect(txt).toContain('# https://example.com/llms.txt');
+  });
+
+  it('without a baseUrl: no sitemap line, path-only llms.txt pointer', () => {
+    const txt = renderRobotsTxt(undefined, '/docs');
+    expect(txt).not.toContain('Sitemap:');
+    expect(txt).toContain('# /docs/llms.txt');
   });
 });

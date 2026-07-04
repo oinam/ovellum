@@ -37,6 +37,7 @@ import {
   resolveAiConfig,
   mdMirrorPath,
   renderPageMarkdown,
+  renderRobotsTxt,
   generateLlmsTxt,
   generateLlmsFullText,
   type AiDoc,
@@ -667,6 +668,17 @@ export async function buildSite(options: BuildSiteOptions): Promise<BuildSiteRes
 
   // Drafts (dev builds) never belong in publish artifacts.
   const publishedPages = pages.filter((p) => !p.draft);
+
+  // robots.txt — emitted only when the llms.txt index is on, and never over a
+  // user-supplied one (publicDir copies land in the output root before this).
+  // Points crawlers at the sitemap (when absolute URLs exist) and at the
+  // AI-readable index; comments are ignored by robots parsers, read by people.
+  if (ai.llmsTxt) {
+    const robotsAbs = path.join(outputAbs, 'robots.txt');
+    if (!existsSync(robotsAbs)) {
+      await writeFile(robotsAbs, renderRobotsTxt(site.baseUrl, basePrefix), 'utf8');
+    }
+  }
 
   // Emit sitemap.xml and feed.xml when site.baseUrl is configured.
   if (site.baseUrl) {

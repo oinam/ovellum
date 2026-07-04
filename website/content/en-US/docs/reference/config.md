@@ -300,6 +300,14 @@ Drafts and the 404 page are excluded from all AI output (the same rule as
 its prefix root — `/llms.txt` for the default locale, `/ja/llms.txt` and
 `/ja/**/*.md` for the others.
 
+**Discoverability.** When `mdMirror` is on, each page's `<head>` carries a
+`<link rel="alternate" type="text/markdown">` pointing at its `.md` twin, so
+crawlers and agents find the Markdown without guessing the URL convention. And
+when `llmsTxt` is on, the build emits a default `/robots.txt` — allow-all, a
+`Sitemap:` line when [`baseUrl`](#site-manual-mode) is set, and a comment
+pointing at `/llms.txt` — unless you supply your own `robots.txt` via
+[`publicDir`](#site-manual-mode) (yours always wins).
+
 ```typescript
 // Opt out entirely:
 export default defineConfig({

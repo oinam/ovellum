@@ -302,6 +302,11 @@ A build also emits machine-readable companions next to the HTML — `/llms.txt`,
 docs without scraping HTML. These are on by default; see
 [`site.ai`](/docs/reference/config/#ai).
 
+They're discoverable, too: every page's `<head>` links its Markdown twin via
+`<link rel="alternate" type="text/markdown">`, and the build writes a default
+`/robots.txt` (allow-all, sitemap, a pointer at `/llms.txt`) when you haven't
+supplied your own.
+
 ### Per-page LLM actions
 
 When the `.md` mirror is enabled (the default), each doc page carries a small

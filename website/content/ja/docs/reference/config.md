@@ -1,7 +1,7 @@
 ---
 title: 設定
 description: ovellum.config.{json,ts,js} のすべてのフィールドと、その型・デフォルト値・効果。
-sourceHash: 'a1b724838ad49276'
+sourceHash: '7c823cb7eb6421a8'
 ---
 
 # 設定
@@ -299,6 +299,14 @@ HTML と並べて配信される追加ファイルです。
 `feed.xml` と同じルール）。i18n サイトでは各ロケールがそのプレフィックスのルートに
 独自のセットを持ちます — デフォルトロケールは `/llms.txt`、その他は
 `/ja/llms.txt` と `/ja/**/*.md`。
+
+**発見可能性。** `mdMirror` がオンのとき、各ページの `<head>` には `.md` ツインを
+指す `<link rel="alternate" type="text/markdown">` が入り、クローラーやエージェントが
+URL の慣習を推測せずに Markdown を見つけられます。また `llmsTxt` がオンのとき、
+ビルドはデフォルトの `/robots.txt` を出力します — 全許可、
+[`baseUrl`](#site-manual-mode) 設定時は `Sitemap:` 行、そして `/llms.txt` を指す
+コメント。[`publicDir`](#site-manual-mode) で独自の `robots.txt` を置いた場合は
+常にそちらが優先されます。
 
 ```typescript
 // 完全に無効化する:

@@ -46,6 +46,20 @@ export function resolveAiConfig(ai: OvellumAiConfig | undefined): ResolvedAiConf
 }
 
 /**
+ * A default `robots.txt` for sites that emit the llms.txt index. Written only
+ * when the user didn't supply their own (via `publicDir`): allow everything,
+ * point at the sitemap when absolute URLs exist, and mention the AI-readable
+ * index (as comments — ignored by robots parsers, read by people and agents).
+ */
+export function renderRobotsTxt(baseUrl: string | undefined, basePrefix: string): string {
+  const origin = baseUrl ? baseUrl.replace(/\/+$/, '') + basePrefix : basePrefix;
+  const lines = ['User-agent: *', 'Allow: /', ''];
+  if (baseUrl) lines.push(`Sitemap: ${origin}/sitemap.xml`, '');
+  lines.push('# AI-readable index of this site (llms.txt convention):', `# ${origin}/llms.txt`);
+  return lines.join('\n') + '\n';
+}
+
+/**
  * Output path (relative to the site root, POSIX) for a page's `.md` mirror,
  * or `null` for a page that should not get one (the 404). Convention: append
  * `.md` to the page path with the trailing slash dropped —

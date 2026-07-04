@@ -976,3 +976,32 @@ describe('renderPage', () => {
     expect(withoutToc).not.toContain('ov-toc-inner');
   });
 });
+
+describe('markdown alternate link (F3)', () => {
+  it('emits <link rel="alternate" type="text/markdown"> when a mirror URL is provided', () => {
+    const html = renderPage({
+      site: { title: 'X', defaultTheme: 'auto', footer: '' },
+      nav: NAV,
+      url: '/guide/',
+      title: 'Guide',
+      bodyHtml: '<p>hi</p>',
+      headings: [],
+      generatedAt: '2026-07-04T00:00:00.000Z',
+      markdownUrl: '/guide.md',
+    });
+    expect(html).toContain('<link rel="alternate" type="text/markdown" href="/guide.md">');
+  });
+
+  it('omits the link when no mirror URL is provided', () => {
+    const html = renderPage({
+      site: { title: 'X', defaultTheme: 'auto', footer: '' },
+      nav: NAV,
+      url: '/guide/',
+      title: 'Guide',
+      bodyHtml: '<p>hi</p>',
+      headings: [],
+      generatedAt: '2026-07-04T00:00:00.000Z',
+    });
+    expect(html).not.toContain('type="text/markdown"');
+  });
+});
