@@ -1,5 +1,60 @@
 # ovellum
 
+## 0.22.0
+
+### Minor Changes
+
+- c9af0e7: AI output is now discoverable, not just present: every page's `<head>` links
+  its raw-Markdown twin via `<link rel="alternate" type="text/markdown">` (when
+  the `.md` mirror is enabled), and the build emits a default `/robots.txt` —
+  allow-all, a `Sitemap:` line when `site.baseUrl` is set, and a pointer at
+  `/llms.txt` — unless you ship your own via `publicDir` (yours always wins).
+- 27a2eb8: Image optimization, rounded out (B9 slice 3). `site.images.maxWidth`
+  downscales any raster wider than the cap (aspect kept, never enlarges) — the
+  one-line diet for screenshot-heavy sites; it composes with re-compression and
+  conversion (resize first, then encode). `site.images.format` now also accepts
+  `'avif'` alongside `'webp'` — same convert-and-rewrite behavior, smaller
+  files. And `site.ogImage` now covers the landing page too: the hero title gets
+  its own 1200×630 social card, not just doc pages.
+- 70a23b7: `ovellum agents` — keep coding agents briefed on how your docs work. The
+  command adds (or refreshes) a canonical **"Ovellum docs" section** in your
+  top-level `AGENTS.md` / `CLAUDE.md`: which directory is regenerated, the
+  protected-zone contract, which commands to run, and where the MCP server is —
+  rendered from your config so it stays truthful. Idempotent and surgical: it
+  touches only its own section, preserves everything around it, and writes
+  nothing when already current. `--check` turns it into a CI gate (exit 1 when
+  the section is missing or stale). `ovellum init` now performs the same upsert
+  when an `AGENTS.md` already exists instead of skipping it.
+
+  Also new in the docs: CI freshness recipes (a PR gate with
+  `diff --exit-code` + `check --strict` + `agents --check`, and a scheduled
+  regenerate-and-PR workflow), a guide to letting AI agents draft docs safely
+  through `ovellum_write_zone`, and a migration recipe for publishing
+  agent-generated wikis (OpenWiki-style Markdown folders) with manual mode.
+
+- d257884: Versioned docs, finished (B6 slice 2). Non-latest versions now behave the way
+  readers and crawlers expect: every non-latest page carries an unobtrusive
+  banner — "This is documentation for **v1**, not the latest version. Switch to
+  the latest" — linking to the same page in the latest version (localized,
+  en + ja), plus a `noindex` robots meta, and `sitemap.xml` lists only the
+  latest version. All automatic from `site.versions`; the latest version and
+  unversioned sites are byte-identical.
+
+  And cutting a version is now one command: **`ovellum snapshot <id>`** copies
+  the latest content tree into `<input>/<id>/` and prints the `site.versions`
+  entry to add (it never edits your config — that change stays yours to review).
+  Works on both versioned projects and first-time migrations.
+
+### Patch Changes
+
+- 6deb4b1: Three long-tracked paper-cuts from the audit list: orphan archive files no
+  longer overwrite each other when the same anchor is orphaned twice on the same
+  day (a `-2`/`-3` counter suffix keeps every archived block); the dev server's
+  pretty-URL fallback no longer 500s when a watched build deletes a file
+  mid-request (stat races are treated as 404); and `--verbose` now reports when
+  the update notifier fell back to default settings because the project config
+  could not be loaded.
+
 ## 0.21.0
 
 ### Minor Changes

@@ -8,12 +8,12 @@
     "url": "https://github.com/oinam/ovellum",
     "source": "github"
   },
-  "version": "0.21.0",
+  "version": "0.22.0",
   "packages": [
     {
       "registryType": "npm",
       "identifier": "ovellum",
-      "version": "0.21.0",
+      "version": "0.22.0",
       "transport": { "type": "stdio" },
       "packageArguments": [
         { "type": "positional", "value": "mcp" }

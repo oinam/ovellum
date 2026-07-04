@@ -32,10 +32,26 @@ Legend: `[ ]` not started · `[~]` in progress · `[x]` done · `[!]` blocked
 
 ## Current state (2026-07-02)
 
-**Publish state (read this first):** **`ovellum@0.21.0` is live on npm**
-(2026-06-30). Released via `./publish.sh --npmotp=<code>`; signed tag
-`ovellum@0.21.0` + GitHub release + MCP Registry `io.github.oinam/ovellum@0.21.0`.
-**One pending changeset** (`ovellum-agents.md`, minor) — unreleased work below.
+**Publish state (read this first):** **`ovellum@0.22.0` is version-committed
+and prepped, NOT yet published** (2026-07-04) — awaiting the maintainer's
+`./publish.sh --npmotp=<code>` (push + npm publish + signed tag + GitHub
+release + MCP registry). Prep done per RELEASE.md: 5 changesets consumed
+(`changeset version` → 0.22.0 + CHANGELOG), `site.version` badge → v0.22.0,
+`server.json` both versions → 0.22.0, full gate green (28 tasks), website
+builds clean. Last published: `ovellum@0.21.0` (2026-06-30).
+
+**0.22.0 contents — `ovellum agents` (2026-07-02) + Tier F complete
+(2026-07-04):** F4 paper-cuts (orphan collision suffix, dev-server stat-race
+404s, notifier `--verbose` fallback note) · F3 AI discoverability
+(`<link rel="alternate" type="text/markdown">` per page + default
+`robots.txt` w/ llms.txt pointer, user's own always wins) · F2 versioning
+polish (old-version banner `.ov-version-ribbon` localized en+ja + `noindex` +
+sitemap = latest-only, all automatic; **`ovellum snapshot <id>`** — copies
+latest content into `content/<id>/`, prints the config entry, never edits a
+TS config) · F1 images slice 3 (`site.images.maxWidth` downscale cap,
+`format: 'avif'`, landing-page OG cards; **srcset re-deferred** — needs an
+asset-manifest design pass, reason recorded in ROADMAP F1). Tier F all
+checked off in ROADMAP second edition.
 
 **Roadmap re-planned (2026-07-03):** the first-edition ROADMAP was essentially
 cleared, so it's archived at `ROADMAP-2026-06.md` and **`ROADMAP.md` is now the

@@ -14,7 +14,7 @@ export default {
     title: 'Ovellum',
     logo: '/ovellum-logo.svg',
     favicon: '/ovellum-logo.svg',
-    version: 'v0.21.0',
+    version: 'v0.22.0',
     description:
       'Ovellum is an open-source documentation tool for TypeScript and JavaScript. It lets auto-generated API docs and hand-written narrative live together in the same files, without conflict.',
     baseUrl: 'https://ovellum.oss.oinam.com',
