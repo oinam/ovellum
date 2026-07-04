@@ -220,9 +220,11 @@ content/
 
 **Composes with [`locales`](#site-manual-mode):** when both are set, content lives
 at `content/<id>/<locale>/` and URLs nest as `/<id>/<locale>/…` (the latest
-version + default locale stay at the root). Sitemap, RSS, and `llms.txt` are
-emitted per version. The full walkthrough is in the
-[versioning guide](/docs/guides/versioning/).
+version + default locale stay at the root). RSS and `llms.txt` are emitted per
+version; non-latest versions carry an old-version banner + `noindex` and stay
+out of `sitemap.xml`. Cut a new version with
+[`ovellum snapshot`](/docs/reference/cli/#ovellum-snapshot). The full
+walkthrough is in the [versioning guide](/docs/guides/versioning/).
 
 > Enabling `versions` moves your content into a `content/<id>/` folder — a
 > one-time migration. Unversioned sites need no `content/<id>/` folder and are

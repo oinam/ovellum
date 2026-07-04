@@ -665,6 +665,26 @@ a:hover {
   font-weight: 700;
   letter-spacing: 0.02em;
 }
+/* Old-version banner — same band shape as the draft ribbon, but neutral (it
+   ships to production, so it stays inside the monochrome palette). */
+.ov-version-ribbon {
+  padding: var(--space-2xs) var(--space-s);
+  text-align: center;
+  font-size: 0.85rem;
+  line-height: 1.4;
+  color: var(--color-fg-muted);
+  background: var(--color-surface);
+  border-block-end: 1px solid var(--color-border);
+}
+.ov-version-ribbon strong {
+  font-weight: 600;
+  color: var(--color-fg);
+}
+.ov-version-ribbon a {
+  color: var(--color-fg);
+  text-decoration: underline;
+  text-underline-offset: 0.15em;
+}
 .ov-nav-draft {
   display: inline-block;
   margin-inline-start: var(--space-2xs);

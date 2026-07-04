@@ -163,6 +163,10 @@ export interface ShellOptions {
   localePrefix?: string;
   /** Render the draft ribbon (dev builds only — drafts never reach production). */
   draft?: boolean;
+  /** Emit `<meta name="robots" content="noindex">` (non-latest doc versions). */
+  noindex?: boolean;
+  /** Render the old-version banner: version label + where "latest" lives. */
+  oldVersion?: { label: string; latestUrl: string };
   /** Resolved UI-chrome strings for this locale. */
   strings: UiStrings;
   /** Text direction. `'rtl'` adds `dir="rtl"` to `<html>`; ltr/undefined emit nothing. */
@@ -338,6 +342,7 @@ function renderShell(opts: ShellOptions): string {
        (no page impact) — an accepted tradeoff for staying all-OKLCH. -->
   <meta name="theme-color" id="ov-theme-color" data-light="oklch(97% 0 0)" data-dark="oklch(20.5% 0 0)" content="oklch(97% 0 0)">
   <title>${escapeHtml(opts.fullTitle)}</title>
+  ${opts.noindex ? '<meta name="robots" content="noindex">' : ''}
   ${opts.tags && opts.tags.length ? `<meta name="keywords" content="${escapeAttr(opts.tags.join(', '))}">` : ''}
   ${desc ? `<meta name="description" content="${escapeAttr(desc)}">` : ''}
   ${opts.site.baseUrl ? `<link rel="canonical" href="${escapeAttr(join(opts.site.baseUrl, basePath + opts.url))}">` : ''}
@@ -414,6 +419,7 @@ function renderShell(opts: ShellOptions): string {
 ${i18nScript(strings)}</head>
 <body${opts.bodyClass ? ` class="${escapeAttr(opts.bodyClass)}${opts.draft ? ' ov-has-draft' : ''}"` : opts.draft ? ' class="ov-has-draft"' : ''}>
   ${opts.draft ? `<div class="ov-draft-ribbon" role="status"><strong>${escapeHtml(strings.draftLabel)}</strong> — ${escapeHtml(strings.draftRibbonNote)}.</div>` : ''}
+  ${opts.oldVersion ? renderOldVersionRibbon(opts.oldVersion, basePath, strings) : ''}
   ${renderFrame()}
   ${renderTopbar(opts.site, assets, opts.docsHref ? siteUrl(opts.docsHref, basePath) : undefined, searchEnabled, basePath, strings, opts.localeAlternates, opts.localePrefix ?? '', opts.lang, opts.site.defaultLocale, opts.versionAlternates)}
   ${opts.body}
@@ -942,10 +948,31 @@ export interface RenderPageInput {
   localePrefix?: string;
   /** Draft page — renders the ribbon (dev only). */
   draft?: boolean;
+  /** Non-latest version page → noindex meta (kept out of search results). */
+  noindex?: boolean;
+  /** Old-version banner data (non-latest versions). */
+  oldVersion?: { label: string; latestUrl: string };
   /** Resolved UI-chrome strings. Defaults to English when omitted. */
   strings?: UiStrings;
   /** Text direction; `'rtl'` adds `dir="rtl"` to `<html>`. */
   dir?: 'ltr' | 'rtl';
+}
+
+/**
+ * The "you're viewing an old version" band. Mirrors the draft ribbon's shape;
+ * the `{version}` placeholder in the localized note is replaced with the
+ * version label so translations can put it anywhere in the sentence.
+ */
+function renderOldVersionRibbon(
+  v: { label: string; latestUrl: string },
+  basePath: string,
+  strings: UiStrings,
+): string {
+  const note = escapeHtml(strings.oldVersionNote).replace(
+    '{version}',
+    `<strong>${escapeHtml(v.label)}</strong>`,
+  );
+  return `<div class="ov-version-ribbon" role="status">${note} <a href="${escapeAttr(basePath + v.latestUrl)}">${escapeHtml(strings.oldVersionSwitch)}</a></div>`;
 }
 
 /**
@@ -1012,6 +1039,8 @@ export function renderPage(input: RenderPageInput): string {
     versionAlternates: input.versionAlternates,
     localePrefix: input.localePrefix,
     draft: input.draft,
+    noindex: input.noindex,
+    oldVersion: input.oldVersion,
     strings,
     dir: input.dir,
   });
@@ -1050,6 +1079,10 @@ export interface RenderLandingInput {
   strings?: UiStrings;
   /** Text direction; `'rtl'` adds `dir="rtl"` to `<html>`. */
   dir?: 'ltr' | 'rtl';
+  /** Non-latest version landing → noindex meta. */
+  noindex?: boolean;
+  /** Old-version banner data (non-latest versions). */
+  oldVersion?: { label: string; latestUrl: string };
 }
 
 /**
@@ -1165,6 +1198,8 @@ export function renderLanding(input: RenderLandingInput): string {
     localeAlternates: input.localeAlternates,
     versionAlternates: input.versionAlternates,
     localePrefix: input.localePrefix,
+    noindex: input.noindex,
+    oldVersion: input.oldVersion,
     strings,
     dir: input.dir,
   });

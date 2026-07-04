@@ -35,6 +35,10 @@ export interface UiStrings {
   builtWith: string;
   draftLabel: string;
   draftRibbonNote: string;
+  /** Old-version banner text; `{version}` is replaced with the version label. */
+  oldVersionNote: string;
+  /** Old-version banner link text → the latest version. */
+  oldVersionSwitch: string;
   appearance: string;
   modeGroup: string;
   modeLabel: string;
@@ -99,6 +103,8 @@ export const DEFAULT_STRINGS: UiStrings = {
   builtWith: 'Built with Ovellum',
   draftLabel: 'Draft',
   draftRibbonNote: 'visible locally only, never published',
+  oldVersionNote: 'This is documentation for {version}, not the latest version.',
+  oldVersionSwitch: 'Switch to the latest',
   appearance: 'Appearance',
   modeGroup: 'Color mode',
   modeLabel: 'Mode',
@@ -169,6 +175,8 @@ export const BUILTIN_STRINGS: Record<string, Partial<UiStrings>> = {
     builtWith: 'Ovellum で構築',
     draftLabel: '下書き',
     draftRibbonNote: 'ローカルでのみ表示され、公開されません',
+    oldVersionNote: 'これは {version} のドキュメントで、最新バージョンではありません。',
+    oldVersionSwitch: '最新版に切り替える',
     appearance: '外観',
     modeGroup: 'カラーモード',
     modeLabel: 'モード',

@@ -26,6 +26,7 @@ package manager's task runner.
 | `agents`   | available | Add or refresh the canonical "Ovellum docs" section in `AGENTS.md` / `CLAUDE.md` (idempotent; `--check` for CI). |
 | `mcp`      | available | Run Ovellum as an MCP server over stdio so an AI agent can drive it.      |
 | `clean`    | available | Remove auto-generated outputs while preserving manual files (dry-run by default). |
+| `snapshot` | available | Freeze the current docs as a version: copy the latest content into `<input>/<id>/` and print the config entry to add. |
 
 ## `ovellum init`
 
@@ -772,6 +773,43 @@ be deliberate, so it never happens without an explicit flag.
 | ----------- | ------- | ----------- |
 | `--confirm` | off     | Actually delete. Without it, clean is a dry run. |
 | `--orphans` | off     | Also remove `.ovellum/orphans/`. |
+
+## `ovellum snapshot`
+
+Freeze the current docs as a [version](/docs/guides/versioning/): copy the
+latest content tree into `<input>/<id>/`, then print the `site.versions` entry
+to add. The command **never edits your config** — a TypeScript config can't be
+machine-edited safely, so the config change is always yours to make and review.
+
+- On a **versioned** project, the source is the latest version's directory
+  (`content/<latest>/` → `content/<id>/`); sibling versions are untouched.
+- On a project **without** `site.versions`, the source is the content root
+  (the new version directory and a nested output directory are skipped), and
+  the output explains the one-time migration: once `site.versions` is set,
+  every version — including the latest — lives in its own directory.
+
+### Synopsis
+
+```
+ovellum snapshot <id> [--cwd <dir>] [--config <path>] [--force]
+```
+
+### Flags
+
+| Flag              | Type    | Default         | Notes                                                          |
+| ----------------- | ------- | --------------- | -------------------------------------------------------------- |
+| `<id>`            | string  | required        | Version id — also the directory name and URL prefix (`/1.0/`). Letters, digits, `.`, `_`, `-`. |
+| `--cwd <dir>`     | path    | `process.cwd()` | Project root.                                                  |
+| `--config <path>` | path    | auto-discovered | Skip discovery and load this file directly.                    |
+| `--force`         | boolean | `false`         | Overwrite an existing `<input>/<id>/` directory.               |
+
+### Exit codes
+
+| Code | Meaning                                                                     |
+| ---- | ---------------------------------------------------------------------------- |
+| `0`  | Snapshot written.                                                            |
+| `2`  | Invalid id, id already configured, or the target exists (without `--force`). |
+| `3`  | `ConfigError` — config schema invalid, file not found, etc.                  |
 
 ## `ovellum agents`
 

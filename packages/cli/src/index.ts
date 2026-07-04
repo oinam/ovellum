@@ -9,6 +9,7 @@ import { initCommand } from './commands/init.js';
 import { mcpCommand } from './commands/mcp.js';
 import { orphansCommand } from './commands/orphans.js';
 import { serveCommand } from './commands/serve.js';
+import { snapshotCommand } from './commands/snapshot.js';
 import { upgradeCommand } from './commands/upgrade.js';
 import { watchCommand } from './commands/watch.js';
 import { maybeNotifyUpdate } from './update/notifier.js';
@@ -31,6 +32,7 @@ const main = defineCommand({
     serve: serveCommand,
     check: checkCommand,
     clean: cleanCommand,
+    snapshot: snapshotCommand,
     orphans: orphansCommand,
     agents: agentsCommand,
     mcp: mcpCommand,

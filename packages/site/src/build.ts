@@ -89,6 +89,8 @@ export interface PageOutput {
   lastModified?: string;
   /** True for a draft page (dev builds only); excluded from sitemap/RSS. */
   draft?: boolean;
+  /** True for a page of a non-latest docs version — noindexed, out of the sitemap. */
+  oldVersion?: boolean;
 }
 
 export interface BuildSiteResult {
@@ -386,6 +388,17 @@ export async function buildSite(options: BuildSiteOptions): Promise<BuildSiteRes
     const homeUrl = spec.urlPrefix ? spec.urlPrefix + '/' : '/';
     const alternates = (key: string) => buildLocaleAlternates(specs, spec, key);
     const versionAlts = (key: string) => buildVersionAlternates(specs, spec, key);
+    // Non-latest versions get a noindex meta, an old-version banner, and stay
+    // out of the sitemap — readers land there on purpose, crawlers shouldn't.
+    const oldVersion = !spec.isLatestVersion;
+    const oldVersionFor = (key: string): { label: string; latestUrl: string } | undefined => {
+      if (!oldVersion) return undefined;
+      const latest = versionAlts(key).find((a) => a.isLatest);
+      return {
+        label: spec.versionLabel ?? spec.version ?? '',
+        latestUrl: latest?.url ?? '/',
+      };
+    };
     // Tracks whether this locale's content walk produced its /404/ page.
     let notFoundRendered = false;
     // Non-draft, non-404 pages for this locale's llms.txt / llms-full.txt.
@@ -429,6 +442,8 @@ export async function buildSite(options: BuildSiteOptions): Promise<BuildSiteRes
         localeAlternates: alternates('/'),
         versionAlternates: versionAlts('/'),
         localePrefix: spec.urlPrefix,
+        noindex: oldVersion || undefined,
+        oldVersion: oldVersionFor('/'),
         strings: spec.strings,
         dir: spec.dir,
       });
@@ -442,6 +457,7 @@ export async function buildSite(options: BuildSiteOptions): Promise<BuildSiteRes
         title:
           localize(site.landing.hero.title, spec.code ?? undefined, site.defaultLocale) ||
           site.title,
+        oldVersion: oldVersion || undefined,
       });
       landingRendered = true;
     }
@@ -498,6 +514,8 @@ export async function buildSite(options: BuildSiteOptions): Promise<BuildSiteRes
           localePrefix: spec.urlPrefix,
           includeDrafts,
           draft: spec.draftBySource.has(sourceRelFromCwd),
+          noindex: oldVersion || undefined,
+          oldVersion: oldVersionFor(stripLocalePrefix(url, spec.urlPrefix)),
           strings: spec.strings,
           dir: spec.dir,
           remarkPlugins: options.remarkPlugins,
@@ -525,6 +543,7 @@ export async function buildSite(options: BuildSiteOptions): Promise<BuildSiteRes
           description: result.description,
           lastModified: result.lastModified,
           draft: spec.draftBySource.has(sourceRelFromCwd) || undefined,
+          oldVersion: oldVersion || undefined,
         });
         // Per-page render warnings (e.g. an unparseable `updated:` date) are
         // real problems the author should fix.
@@ -681,9 +700,11 @@ export async function buildSite(options: BuildSiteOptions): Promise<BuildSiteRes
   }
 
   // Emit sitemap.xml and feed.xml when site.baseUrl is configured.
+  // Non-latest versions stay out of the sitemap (they're noindexed too) —
+  // search traffic should land on the latest docs.
   if (site.baseUrl) {
     const xml = generateSitemap({
-      pages: publishedPages,
+      pages: publishedPages.filter((p) => !p.oldVersion),
       baseUrl: site.baseUrl,
       basePath: site.basePath,
     });
@@ -774,6 +795,10 @@ interface RenderOneInput {
   includeDrafts?: boolean;
   /** Whether this page is a draft (renders the ribbon; only ever in dev). */
   draft?: boolean;
+  /** Non-latest version page → noindex meta. */
+  noindex?: boolean;
+  /** Old-version banner data (non-latest versions). */
+  oldVersion?: { label: string; latestUrl: string };
   /** Resolved UI-chrome strings for this locale. */
   strings: UiStrings;
   /** Text direction for `<html dir>`. */
@@ -909,6 +934,8 @@ async function renderOne(input: RenderOneInput): Promise<RenderOneResult | null>
     versionAlternates: input.versionAlternates,
     localePrefix: input.localePrefix,
     draft: input.draft,
+    noindex: input.noindex,
+    oldVersion: input.oldVersion,
     strings: input.strings,
     dir: input.dir,
   });

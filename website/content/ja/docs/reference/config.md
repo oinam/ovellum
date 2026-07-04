@@ -1,7 +1,7 @@
 ---
 title: 設定
 description: ovellum.config.{json,ts,js} のすべてのフィールドと、その型・デフォルト値・効果。
-sourceHash: '7c823cb7eb6421a8'
+sourceHash: '5b1f867856b010e9'
 ---
 
 # 設定
@@ -220,9 +220,11 @@ content/
 
 **[`locales`](#site-manual-mode) と組み合わせ可能:** 両方を設定すると、コンテンツは
 `content/<id>/<locale>/` に置かれ、URL は `/<id>/<locale>/…` のようにネストします
-（最新バージョン + デフォルトロケールはルートのまま）。サイトマップ、RSS、`llms.txt`
-はバージョンごとに出力されます。詳しい手順は
-[バージョン管理ガイド](/ja/docs/guides/versioning/)にあります。
+（最新バージョン + デフォルトロケールはルートのまま）。RSS と `llms.txt` は
+バージョンごとに出力されます。最新でないバージョンには古いバージョンのバナーと
+`noindex` が付き、`sitemap.xml` からは除外されます。新しいバージョンは
+[`ovellum snapshot`](/ja/docs/reference/cli/#ovellum-snapshot) で切れます。
+詳しい手順は[バージョン管理ガイド](/ja/docs/guides/versioning/)にあります。
 
 > `versions` を有効にすると、コンテンツが `content/<id>/` フォルダに移動します —
 > 一度きりの移行です。バージョンなしのサイトには `content/<id>/` フォルダは不要で、

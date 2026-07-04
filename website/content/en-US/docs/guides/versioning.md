@@ -65,15 +65,37 @@ producing dead links.
 
 ## Cutting a new version
 
-Versioning is just folders, so releasing a new major is a copy and a config edit:
+Versioning is just folders, so releasing a new major is a copy and a config
+edit — and [`ovellum snapshot`](/docs/reference/cli/#ovellum-snapshot) does the
+copy for you:
 
-1. Copy the current latest into a frozen folder: `cp -r content/v2 content/v1`
-   (now `v1` is the snapshot).
-2. Keep editing `content/v2` as the live latest.
-3. Add the new entry to `site.versions`.
+```bash
+npx ovellum snapshot 1.0
+```
+
+It freezes the current latest content as `content/1.0/` and prints the
+`site.versions` entry to add. (The command never edits your config — a
+TypeScript config isn't safely machine-editable, so the config change stays
+yours to review.) On a project without `site.versions` yet, it also prints the
+one-time migration step: with versions enabled, *every* version lives in its
+own directory, so your working content moves into `content/<latest-id>/` too.
 
 Older versions are plain content — freeze them by simply not editing them, or
 keep patching them; both are fine.
+
+## Old versions and search engines
+
+Non-latest versions are for readers who arrive on purpose, not for search
+traffic — so every non-latest page automatically gets:
+
+- a **banner** above the topbar — "This is documentation for **v1**, not the
+  latest version. [Switch to the latest]" — linking to the same page in the
+  latest version (localized like the rest of the chrome);
+- a `<meta name="robots" content="noindex">`, and
+- **exclusion from `sitemap.xml`** (only the latest version is listed).
+
+No configuration; it follows from `site.versions`. The latest version is
+untouched.
 
 ## With multiple languages
 
@@ -97,6 +119,8 @@ within a version.
 ## What you get per version
 
 Each version is a first-class site: its own sidebar nav, `_meta.json` ordering,
-and frontmatter. Build artifacts are emitted per version too — `sitemap.xml`
-covers them all, while RSS and [`llms.txt`](/docs/guides/automation/) are written
-per version (the latest at the root, older ones under their prefix).
+and frontmatter. Build artifacts are emitted per version too — RSS and
+[`llms.txt`](/docs/guides/automation/) are written per version (the latest at
+the root, older ones under their prefix), while `sitemap.xml` lists **only the
+latest** (non-latest pages are noindexed — see
+[above](#old-versions-and-search-engines)).

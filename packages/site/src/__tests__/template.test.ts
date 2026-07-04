@@ -1005,3 +1005,48 @@ describe('markdown alternate link (F3)', () => {
     expect(html).not.toContain('type="text/markdown"');
   });
 });
+
+describe('old-version pages (F2)', () => {
+  const oldVersionInput = {
+    site: { title: 'X', defaultTheme: 'auto' as const, footer: '' },
+    nav: NAV,
+    url: '/v1/guide/',
+    title: 'Guide',
+    bodyHtml: '<p>hi</p>',
+    headings: [],
+    generatedAt: '2026-07-04T00:00:00.000Z',
+    noindex: true,
+    oldVersion: { label: 'v1', latestUrl: '/guide/' },
+  };
+
+  it('emits noindex meta and the old-version banner with a latest link', () => {
+    const html = renderPage(oldVersionInput);
+    expect(html).toContain('<meta name="robots" content="noindex">');
+    expect(html).toContain('ov-version-ribbon');
+    expect(html).toContain('<strong>v1</strong>');
+    expect(html).toContain('href="/guide/"');
+    expect(html).toContain('Switch to the latest');
+  });
+
+  it('prefixes the latest link with basePath', () => {
+    const html = renderPage({
+      ...oldVersionInput,
+      site: { ...oldVersionInput.site, basePath: '/docs' },
+    });
+    expect(html).toContain('href="/docs/guide/"');
+  });
+
+  it('emits neither on a latest-version page', () => {
+    const html = renderPage({
+      site: { title: 'X', defaultTheme: 'auto', footer: '' },
+      nav: NAV,
+      url: '/guide/',
+      title: 'Guide',
+      bodyHtml: '<p>hi</p>',
+      headings: [],
+      generatedAt: '2026-07-04T00:00:00.000Z',
+    });
+    expect(html).not.toContain('content="noindex"');
+    expect(html).not.toContain('ov-version-ribbon');
+  });
+});
