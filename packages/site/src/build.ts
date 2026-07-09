@@ -388,6 +388,14 @@ export async function buildSite(options: BuildSiteOptions): Promise<BuildSiteRes
     const homeUrl = spec.urlPrefix ? spec.urlPrefix + '/' : '/';
     const alternates = (key: string) => buildLocaleAlternates(specs, spec, key);
     const versionAlts = (key: string) => buildVersionAlternates(specs, spec, key);
+    // `::include` resolution roots: this tree first, then the default locale's
+    // tree of the SAME version (i18n fallback — a locale missing a snippet
+    // renders the default-locale one instead of a hole).
+    const defaultSpec = specs.find((s) => s.version === spec.version && s.isDefault);
+    const includeRoots =
+      defaultSpec && defaultSpec.inputAbs !== spec.inputAbs
+        ? [spec.inputAbs, defaultSpec.inputAbs]
+        : [spec.inputAbs];
     // Non-latest versions get a noindex meta, an old-version banner, and stay
     // out of the sitemap — readers land there on purpose, crawlers shouldn't.
     const oldVersion = !spec.isLatestVersion;
@@ -411,6 +419,7 @@ export async function buildSite(options: BuildSiteOptions): Promise<BuildSiteRes
         remarkPlugins: options.remarkPlugins,
         rehypePlugins: options.rehypePlugins,
         convertImages: imageFormat,
+        includeRoots,
       });
       // Render each install snippet through the same markdown/shiki pipeline as
       // doc code blocks (and the pitch body) so it gets syntax highlighting plus
@@ -549,6 +558,7 @@ export async function buildSite(options: BuildSiteOptions): Promise<BuildSiteRes
           remarkPlugins: options.remarkPlugins,
           rehypePlugins: options.rehypePlugins,
           convertImages: imageFormat,
+          includeRoots,
           ogImage: ogContext,
         });
         if (!result) continue; // draft page excluded in production — skip
@@ -836,6 +846,9 @@ interface RenderOneInput {
   rehypePlugins?: unknown[];
   /** Rewrite local raster `<img src>` to the converted format (`site.images.format`). */
   convertImages?: 'webp' | 'avif';
+  /** Ordered content roots for `::include` resolution (current tree, then
+   *  the default-locale fallback). Unset = include directives are dropped. */
+  includeRoots?: string[];
   /** Per-page OpenGraph card generation (`site.ogImage` + `site.baseUrl`). */
   ogImage?: { dirAbs: string; config: ResolvedOgConfig; baseUrl: string; basePath: string };
 }
@@ -873,11 +886,18 @@ async function renderOne(input: RenderOneInput): Promise<RenderOneResult | null>
     : typeof frontmatter.tags === 'string'
       ? [frontmatter.tags]
       : undefined;
-  const { html: bodyHtml, headings } = await renderMarkdown(parsed.content, {
+  const {
+    html: bodyHtml,
+    headings,
+    warnings: includeWarnings,
+  } = await renderMarkdown(parsed.content, {
     codeTheme: input.site.codeTheme,
     convertImages: input.convertImages,
     remarkPlugins: input.remarkPlugins as PluggableList | undefined,
     rehypePlugins: input.rehypePlugins as PluggableList | undefined,
+    include: input.includeRoots
+      ? { sourceAbs: input.absInput, roots: input.includeRoots }
+      : undefined,
   });
   // Title resolution mirrors the nav (nav.ts pageNode): frontmatter `title`,
   // else the first `# H1` in the body, else the site title. (The ToC only
@@ -895,6 +915,9 @@ async function renderOne(input: RenderOneInput): Promise<RenderOneResult | null>
   // A frontmatter `updated:` pins the "Edited" date explicitly, overriding the
   // git/fs lookup. Unparseable → warn and fall back to git.
   const warnings: string[] = [];
+  // Snippet-expansion problems (missing include, escape, cycle) are real
+  // authoring errors — surface them like any other per-page warning.
+  warnings.push(...includeWarnings.map((w) => `${input.sourceRelFromCwd} ${w}`));
   const pinnedDate = normalizeFrontmatterDate(frontmatter.updated);
   if (frontmatter.updated !== undefined && pinnedDate === undefined) {
     warnings.push(
@@ -990,6 +1013,7 @@ async function readLandingBody(
     remarkPlugins?: unknown[];
     rehypePlugins?: unknown[];
     convertImages?: 'webp' | 'avif';
+    includeRoots?: string[];
   },
 ): Promise<LandingBody | undefined> {
   const abs = path.join(inputAbs, LANDING_BODY_FILE);
@@ -1002,6 +1026,9 @@ async function readLandingBody(
     convertImages: markdownPlugins?.convertImages,
     remarkPlugins: markdownPlugins?.remarkPlugins as PluggableList | undefined,
     rehypePlugins: markdownPlugins?.rehypePlugins as PluggableList | undefined,
+    include: markdownPlugins?.includeRoots
+      ? { sourceAbs: abs, roots: markdownPlugins.includeRoots }
+      : undefined,
   });
   return { html, sourcePath: path.join(path.basename(inputAbs), LANDING_BODY_FILE) };
 }

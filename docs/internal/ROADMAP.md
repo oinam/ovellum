@@ -87,15 +87,17 @@ close open loops.
 
 ## Tier W — authoring power (the remaining COMPETITIVE.md adopts)
 
-- [ ] **W1 (M)** **Reusable snippets / includes (partials).** The one real
-      authoring gap left vs the incumbent. Author once under `_snippets/`
-      (or any underscore-prefixed dir — already nav-excluded by convention),
-      include with a Markdown-native directive (`::include{file=…}`), reusing
-      the B2 `remark-directive` pipeline. Design must cover: recursion guard,
-      path containment (no `..` escapes — same rule as everywhere), snippet
-      frontmatter (ignored vs merged), i18n (per-locale snippets fall back to
-      default locale), and `check` validating include targets. Sanitize stays
-      the guard. *Highest-impact item in this edition.*
+- [x] **W1 (M)** **Reusable snippets / includes** — **DONE 2026-07-09
+      (0.23.0)**: `::include[/path.md]` leaf directive (`packages/site/src/
+      includes.ts`, `remarkIncludes` between remarkDirective and
+      remarkComponents so snippet directives transform AND sanitize stays the
+      guard); root-absolute→content roots / relative→including file;
+      containment enforced; cycle guard + depth cap; frontmatter stripped;
+      i18n default-locale fallback; failures = warning + omitted; `check`
+      validates targets (`broken-include`). `.md`-mirror expansion NOT done
+      (mirrors show authored source, like other directives — documented).
+      Closes the COMPETITIVE authoring-parity list; the proposed 1.0 gate's
+      W1 leg is now satisfied.
 - [ ] **W2 (S–M)** **Changelog page type.** A first-class "Updates" page:
       date-grouped entries with stable anchors, rendered from one Markdown
       file with a light directive or heading convention (no new file format),

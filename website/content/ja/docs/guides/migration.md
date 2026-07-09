@@ -1,7 +1,7 @@
 ---
 title: Ovellum への移行
 description: TypeDoc から、手書きの Markdown サイトから、あるいはホスト型ドキュメントプラットフォームから — 何が変わり、Ovellum が何を加え、どうコンテンツを持ち込むか。
-sourceHash: 'edba40621b372d50'
+sourceHash: 'abca7649394759d5'
 ---
 
 # Ovellum への移行
@@ -66,6 +66,7 @@ Ovellum では生成ファイルの*中*に、`@manual` ゾーンとして物語
   `bare` モード、設定可能なアクセント、システムまたはバンドルのフォント。
 - **オーサリング** — GitHub 風のコールアウト、脚注、
   [コンポーネントディレクティブ](/ja/docs/guides/components/)（tabs/steps/cards）、
+  [再利用できるスニペット](/ja/docs/guides/snippets/)、
   Mermaid 図、コピーボタン付きの Shiki シンタックスハイライト。
 - **[検索](/ja/docs/guides/search/)**（Pagefind、⌘K）、**[i18n](/ja/docs/guides/i18n/)**
   （ロケールごとのサブツリー + 言語ピッカー）、**[バージョン管理](/ja/docs/guides/versioning/)**、

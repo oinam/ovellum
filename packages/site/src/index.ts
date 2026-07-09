@@ -12,6 +12,8 @@ export { buildNav, findAdjacent, findBreadcrumbs, flattenNav } from './nav.js';
 export type { AdjacentPages, NavNode } from './nav.js';
 export { extractMarkdownLinks } from './links.js';
 export type { MarkdownLink } from './links.js';
+export { extractIncludes, resolveInclude } from './includes.js';
+export type { IncludeRef } from './includes.js';
 export { countWords, lastModifiedISO, readingMinutes } from './page-meta.js';
 export type { LastModifiedInput } from './page-meta.js';
 export { ICONS, renderIcon } from './icons.js';

@@ -10,7 +10,9 @@ import { findAnchors } from '@ovellum/merger';
 import { parseManualDoc } from '@ovellum/reader';
 import {
   buildNav,
+  extractIncludes,
   extractMarkdownLinks,
+  resolveInclude,
   flattenNav,
   resolveHomeRel,
   walkContent,
@@ -24,6 +26,7 @@ interface Issue {
   message: string;
   kind:
     | 'broken-link'
+    | 'broken-include'
     | 'unsafe-scheme'
     | 'stale-translation'
     | 'orphan-translation'
@@ -159,6 +162,7 @@ export const checkCommand = defineCommand({
             counts: {
               brokenLinks: counts.broken,
               unsafeSchemes: counts.unsafe,
+              ...(counts.includes > 0 ? { brokenIncludes: counts.includes } : {}),
               ...(showStale ? { staleTranslations: counts.stale } : {}),
               ...(strict ? { strictIssues: counts.strict } : {}),
             },
@@ -179,6 +183,9 @@ export const checkCommand = defineCommand({
       `  broken links:    ${counts.broken}`,
       `  unsafe schemes:  ${counts.unsafe}`,
     ];
+    if (counts.includes > 0) {
+      lines.push(`  broken includes: ${counts.includes}`);
+    }
     if (showStale) {
       lines.push(`  stale translations: ${counts.stale}`);
     }
@@ -217,10 +224,17 @@ interface CheckInput {
   strict?: boolean;
 }
 
-function countIssues(issues: Issue[]): { broken: number; unsafe: number; stale: number; strict: number } {
+function countIssues(issues: Issue[]): {
+  broken: number;
+  includes: number;
+  unsafe: number;
+  stale: number;
+  strict: number;
+} {
   const by = (k: Issue['kind']) => issues.filter((i) => i.kind === k).length;
   return {
     broken: by('broken-link'),
+    includes: by('broken-include'),
     unsafe: by('unsafe-scheme'),
     stale: by('stale-translation') + by('orphan-translation'),
     strict: issues.filter((i) => STRICT_KINDS.has(i.kind)).length,
@@ -368,6 +382,33 @@ async function checkManual({ config, cwd, strict }: CheckInput): Promise<CheckRu
             line,
             kind: 'broken-link',
             message: `broken internal link to ${resolved} (raw: ${target})`,
+          });
+        }
+      }
+      // `::include` targets must exist — resolved exactly as the build does:
+      // this locale's tree first, then the default locale's (i18n fallback).
+      const defaultView = views.find((x) => x.urlPrefix === '');
+      const includeRoots =
+        defaultView && defaultView.inputAbs !== v.inputAbs
+          ? [v.inputAbs, defaultView.inputAbs]
+          : [v.inputAbs];
+      for (const inc of extractIncludes(content)) {
+        if (inc.file === null) {
+          issues.push({
+            file: rel,
+            line: inc.line,
+            kind: 'broken-include',
+            message: 'include directive has no target — write ::include[/path.md]',
+          });
+          continue;
+        }
+        const target = resolveInclude(inc.file, path.dirname(file), includeRoots, existsSync);
+        if ('error' in target) {
+          issues.push({
+            file: rel,
+            line: inc.line,
+            kind: 'broken-include',
+            message: `broken include ${inc.file} — ${target.error}`,
           });
         }
       }

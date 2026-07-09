@@ -13,6 +13,7 @@ import { createHighlighter, type Highlighter } from 'shiki';
 import type { Root, Element, ElementContent } from 'hast';
 import type { OvellumCodeTheme } from '@ovellum/core';
 import { remarkComponents, rehypeTabs, rehypeMermaid, COMPONENT_CLASSES } from './directives.js';
+import { remarkIncludes } from './includes.js';
 
 export interface Heading {
   depth: number;
@@ -23,6 +24,8 @@ export interface Heading {
 export interface RenderedMarkdown {
   html: string;
   headings: Heading[];
+  /** Problems from snippet expansion (missing include, escape, cycle). */
+  warnings: string[];
 }
 
 export interface RenderMarkdownOptions {
@@ -34,6 +37,12 @@ export interface RenderMarkdownOptions {
   rehypePlugins?: PluggableList;
   /** Rewrite local `.png`/`.jpg`/`.jpeg` `<img src>` to this format's extension. */
   convertImages?: 'webp' | 'avif';
+  /**
+   * Enable `::include[/path.md]` snippet expansion: the rendered file's
+   * absolute path plus the ordered content roots (current tree, then the
+   * default-locale fallback). Unset = include directives are dropped.
+   */
+  include?: { sourceAbs: string; roots: string[] };
 }
 
 /**
@@ -256,6 +265,7 @@ export async function renderMarkdown(
   const themes = CODE_THEME_PAIRS[opts.codeTheme ?? 'github'] ?? CODE_THEME_PAIRS.github;
   const headings: Heading[] = [];
 
+  const includeWarnings: string[] = [];
   const processor = unified()
     .use(remarkParse)
     // GFM enables tables, strikethrough, task lists, and literal autolinks
@@ -266,6 +276,15 @@ export async function renderMarkdown(
     // class-tagged elements. Runs in the remark phase so the structure flows
     // through sanitize (its classes are whitelisted in SANITIZE_SCHEMA).
     .use(remarkDirective)
+    // Snippet expansion (`::include[/path.md]`) sits between the directive
+    // parse and the component transform: included content is spliced in as
+    // mdast, so snippets may use directives AND everything still flows through
+    // sanitize below — includes add no unsanitized surface.
+    .use(
+      remarkIncludes(
+        opts.include ? { ...opts.include, warnings: includeWarnings } : undefined,
+      ),
+    )
     .use(remarkComponents);
   // Plugin-supplied remark plugins (B1): after the built-ins, before the HTML
   // conversion — so whatever mdast they emit still flows through sanitize.
@@ -327,7 +346,7 @@ export async function renderMarkdown(
     .use(rehypeStringify, { allowDangerousHtml: true })
     .process(md);
 
-  return { html: String(file), headings };
+  return { html: String(file), headings, warnings: includeWarnings };
 }
 
 /**

@@ -67,8 +67,9 @@ get, out of the box:
   [host-inheriting](/docs/guides/themes/#inheriting-a-host-projects-design)
   `bare` mode, configurable accent, system or bundled fonts.
 - **Authoring** — GitHub-style callouts, footnotes,
-  [component directives](/docs/guides/components/) (tabs/steps/cards), Mermaid
-  diagrams, and Shiki syntax highlighting with copy buttons.
+  [component directives](/docs/guides/components/) (tabs/steps/cards),
+  [reusable snippets](/docs/guides/snippets/), Mermaid diagrams, and Shiki
+  syntax highlighting with copy buttons.
 - **[Search](/docs/guides/search/)** (Pagefind, ⌘K), **[i18n](/docs/guides/i18n/)**
   (per-locale subtrees + language picker), **[versioned docs](/docs/guides/versioning/)**,
   **[drafts](/docs/guides/drafts/)**, a landing page, a themed 404, `sitemap.xml`

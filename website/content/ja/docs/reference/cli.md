@@ -1,7 +1,7 @@
 ---
 title: CLI リファレンス
 description: ovellum CLI のすべてのサブコマンドとフラグ。
-sourceHash: 'bcfecb871578a7b5'
+sourceHash: 'a40079e7f55633aa'
 ---
 
 # CLI リファレンス
@@ -404,7 +404,10 @@ ovellum serve [--cwd <dir>] [--config <path>] [--port <n>] [--host <addr>]
 2. 安全でない URL スキーム（`javascript:`、`vbscript:`、`data:`、`file:`）を
    使うリンクがないこと。`renderMarkdown` がレンダリング時にこれらを除去するとはいえ、
    `check` はここで警告し、作者がソースの段階で削除できるようにします。
-3. i18n サイト（`site.locales` が 2 つ以上）では、翻訳がそのソースページと
+3. すべての [`::include`](/ja/docs/guides/snippets/) ターゲットが存在すること
+   （ビルドと同じ解決順: ページのロケールツリー、次にデフォルトロケール）、そして
+   コンテンツディレクトリの内側に留まること。
+4. i18n サイト（`site.locales` が 2 つ以上）では、翻訳がそのソースページと
    同期していること — [翻訳の陳腐化](#翻訳の陳腐化)を参照してください。
 
 ### 構文

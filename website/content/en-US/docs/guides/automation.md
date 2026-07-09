@@ -80,8 +80,9 @@ In `manual` mode the auto/hybrid fields are replaced by `output`, `pages`
 ```
 
 `counts.staleTranslations` appears only on [i18n](/docs/guides/i18n/) sites
-(two or more `site.locales`). `issue.kind` is one of `broken-link`,
-`unsafe-scheme`, `stale-translation`, or `orphan-translation` — plus, with
+(two or more `site.locales`); `counts.brokenIncludes` only when non-zero.
+`issue.kind` is one of `broken-link`, `broken-include`, `unsafe-scheme`,
+`stale-translation`, or `orphan-translation` — plus, with
 [`--strict`](/docs/reference/cli/#strict-mode---strict), `positional-zone`,
 `stale-anchor`, and `missing-frontmatter` (counted under `counts.strictIssues`).
 

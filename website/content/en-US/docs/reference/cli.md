@@ -405,7 +405,10 @@ correctly ignored), and verifies:
 2. No link uses an unsafe URL scheme (`javascript:`, `vbscript:`, `data:`,
    `file:`). Even though `renderMarkdown` strips these at render time,
    `check` flags them here so authors can remove them at the source.
-3. On i18n sites (two or more `site.locales`), translations are in sync with
+3. Every [`::include`](/docs/guides/snippets/) target exists (resolved like the
+   build: the page's locale tree first, then the default locale's) and stays
+   inside the content directory.
+4. On i18n sites (two or more `site.locales`), translations are in sync with
    their source page — see [Translation staleness](#translation-staleness).
 
 ### Synopsis
