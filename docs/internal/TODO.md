@@ -32,7 +32,23 @@ Legend: `[ ]` not started · `[~]` in progress · `[x]` done · `[!]` blocked
 
 ## Current state (2026-07-02)
 
-**Publish state (read this first):** **`ovellum@0.22.0` is LIVE on npm**
+**Publish state (read this first):** **`ovellum@0.23.0` is version-committed
+and prepped, NOT yet published** (2026-07-09) — awaiting the maintainer's
+`./publish.sh --npmotp=<code>`. If npm publish 404s, it's the expired-token
+gotcha: `npm login`, re-run. Prep per RELEASE.md: 1 changeset consumed →
+0.23.0 + CHANGELOG, badge → v0.23.0, `server.json` → 0.23.0, full gate green.
+
+**0.23.0 contents — W1 snippets/includes (2026-07-09, the ROADMAP second
+edition's headline):** `::include[/path.md]` leaf directive
+(`packages/site/src/includes.ts`; expansion between remarkDirective and
+remarkComponents so snippet directives transform and sanitize stays the
+guard); root-absolute→content roots / relative→including file; containment +
+cycle guard + depth cap; snippet frontmatter stripped; i18n default-locale
+fallback; failures = warning + omitted; `check` validates targets
+(`broken-include`, `counts.brokenIncludes`). Guide `guides/snippets` en+ja.
+19 new tests + compiled-CLI smoke. **The proposed 1.0 gate's W1 leg is now
+satisfied** — remaining legs V1–V3 still await the maintainer's yes.
+Previously: **`ovellum@0.22.0` LIVE on npm**
 (2026-07-04, via `./publish.sh --npmotp=<code>`; signed tag `ovellum@0.22.0`
 pushed, GitHub release + MCP registry handled by the script). **No pending
 changesets.** Tree clean, fully pushed. Release hiccup worth remembering: the
