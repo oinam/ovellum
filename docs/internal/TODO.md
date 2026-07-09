@@ -32,11 +32,13 @@ Legend: `[ ]` not started · `[~]` in progress · `[x]` done · `[!]` blocked
 
 ## Current state (2026-07-02)
 
-**Publish state (read this first):** **`ovellum@0.23.0` is version-committed
-and prepped, NOT yet published** (2026-07-09) — awaiting the maintainer's
-`./publish.sh --npmotp=<code>`. If npm publish 404s, it's the expired-token
-gotcha: `npm login`, re-run. Prep per RELEASE.md: 1 changeset consumed →
-0.23.0 + CHANGELOG, badge → v0.23.0, `server.json` → 0.23.0, full gate green.
+**Publish state (read this first):** **`ovellum@0.23.0` is LIVE on npm**
+(2026-07-09, via `./publish.sh`; signed tag pushed, GitHub release + MCP
+registry done). **No pending changesets.** Tree clean, fully pushed.
+**Next work:** ROADMAP second edition — the v1.0 gate legs **V1 semver
+contract / V2 OS-matrix CI / V3 perf bench** (the gate itself + G1 `ovellum
+coverage` + the W3 importer naming are proposals awaiting the maintainer's
+yes); or the smaller W2 changelog page / Tier G items.
 
 **0.23.0 contents — W1 snippets/includes (2026-07-09, the ROADMAP second
 edition's headline):** `::include[/path.md]` leaf directive
