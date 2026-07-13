@@ -213,6 +213,9 @@ function renderShell(opts: ShellOptions): string {
   // partial site object (template/landing tests cast partial fixtures to the
   // full type). DEFAULT_CONFIG sets `search.enabled: false`.
   const searchEnabled = opts.site.search?.enabled === true;
+  // Pagefind's base CSS must load BEFORE ovellum.css: the theme's
+  // `.ov-search .pagefind-ui__*` overrides tie Pagefind's own scoped rules on
+  // specificity, so source order decides which wins.
   const searchHead = searchEnabled
     ? `<link rel="stylesheet" href="${escapeAttr(assets)}pagefind/pagefind-ui.css">`
     : '';
@@ -362,9 +365,9 @@ function renderShell(opts: ShellOptions): string {
   }
   ${hreflang}
   <link rel="icon" href="${escapeAttr(siteUrl(opts.site.favicon ?? '/favicon.ico', basePath))}">
+  ${searchHead}
   <link rel="stylesheet" href="${escapeAttr(assets)}assets/ovellum.css">
   ${customFontHead}
-  ${searchHead}
   ${bareThemeHead}
   ${extraCssHead}
   ${opts.site.headExtra ?? ''}
@@ -420,7 +423,6 @@ ${i18nScript(strings)}</head>
 <body${opts.bodyClass ? ` class="${escapeAttr(opts.bodyClass)}${opts.draft ? ' ov-has-draft' : ''}"` : opts.draft ? ' class="ov-has-draft"' : ''}>
   ${opts.draft ? `<div class="ov-draft-ribbon" role="status"><strong>${escapeHtml(strings.draftLabel)}</strong> — ${escapeHtml(strings.draftRibbonNote)}.</div>` : ''}
   ${opts.oldVersion ? renderOldVersionRibbon(opts.oldVersion, basePath, strings) : ''}
-  ${renderFrame()}
   ${renderTopbar(opts.site, assets, opts.docsHref ? siteUrl(opts.docsHref, basePath) : undefined, searchEnabled, basePath, strings, opts.localeAlternates, opts.localePrefix ?? '', opts.lang, opts.site.defaultLocale, opts.versionAlternates)}
   ${opts.body}
   ${backToTop}
@@ -430,16 +432,6 @@ ${i18nScript(strings)}</head>
 </body>
 </html>
 `;
-}
-
-/**
- * The faint editorial page-frame: two full-viewport vertical rules hugging
- * the content edges, pinned at the header baseline by small square corner
- * nodes. Purely decorative (aria-hidden; pointer-events:none in CSS), styled
- * entirely via `.ov-frame*` in the stylesheet.
- */
-function renderFrame(): string {
-  return `<div class="ov-frame" aria-hidden="true"><div class="ov-frame-inner"><span class="ov-frame-node ov-frame-node--tl"></span><span class="ov-frame-node ov-frame-node--tr"></span></div></div>`;
 }
 
 /**

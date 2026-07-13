@@ -57,6 +57,7 @@
   --space-3xl: clamp(6rem, 5.6087rem + 1.9565vw, 7.125rem);
 
   /* Radii (subset shipped) */
+  --radius-sm: 0.25rem;
   --radius-md: 0.375rem;
   --radius-lg: 0.5rem;
   --radius-xl: 0.75rem;
@@ -139,7 +140,6 @@
      whisper-thin rules, not boxes. */
   --color-border: color-mix(in oklch, var(--color-fg) 10%, transparent);
   --color-border-strong: color-mix(in oklch, var(--color-fg) 18%, transparent);
-  --color-frame-line: color-mix(in oklch, var(--color-fg) 7%, transparent);
   --color-border-focus: var(--color-gray-500);
   /* Links follow the accent role. */
   --color-link: var(--color-accent);
@@ -181,14 +181,10 @@
 
   /* Layout widths (site-specific, not in STYLES.md) */
   --ov-header-h: 4rem;
-  /* Editorial frame geometry. --frame-inset is where the vertical rules sit
-     (measured in from the --chrome-max box edge); --frame-gutter is the
-     breathing room between those rules and the content inside them. Topbar,
-     footer, and the doc layout all inset their content by inset + gutter, so
-     every surface clears the lines by the same rhythmic step. Tune the gutter
-     (e.g. --space-xs for tighter, --space-m for airier) in one place. */
-  --frame-inset: var(--space-m);
-  --frame-gutter: var(--space-s);
+  /* Horizontal page inset. Topbar, footer, and the doc layout all pad their
+     content in from the --chrome-max box edge by this same step, so every
+     surface lines up. Tune it in one place. */
+  --page-inset: calc(var(--space-m) + var(--space-s));
   --sidebar-w: 260px;
   --toc-w: 220px;
   --content-max: 76ch;
@@ -560,10 +556,11 @@ a:hover {
   /* brand | search (fills the middle) | icon cluster */
   grid-template-columns: auto 1fr auto;
   align-items: center;
-  /* Fixed height so the frame's corner nodes can pin to the header baseline. */
+  /* Fixed height so sticky offsets (sidebar, ToC, anchor scroll-padding)
+     share one measure. */
   min-block-size: var(--ov-header-h);
   gap: var(--space-m);
-  padding: var(--space-2xs) calc(var(--frame-inset) + var(--frame-gutter));
+  padding: var(--space-2xs) var(--page-inset);
   max-inline-size: var(--chrome-max);
   margin-inline: auto;
   inline-size: 100%;
@@ -884,6 +881,34 @@ a:hover {
   /* Subtle fill so the search box reads as a distinct field, a step off the
      page/topbar background in both light and dark. */
   background: var(--color-bg-muted);
+  /* Pill shape — deliberately rounder than every other surface, so the topbar
+     search reads as the one soft element in the chrome. Scoped here (not via
+     --pagefind-ui-border-radius) so the drawer, tags, and buttons keep the
+     regular radii. */
+  border-radius: 999px;
+}
+/* The inline "Clear" control sits inside the pill's right end — no box (a
+   filled button would fight the pill's curve), styled as a quiet mono eyebrow
+   (the code-block language label idiom): subtle ink that darkens on hover. */
+.ov-search .pagefind-ui__search-clear {
+  /* We mount Pagefind with resetStyles:false, so the UA's native button
+     border/appearance are still live here — zero them explicitly. */
+  appearance: none;
+  -webkit-appearance: none;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--color-fg-subtle);
+  padding-inline: 0.9em 1.1em;
+  transition: color 120ms ease;
+}
+.ov-search .pagefind-ui__search-clear:hover {
+  color: var(--color-fg);
 }
 .ov-search .pagefind-ui__search-input::placeholder {
   color: var(--color-fg-muted);
@@ -950,6 +975,16 @@ a:hover {
   color: var(--color-fg-muted);
   min-inline-size: 0;
 }
+/* Matched-term highlights — Pagefind wraps hits in <mark>, which the UA paints
+   yellow: the one stray hue on a monochrome page. Re-ink as a quiet foreground
+   tint (the same color-mix family as the borders) so it auto-adapts when
+   --color-fg flips per theme. */
+.ov-search mark {
+  background: color-mix(in oklch, var(--color-fg) 12%, transparent);
+  color: inherit;
+  border-radius: var(--radius-sm);
+  padding-inline: 0.12em;
+}
 
 /* Small platform-aware shortcut chip rendered by script.js after Pagefind mounts. */
 .ov-search-kbd {
@@ -970,6 +1005,13 @@ a:hover {
   user-select: none;
 }
 .ov-search:focus-within .ov-search-kbd {
+  display: none;
+}
+/* ...and also while the input holds a query: the input keeps its text after
+   focus leaves, and Pagefind keeps the Clear control visible with it — which
+   sits exactly where the chip does. The shortcut hint only earns its spot on
+   an idle, empty field. */
+.ov-search:has(.pagefind-ui__search-input:not(:placeholder-shown)) .ov-search-kbd {
   display: none;
 }
 
@@ -1338,8 +1380,7 @@ body.ov-menu-open {
 
 @media (max-width: 720px) {
   /* Tighter inner gap so the centered search keeps room next to the
-     larger brand and the hamburger. The frame is hidden here, so the
-     frame-clearance gutter is dropped back to the plain mobile inset. */
+     larger brand and the hamburger, and a plain mobile inset. */
   .ov-topbar-inner {
     gap: var(--space-xs);
     padding-inline: var(--space-s);
@@ -1372,68 +1413,6 @@ body.ov-menu-open {
   }
 }
 
-/* Editorial frame
-   ===
-   Two whisper-faint full-viewport vertical rules hugging the outer content
-   edges, pinned at the header baseline by small square corner nodes — the
-   "framed page" motif. The frame is fixed + pointer-events:none, so it
-   overlays the scroll without ever intercepting a click, and aligns to
-   --chrome-max (the constant chrome width) so the rules sit flush with the
-   topbar brand and footer edges on every page, the landing included. */
-.ov-frame {
-  position: fixed;
-  inset: 0;
-  z-index: 11;
-  pointer-events: none;
-}
-.ov-frame-inner {
-  position: relative;
-  block-size: 100%;
-  max-inline-size: var(--chrome-max);
-  margin-inline: auto;
-}
-.ov-frame-inner::before,
-.ov-frame-inner::after {
-  content: '';
-  position: absolute;
-  inset-block: 0;
-  inline-size: 1px;
-  background: var(--color-frame-line);
-}
-.ov-frame-inner::before {
-  inset-inline-start: var(--frame-inset);
-}
-.ov-frame-inner::after {
-  inset-inline-end: var(--frame-inset);
-}
-/* Corner marks — a small, darker "+" where each vertical rule meets the header
-   baseline. Drawn as two 1px crossing gradients (no fill, no border), in
-   fg-subtle, so the intersection reads as a deliberate-but-quiet cross rather
-   than a pronounced dot. The vertical arm overlays the rail; the horizontal arm
-   crosses it. */
-.ov-frame-node {
-  position: absolute;
-  top: calc(var(--ov-header-h) - 5px);
-  inline-size: 10px;
-  block-size: 10px;
-  background:
-    linear-gradient(var(--color-fg-subtle), var(--color-fg-subtle)) center / 1px 100% no-repeat,
-    linear-gradient(var(--color-fg-subtle), var(--color-fg-subtle)) center / 100% 1px no-repeat;
-}
-.ov-frame-node--tl {
-  inset-inline-start: calc(var(--frame-inset) - 5px);
-}
-.ov-frame-node--tr {
-  inset-inline-end: calc(var(--frame-inset) - 5px);
-}
-@media (max-width: 720px) {
-  /* Below the mobile breakpoint the sidebar collapses inline and the gutters
-     shrink, so the rules would cut through stacked content — drop the frame. */
-  .ov-frame {
-    display: none;
-  }
-}
-
 /* Layout */
 .ov-layout {
   display: grid;
@@ -1443,12 +1422,10 @@ body.ov-menu-open {
   gap: var(--space-xl);
   max-inline-size: var(--page-max);
   margin-inline: auto;
-  /* Asymmetric inline padding: the LEFT edge sits exactly on the frame's left
-     rail (--frame-inset) so the sidebar touches it — one visual border, not two.
-     The RIGHT edge keeps the --frame-gutter clearance so the ToC doesn't crowd
-     the right rail. */
   padding-block: var(--space-m);
-  padding-inline: var(--frame-inset) calc(var(--frame-inset) + var(--frame-gutter));
+  /* Same inline inset as the topbar/footer so the sidebar edge lines up with
+     the brand above it. */
+  padding-inline: var(--page-inset);
 }
 
 /* Sidebar */
@@ -1467,10 +1444,6 @@ body.ov-menu-open {
   margin: 0;
   padding: 0;
 }
-/* No separate sidebar track: the frame's left rail IS the sidebar's left
-   border (one line, not two). The layout pulls the sidebar flush onto that rail
-   (see .ov-layout padding-inline-start), so the active indicator below lands
-   directly on it. */
 .ov-sidebar-nav > ul > li {
   /* No section divider rules — the bold group heading carries the break. */
   margin-block-end: var(--space-m);
@@ -2488,32 +2461,10 @@ a.ov-nav-group--link.is-active::before {
   grid-template-columns: auto 1fr auto;
   align-items: center;
   gap: var(--space-m);
-  padding: var(--space-m) calc(var(--frame-inset) + var(--frame-gutter));
+  padding: var(--space-m) var(--page-inset);
   max-inline-size: var(--chrome-max);
   margin-inline: auto;
   inline-size: 100%;
-}
-/* Corner marks where the frame rails meet the footer's top border — the same
-   "+" intersection as the header baseline, mirrored at the foot of the page.
-   Positioned to the footer-inner box (= the --chrome-max box the rails align
-   to), straddling the footer's top rule. */
-.ov-footer-inner::before,
-.ov-footer-inner::after {
-  content: '';
-  position: absolute;
-  top: -5px;
-  inline-size: 10px;
-  block-size: 10px;
-  background:
-    linear-gradient(var(--color-fg-subtle), var(--color-fg-subtle)) center / 1px 100% no-repeat,
-    linear-gradient(var(--color-fg-subtle), var(--color-fg-subtle)) center / 100% 1px no-repeat;
-  pointer-events: none;
-}
-.ov-footer-inner::before {
-  inset-inline-start: calc(var(--frame-inset) - 5px);
-}
-.ov-footer-inner::after {
-  inset-inline-end: calc(var(--frame-inset) - 5px);
 }
 .ov-footer-left {
   grid-column: 1;
@@ -2586,12 +2537,6 @@ a.ov-nav-group--link.is-active::before {
   }
   .ov-footer-inner {
     padding-inline: var(--space-s);
-  }
-  /* The frame (and its corner nodes) are hidden on mobile — drop the footer
-     nodes too so they don't float without their rails. */
-  .ov-footer-inner::before,
-  .ov-footer-inner::after {
-    display: none;
   }
   .ov-footer-left {
     grid-column: 1;
@@ -2749,7 +2694,6 @@ body.ov-body-404 .ov-content-card {
     --color-bg: oklch(100% 0 0); /* white */
     --color-fg: oklch(0% 0 0); /* black */
   }
-  .ov-frame,
   .ov-topbar,
   .ov-sidebar,
   .ov-toc,
@@ -2807,12 +2751,6 @@ body.ov-body-404 .ov-content-card {
   .ov-footer {
     border-block-start: 1px solid oklch(84.5% 0 0); /* #ccc */
     color: oklch(45% 0 0); /* #555 */
-  }
-  /* The footer's "+" corner marks belong to the on-screen frame — drop them
-     on paper. */
-  .ov-footer-inner::before,
-  .ov-footer-inner::after {
-    display: none;
   }
 }
 

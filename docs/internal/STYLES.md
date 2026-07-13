@@ -561,12 +561,10 @@ These are what components consume. Every theme redefines this set.
 
   /* Borders — translucent tints of the foreground, so one :root definition
      adapts to either theme as --color-fg flips (no per-theme redeclaration).
-     This is the "framed page" palette: structure carried by whisper-thin
-     hairlines, not filled boxes. */
+     Structure is carried by whisper-thin hairlines, not filled boxes. */
   --color-border: color-mix(in oklch, var(--color-fg) 10%, transparent);
   --color-border-strong: color-mix(in oklch, var(--color-fg) 18%, transparent);
   --color-border-focus: <neutral-500>; /* neutral ring — chrome carries no hue */
-  --color-frame-line: color-mix(in oklch, var(--color-fg) 7%, transparent); /* page-edge frame rules + corner nodes */
 
   /* Accent — MONOCHROME chrome (decided 2026-06-04). Resolves to the
      foreground neutral; the blue ramp stays defined but is reserved for
