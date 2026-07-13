@@ -43,6 +43,9 @@ export default {
       { label: { 'en-US': 'Docs', ja: 'ドキュメント' }, href: '/docs/' },
       { label: 'GitHub', href: 'https://github.com/oinam/ovellum', icon: 'github', external: true },
       { label: 'npm', href: 'https://www.npmjs.com/package/ovellum', icon: 'package', external: true },
+      // No `external` — mailto shouldn't get target="_blank" (opens a dead tab
+      // in some browsers before the mail client takes over).
+      { label: { 'en-US': 'Contact', ja: 'お問い合わせ' }, href: 'mailto:hi@oinam.com', icon: 'mail' },
     ],
     footerNav: [
       { label: { 'en-US': 'Contributing', ja: 'コントリビュート' }, href: '/docs/contributing/' },
