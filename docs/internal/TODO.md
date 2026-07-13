@@ -30,15 +30,29 @@ Legend: `[ ]` not started · `[~]` in progress · `[x]` done · `[!]` blocked
 
 ---
 
-## Current state (2026-07-02)
+## Current state (2026-07-13)
 
-**Publish state (read this first):** **`ovellum@0.23.0` is LIVE on npm**
-(2026-07-09, via `./publish.sh`; signed tag pushed, GitHub release + MCP
-registry done). **No pending changesets.** Tree clean, fully pushed.
-**Next work:** ROADMAP second edition — the v1.0 gate legs **V1 semver
-contract / V2 OS-matrix CI / V3 perf bench** (the gate itself + G1 `ovellum
-coverage` + the W3 importer naming are proposals awaiting the maintainer's
-yes); or the smaller W2 changelog page / Tier G items.
+**Publish state (read this first):** **`ovellum@0.24.0` is PREPPED, awaiting
+`./publish.sh`** (2026-07-13; 0.23.0 is the version live on npm). The
+theme-polish session is committed (`feat(site)` + `feat(website)` +
+`chore: release 0.24.0`), changesets consumed, badge + server.json bumped,
+full gate green, browser-verified light+dark. **0.24.0 = default-theme
+simplification + search polish:** editorial page frame removed (side rails +
+`+` corner marks; header keeps only border-bottom, footer only border-top;
+one `--page-inset` token replaces `--frame-inset`/`--frame-gutter`); pill
+search input (999px); Pagefind CSS now loads BEFORE ovellum.css (cascade-order
+fix that un-broke input weight/fill); Clear control = quiet mono eyebrow (UA
+button border zeroed — `resetStyles:false` leaves it live); `<mark>`
+highlights re-inked as translucent fg tint (dark-safe); `⌘K` chip hides while
+input holds a query; missing `--radius-sm` token defined (was used 10×,
+rendered square — extract-tokens never ADDS tokens, only updates values).
+Website: Contact `mail` icon → `mailto:hi@oinam.com` in topbarNav (no
+`external` — mailto must not get target=_blank).
+**Next work:** after publish, mark 0.24.0 live here; then ROADMAP second
+edition — the v1.0 gate legs **V1 semver contract / V2 OS-matrix CI / V3 perf
+bench** (the gate itself + G1 `ovellum coverage` + the W3 importer naming are
+proposals awaiting the maintainer's yes); or the smaller W2 changelog page /
+Tier G items.
 
 **0.23.0 contents — W1 snippets/includes (2026-07-09, the ROADMAP second
 edition's headline):** `::include[/path.md]` leaf directive
