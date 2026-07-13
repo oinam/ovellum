@@ -32,12 +32,13 @@ Legend: `[ ]` not started · `[~]` in progress · `[x]` done · `[!]` blocked
 
 ## Current state (2026-07-13)
 
-**Publish state (read this first):** **`ovellum@0.24.0` is PREPPED, awaiting
-`./publish.sh`** (2026-07-13; 0.23.0 is the version live on npm). The
-theme-polish session is committed (`feat(site)` + `feat(website)` +
-`chore: release 0.24.0`), changesets consumed, badge + server.json bumped,
-full gate green, browser-verified light+dark. **0.24.0 = default-theme
-simplification + search polish:** editorial page frame removed (side rails +
+**Publish state (read this first):** **`ovellum@0.24.0` is LIVE on npm**
+(2026-07-13, via `./publish.sh`; signed tag pushed, GitHub release cut, MCP
+registry shows 0.24.0 — the registry device-code login needed a standalone
+`mcp-publisher login github` retry, then `./publish.sh --skip-npm`; a code
+from an earlier attempt fails with `incorrect_device_code`, always use the
+freshly printed one). **No pending changesets.** Tree clean, fully pushed.
+**0.24.0 = default-theme simplification + search polish:** editorial page frame removed (side rails +
 `+` corner marks; header keeps only border-bottom, footer only border-top;
 one `--page-inset` token replaces `--frame-inset`/`--frame-gutter`); pill
 search input (999px); Pagefind CSS now loads BEFORE ovellum.css (cascade-order
@@ -48,11 +49,10 @@ input holds a query; missing `--radius-sm` token defined (was used 10×,
 rendered square — extract-tokens never ADDS tokens, only updates values).
 Website: Contact `mail` icon → `mailto:hi@oinam.com` in topbarNav (no
 `external` — mailto must not get target=_blank).
-**Next work:** after publish, mark 0.24.0 live here; then ROADMAP second
-edition — the v1.0 gate legs **V1 semver contract / V2 OS-matrix CI / V3 perf
-bench** (the gate itself + G1 `ovellum coverage` + the W3 importer naming are
-proposals awaiting the maintainer's yes); or the smaller W2 changelog page /
-Tier G items.
+**Next work:** ROADMAP second edition — the v1.0 gate legs **V1 semver
+contract / V2 OS-matrix CI / V3 perf bench** (the gate itself + G1 `ovellum
+coverage` + the W3 importer naming are proposals awaiting the maintainer's
+yes); or the smaller W2 changelog page / Tier G items.
 
 **0.23.0 contents — W1 snippets/includes (2026-07-09, the ROADMAP second
 edition's headline):** `::include[/path.md]` leaf directive
