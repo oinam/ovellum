@@ -1,5 +1,41 @@
 # ovellum
 
+## 0.25.0
+
+### Minor Changes
+
+- f0526d4: Fix "Edited today" on every page after a deploy. Page dates are read from
+  `git log`, but a shallow CI checkout (`actions/checkout`'s default
+  `fetch-depth: 1`) leaves git with only the tip commit, so every page's date
+  collapsed onto the deploy commit. The build now detects a shallow git clone and
+  emits a warning pointing at the fix (`fetch-depth: 0`, or pin dates with an
+  `updated:` frontmatter field / disable `pageMeta.lastModified`), so this can't
+  regress silently. The deploy guide's sample workflow now sets `fetch-depth: 0`
+  and explains why.
+- f0526d4: Generated docs now respect the real edited date. The generator used to bake two
+  build-time timestamps into every file — a `generated: <now>` frontmatter field
+  and a `generated="<now>"` attribute on each `ovellum:anchor` comment — so
+  regenerating produced different bytes every run, a fresh git diff each build,
+  and the page read "Edited today" forever even when the source never changed.
+
+  Generation is now **deterministic**: both timestamps are removed (the anchor
+  attribute was decorative — the reader/merger match on `id=` only), so unchanged
+  source regenerates byte-identically. In their place the generator stamps
+  `updated:` = the **source file's** last-change date (git author date, following
+  renames), resolved by the CLI and injected into the pure generator. A generated
+  page's "Edited" line now tracks when the documented _code_ last changed, not
+  when `ovellum build` last ran — and because it's baked into the frontmatter at
+  generation time, it stays correct even on a shallow-clone site build.
+
+- f0526d4: Refresh the per-page documentation actions. The Copy page / View as Markdown /
+  Open-in-LLM actions now sit as a compact row of icon buttons on the breadcrumb
+  line (top-right) instead of a separate row of text chips below it. Copy page and
+  View as Markdown get proper icons (a copy glyph and a Markdown mark); a vertical
+  separator and an "Open in" label then precede brand-icon deep-links to
+  **ChatGPT, Claude, and — newly added — Google Gemini**. Icons carry accessible
+  labels and tooltips, adapt to light/dark via `currentColor`, and the Copy button
+  flashes a check on success.
+
 ## 0.24.0
 
 ### Minor Changes
