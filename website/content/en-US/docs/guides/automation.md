@@ -123,6 +123,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with: { fetch-depth: 0 } # full history → accurate page "Edited" dates
       - uses: actions/setup-node@v4
         with: { node-version: 22 }
       - run: npm ci
@@ -153,6 +154,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with: { fetch-depth: 0 } # full history → accurate page "Edited" dates
       - uses: actions/setup-node@v4
         with: { node-version: 22 }
       - run: npm ci
@@ -311,8 +313,9 @@ supplied your own.
 ### Per-page LLM actions
 
 When the `.md` mirror is enabled (the default), each doc page carries a small
-row of actions: **Copy page** (copies the page's Markdown to the clipboard),
-**View as Markdown** (the raw `.md`), and — when `site.baseUrl` is set so the
-link is absolute — **Open in ChatGPT** / **Open in Claude**, which hand the page
-to that assistant. No config beyond `site.ai.mdMirror`; they disappear if it's
-off.
+row of icon actions on the breadcrumb line: **Copy page** (copies the page's
+Markdown to the clipboard) and **View as Markdown** (the raw `.md`). Then — when
+`site.baseUrl` is set so the link is absolute — a separator and an **Open in**
+group with **ChatGPT**, **Claude**, and **Google Gemini**, each of which opens
+that assistant with a prompt pointing at the page's Markdown. No config beyond
+`site.ai.mdMirror`; they disappear if it's off.

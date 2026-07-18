@@ -27,6 +27,12 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          # Full history so `git log` can find each page's real last
+          # content-change commit. A shallow clone (the default depth 1) leaves
+          # git with only the tip commit, so every page's "Edited" date
+          # collapses onto this deploy — the whole site reads "Edited today".
+          fetch-depth: 0
 
       - name: Setup pnpm
         # Version is read from package.json's `packageManager` field —

@@ -154,6 +154,28 @@ export function normalizeFrontmatterDate(value: unknown): string | undefined {
   return undefined;
 }
 
+/**
+ * Detect a shallow git clone. In a shallow clone `git log` can only see the
+ * commits that were actually fetched — often just the tip (`fetch-depth: 1`,
+ * the `actions/checkout` default). Every per-file `git log -1` then returns
+ * that single tip commit, so every page's "Edited" date collapses onto the
+ * latest commit and the whole site reads "Edited today". The fix is to fetch
+ * full history (`fetch-depth: 0`); this lets the build warn instead of silently
+ * shipping wrong dates. Returns `true` only when git positively reports shallow;
+ * a missing git / non-repo / any error is treated as "not shallow".
+ */
+export async function isShallowRepository(cwd: string): Promise<boolean> {
+  try {
+    const { stdout } = await execFileAsync('git', ['rev-parse', '--is-shallow-repository'], {
+      cwd,
+      timeout: 2000,
+    });
+    return stdout.trim() === 'true';
+  } catch {
+    return false;
+  }
+}
+
 async function tryGitLog(input: LastModifiedInput): Promise<string | undefined> {
   try {
     // `--follow` tracks the file across renames, and `--diff-filter=AM` keeps

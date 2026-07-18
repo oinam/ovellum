@@ -19,6 +19,7 @@ import { computeManifest, writeDeployManifest } from './manifest.js';
 import { runPluginHook, composeTransformPage } from './plugins.js';
 import { collectAnchorIds, collectNodes, readProjectIR, writeProjectIR } from './ir.js';
 import { detectRenames } from './rename.js';
+import { resolveSourceDates } from './source-dates.js';
 
 export interface RunBuildInput {
   config: OvellumConfig;
@@ -242,7 +243,15 @@ async function buildProjectDocs(
     ? { ...project, files: project.files.filter((f) => opts.onlyFiles!.has(f.filePath)) }
     : project;
   if (opts.onlyFiles) log(`affected: ${scoped.files.length} of ${project.files.length} file(s)`);
-  const { files, warnings: genWarnings } = generateDocs(scoped, config);
+  // Resolve each source file's last-change date (author date, from git) so the
+  // generated doc's `updated:` frontmatter — and therefore its page "Edited"
+  // date — tracks when the CODE last changed, not when this build ran. Stable
+  // input keeps the generated output byte-identical across unchanged rebuilds.
+  const sourceDates = await resolveSourceDates(
+    cwd,
+    scoped.files.map((f) => f.filePath),
+  );
+  const { files, warnings: genWarnings } = generateDocs(scoped, config, { sourceDates });
   log(`generated ${files.size} output(s)`);
   // Generator diagnostics are real problems (a doc that couldn't be produced
   // cleanly). `info`/`warn` tag the rest of this arm's diagnostics by severity.

@@ -12,7 +12,7 @@ where the merger will splice human-written content for a given source
 symbol. Represented as an HTML comment:
 
 ```html
-<!-- ovellum:anchor id="src/foo.ts::formatDate" generated="…" -->
+<!-- ovellum:anchor id="src/foo.ts::formatDate" -->
 ```
 
 Every auto-generated section gets one. See

@@ -1,7 +1,7 @@
 ---
 title: 用語集
 description: ドキュメント全体に登場する用語の 1 行定義。
-sourceHash: '60845ad0b3fc39b1'
+sourceHash: '0117e5342552353c'
 ---
 
 # 用語集
@@ -13,7 +13,7 @@ sourceHash: '60845ad0b3fc39b1'
 コメントとして表現されます。
 
 ```html
-<!-- ovellum:anchor id="src/foo.ts::formatDate" generated="…" -->
+<!-- ovellum:anchor id="src/foo.ts::formatDate" -->
 ```
 
 自動生成されるすべてのセクションに 1 つ付きます。

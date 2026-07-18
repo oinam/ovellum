@@ -4,7 +4,7 @@ import type {
   OvellumLandingConfig,
   OvellumSiteConfig,
 } from '@ovellum/core';
-import { ICONS, renderIcon, type IconName } from './icons.js';
+import { ICONS, renderIcon, renderBrandIcon, type IconName, type BrandIconName } from './icons.js';
 import type { Heading } from './markdown.js';
 import type { NavNode } from './nav.js';
 import { formatEditedDate } from './page-meta.js';
@@ -997,14 +997,20 @@ export function renderPage(input: RenderPageInput): string {
     ? `<p class="ov-edit-page"><a class="ov-edit-link" href="${escapeAttr(input.editUrl)}" rel="noopener" target="_blank">${escapeHtml(strings.editThisPage)}</a></p>`
     : '';
   const pageActions = renderPageActions(input.markdownUrl, input.site, strings);
+  // Breadcrumb (left) and the per-page actions (right) share one line at the top
+  // of the card. Rendered only when at least one is present, so a top-level page
+  // with no `.md` mirror doesn't leave an empty row.
+  const pageHeader =
+    breadcrumbs || pageActions
+      ? `<div class="ov-page-header">${breadcrumbs}${pageActions}</div>`
+      : '';
 
   const body = `<div class="ov-layout">
     <aside class="ov-sidebar" aria-label="${escapeAttr(strings.siteNav)}">${sidebar}</aside>
     <main class="ov-content">
       <div class="ov-content-card">
-        ${breadcrumbs}
+        ${pageHeader}
         ${pageMeta}
-        ${pageActions}
         <article class="ov-prose">${input.bodyHtml}</article>
         ${editLink}
       </div>
@@ -1420,10 +1426,15 @@ function renderBreadcrumbs(
 
 /**
  * The "use this page with an LLM" actions, rendered when the page has a `.md`
- * mirror (`markdownUrl`). "Copy page" grabs the Markdown (client-side fetch);
- * "View as Markdown" links to the mirror; and — only when `site.baseUrl` is set,
- * so the link is absolute and an agent can fetch it — "Open in ChatGPT/Claude"
- * deep-link to those tools with a prompt pointing at the mirror.
+ * mirror (`markdownUrl`), as a compact row of icon buttons on the breadcrumb
+ * line. "Copy page" grabs the Markdown (client-side fetch); "View as Markdown"
+ * links to the mirror. Then — only when `site.baseUrl` is set, so the link is
+ * absolute and an assistant can fetch it — a separator, an "Open in" label, and
+ * brand-icon deep-links to ChatGPT, Claude, and Google Gemini, each carrying a
+ * prompt that points at the mirror.
+ *
+ * Icons carry an accessible name via `aria-label` (+ a `title` tooltip); the
+ * label text still lives in `strings` so a locale translates it.
  */
 function renderPageActions(
   markdownUrl: string | undefined,
@@ -1432,17 +1443,25 @@ function renderPageActions(
 ): string {
   if (!markdownUrl) return '';
   const actions = [
-    `<button class="ov-page-action" type="button" data-ov-copy-md="${escapeAttr(markdownUrl)}" data-ov-copied="${escapeAttr(strings.copied)}">${escapeHtml(strings.copyPage)}</button>`,
-    `<a class="ov-page-action" href="${escapeAttr(markdownUrl)}">${escapeHtml(strings.viewMarkdown)}</a>`,
+    `<button class="ov-page-action" type="button" data-ov-copy-md="${escapeAttr(markdownUrl)}" data-ov-copied="${escapeAttr(strings.copied)}" aria-label="${escapeAttr(strings.copyPage)}" title="${escapeAttr(strings.copyPage)}">${renderIcon('copy', { size: 16 })}</button>`,
+    `<a class="ov-page-action" href="${escapeAttr(markdownUrl)}" aria-label="${escapeAttr(strings.viewMarkdown)}" title="${escapeAttr(strings.viewMarkdown)}">${renderIcon('markdown', { size: 16 })}</a>`,
   ];
   if (site.baseUrl) {
     const absMd = join(site.baseUrl, markdownUrl);
     const prompt = encodeURIComponent(`Read ${absMd} — I have questions about this documentation page.`);
+    // Deep-links that pre-fill a prompt in each assistant's web app.
+    const openIn: Array<[BrandIconName, string, string]> = [
+      ['chatgpt', `https://chatgpt.com/?q=${prompt}`, strings.askChatGpt],
+      ['claude', `https://claude.ai/new?q=${prompt}`, strings.askClaude],
+      ['gemini', `https://gemini.google.com/app?q=${prompt}`, strings.askGemini],
+    ];
     actions.push(
-      `<a class="ov-page-action" href="https://chatgpt.com/?q=${prompt}" target="_blank" rel="noopener">${escapeHtml(strings.askChatGpt)}</a>`,
-    );
-    actions.push(
-      `<a class="ov-page-action" href="https://claude.ai/new?q=${prompt}" target="_blank" rel="noopener">${escapeHtml(strings.askClaude)}</a>`,
+      `<span class="ov-page-actions-sep" aria-hidden="true"></span>`,
+      `<span class="ov-page-actions-label">${escapeHtml(strings.openInLabel)}</span>`,
+      ...openIn.map(
+        ([mark, href, label]) =>
+          `<a class="ov-page-action ov-page-action--brand" href="${escapeAttr(href)}" target="_blank" rel="noopener" aria-label="${escapeAttr(label)}" title="${escapeAttr(label)}">${renderBrandIcon(mark, { size: 16 })}</a>`,
+      ),
     );
   }
   return `<div class="ov-page-actions">${actions.join('')}</div>`;

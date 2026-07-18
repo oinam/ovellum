@@ -66,7 +66,7 @@ section per exported symbol.
 Open one of the generated files. You'll see anchor comments like:
 
 ```markdown
-<!-- ovellum:anchor id="src/utils/format.ts::padZero" generated="..." -->
+<!-- ovellum:anchor id="src/utils/format.ts::padZero" -->
 
 ## padZero
 

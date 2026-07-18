@@ -166,6 +166,17 @@ identical regardless of host.
 
 ## 8. Failure modes worth knowing
 
+- **Every page reads "Edited today".** The build reads each page's
+  last-modified date from `git log` for that file. `actions/checkout`
+  defaults to a shallow clone (`fetch-depth: 1` — only the tip commit), so
+  git has no history and every page collapses onto the deploy commit's date.
+  **Fix: `fetch-depth: 0` on the checkout step** (wired into both
+  `deploy-website.yml` and `website-preview.yml`). Since 0.25.0 the build
+  detects a shallow clone and emits a warning, so a regression shows up in the
+  Actions log instead of silently on the live site. This is *not* the old
+  0.10.0 rename bug (that fix — `git log --follow --diff-filter=AM` — is
+  intact); same symptom, different cause (CI checkout depth, not a content
+  change from the push).
 - **`pnpm install --frozen-lockfile` fails.** The lockfile and
   `package.json`s drifted. Run `pnpm install` locally, commit the
   lockfile, push. (The intermediate-commit caveat documented in

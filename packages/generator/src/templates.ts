@@ -151,7 +151,12 @@ function signatureTypeOnly(signature: string, name: string): string {
 }
 
 function anchorComment(node: DocNode): string {
-  return `<!-- ovellum:anchor id="${node.id}" generated="${new Date().toISOString()}" -->`;
+  // Deterministic on purpose: the anchor carries only its stable `id`. It used
+  // to embed `generated="<now>"`, but the reader/merger match on `id=` and
+  // ignore everything else (`[^>]*`), so that timestamp did nothing except
+  // churn the file on every build — a fresh diff each time, which reset the
+  // page's "Edited" date to today. Same source in → byte-identical output.
+  return `<!-- ovellum:anchor id="${node.id}" -->`;
 }
 
 function fence(content: string, lang: string): string {

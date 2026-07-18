@@ -28,6 +28,7 @@ import {
 } from './nav.js';
 import {
   countWords,
+  isShallowRepository,
   lastModifiedISO,
   normalizeFrontmatterDate,
   readingMinutes,
@@ -194,6 +195,22 @@ export async function buildSite(options: BuildSiteOptions): Promise<BuildSiteRes
   // `info` = a benign note about what the build did; `warn` = a real problem.
   const info = (message: string): BuildWarning => ({ message, severity: 'info' });
   const warn = (message: string): BuildWarning => ({ message, severity: 'warning' });
+
+  // Guard the classic CI footgun: a shallow checkout (`fetch-depth: 1`, the
+  // `actions/checkout` default) leaves git with only the tip commit, so every
+  // page's git-derived "Edited" date collapses onto the latest commit and the
+  // whole site reads "Edited today". Warn once and loudly rather than ship
+  // wrong dates silently — the fix is `fetch-depth: 0` (or an explicit
+  // `updated:` frontmatter / `pageMeta.lastModified: false`).
+  if (site.pageMeta.lastModified && (await isShallowRepository(cwd))) {
+    warnings.push(
+      warn(
+        'Shallow git clone detected — every page\'s "Edited" date collapses onto the latest commit ' +
+          '(the site will read "Edited today"). Fetch full history (`fetch-depth: 0` in actions/checkout) ' +
+          'or disable `pageMeta.lastModified`.',
+      ),
+    );
+  }
 
   // Opt-in raster-image optimization (B9). When `site.images` is set, copied
   // image assets are re-encoded in place via sharp; everything else copies

@@ -8,6 +8,7 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import {
   countWords,
   formatEditedDate,
+  isShallowRepository,
   lastModifiedISO,
   normalizeFrontmatterDate,
   readingMinutes,
@@ -195,5 +196,51 @@ describe('lastModifiedISO — command-injection resistance', () => {
     // The date is the original content commit, NOT the rename.
     const iso = await lastModifiedISO({ absPath: path.join(workDir, 'new.md'), cwd: workDir });
     expect(iso).toMatch(/^2026-01-15T/);
+  });
+});
+
+// A shallow clone is the CI footgun behind "everything Edited today": git only
+// has the tip commit, so every per-file `git log` returns it. The build uses
+// this to warn instead of silently shipping wrong dates.
+describe('isShallowRepository', () => {
+  let dirs: string[] = [];
+  const mk = (): string => {
+    const d = mkdtempSync(path.join(tmpdir(), 'ovellum-shallow-'));
+    dirs.push(d);
+    return d;
+  };
+
+  afterEach(async () => {
+    for (const d of dirs) await rm(d, { recursive: true, force: true });
+    dirs = [];
+  });
+
+  const initRepo = async (cwd: string): Promise<void> => {
+    await execFileAsync('git', ['init', '-q', '-b', 'main'], { cwd });
+    await execFileAsync('git', ['config', 'user.email', 'test@example.com'], { cwd });
+    await execFileAsync('git', ['config', 'user.name', 'Test'], { cwd });
+    await execFileAsync('git', ['config', 'commit.gpgsign', 'false'], { cwd });
+  };
+
+  it('returns false for a non-git directory', async () => {
+    expect(await isShallowRepository(mk())).toBe(false);
+  });
+
+  it('returns false for a full repo, true for a shallow clone of it', async () => {
+    const src = mk();
+    await initRepo(src);
+    for (const n of ['a', 'b', 'c']) {
+      writeFileSync(path.join(src, `${n}.md`), `# ${n}\n`);
+      await execFileAsync('git', ['add', '.'], { cwd: src });
+      await execFileAsync('git', ['commit', '-q', '-m', n], {
+        cwd: src,
+        env: { ...process.env, GIT_COMMITTER_DATE: '2026-01-15T10:00:00Z' },
+      });
+    }
+    expect(await isShallowRepository(src)).toBe(false);
+
+    const shallow = mk();
+    await execFileAsync('git', ['clone', '--depth', '1', '-q', `file://${src}`, shallow]);
+    expect(await isShallowRepository(shallow)).toBe(true);
   });
 });

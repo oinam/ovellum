@@ -282,6 +282,18 @@ shipped with the site, so it works on any static host with no server.
 Set either to `false` to hide that half of the line. Set both to `false`
 to hide the meta line entirely.
 
+:::note{title="Generated (auto/hybrid) docs date themselves"}
+When Ovellum **generates** a doc from source, it stamps an `updated:` into the
+frontmatter automatically — the **source file's** last change date (git author
+date, following renames). So a generated page's **Edited** line tracks when the
+documented *code* last changed, not when you last ran `ovellum build`.
+Regenerating unchanged source produces byte-identical output, so the date never
+drifts to "today" on a rebuild. Because the date is baked into the frontmatter
+at generation time, it's also correct on a downstream site build even from a
+shallow git clone. (This frontmatter is generator-owned and rewritten each
+build; to pin a date by hand, do it on a purely **manual** page.)
+:::
+
 ### `ai`
 
 `{ enabled?: boolean, llmsTxt?: boolean, fullText?: boolean, mdMirror?: boolean }`.

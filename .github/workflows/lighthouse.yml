@@ -37,6 +37,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          # Full history — this job runs `ovellum build`, whose page "Edited"
+          # dates come from `git log`; a shallow clone collapses them all onto
+          # the tip commit (and trips the build's shallow-clone warning).
+          fetch-depth: 0
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v4

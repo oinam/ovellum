@@ -15,13 +15,19 @@ Every auto-generated section in a Markdown file gets an HTML comment that
 identifies which source symbol it documents:
 
 ```html
-<!-- ovellum:anchor id="src/utils/format.ts::formatDate" generated="2026-05-16T..." -->
+<!-- ovellum:anchor id="src/utils/format.ts::formatDate" -->
 ```
 
 The `id` is the symbol's **anchor ID**, formatted as
 `{relativeFilePath}::{symbolPath}`. Class methods use dot notation
 (`src/models/User.ts::User.constructor`); module-level docs use the
 sentinel `__module__`.
+
+The anchor carries **only** its `id` — no timestamp, nothing else. That's
+deliberate: generation is deterministic, so regenerating unchanged source
+produces byte-identical output. Nothing churns the file, so version control
+sees no diff and the page's ["Edited" date](/docs/reference/config/#pagemeta)
+stays put instead of resetting to "today" on every build.
 
 Anchors are invisible to readers — they're HTML comments, stripped by the
 browser. Their job is to give the merger a stable handle on each section.
@@ -59,7 +65,7 @@ anchor comment. That anchor is what the merger uses to find a home for the
 block on the next build:
 
 ```
-<!-- ovellum:anchor id="src/utils/format.ts::formatDate" generated="..." -->
+<!-- ovellum:anchor id="src/utils/format.ts::formatDate" -->
 ## formatDate
 
 Auto-generated description.

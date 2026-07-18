@@ -9,6 +9,18 @@ export interface GenerateResult {
   warnings: string[];
 }
 
+export interface GenerateOptions {
+  /**
+   * Source file path (relative to project root, as in `DocFile.filePath`) → the
+   * source's last-change date (ISO-8601). Stamped as each doc's `updated:`
+   * frontmatter so the page "Edited" date tracks when the CODE last changed, not
+   * when `ovellum build` last ran. Resolved by the caller (which owns git); the
+   * generator stays pure. Files absent from the map get no `updated:` and fall
+   * back to the site's own git/mtime lookup.
+   */
+  sourceDates?: Map<string, string>;
+}
+
 /**
  * Render a `DocProject` IR into markdown bodies keyed by output path.
  *
@@ -18,7 +30,11 @@ export interface GenerateResult {
  * deprecation callouts beyond a plain blockquote are deferred to later
  * Phase 3 work.
  */
-export function generateDocs(project: DocProject, config: OvellumConfig): GenerateResult {
+export function generateDocs(
+  project: DocProject,
+  config: OvellumConfig,
+  options: GenerateOptions = {},
+): GenerateResult {
   const files = new Map<string, string>();
   const warnings: string[] = [];
 
@@ -27,15 +43,16 @@ export function generateDocs(project: DocProject, config: OvellumConfig): Genera
   const wrapPreserved = config.mode === 'hybrid';
   for (const file of project.files) {
     const outputPath = outputPathFor(file.filePath, config);
-    const body = renderFile(file, project.generatedAt, { wrapPreserved });
+    const updated = options.sourceDates?.get(file.filePath);
+    const body = renderFile(file, { wrapPreserved }, updated);
     files.set(outputPath, body);
   }
 
   return { files, warnings };
 }
 
-function renderFile(file: DocFile, generatedAt: string, opts: RenderOptions): string {
-  const parts: string[] = [buildFrontmatter(file, generatedAt)];
+function renderFile(file: DocFile, opts: RenderOptions, updated?: string): string {
+  const parts: string[] = [buildFrontmatter(file, { updated })];
 
   if (file.description) {
     parts.push(file.description.trim());

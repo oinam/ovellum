@@ -578,13 +578,16 @@
   })();
 
   // "Copy page" action: fetch the page's `.md` mirror and copy it to the
-  // clipboard, flashing a confirmation. The link/ChatGPT/Claude actions are
-  // plain anchors and need no JS.
+  // clipboard, flashing a check icon. The button is icon-only now, so we swap
+  // its innerHTML (not textContent, which would wipe the SVG) and restore the
+  // captured original. The View-as-Markdown / Open-in-* actions are plain
+  // anchors and need no JS.
   (function copyPage() {
     document.querySelectorAll('[data-ov-copy-md]').forEach(function (btn) {
       var href = btn.getAttribute('data-ov-copy-md');
-      var label = btn.textContent;
-      var done = btn.getAttribute('data-ov-copied') || 'Copied';
+      var original = btn.innerHTML;
+      var idleLabel = btn.getAttribute('aria-label');
+      var doneLabel = btn.getAttribute('data-ov-copied') || 'Copied';
       btn.addEventListener('click', function () {
         fetch(href)
           .then(function (r) {
@@ -594,9 +597,13 @@
             return navigator.clipboard.writeText(md);
           })
           .then(function () {
-            btn.textContent = done;
+            btn.innerHTML = CHECK_ICON;
+            btn.setAttribute('aria-label', doneLabel);
+            btn.classList.add('is-copied');
             setTimeout(function () {
-              btn.textContent = label;
+              btn.innerHTML = original;
+              if (idleLabel) btn.setAttribute('aria-label', idleLabel);
+              btn.classList.remove('is-copied');
             }, 1600);
           })
           .catch(function () {

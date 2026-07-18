@@ -110,6 +110,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # full history — see the note below
       - uses: pnpm/action-setup@v4
         with: { version: 10 }
       - uses: actions/setup-node@v4
@@ -132,6 +134,17 @@ jobs:
       - id: deployment
         uses: actions/deploy-pages@v4
 ```
+
+:::note{title="Why `fetch-depth: 0`"}
+Each page's "Edited" date comes from the last commit that changed the file, read
+via `git log`. `actions/checkout` clones only the tip commit by default
+(`fetch-depth: 1`), which leaves git with no history — so every page collapses
+onto the deploy commit and the whole site reads "Edited today". `fetch-depth: 0`
+fetches the full history so the dates are accurate. (You can skip it if you pin
+dates with an `updated:` frontmatter field or turn dates off with
+`pageMeta.lastModified: false` — otherwise the build warns when it sees a shallow
+clone.)
+:::
 
 Then set **Settings → Pages → Source** to **GitHub Actions**, push to `main`,
 and the workflow handles the rest. (Using npm instead of pnpm? Swap the

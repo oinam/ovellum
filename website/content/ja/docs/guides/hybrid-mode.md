@@ -1,7 +1,7 @@
 ---
 title: 自動と手動を混在させる（ハイブリッドモード）
 description: 1 つのファイル、2 人の著者 — 両者を共存させるマージエンジン。
-sourceHash: '0975c753b5575004'
+sourceHash: '447eea1982573955'
 ---
 
 # 自動と手動を混在させる（ハイブリッドモード）
@@ -64,7 +64,7 @@ npx ovellum build
 生成されたファイルの 1 つを開きます。次のようなアンカーコメントが見えるはずです:
 
 ```markdown
-<!-- ovellum:anchor id="src/utils/format.ts::padZero" generated="..." -->
+<!-- ovellum:anchor id="src/utils/format.ts::padZero" -->
 
 ## padZero
 

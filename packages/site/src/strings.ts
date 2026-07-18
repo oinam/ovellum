@@ -76,8 +76,10 @@ export interface UiStrings {
   copyCode: string;
   copyPage: string;
   viewMarkdown: string;
+  openInLabel: string;
   askChatGpt: string;
   askClaude: string;
+  askGemini: string;
 }
 
 export const DEFAULT_STRINGS: UiStrings = {
@@ -142,8 +144,10 @@ export const DEFAULT_STRINGS: UiStrings = {
   copyCode: 'Copy code',
   copyPage: 'Copy page',
   viewMarkdown: 'View as Markdown',
+  openInLabel: 'Open in',
   askChatGpt: 'Open in ChatGPT',
   askClaude: 'Open in Claude',
+  askGemini: 'Open in Google Gemini',
 };
 
 /**
@@ -214,8 +218,10 @@ export const BUILTIN_STRINGS: Record<string, Partial<UiStrings>> = {
     copyCode: 'コードをコピー',
     copyPage: 'ページをコピー',
     viewMarkdown: 'Markdown で表示',
+    openInLabel: '開く',
     askChatGpt: 'ChatGPT で開く',
     askClaude: 'Claude で開く',
+    askGemini: 'Google Gemini で開く',
   },
 };
 

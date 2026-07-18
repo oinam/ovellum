@@ -1,7 +1,7 @@
 ---
 title: 自動化と AI エージェント
 description: スクリプト・CI ジョブ・AI エージェントから Ovellum を操作する — 機械可読な --json 出力、安定した終了コード、MCP サーバー。
-sourceHash: '18aa408decd7b51e'
+sourceHash: 'a67724e5a9c64779'
 ---
 
 # 自動化と AI エージェント
@@ -123,6 +123,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with: { fetch-depth: 0 } # 全履歴 → ページの「編集日」が正確になる
       - uses: actions/setup-node@v4
         with: { node-version: 22 }
       - run: npm ci
@@ -154,6 +155,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with: { fetch-depth: 0 } # 全履歴 → ページの「編集日」が正確になる
       - uses: actions/setup-node@v4
         with: { node-version: 22 }
       - run: npm ci
@@ -308,8 +310,9 @@ Ovellum は、エージェントが書いた文章に人間の文章と同じ保
 
 ### ページごとの LLM アクション
 
-`.md` ミラーが有効なとき（デフォルト）、各ドキュメントページには小さなアクションの行が
-付きます: **ページをコピー**（ページの Markdown をクリップボードにコピー）、
-**Markdown で表示**（生の `.md`）、そして — `site.baseUrl` が設定されてリンクが絶対 URL に
-なるとき — **ChatGPT で開く** / **Claude で開く**（ページをそのアシスタントに渡します）。
-`site.ai.mdMirror` 以外の設定は不要で、オフにすると消えます。
+`.md` ミラーが有効なとき（デフォルト）、各ドキュメントページのパンくずの行に小さな
+アイコンアクションの行が付きます: **ページをコピー**（ページの Markdown をクリップボードに
+コピー）と **Markdown で表示**（生の `.md`）。そして — `site.baseUrl` が設定されてリンクが
+絶対 URL になるとき — 区切りと **開く** グループ（**ChatGPT**、**Claude**、
+**Google Gemini**）が続き、それぞれページの Markdown を指すプロンプトでそのアシスタントを
+開きます。`site.ai.mdMirror` 以外の設定は不要で、オフにすると消えます。

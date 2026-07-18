@@ -66,6 +66,34 @@ describe('generateDocs', () => {
     expect(body).toContain("padZero(7, 3) // '007'");
   });
 
+  it('is deterministic — no build timestamp churns the output', () => {
+    // Two independent runs must be byte-identical. A volatile `generated: <now>`
+    // frontmatter field or anchor `generated="<now>"` attribute would break this
+    // and make every regeneration a fresh git diff → "Edited today" forever.
+    const a = generateDocs(baseProject, DEFAULT_CONFIG).files.get('docs/format.md');
+    const b = generateDocs(baseProject, DEFAULT_CONFIG).files.get('docs/format.md');
+    expect(a).toBe(b);
+    expect(a).not.toContain('generated:');
+    expect(a).not.toContain('generated=');
+  });
+
+  it('stamps `updated:` from the resolved source date, and omits it when absent', () => {
+    const withDate = generateDocs(baseProject, DEFAULT_CONFIG, {
+      sourceDates: new Map([['src/format.ts', '2026-05-30T10:00:00+05:30']]),
+    }).files.get('docs/format.md');
+    expect(withDate).toContain('updated: ');
+    expect(withDate).toContain('2026-05-30T10:00:00+05:30');
+
+    const withoutDate = generateDocs(baseProject, DEFAULT_CONFIG).files.get('docs/format.md');
+    expect(withoutDate).not.toContain('updated:');
+
+    // An unrelated source path in the map must not leak onto this file.
+    const mismatched = generateDocs(baseProject, DEFAULT_CONFIG, {
+      sourceDates: new Map([['src/other.ts', '2026-05-30T10:00:00+05:30']]),
+    }).files.get('docs/format.md');
+    expect(mismatched).not.toContain('updated:');
+  });
+
   it('emits one output file per source file', () => {
     const proj: DocProject = {
       ...baseProject,

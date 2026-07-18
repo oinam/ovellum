@@ -1,7 +1,7 @@
 ---
 title: デプロイ
 description: 一度ビルドすれば自己完結した dist/ フォルダができあがり、あとはどこにでもホストできます — セルフホスト、GitHub Pages、Cloudflare、または任意の静的ホスト。
-sourceHash: '468695df438296c3'
+sourceHash: '74930cc8d808a022'
 ---
 
 # デプロイ
@@ -91,6 +91,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # 全履歴 — 下記の注記を参照
       - uses: pnpm/action-setup@v4
         with: { version: 10 }
       - uses: actions/setup-node@v4
@@ -113,6 +115,10 @@ jobs:
       - id: deployment
         uses: actions/deploy-pages@v4
 ```
+
+:::note{title="`fetch-depth: 0` が必要な理由"}
+各ページの「編集日」は、そのファイルを最後に変更したコミットから `git log` で取得します。`actions/checkout` はデフォルトで先頭コミットのみをクローンするため（`fetch-depth: 1`）、git に履歴が残らず、すべてのページがデプロイコミットに収束してサイト全体が「今日編集」と表示されてしまいます。`fetch-depth: 0` は全履歴を取得するので日付が正確になります。（フロントマターの `updated:` で日付を固定する、または `pageMeta.lastModified: false` で日付を無効にする場合は省略できます。それ以外の場合、浅いクローンを検出するとビルドが警告します。）
+:::
 
 そして **Settings → Pages → Source** を **GitHub Actions** に設定し、`main` にプッシュすれば、あとはワークフローが処理します。（pnpm の代わりに npm を使う？ `pnpm/action-setup` のステップを `setup-node` の `cache: npm` に差し替え、`npm ci` + `npx ovellum build` を実行します。）
 

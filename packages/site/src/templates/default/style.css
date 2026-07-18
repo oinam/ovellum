@@ -2182,8 +2182,21 @@ a.ov-nav-group--link.is-active::before {
 /* Breadcrumbs — sits above the page-meta when the page is nested 2+
    levels deep. Slash separator inserted via ::after on each crumb so
    it scales with text and doesn't render as an extra DOM element. */
+/* Breadcrumb (left) + per-page actions (right) share one line at the top of
+   the content card. Wraps to two lines on narrow viewports. */
+.ov-page-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-s);
+  flex-wrap: wrap;
+  margin: 0 0 var(--space-2xs);
+}
 .ov-breadcrumbs {
   margin: 0 0 var(--space-2xs);
+}
+.ov-page-header .ov-breadcrumbs {
+  margin: 0;
 }
 .ov-breadcrumbs ol {
   list-style: none;
@@ -2233,40 +2246,64 @@ a.ov-nav-group--link.is-active::before {
   padding-inline: 0.5em;
 }
 
-/* "Use this page with an LLM" actions — a quiet row of chips under the page
-   meta: copy the Markdown, view it, or hand it to ChatGPT / Claude. */
+/* "Use this page with an LLM" actions — a compact row of icon buttons on the
+   breadcrumb line: copy the Markdown, view it, then (separated + labelled)
+   hand it to ChatGPT / Claude / Gemini. */
 .ov-page-actions {
   display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-2xs);
-  margin: 0 0 var(--space-m);
+  align-items: center;
+  gap: var(--space-3xs);
+  margin: 0;
+  /* Pin the actions to the right edge even on pages with no breadcrumb. */
+  margin-left: auto;
 }
 .ov-page-action {
   appearance: none;
   display: inline-flex;
   align-items: center;
-  gap: var(--space-3xs, 0.25rem);
-  padding: 0.2em 0.6em;
-  font: inherit;
-  font-size: 0.78em;
-  line-height: 1.4;
-  color: var(--color-fg-muted);
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
+  justify-content: center;
+  width: 1.9rem;
+  height: 1.9rem;
+  padding: 0;
+  color: var(--color-fg-subtle);
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
   text-decoration: none;
   cursor: pointer;
   transition:
     color 0.12s ease,
+    background-color 0.12s ease,
     border-color 0.12s ease;
+}
+.ov-page-action svg {
+  display: block;
 }
 .ov-page-action:hover {
   color: var(--color-fg);
-  border-color: var(--color-border-strong);
+  background: var(--color-surface);
+  border-color: var(--color-border);
+}
+.ov-page-action.is-copied {
+  color: var(--color-primary);
 }
 .ov-page-action:focus-visible {
   outline: 2px solid var(--color-border-focus);
   outline-offset: 2px;
+}
+/* Vertical bar between the copy/view actions and the "Open in" group. */
+.ov-page-actions-sep {
+  flex: none;
+  width: 1px;
+  height: 1.1rem;
+  margin-inline: var(--space-3xs);
+  background: var(--color-border);
+}
+.ov-page-actions-label {
+  font-size: 0.78em;
+  color: var(--color-fg-subtle);
+  white-space: nowrap;
+  padding-inline-start: var(--space-3xs);
 }
 
 /* Edit-this-page link */
