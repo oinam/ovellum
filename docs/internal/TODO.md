@@ -30,6 +30,43 @@ Legend: `[ ]` not started · `[~]` in progress · `[x]` done · `[!]` blocked
 
 ---
 
+## Current state (2026-07-18)
+
+**Publish state (read this first):** **`ovellum@0.25.0` is LIVE on npm**
+(2026-07-18) — `latest` = 0.25.0, signed tag `ovellum@0.25.0` pushed, GitHub
+release cut, `main` fully pushed. **One loose end: the MCP registry is still on
+0.24.0.** `mcp-publisher publish` 403s: authenticated as GitHub user
+`brajeshwar` (who IS a *public admin/owner* of the `oinam` org — verified 204 on
+`/orgs/oinam/public_members/brajeshwar`), but the registry resolves the login
+token to `io.github.brajeshwar/*` only and won't honor `io.github.oinam/*`. So
+this is **not** the "make membership public" case the error text suggests — most
+likely the **mcp-publisher OAuth app isn't granted access to the `oinam` org**
+under the org's third-party OAuth-app restrictions. **Fix (maintainer-side,
+non-blocking):** approve the mcp-publisher app at
+`https://github.com/organizations/oinam/settings/oauth_application_policy` (or
+grant `oinam` org access when re-running `mcp-publisher login github`), then
+`mcp-publisher publish` (or `./publish.sh --skip-npm`). NEW GOTCHA — record for
+next release. **No pending changesets.**
+
+**0.25.0 = documentation edited-dates + per-page action refresh (3 changesets):**
+(1) **Generated docs respect the source's edited date** — the generator's
+build-time timestamps (frontmatter `generated:` + anchor `generated=`) are gone
+(anchor attr was decorative; reader/merger match on `id=` only), so generation
+is **byte-deterministic**; it now stamps `updated:` = the source file's last git
+change (**author** date, `--follow`), resolved by the CLI
+(`packages/cli/src/dev/source-dates.ts`) and injected into the pure generator.
+(2) **Shallow-clone edited-date guard** (manual docs) — `fetch-depth: 0` on the
+site-building workflows + a build-time warning when a shallow clone would
+collapse dates onto the tip commit (`isShallowRepository` in page-meta.ts).
+(3) **Per-page actions refresh** — moved onto the breadcrumb line (top-right) as
+icon buttons (`.ov-page-header`); copy + new hand-rolled `markdown` mark; then a
+separator, an "Open in" label, and **filled brand-icon** deep-links to ChatGPT /
+Claude / **Google Gemini (new)** via `renderBrandIcon` + `BRAND_ICONS` in
+icons.ts. **Gemini's `gemini.google.com/app?q=` deep-link is best-effort** — no
+documented `?q=` prefill; flagged in repo-root `TODO.md` to verify/adjust later.
+Site still uses committer date (`%cI`) for manual pages; generator uses author
+date (`%aI`) — offered to align, maintainer hasn't decided.
+
 ## Current state (2026-07-13)
 
 **Publish state (read this first):** **`ovellum@0.24.0` is LIVE on npm**
